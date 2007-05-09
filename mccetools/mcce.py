@@ -4,19 +4,25 @@ import commands
 import re
 import math
 
-"""Various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram; D. Mobley edited in May 2007. (Sorry the documentation is minimal but it came to me with none). 
+"""Various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram Haque; D. Mobley edited in May 2007. 
 
 Prerequisites:
 - MCCE (available from http://www.sci.ccny.cuny.edu/~mcce)
 
 Functionality:
-- Main function seems to be protonation_state, which takes as input a pdb file, a pH, and the path to MCCE, and returns an array of lines of a pdb file, generated using predicted protonation states. Currently seems to require absolute path to the input pdb file. Reads input PDB, runs MCCE, which protonates the pdb and generates various temporary files. Calls the remaining functions in here to parse the MCCE output and put the appropriate protonation states into the output pdb, which is returned as a text array; make naming in output pdb be consistent with AMBER naming. Also checks histidine protonation and names histidines accordingly; checks for disulfide bonds and renames; gives terminal residues correct names. Note that this can be rather slow (hours+?) due to MCCE speed and depending on size of protein. 
+- Main function seems to be protonation_state, which takes as input a pdb file, a pH, and the path to MCCE, and returns an array of lines of a pdb file, generated using predicted protonation states. Currently seems to require absolute path to the input pdb file. Reads input PDB, runs MCCE, which protonates the pdb and generates various temporary files. Calls the remaining functions in here to parse the MCCE output and put the appropriate protonation states into the output pdb, which is returned as a text array; make naming in output pdb be consistent with AMBER naming. Also checks histidine protonation and names histidines accordingly; checks for disulfide bonds and renames; gives terminal residues correct names. Note that this can be rather slow (hours+?) due to MCCE speed and depending on size of protein. Note also that the returned pdb file is a text array without newline characters. 
 
 Known limitations:
+- C terminal residues are determined by the last residue in the pdb file, which means the last residue in the file needs to not be a HET atom or similar, but rather the terminal residue of the protein.
+
+Bugs:
 
 Revision log:
-- 5-8-2007: DLM adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
-- 5-9-2007: A bit more documentation, and fixed protonation_state routine so as not to require an absolute path to the pdb file (obtains an absolute path from the file name plus current directory)."""
+- 5-8-2007: DLM: Adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
+- 5-9-2007: DLM: A bit more documentation, and fixed protonation_state routine so as not to require an absolute path to the pdb file (obtains an absolute path from the file name plus current directory).
+- 5-9-2007: DLM: Fixed a bug in oxygen naming on the C terminal residue (used O and OXT, though it was supposed to (and claimed to) use OC1 and OC2.)
+"""
+
 
 
 def paramgen(pdbpath,mcce_location):
@@ -197,7 +203,14 @@ def rename_termini(npdb):
 	for j in [-1,-2]:
 		for i in range(len(npdb[j])):
 			npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
-		
+                        #DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
+                        #Adding the below to do the renaming.
+                        if npdb[j][i][13:16].split()[0]=='O':
+                          print "Chunk we are replacing is '%s'." % npdb[j][i][13:16]
+                          npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
+                        elif npdb[j][i][13:16].split()[0]=='OXT':
+                          print "Chunk we are replacing is '%s'." % npdb[j][i][13:16]
+			  npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
 	
 def nest_pdb(pdbarr):
 	nestedpdb=[]
