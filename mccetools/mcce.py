@@ -206,10 +206,8 @@ def rename_termini(npdb):
                         #DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
                         #Adding the below to do the renaming.
                         if npdb[j][i][13:16].split()[0]=='O':
-                          print "Chunk we are replacing is '%s'." % npdb[j][i][13:16]
                           npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
                         elif npdb[j][i][13:16].split()[0]=='OXT':
-                          print "Chunk we are replacing is '%s'." % npdb[j][i][13:16]
 			  npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
 	
 def nest_pdb(pdbarr):
