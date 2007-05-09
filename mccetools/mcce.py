@@ -10,10 +10,9 @@ Prerequisites:
 - MCCE (available from http://www.sci.ccny.cuny.edu/~mcce)
 
 Functionality:
-- Main function seems to be protonation_state, which takes as input a pdb file, a pH, the path to MCCE, and an output pdb file name to be written, using predicted protonation states. Currently seems to require absolute path to the input pdb file (may also require absolute path to output pdb file). Reads input PDB, runs MCCE, which protonates the pdb and generates various temporary files. Calls the remaining functions in here to parse the MCCE output and put the appropriate protonation states into the output pdb; make naming in output pdb be consistent with AMBER naming. Also checks histidine protonation and names histidines accordingly; checks for disulfide bonds and renames; gives terminal residues correct names. Note that this can be rather slow (hours+?) due to MCCE speed. 
+- Main function seems to be protonation_state, which takes as input a pdb file, a pH, and the path to MCCE, and returns an array of lines of a pdb file, generated using predicted protonation states. Currently seems to require absolute path to the input pdb file. Reads input PDB, runs MCCE, which protonates the pdb and generates various temporary files. Calls the remaining functions in here to parse the MCCE output and put the appropriate protonation states into the output pdb, which is returned as a text array; make naming in output pdb be consistent with AMBER naming. Also checks histidine protonation and names histidines accordingly; checks for disulfide bonds and renames; gives terminal residues correct names. Note that this can be rather slow (hours+?) due to MCCE speed and depending on size of protein. 
 
 Known limitations:
-- Requires absolute path for input pdb to protonation_state; should fix this.
 
 Revision log:
 - 5-8-2007: DLM adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
