@@ -4,6 +4,22 @@ import commands
 import re
 import math
 
+"""Various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram; D. Mobley edited in May 2007. (Sorry the documentation is minimal but it came to me with none). 
+
+Prerequisites:
+- MCCE (available from http://www.sci.ccny.cuny.edu/~mcce)
+
+Functionality:
+- Main function seems to be protonation_state, which takes as input a pdb file, a pH, the path to MCCE, and an output pdb file name to be written, using predicted protonation states. Currently seems to require absolute path to the input pdb file (may also require absolute path to output pdb file). Reads input PDB, runs MCCE, which protonates the pdb and generates various temporary files. Calls the remaining functions in here to parse the MCCE output and put the appropriate protonation states into the output pdb; make naming in output pdb be consistent with AMBER naming. Also checks histidine protonation and names histidines accordingly; checks for disulfide bonds and renames; gives terminal residues correct names. Note that this can be rather slow (hours+?) due to MCCE speed. 
+
+Known limitations:
+- Requires absolute path for input pdb to protonation_state; should fix this.
+
+Revision log:
+- 5-8-2007: DLM adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
+- 5-9-2007: A bit more documentation, and fixed protonation_state routine so as not to require an absolute path to the pdb file (obtains an absolute path from the file name plus current directory)."""
+
+
 def paramgen(pdbpath,mcce_location):
 	"""Generate a dictionary of parameters used by MCCE.
 		
@@ -333,18 +349,20 @@ def protonation_state(pdbfile,ph,mccepath,cleanup=True):
 	"""Finds the ML protonation state of a given PDB file at a
 		given pH by running MCCE.
 		Returns: list containing lines of the output PDB file"""
+        cwd=os.getcwd()
+        #Convert PDB file name to path, as paramgen expects an absolute path
+        pdbpath=os.path.join(cwd,pdbfile)
 	# Set up the parameters for the MCCE run
-	params=paramgen(pdbfile,mccepath)
+	params=paramgen(pdbpath,mccepath)
 	params['TITR_PH0']=str(ph)
 	params['TITR_STEPS']="1"
 	
 	# Create a temporary directory and run MCCE
-	cwd=os.getcwd()
 	tempdir=tempfile.mkdtemp();
-	print tempdir
+	print "Running MCCE in temporary directory %s..." % tempdir
 	os.chdir(tempdir)
 	run_mcce(params)
-	
+
 	pdbarr = ps_processmcce(tempdir)
 
 	# Generate a breakpoint for interactive testing...
