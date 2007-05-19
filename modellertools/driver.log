@@ -1,0 +1,28 @@
+
+                         MODELLER 9v1, 2007/01/19, r4822
+
+     PROTEIN STRUCTURE MODELLING BY SATISFACTION OF SPATIAL RESTRAINTS
+
+
+                     Copyright(c) 1989-2007 Andrej Sali
+                            All Rights Reserved
+
+                             Written by A. Sali
+                               with help from
+           B. Webb, M.S. Madhusudhan, M-Y. Shen, M.A. Marti-Renom,
+                N. Eswar, F. Alber, M. Topf, B. Oliva, A. Fiser,
+                    R. Sanchez, B. Yerkovich, A. Badretdinov,
+                      F. Melo, J.P. Overington, E. Feyfant
+                 University of California, San Francisco, USA
+                    Rockefeller University, New York, USA
+                      Harvard University, Cambridge, USA
+                   Imperial Cancer Research Fund, London, UK
+              Birkbeck College, University of London, London, UK
+
+
+Kind, OS, HostName, Kernel, Processor: 4, Darwin vspm23.stanford.edu 8.9.2 i386
+Date and time of compilation         : 2007/01/19 14:00:47
+MODELLER executable type             : mac10v4-intel
+Job starting time (YY/MM/DD HH:MM:SS): 2007/05/10 19:51:50
+
+usage: ./driver.py pdb_filename sequence_filename

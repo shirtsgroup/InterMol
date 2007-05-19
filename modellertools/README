@@ -1,0 +1,38 @@
+README
+
+Last updated: May 15, 2007
+
+REQUIREMENTS
+
+    *  MODELLER 9v1 ( http://salilab.org/modeller/ ) must be installed on your machine
+
+INSTALLATION
+
+    1) put the "modlib" directory (e.g. /Library/modeller-9v1/modlib/ ) in your PYTHONPATH.
+       This directory contains the python modules needed by mmtools/modellertools
+
+    2) copy the files
+
+           mmtools/modellertools/lib/*.lib
+
+       to modlib directory in the Modeller folder.  Just overwrite the files that are already there.
+
+       As of this writing, these contain CHARMM-style residue parameters enabling MODELLER to 
+       build models using the following (one-letter abbrev) non-canonical residues:
+
+           dX	        D-amino acid version of residue X	
+	   n		norleucine
+ 
+
+PACKAGE CONTENTS
+
+-  Model_PDB.py - contains code for homology modeling using Modeller
+-  single_driver.py - code for testing Model_PDB on a single target/template specified as command line arguments
+-  driver.py - code for testing all of the targets/tempates for the submicrosecond folders project
+-  *.seq - one-letter sequences I used for testing
+-  ????.pdb - PDB databank structures for all of our targets
+-  ????_*.pdb - PDB outputs for each target
+
+Greg Bowman
+gbowman@stanford.edu
+

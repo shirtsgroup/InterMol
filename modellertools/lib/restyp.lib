@@ -1,0 +1,143 @@
+# Version: August 13, 1993
+#
+# LIBRARY OF RESIDUE TYPES
+#
+# MODELLER 1.1, Copyright Andrej Sali
+#
+#
+# Several residue naming schemes exist: 
+# 
+#   (1) Three-letter Brookhaven Protein Data Bank, extended.
+#   (2) Single-letter Brookhaven Protein Data Bank, extended.
+#   (3) Four letter CHARMM, extended.
+# 
+# 
+# This file gives:
+# 
+#   (1) The residue names in those three sets.
+#   (2) Equivalences between the three sets.
+# 
+# Each residue type may have several PDB-3 names, but only one PDB-1 
+# name and one CHARMM name. The naming schemes are case sensitive. If
+# a certain existing CHARMM residue type does not have an equivalent 
+# in the PDB-1/3 lists, its name is invented, or the name of a similar 
+# residue is used. In contrast, if an existing PDB residue type does 
+# not occur in the CHARMM list, its name is kept undefined (####) 
+# so that the lack of the CHARMM topology entry is properly flagged. 
+# This means that a certain residue's name may appear several times 
+# within the same scheme (for example, CHARMM charged and neutral
+# species are not distinguished in the PDB list).
+#
+# Each residue type can be ATOM, DEFATM, or HETATM. The first two
+# correspond to PDB ATOM records, and the last to HETAM.
+#
+# The first 21 residue types are hard-coded, and their order should not be
+# changed. For certain applications (e.g. alignment) only these residue types
+# are supported. Other residues will be treated as equivalent to that named
+# in the 'STD' column, or if blank, as the default residue type defined on
+# the DEFATM line.
+#
+# To add a new residue type, simply add a new line to the end of this file.
+# Note that multiple names can be listed in the PDB-3 column, because PDB
+# can use different names for the same residue type (e.g. water can be HOH,
+# WAT, etc.). The PDB-1 code must be a single character. It does not have to
+# be unique, but if it is not unique you cannot use it in the alignment file.
+# Any character is fine (it does not have to be a letter). If you run out of
+# characters you can re-define the existing ones that you do not need. The
+# CHARMM field gives the four-character CHARMM residue name, as specified
+# in the RESI record of the topology library.
+#
+#
+# TYPE  PDB-3               PDB-1 STD CHARMM    DESCRIPTION
+#-------------------------------------------------------------------------------
+ATOM   | ALA                 | A |   | ALA  | alanine
+ATOM   | CYS CSH             | C |   | CYS  | cysteine
+ATOM   | ASP                 | D |   | ASP  | aspartic acid, +1
+ATOM   | GLU                 | E |   | GLU  | glutamic acid, +1
+ATOM   | PHE                 | F |   | PHE  | phenylalanine
+DEFATM | GLY                 | G |   | GLY  | glycine
+ATOM   | HIS                 | H |   | HIS  | histidine, neutral, proton on ND1 (HSD originally)
+ATOM   | ILE                 | I |   | ILE  | isoleucine
+ATOM   | LYS                 | K |   | LYS  | lysine, +1
+ATOM   | LEU                 | L |   | LEU  | leucine
+ATOM   | MET                 | M |   | MET  | methionine
+ATOM   | ASN                 | N |   | ASN  | asparagine
+ATOM   | PRO PR0 PRZ         | P |   | PRO  | proline
+ATOM   | GLN                 | Q |   | GLN  | glutamine
+ATOM   | ARG                 | R |   | ARG  | arginine, +1
+ATOM   | SER                 | S |   | SER  | serine
+ATOM   | THR                 | T |   | THR  | threonine
+ATOM   | VAL                 | V |   | VAL  | valine
+ATOM   | TRP                 | W |   | TRP  | tryptophan
+ATOM   | TYR                 | Y |   | TYR  | tyrosine
+ATOM   | GAP                 | - |   | GAP  | an alignment gap
+ATOM   | dALA                | d |   | dALA | alanine
+ATOM   | NLE                 | n |   | NLE  | norleucine
+ATOM   | ASX                 | B | N | ASX  | ASP/ASN ambiguous
+ATOM   | GLX                 | Z | Q | GLX  | GLU/GLN ambiguous
+ATOM   | UNK                 | X | A | UNK  | unknown residue type
+HETATM | PCA PGA             | p |   | #### | pyrrolidine carboxylic acid (pyroglutamate)
+ATOM   | HSE                 | 6 |   | HSE  | histidine, neutral, proton on NE2
+ATOM   | HSP                 | 7 |   | HSP  | histidine, +1 (proton on NE2 and ND1)
+HETATM | HOH H2O OH2 MOH WAT | w |   | TIP3 | water
+HETATM | CAL CA              | 3 |   | CAL  | calcium ion, +2
+HETATM | ZN ZN2              | z |   | ZN2  | zinc, +2
+HETATM | HEM                 | h |   | HEME | heme ligand
+HETATM | O2                  | # |   | O2   | O2 ligand for heme
+HETATM | CO                  | # |   | CO   | CO ligand for heme
+HETATM | CYS CSS CYX         | C |   | CSS  | cystine
+HETATM | ABU                 | g |   | #### | amino-butyric acid
+HETATM | ACD                 | d |   | #### | acidic unknown
+HETATM | ALB                 | l |   | #### | beta-alanine
+HETATM | ALI                 | a |   | #### | aliphatic unknown
+HETATM | ARO                 | r |   | #### | aromatic unknown
+HETATM | BAS                 | b |   | #### | basic unknown
+HETATM | HYP                 | # |   | #### | hydroxyproline
+HETATM | SAR                 | s |   | #### | sarcosine
+HETATM | FOR                 | f |   | #### | formyl
+HETATM | MSE                 | M | M | #### | selenomethionine
+HETATM | MEX                 | C |   | #### | cysteine bridged with beta-mercaptoethanol
+HETATM | SO4                 | # |   | SO4  | sulphate ion -2
+HETATM | ABU                 | # |   | #### | similar to Cys, but SG->CG
+HETATM | BRK                 | / | - | BRK  | chain break
+HETATM | HIS                 | H | H | HIS  | histidine for TOPH19
+HETATM | HIS                 | H | H | HSC  | doubly protonated HIS for TOPH19
+HETATM | PEN                 | # |   | PEN  | Penicillamine for TOPH19
+HETATM | FRM                 | # |   | FORM | for TOPH19
+HETATM | AMN                 | # |   | AMN  | for TOPH19
+HETATM | CBX                 | # |   | CBX  | for TOPH19
+HETATM | ETH                 | # |   | ETH  | for TOPH19
+HETATM | OHH                 | # |   | OH2  | TIPS3P water model for TOPH19
+HETATM | COH                 | # |   | COH  | for TOPH19
+HETATM | ST2                 | # |   | ST2  | for TOPH19
+HETATM | BLK                 | . |   | BLK  | BLOCK, place holder
+HETATM | NAG                 | 1 |   | NAG  | N-ACETYL-D-GLUCOSAMINE
+HETATM | MAN                 | 2 |   | MAN  | ALPHA-D-MANNOSE
+HETATM | MN                  | 4 |   | MN   | manganese ion, +2
+HETATM | MYR                 | 5 |   | MYR  | MYRISTATE
+HETATM | GDP                 | x |   | GDP  | GDP
+HETATM | GTP                 | y |   | GTP  | GTP
+HETATM | IGL                 | q |   | IGLN | iso-glutamin
+HETATM | 156                 | i |   | 0156 | 0156
+HETATM | ATP                 | @ |   | ATP  | ATP
+HETATM | MG                  | $ |   | MG   | magnesium ion
+HETATM | K                   | % |   | K    | potassium ion
+HETATM | ADE                 | # |   | ADE  | 
+HETATM | ADP                 | # |   | ADP  | adenosine diphosphate, jjp1/adm jr.
+HETATM | CYT                 | # |   | CYT  | 
+HETATM | DEO                 | # |   | DEOT | DEOXYRIBOSE, Wilma Olsen's dihedral model
+HETATM | DMP                 | # |   | DMPA | Dimethylphosphate
+HETATM | DUM                 | # |   | DUM  | DUMMY ATOM
+HETATM | GUA                 | # |   | GUA  | 
+HETATM | MP_                 | # |   | MP_0 | Methylphosphate, neutral
+HETATM | MP_                 | # |   | MP_1 | Methylphosphate, anionic
+HETATM | MP_                 | # |   | MP_2 | Methylphosphate, dianionic 
+HETATM | NAD                 | # |   | NAD  | oxidized nicotinamide adenine dinucleotide, jjp1/adm jr.
+HETATM | NAD                 | # |   | NADH | reduced nicotinamide adenine dinucleotide, jjp1/adm jr.
+HETATM | NIC                 | # |   | NIC  | oxidized nicotinamide, jjp1/adm jr.
+HETATM | NIC                 | # |   | NICH | reduced nicotinamide, jjp1/adm jr.
+HETATM | PPI                 | # |   | PPI1 | Inorganic phosphate, jjp1/adm jr.
+HETATM | RIB                 | # |   | RIBT | RIBOSE, Wilma Olsen's dihedral model
+HETATM | SOD                 | # |   | SOD  | Sodium Ion
+HETATM | THY                 | # |   | THY  | 
+HETATM | URA                 | # |   | URA  | 
