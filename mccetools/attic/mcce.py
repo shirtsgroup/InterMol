@@ -21,23 +21,16 @@ Revision log:
 - 5-8-2007: DLM: Adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
 - 5-9-2007: DLM: A bit more documentation, and fixed protonation_state routine so as not to require an absolute path to the pdb file (obtains an absolute path from the file name plus current directory).
 - 5-9-2007: DLM: Fixed a bug in oxygen naming on the C terminal residue (used O and OXT, though it was supposed to (and claimed to) use OC1 and OC2.)
-
-- 5-14-2005: VV: Fixed another terminii naming problem -->  ffamber residues do not include a CLYN (C-terminal neutral lysine), only CLYP.
-- 5-15-2005: VV: Added protonatePDB, which writes a pdb outputfile file with the right protomation state
--                Added read_paramfile().  paramgen() can now also take default params from a MMCE-style prm file
 """
 
 
 
-def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
+def paramgen(pdbpath,mcce_location):
 	"""Generate a dictionary of parameters used by MCCE.
 		
 		parameters:
-			pdbpath - The path to the PDB file used as input for MCCE.  Must be ABSOLUTE path  
+			pdbpath - The path to the PDB file used as input for MCCE.
 			mcce_location - The base directory in which MCCE is installed.
-			
-			OPTIONAL
-			fromfile - read params from a file, except for those dependent on your pdb and mcce installation   
 		
 		returns:
 			A dictionary containing a list of default MCCE parameters.
@@ -46,10 +39,14 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
 	# This was just generated from the sample .prm files in the
 	# MCCE distribution
 	mcce_params={}
+	mcce_params['MCCE_HOME']=mcce_location
+	mcce_params['INPDB']=pdbpath
 	mcce_params['DO_PREMCCE']='t'
 	mcce_params['DO_ROTAMERS']='t'
 	mcce_params['DO_ENERGY']='t'
 	mcce_params['DO_MONTE']='t'
+	mcce_params['EXTRA']=mcce_params['MCCE_HOME']+'/extra.tpl'
+	mcce_params['RENAME_RULES']=mcce_params['MCCE_HOME']+'/name.txt'
 	mcce_params['EPSILON_PROT']='8.0'
 	mcce_params['TITR_TYPE']='ph'
 	mcce_params['TITR_PH0']='7.0'
@@ -95,6 +92,7 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
 	mcce_params['RADIUS_PROBE']='1.4'
 	mcce_params['IONRAD']='2.0'
 	mcce_params['SALT']='0.15'
+	mcce_params['DELPHI_EXE']=mcce_params['MCCE_HOME']+'/bin/delphi'
 	mcce_params['BIG_PAIRWISE']='5.0'
 	mcce_params['MONTE_SEED']='-1'
 	mcce_params['MONTE_T']='298.15'
@@ -108,47 +106,13 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
 	mcce_params['NSTATE_MAX']='1000000'
 	mcce_params['DELPHI_START']='1'
 	mcce_params['DELPHI_END']='99999'
-	
-	if fromfile != None:
-	    # read the params from the chosen file
-	    if os.exists(fromfile):
-	        fileparams = read_paramfile(fromfile)
- 
-        # merge these parms with the PDB- and MCCE-LOCATION-dependent fields
-	mcce_params['MCCE_HOME']=mcce_location
-	mcce_params['INPDB']=pdbpath
-	mcce_params['EXTRA']=mcce_params['MCCE_HOME']+'/extra.tpl'
-	mcce_params['RENAME_RULES']=mcce_params['MCCE_HOME']+'/name.txt'
-	mcce_params['DELPHI_EXE']=mcce_params['MCCE_HOME']+'/bin/delphi'
-	    		
-        # set any xtra parameters we specify
-	for key in xtraprms.keys():
-	    mcce_params[key]=xtraprms[key]
-	    		
 	return mcce_params
 
 def print_prm(mcceparams):
 	"""Test method to dump mcceparams dictionary to screen"""
-	sorted = mcceparams.keys()
-	print sorted
-	sorted.sort()
-	for i in sorted:
-            print '%-20s%s'%(mcceparams[i]," ("+i+")")
+	for i in mcceparams.keys():
+		print mcceparams[i]+" ("+i+")"
 
-def read_paramfile(paramfile):
-	"""Reads in a MCCE param file and returns a dictionary of all the fields found"""
-	
-	params = {}
-	fin = open(paramfile,'r')
-	for line in fin.readlines():
-	    print 'line', line	
-            fields = line.split()
-	    if len(fields) > 1:
-	      if (fields[-1][0] == '(' ) & (fields[-1][-1] == ')'):
-		params[ fields[-1][1:-1] ] = fields[0] 
-	fin.close()				   
-        return params
-         
 def run_mcce(mcceparams):
 	"""Runs MCCE in the current directory, using run parameters
 		given in variable mcceparams (from the paramgen function).
@@ -238,11 +202,7 @@ def rename_termini(npdb):
 			npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
 	for j in [-1,-2]:
 		for i in range(len(npdb[j])):
-		        #VV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
-			if ctrname=='LYN':	
-			    npdb[j][i] = npdb[j][i][0:17]+'CLYP'+npdb[j][i][21:]
-		        else:	
-			    npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
+			npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
                         #DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
                         #Adding the below to do the renaming.
                         if npdb[j][i][13:16].split()[0]=='O':
@@ -395,24 +355,17 @@ def pdb_cleanup(pdbarr):
 		
 	return unnest_pdb(npdb)
 	
-def protonation_state(pdbfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={}):
+def protonation_state(pdbfile,ph,mccepath,cleanup=True):
 	"""Finds the ML protonation state of a given PDB file at a
 		given pH by running MCCE.
 		Returns: list containing lines of the output PDB file"""
-	
+        cwd=os.getcwd()
         #Convert PDB file name to path, as paramgen expects an absolute path
-        pdbpath=os.path.join(os.getcwd(),pdbfile)
-	print 'pdbpath', pdbpath
-	
+        pdbpath=os.path.join(cwd,pdbfile)
 	# Set up the parameters for the MCCE run
-	params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
-	
-	# FOR TESTING -- do a titration curve:
-	#params['TITR_PH0']=str(ph)
-	#params['TITR_STEPS']="1"
-	params['TITR_PH0']="0.0"
-	params['TITR_PHD']="1.0" #pH titration interval (i.e. stepsize)
-	params['TITR_STEPS']="15"
+	params=paramgen(pdbpath,mccepath)
+	params['TITR_PH0']=str(ph)
+	params['TITR_STEPS']="1"
 	
 	# Create a temporary directory and run MCCE
 	tempdir=tempfile.mkdtemp();
@@ -426,48 +379,21 @@ def protonation_state(pdbfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={
 #	raw_input("about to clean house...")
 	
 	# clean up the temp dir
-	# In the OLD version of MMCE: There should only be files, no subdirs --Imran(?)
-	# BUT, in mcce2.2:            There is an "energies" subdir -- added lines to remove these --vv
+	# There should only be files, no subdirs
 	if (cleanup):
-                cwd = os.getcwd()
-                os.chdir(tempdir)
 		for i in os.listdir(tempdir):
-                    thisdir = os.path.join(tempdir,i) 
-                    if os.path.isdir(thisdir):
-                        for j in os.listdir(thisdir):
-                           os.unlink(os.path.join(thisdir,j))
-                        os.rmdir(thisdir) 
-                    else:
-                        print 'removing', i, '...'
-		        os.unlink(thisdir)
+			os.unlink(i)
 		os.chdir(cwd)
 		os.rmdir(tempdir)
 	
 	return pdbarr
 
-def protonatePDB(pdbfile,outfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={}):
-	"""Reads in a pdb  file, finds the ML protonation,. writes to output PDB file"""
-	
-	thisdir = os.getcwd()
-	pdbarr = protonation_state(pdbfile,ph,mccepath,cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
-
-        # Write PDB file name to absolute path
-        outpath=os.path.join(thisdir,outfile)
-	fout = open(outpath,'w')
-	for line in pdbarr:
-	    fout.write(line+'\n')
-	fout.close()	   
-	
-	
 def ps_processmcce(tempdir):
 	"""Handles the file processing work for protonation_state"""
 	# Build and use a regex to grab the appropriate entries from the MCCE PDB
 	sstr,neut,pos,neg=ps_mostlikely(tempdir)
 	rx=re.compile(sstr)
 	print "searchstring: \"",sstr
-	print "neut: \"",neut
-	print "pos: \"",pos
-	print "neg: \"",neg
 	f=open(tempdir+"/step2_out.pdb","rt")
 	pdbarr=filter(lambda x:rx.search(x),f.readlines())
 	f.close()
