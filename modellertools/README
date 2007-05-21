@@ -1,38 +1,10 @@
-README
-
-Last updated: May 15, 2007
-
-REQUIREMENTS
-
-    *  MODELLER 9v1 ( http://salilab.org/modeller/ ) must be installed on your machine
-
-INSTALLATION
-
-    1) put the "modlib" directory (e.g. /Library/modeller-9v1/modlib/ ) in your PYTHONPATH.
-       This directory contains the python modules needed by mmtools/modellertools
-
-    2) copy the files
-
-           mmtools/modellertools/lib/*.lib
-
-       to modlib directory in the Modeller folder.  Just overwrite the files that are already there.
-
-       As of this writing, these contain CHARMM-style residue parameters enabling MODELLER to 
-       build models using the following (one-letter abbrev) non-canonical residues:
-
-           dX	        D-amino acid version of residue X	
-	   n		norleucine
- 
-
-PACKAGE CONTENTS
-
+Contents:
 -  Model_PDB.py - contains code for homology modeling using Modeller
 -  single_driver.py - code for testing Model_PDB on a single target/template specified as command line arguments
 -  driver.py - code for testing all of the targets/tempates for the submicrosecond folders project
 -  *.seq - one-letter sequences I used for testing
 -  ????.pdb - PDB databank structures for all of our targets
 -  ????_*.pdb - PDB outputs for each target
-
-Greg Bowman
-gbowman@stanford.edu
+-  top_heav.lib - new amino acid definitions for Modeller.  Should be put in your modeller-9v1/modlib directory.  L-amino acids are unchanged.  Added in D-amino acids with the same one letter codes as their L-counterparts, but in lower case.  Many improper constraints were removed to allow the D-form.  Only dALA and dPRO have been tested, others should be tested for proper chirality before use.  J and j and used to designate the L and D forms of norleucine.  PDB names are the same for both L and D forms.  For example, both dALA and lALA will appear as just ALA in the pdb file output by Modeller.
+-  restyp.lib - new amino acid list.  Should be put in your modeller-9v1/modlib directory as well.
 

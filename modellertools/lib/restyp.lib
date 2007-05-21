@@ -71,8 +71,27 @@ ATOM   | VAL                 | V |   | VAL  | valine
 ATOM   | TRP                 | W |   | TRP  | tryptophan
 ATOM   | TYR                 | Y |   | TYR  | tyrosine
 ATOM   | GAP                 | - |   | GAP  | an alignment gap
-ATOM   | dALA                | d |   | dALA | alanine
-ATOM   | NLE                 | n |   | NLE  | norleucine
+ATOM   | ALA                 | a |   | dALA | d-alanine
+ATOM   | CYS CSH             | c |   | dCYS | d-cysteine
+ATOM   | ASP                 | d |   | dASP | d-aspartic acid, +1
+ATOM   | GLU                 | e |   | dGLU | d-glutamic acid, +1
+ATOM   | PHE                 | f |   | dPHE | d-phenylalanine
+ATOM   | HIS                 | h |   | dHIS | d-histidine, neutral, proton on ND1 (HSD originally)
+ATOM   | ILE                 | i |   | dILE | d-isoleucine
+ATOM   | LYS                 | k |   | dLYS | d-lysine, +1
+ATOM   | LEU                 | l |   | dLEU | d-leucine
+ATOM   | MET                 | m |   | dMET | d-methionine
+ATOM   | ASN                 | n |   | dASN | d-asparagine
+ATOM   | PRO                 | p |   | dPRO | d-proline
+ATOM   | GLN                 | q |   | dGLN | d-glutamine
+ATOM   | ARG                 | r |   | dARG | d-arginine, +1
+ATOM   | SER                 | s |   | dSER | d-serine
+ATOM   | THR                 | t |   | dTHR | d-threonine
+ATOM   | VAL                 | v |   | dVAL | d-valine
+ATOM   | TRP                 | w |   | dTRP | d-tryptophan
+ATOM   | TYR                 | y |   | dTYR | d-tyrosine
+ATOM   | NLE                 | J |   | NLE  | norleucine
+ATOM   | NLE                 | j |   | dNLE | norleucine
 ATOM   | ASX                 | B | N | ASX  | ASP/ASN ambiguous
 ATOM   | GLX                 | Z | Q | GLX  | GLU/GLN ambiguous
 ATOM   | UNK                 | X | A | UNK  | unknown residue type

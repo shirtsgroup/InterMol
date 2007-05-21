@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import Model_PDB
+import modelPDB
 import sys
 
 # check have right number of inputs
@@ -15,7 +15,7 @@ outfile = "target.pdb"
 print "PDB File: " + pdb_file
 print "Sequence File: " + seq_file
 
-myModel = Model_PDB.Model_PDB()
-myModel.make_model(pdb_file, seq_file, outfile)
+myModel = modelPDB.ModelPDB()
+myModel.makeModel(pdb_file, seq_file, outfile)
 
 
