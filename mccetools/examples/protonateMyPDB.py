@@ -26,7 +26,8 @@ outpdbfile = os.path.join(os.curdir,'3gb1_out.pdb')
 pH = 7.0
 
 # Specify a MCCE parameter file with the desired set of parameters for calculating the pKa 
-prmfile = '/Users/vincentvoelz/scripts/mmtools/mccetools/prmfiles/run.prm.quick'
+prmfile = '../prmfiles/run.prm.quick'
+prmfile = os.path.abspath(prmfile)
 
 # Specify additional or different parameters than prmfile,  if desired.
 # xtraprms = {'TITR_PH0':'3.0'}

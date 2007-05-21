@@ -28,8 +28,8 @@ f        step 4: monte carlo sampling                       (DO_MONTE)
 Less modified entries
 ------------------------------------------------------------------------------
 8.0      Protein dielectric constant for DelPhi             (EPSILON_PROT)
-/home1/voelzv/mcce/extra.tpl                                (EXTRA)
-/home1/voelzv/mcce/name.txt MCCE renaming rule.             (RENAME_RULES)
+/usr/local/mcce/extra.tpl                                   (EXTRA)
+/usr/local/mcce/name.txt MCCE renaming rule.                (RENAME_RULES)
 
 ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 0.0      Initial pH                                         (TITR_PH0)
@@ -44,7 +44,7 @@ ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 #############################################################################
 MODIFYING FOLLOWING ENTRIES REQUIRE ADVANCED KNOWLEDGE:
 -----------------------------------------------------------------------------
-/home1/voelzv/mcce                                          (MCCE_HOME)
+/usr/local/mcce                                             (MCCE_HOME)
 t       Minimize output files                               (MINIMIZE_SIZE)
 
 Options specific to each step:
@@ -94,7 +94,7 @@ step 3:
 1.4      Radius of the probe                                (RADIUS_PROBE)
 2.0      Ion radius                                         (IONRAD)
 0.15     Salt                                               (SALT)
-/home1/voelzv/mcce/bin/delphi DelPhi executable             (DELPHI_EXE)
+/usr/local/mcce/bin/delphi DelPhi executable                (DELPHI_EXE)
 
 
 step 4:
