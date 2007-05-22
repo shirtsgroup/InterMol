@@ -26,6 +26,7 @@ class ionCalculator(object):
       gromacsSystem.prepare(outname='prod', os.path.abspath(os.curdir))      
     """        
 
+    # JDC: 'useff' might be named something more clear, like 'forcefieldName', or perhaps 'ffname'.
     def __init__(self, useff):
         # JDC: Added documentation on what required argument 'useff' signified.
         """Initialize the ion calculator given the gromacs forcefield of choice.
