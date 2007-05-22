@@ -119,13 +119,22 @@ class ionCalculator(object):
             print 'Only solvent=\'water\' is supported.  Exiting.'
             sys.exit(1)
 
-        # JDC: Should use Units clas for this.
+        # JDC: You should use Units class for computations like this.
+        # The calculation would be something like the following (if I understand what you're trying to do):
+        #
+        # import mmtools.utilities.Units as Units
+        # solventMass = 18.016 * Units.g / Units.mol
+        # solventDensity = 1.0 * Units.g / Units.cm**3
+        # solventConcentration = solventDensity / solventMass
+        # ionFraction = ionConcentration / solventConcentration        
+        #
+        # See how easy that is!!!
         waterGramPerMol = 18.016
         waterMolPerGram = 1./waterGramPerMol
         waterGramPerLiter = 1000.0
         waterMolPerLiter = waterMolPerGram * waterGramPerLiter
-                
-        # JDC: I scratched my head for a while and couldn't figure out what the quantity in parenthesis represented.  Maybe I'm just tired, but it would be much less confusing if you assigned it to a variable like 'numberOfIonsInBox' and then returned *this* variable instead.
+        
+        # JDC: I scratched my head for a while and couldn't figure out what the quantity in parenthesis represented.  Maybe I'm just tired, but it would be much less confusing if you assigned it to a variable like 'numberOfIonsInBox' and then returned *this* variable instead.        
         return (concentration/waterMolPerLiter)
 
         
