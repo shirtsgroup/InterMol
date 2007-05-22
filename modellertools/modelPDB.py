@@ -1,4 +1,18 @@
-#=============================================================================================# modelPDB.py## Uses Modeller to build PDB starting structures for molecular simulations.## Written 2007-05-20 by# Gregory R. Bowman <gbowman@stanford.edu># Biophysics Program, Stanford University# Pande group#=============================================================================================# TODO:#=============================================================================================# CVS VERSION CONTROL INFORMATION#=============================================================================================# GLOBAL IMPORTS
+#=============================================================================================
+# modelPDB.py
+#
+# Uses Modeller to build PDB starting structures for molecular simulations.
+#
+# Written 2007-05-20 by
+# Gregory R. Bowman <gbowman@stanford.edu>
+# Biophysics Program, Stanford University
+# Pande group
+#=============================================================================================
+# TODO:
+#=============================================================================================
+# CVS VERSION CONTROL INFORMATION
+#=============================================================================================
+# GLOBAL IMPORTS
 from modeller import *
 from modeller.automodel import *
 import os
