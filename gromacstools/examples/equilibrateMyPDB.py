@@ -22,15 +22,16 @@
 import mmtools.gromacstools.system as system
 import os, sys
 
-
 # SET UP A GROMACS SIMULATION
-pdbfile = 'test.pdb'
-forcefield = 'ffamber99p'
-salt = 'NaCl'			# supported types are in the <forcefield>.rtp file
-saltconc = 0.150		# molarity
+pdbfile = 'test.pdb'            # PDB file containing protein to solvate
+forcefield = 'ffamber99p'       # gromacs forcefield name to use for grompp
+salt = 'NaCl'			# salt pair for counterions - supported types are in the <forcefield>.rtp file
+saltconc = 0.150		# salt concentration in solution (Molarity) # JDC: Should use Units class for this after modifying ioncalc.py to use Units too.
 
 g = system.GromacsSystem(pdbfile, useff=forcefield)
-g.setup.setSaltConditions('NaCl', 0.150 )
+# g.setup.setSaltConditions('NaCl', 0.150 )
+# JDC: Presumably you meant to use the variables you defined up there.
+g.setup.setSaltConditions(salt, saltconc)
 
 # prepare a system, writing TPR and GRO files, and *mdrun* script in the current directory
 thisdir = os.path.abspath( os.curdir )
