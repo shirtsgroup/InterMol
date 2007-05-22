@@ -3,7 +3,7 @@
 # Units.py
 #
 # Utility class to facilitate working with unit-attached numericial quantities.
-
+#
 # Written 2007-05-17
 # John D. Chodera <jchodera@gmail.com>
 # Department of Chemistry, Stanford University
@@ -11,16 +11,7 @@
 #
 #Inspired by Units.py from MMTK, by Konrad Hinsen.
 #=============================================================================================
-#CVS VERSION CONTROL INFORMATION
-__version__ = "$Revision: $"
-# $Source: $
-#=============================================================================================
 # TODO
-# - Fix dependencies for constants N_A and pi.
-# - Update documentation.
-# - Refer to NIST
-# - Give full names in addition to common abbreviations for all units.
-# - Split into separate scopes for SI, MKS, CGS, English, Common?
 # - Double-check units.
 #=============================================================================================
 """

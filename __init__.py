@@ -1,2 +1,2 @@
-__all__ = ["mccetools","modellertools","gromacstools"]
+__all__ = ["mccetools","modellertools","gromacstools","utilities"]
 
