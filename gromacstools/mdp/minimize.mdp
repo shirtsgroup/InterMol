@@ -1,0 +1,55 @@
+title               =  minimize-default
+cpp                 =  cpp
+
+integrator          =  steep
+nsteps              =  1000
+
+; Energy minimizing stuff
+emtol               =  100.0
+emstep              =  0.001
+
+comm_mode           =  none
+nstcomm             =  1
+nstxout             =  0
+nstvout             =  0
+nstfout             =  0
+nstlog              =  50000
+nstenergy           =  50000
+nstxtcout           =  50000
+xtc_grps            =  Protein
+nstlist             =  10
+ns_type             =  grid
+pbc                 =  xyz  ; means yes
+rlist               =  0.9
+rcoulomb            =  0.9
+coulombtype         =  Reaction-Field
+epsilon_r           =  80
+vdwtype             =  cut-off
+
+rvdw                =  0.9
+; Berendsen temperature coupling is on in two groups
+Tcoupl              =  berendsen
+tc-grps             =  Protein          Other
+tau_t               =  0.1              0.1      
+ref_t               =  308              308
+; Energy monitoring
+energygrps          =  Protein Other
+; Isotropic pressure coupling is now on
+;Pcoupl             =  no
+Pcoupltype          =  isotropic
+tau_p               =  1
+compressibility     =  4.5e-5
+ref_p               =  1.01325
+
+; Generate velocites is on at 300 K.
+gen_vel             =  no
+gen_temp            =  308
+gen_seed            =  173529
+
+; Duan-Kollman used hbonds not all-bonds
+; but we wanted to increase dt (earlier)
+; so I've always used all-bonds
+
+constraints = none
+constraint_algorithm = lincs
+4

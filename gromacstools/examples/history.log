@@ -1,0 +1,10 @@
+echo 9 | pdb2gmx -f test.pdb -o /tmp/tmp84V8B_/test.gro -p /tmp/tmp84V8B_/test.top -ignh
+editconf -bt cubic -f /tmp/tmp84V8B_/test.gro -o /tmp/tmp84V8B_/test_box.gro -d 0.9
+genbox -cp /tmp/tmp84V8B_/test_box.gro -cs ffamber_tip3p.gro -o /tmp/tmp84V8B_/test_solvated.gro -p /tmp/tmp84V8B_/test.top
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmp84V8B_/test_solvated.gro -o /tmp/tmp84V8B_/test_solvated.tpr -p /tmp/tmp84V8B_/test.top -check14
+mdrun -v -s /tmp/tmp84V8B_/test_solvated.tpr -c /tmp/tmp84V8B_/test_solvated_afterem.gro 
+echo 12 | genion -s /tmp/tmp84V8B_/test_solvated.tpr -o /tmp/tmp84V8B_/test_ions.gro -pname Na -np 13 -pq 1 -nname Cl -nn 14 -nq -1 -g genion.log
+echo 9 | pdb2gmx -f /tmp/tmp84V8B_/test_ions.gro -o /tmp/tmp84V8B_/test_ions2.gro -p /tmp/tmp84V8B_/test_ions.top -ignh
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmp84V8B_/test_ions2.gro -o /tmp/tmp84V8B_/test_ions.tpr -p /tmp/tmp84V8B_/test_ions.top -check14
+mdrun -v -s /tmp/tmp84V8B_/test_ions.tpr -c /tmp/tmp84V8B_/test_ions_afterem.gro 
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/equilibrate.mdp -c /tmp/tmp84V8B_/test_ions_afterem.gro -o /tmp/tmp84V8B_/test_equil.tpr -p /tmp/tmp84V8B_/test_ions.top -check14
