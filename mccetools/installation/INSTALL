@@ -1,8 +1,10 @@
 - search for multi-conformer continuum electrostatics on google
 - go to mcce website and download version 2.2
-- copy mcce and delphi binaries into /usr/local/bin using sudo
+- cd to mcce-2.2 directory
 - comment out line that says "checkGLIB" in mcce_install
-- accept default install directory and add /usr/local/mcce/bin to path or create softlink with some other directory in your path
+- run ./mcce_install
+- accept default install directory and add /usr/local/mcce/bin to your PATH or create a softlink with some other directory in your path.  If you change the PATH make sure to run source.
+- copy the mcce and delphi executables from this installation directory to /usr/local/mcce/bin and make sure that they are executable (use chmod +x if necessary)
 - add the following line to your bash_profile and run source .bash_profile
    export MCCE_LOCATION="/usr/local/mcce"
 
