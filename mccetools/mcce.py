@@ -174,7 +174,8 @@ def run_mcce(mcceparams):
                 runfile.write(mcceparams[i]+" ("+i+")\n")
         runfile.close()
         output=commands.getoutput(mcceparams['MCCE_HOME']+"/bin/mcce")
-        os.unlink("run.prm")
+        print output
+        # os.unlink("run.prm")
         return output
 
 def ps_mostlikely(fort38path):
@@ -407,12 +408,14 @@ def pdb_cleanup(pdbarr):
                         npdb[i][j] = atom
                 
         return unnest_pdb(npdb)
-        
-def protonation_state(pdbfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={}):
-        """Finds the ML protonation state of a given PDB file at a
-                given pH by running MCCE.
-                Returns: list containing lines of the output PDB file"""
-        
+
+    
+    
+    
+
+def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, xtraprms={}):
+        """Performs a pH titration on all titratable residues in a PDB file."""
+                      
         #Convert PDB file name to path, as paramgen expects an absolute path
         pdbpath=os.path.join(os.getcwd(),pdbfile)
         print 'pdbpath', pdbpath
@@ -420,13 +423,12 @@ def protonation_state(pdbfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={
         # Set up the parameters for the MCCE run
         params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
         
-        # FOR TESTING -- do a titration curve:
-        #params['TITR_PH0']=str(ph)
-        #params['TITR_STEPS']="1"
-        params['TITR_PH0']="0.0"
+        params['TITR_PH0']=str(pH)
         params['TITR_PHD']="1.0" #pH titration interval (i.e. stepsize)
-        params['TITR_STEPS']="15"
+        params['TITR_STEPS']="1"
         
+       
+    
         # Create a temporary directory and run MCCE
         tempdir=tempfile.mkdtemp();
         print "Running MCCE in temporary directory %s..." % tempdir
@@ -458,11 +460,95 @@ def protonation_state(pdbfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={
         
         return pdbarr
 
-def protonatePDB(pdbfile,outfile,ph,mccepath,cleanup=True, prmfile=None, xtraprms={}):
+
+
+def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=None, xtraprms={}):
+        """Performs a pH titration on all titratable residues in a PDB file."""
+                
+       
+        #Convert PDB file name to path, as paramgen expects an absolute path
+        pdbpath=os.path.join(os.getcwd(),pdbfile)
+        print 'pdbpath', pdbpath
+        
+        # Set up the parameters for the MCCE run
+        params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
+        
+        # FOR TESTING -- do a titration curve:
+        params['TITR_PH0']=str(pHstart)
+        params['TITR_PHD']=str(pHstep)
+        params['TITR_STEPS']=str(pHiters)
+        
+        # Create a temporary directory and run MCCE
+        tempdir=tempfile.mkdtemp();
+        print "Running MCCE in temporary directory %s..." % tempdir
+        os.chdir(tempdir)
+        run_mcce(params)
+
+        pdbarr = ps_processMCCETitration(tempdir)
+
+        # Generate a breakpoint for interactive testing...
+#       raw_input("about to clean house...")
+        
+        # clean up the temp dir
+        # In the OLD version of MMCE: There should only be files, no subdirs --Imran(?)
+        # BUT, in mcce2.2:            There is an "energies" subdir -- added lines to remove these --vv
+        if (cleanup):
+                cwd = os.getcwd()
+                os.chdir(tempdir)
+                for i in os.listdir(tempdir):
+                    thisdir = os.path.join(tempdir,i) 
+                    if os.path.isdir(thisdir):
+                        for j in os.listdir(thisdir):
+                           os.unlink(os.path.join(thisdir,j))
+                        os.rmdir(thisdir) 
+                    else:
+                        print 'removing', i, '...'
+                        os.unlink(thisdir)
+                os.chdir(cwd)
+                os.rmdir(tempdir)
+        
+        return pdbarr
+
+
+
+
+def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, xtraprms={}):
         """Reads in a pdb  file, finds the ML protonation,. writes to output PDB file"""
         
         thisdir = os.getcwd()
-        pdbarr = protonation_state(pdbfile,ph,mccepath,cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
+        pdbarr = protonation_state(pdbfile,pH,mccepath,cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
+
+        # Write PDB file name to absolute path
+        outpath=os.path.join(thisdir,outfile)
+        fout = open(outpath,'w')
+        for line in pdbarr:
+            fout.write(line+'\n')
+        fout.close()       
+
+        
+def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=None, xtraprms={}):
+        """Performs a pH titration on all titratable residues in a PDB file.
+
+    REQUIRED ARGUMENTS
+        pdbfile           The path to the PDB file used as input for MCCE.  Must be ABSOLUTE path  
+        outfile           File to write the resilts of the pH titration calculation
+        pHstart           pH value to start the titration
+        pHstep            \Delta(pH) step size to increment the pH during titration
+        pHiters           Number of total pH values to calculate,  including the startng pH and ending pH
+                             
+    OPTIONAL ARGUMENTS
+        cleanup           If cleanup=True, ccleanup the temporary working dir for the MCCE calculations
+        prmfile           If specified, will read MCCE parameters from file instead of default 
+        xtraprms          Any additional extra MCCE parameters to be defined (overriding those from file or default)
+                          These are specified as a dictionary of strings, e.g.:   {'MONTE_NEQ':'300'}
+   
+    RETURNS
+    
+        None              (writes outfile to disk))
+    """
+
+        thisdir = os.getcwd()
+        pdbarr = titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
 
         # Write PDB file name to absolute path
         outpath=os.path.join(thisdir,outfile)
@@ -504,3 +590,18 @@ def ps_processmcce(tempdir):
         pdbarr=rename_residues(pdbarr)
         pdbarr=pdb_cleanup(pdbarr)
         return pdbarr
+
+def ps_processMCCETitration(tempdir):
+        """For now, handles the file processing work for titrate()"""
+        
+        fin = open(os.path.join(tempdir,'pK.out'),'r')
+        lines = fin.readlines()
+        fin.close()
+
+        fin = open(os.path.join(tempdir,'fort.38'),'r')
+        lines += fin.readlines()
+        fin.close()
+
+        return lines
+            
+            
