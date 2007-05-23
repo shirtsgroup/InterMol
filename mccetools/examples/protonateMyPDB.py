@@ -38,7 +38,7 @@ mcce.print_prm(params)
 
 # Write output PDB file with the correct protonation state 
 ### work is done in a temporary dir; Setting cleanup=True will erase these temporary files 
-mcce.protonatePDB(pdbfile, outpdbfile, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmfile)
+mcce.protonatePDB(pdbfile, outpdbfile, pH, os.environ['MCCE_LOCATION'], cleanup=False, prmfile=prmfile)
 
 
 
