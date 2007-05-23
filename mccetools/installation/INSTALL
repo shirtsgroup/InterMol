@@ -4,7 +4,8 @@
 - comment out line that says "checkGLIB" in mcce_install
 - run ./mcce_install
 - accept default install directory and add /usr/local/mcce/bin to your PATH or create a softlink with some other directory in your path.  If you change the PATH make sure to run source.
-- copy the mcce and delphi executables from this installation directory to /usr/local/mcce/bin and make sure that they are executable (use chmod +x if necessary)
+- for OS X on intel machines copy the mcce and delphi executables from this installation directory to /usr/local/mcce/bin and make sure that they are executable (use chmod +x if necessary)
+  - this step shouldn't be necessary on other platforms, but we haven't tried it yet
 - add the following line to your bash_profile and run source .bash_profile
    export MCCE_LOCATION="/usr/local/mcce"
 

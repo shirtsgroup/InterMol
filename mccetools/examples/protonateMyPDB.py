@@ -20,7 +20,9 @@ import os, sys
 # Specify the input and output PDB filenames
 # NOTE: pdbfile and outpdbfile should be local (not absolute) paths for this project  
 pdbfile = '3gb1_testing.pdb'
-outpdbfile = os.path.join(os.curdir,'3gb1_out.pdb')
+#outpdbfile = os.path.join(os.curdir,'3gb1_out.pdb')
+#pdbfile = '1ENH_enhd.pdb'
+outpdbfile = os.path.join(os.curdir,'out.pdb')
 
 # Specify the pH
 pH = 7.0
