@@ -2,6 +2,7 @@
 - go to mcce website and download version 2.2
 - cd to mcce-2.2 directory
 - comment out line that says "checkGLIB" in mcce_install
+ - Note that this may not be necessary except on Intel Macs
 - run ./mcce_install
 - accept default install directory and add /usr/local/mcce/bin to your PATH or create a softlink with some other directory in your path.  If you change the PATH make sure to run source.
 - for OS X on intel machines copy the mcce and delphi executables from this installation directory to /usr/local/mcce/bin and make sure that they are executable (use chmod +x if necessary)
