@@ -9,6 +9,8 @@
   - this step shouldn't be necessary on other platforms, but we haven't tried it yet
 - add the following line to your bash_profile and run source .bash_profile
    export MCCE_LOCATION="/usr/local/mcce"
+- if using Fink then you're all set, if using Darwin ports then add the following to your .bash_profile and run source .bash_profile
+   export DYLD_LIBRARY_PATH=/opt/local/lib
 
 Note that you may have to chance some paths in the prm files to run the example.
 
