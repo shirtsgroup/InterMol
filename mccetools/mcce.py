@@ -550,11 +550,11 @@ def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=Tru
         thisdir = os.getcwd()
         pdbarr = titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
 
-        # Write PDB file name to absolute path
+        # Write pK.out file name to absolute path
         outpath=os.path.join(thisdir,outfile)
         fout = open(outpath,'w')
         for line in pdbarr:
-            fout.write(line+'\n')
+            fout.write(line.strip()+'\n')
         fout.close()       
         
         
