@@ -1,0 +1,36 @@
+Various tools useful for the the setup and analysis of molecular simulations of biomolecules.
+
+* ambertools
+
+Tools for interacting with programs from the AMBER molecular mechanics package, including Antechamber for the paramerterization of small molecules using GAFF.
+
+* converters
+
+Various converters for converting systems between molecular mechanics packages.
+
+* gromacstools
+
+Tools for interacting with the gromacs molecular mechanics package.
+
+* mccetools
+
+Tools for interacting with MCCE/Delphi for the selection of likely protonation states or pKa estimation.
+
+* modellertools
+
+Tools for modeling proteins from sequence and homologous structure.  Also useful for building in missing heavy atoms or residues in X-ray structures.
+
+* moltools
+
+Tools for dealing with small molecules.
+Requires the OEChem library from OpenEye.
+
+* tinkertools
+
+Tools for interacting with the Tinker molecular mechanics package.
+
+* utility
+
+Various utility classes with physical constants, units, etc.
+
+

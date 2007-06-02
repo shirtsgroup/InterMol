@@ -124,7 +124,7 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
     
     if fromfile != None:
         # read the params from the chosen file
-        if os.exists(fromfile):
+        if os.path.exists(fromfile):
             fileparams = read_paramfile(fromfile)
  
     # merge these parms with the PDB- and MCCE-LOCATION-dependent fields
@@ -154,7 +154,7 @@ def read_paramfile(paramfile):
         params = {}
         fin = open(paramfile,'r')
         for line in fin.readlines():
-            print 'line', line  
+            #print 'line', line  
             fields = line.split()
             if len(fields) > 1:
               if (fields[-1][0] == '(' ) & (fields[-1][-1] == ')'):
@@ -471,7 +471,7 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         print 'pdbpath', pdbpath
         
         # Set up the parameters for the MCCE run
-        params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
+        params=paramgen(pdbpath,mccepath, fromfile=prmfile, xtraprms=xtraprms)
         
         # FOR TESTING -- do a titration curve:
         params['TITR_PH0']=str(pHstart)

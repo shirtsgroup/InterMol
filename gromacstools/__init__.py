@@ -1,2 +1,2 @@
-__all__ = ["system","modeller"]
+__all__ = ["system","modeller","Ion","IonCalculator"]
 
