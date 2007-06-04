@@ -147,7 +147,7 @@ Optional argument: Take amoebaname of molecule. Otherwise looks for amoeba param
    #Store amoeba types for atoms
    amoeba_types=[]
    for atom in mol.GetAtoms():
-     print "\nPlease choose AMOEBA atom type for atom %s with type %s, from the following options:" % (atom.GetType(), atom.GetName())
+     print "\nPlease choose AMOEBA atom type for atom name %s with type %s, from the following options:" % (atom.GetName(), atom.GetType())
      keys = amoeba_key_to_type.keys()
      keys.sort()
      for key in keys:
@@ -158,6 +158,7 @@ Optional argument: Take amoebaname of molecule. Otherwise looks for amoeba param
        type = int( raw_input() )
      if not amoeba_key_to_type.values().count(type)==1: raise TypeError
      amoeba_types.append(type)
+     print "Using type: %s" % type
    
 
         
@@ -576,7 +577,8 @@ OPTIONAL INPUT:
 - boxsize, as used in setting up xyz file. Used in determining a-axis setting (which is set using box size plus 5%). Default: 24A.
 - nsteps: Number of timesteps of constant pressure equilibration to run (units 1 fs). Default: 50000.
   """
-  
+  startdir = os.getcwd()  
+
   if not os.path.exists(workdir): os.mkdir(workdir) 
   os.system('cp %s %s' % (xyzfile, os.path.join(workdir,'mol.xyz') ))
   os.system('cp %s %s' % (prmfile, os.path.join(workdir,'prmfile') ))
@@ -613,7 +615,8 @@ OPTIONAL INPUT:
   #Run
   os.system('chmod 755 run_equilib.sh')
   os.system('./run_equilib.sh')
-
+  #Back to original dir
+  os.chdir(startdir)
   
 
 def stripatoms(atomlist,filein, fileout):
