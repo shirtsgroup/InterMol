@@ -258,8 +258,12 @@ class GromacsSystem:
       cwd = os.path.abspath(os.curdir)  ### remember our original location
       print 'cwd', cwd
     else:
-      cwd = outdir
-      
+      cwd = os.path.abspath(outdir)
+    
+    # specified outdir needs to be absolute to avoid copying errors with command.getoutput()
+    outdir = os.path.abspath(outdir)
+    
+    # specify default outfile name as 'out'
     if outname == None:
       outname = 'out'
       
@@ -322,18 +326,24 @@ class GromacsSystem:
 	self.rungmx( grompp )
  		
         # copy the necessary files to start an MD run back to the original curdir
+	print
+	print 'Copying the *.gro, *.tpr, and equilibration script to outdir=',outdir,'...'
 	
 	### the GRO file
 	out_grofile = os.path.join(outdir,outname+'.gro')
-	cmdout = commands.getoutput( 'cp %s %s'%(self.grofile_ions_afterem, out_grofile) )
+	copycmd = 'cp %s %s'%(self.grofile_ions_afterem, out_grofile)
+	if (self.verbose):
+	  print copycmd 
+	cmdout = commands.getoutput( copycmd )
 	if self.verbose==True:
 	    print cmdout
 	    
 	### the TPR file
 	out_tprfile = os.path.join(outdir,outname+'.tpr')
-	cmdout = commands.getoutput( 'cp %s %s'%(self.tprfile_equil, out_tprfile) )
-	if self.verbose==True:
-	    print cmdout
+        copycmd = 'cp %s %s'%(self.tprfile_equil, out_tprfile)
+	if (self.verbose): print copycmd 
+        cmdout = commands.getoutput( copycmd )
+	if (self.verbose): print cmdout
 	    
         ### the mdrun script
 	equilibrate = 'mdrun -v -s %s -c %s '%( out_tprfile, out_grofile )
@@ -446,6 +456,7 @@ class GromacsSystem:
     nwaters = None
     while ( (len(lines) > 0) & (foundit==False)):
        fields = lines.pop().split()
+       print 'fields', fields       
        if fields[0] == 'SOL':
 	   nwaters = int(fields[1])
 	   foundit = True
