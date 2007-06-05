@@ -124,7 +124,7 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
     
     if fromfile != None:
         # read the params from the chosen file
-        if os.path.exists(fromfile):
+        if os.exists(fromfile):
             fileparams = read_paramfile(fromfile)
  
     # merge these parms with the PDB- and MCCE-LOCATION-dependent fields
@@ -137,7 +137,7 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
     # set any xtra parameters we specify
     for key in xtraprms.keys():
         mcce_params[key]=xtraprms[key]
-                        
+    print_prm(mcce_params)                    
     return mcce_params
 
 def print_prm(mcceparams):
@@ -154,7 +154,7 @@ def read_paramfile(paramfile):
         params = {}
         fin = open(paramfile,'r')
         for line in fin.readlines():
-            #print 'line', line  
+            print 'line', line  
             fields = line.split()
             if len(fields) > 1:
               if (fields[-1][0] == '(' ) & (fields[-1][-1] == ')'):
@@ -252,17 +252,23 @@ def rename_termini(npdb):
                         npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
         for j in [-1,-2]:
                 for i in range(len(npdb[j])):
-                        #VV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
+                        #VAV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
                         if ctrname=='LYN':      
                             npdb[j][i] = npdb[j][i][0:17]+'CLYP'+npdb[j][i][21:]
                         else:   
                             npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
+                            
                         #DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
                         #Adding the below to do the renaming.
                         if npdb[j][i][13:16].split()[0]=='O':
                           npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
                         elif npdb[j][i][13:16].split()[0]=='OXT':
                           npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
+        
+                        #VAV 6/5/2007: gmx ffamber doesn't have "CD1" as an ILE/CILE atomname, only "CD"
+                        if ctrname=='ILE':      
+                          if npdb[j][i][13:16].split()[0]=='CD1':
+                            npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
         
 def nest_pdb(pdbarr):
         nestedpdb=[]
@@ -471,9 +477,9 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         print 'pdbpath', pdbpath
         
         # Set up the parameters for the MCCE run
-        params=paramgen(pdbpath,mccepath, fromfile=prmfile, xtraprms=xtraprms)
+        params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
         
-        # FOR TESTING -- do a titration curve:
+        # Calculate a titration curve with the following parameters
         params['TITR_PH0']=str(pHstart)
         params['TITR_PHD']=str(pHstep)
         params['TITR_STEPS']=str(pHiters)
@@ -487,7 +493,7 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         pdbarr = ps_processMCCETitration(tempdir)
 
         # Generate a breakpoint for interactive testing...
-#       raw_input("about to clean house...")
+        # raw_input("about to clean house...")
         
         # clean up the temp dir
         # In the OLD version of MMCE: There should only be files, no subdirs --Imran(?)
