@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       Great Red Owns Many ACres of Sand 
+               Giving Russians Opium May Alter Current Situation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -16,8 +16,8 @@
 Option     Filename  Type          Description
 ------------------------------------------------------------
   -f       test.pdb  Input         Generic structure: gro g96 pdb tpr tpb tpa
-  -o /tmp/tmp84V8B_/test.gro  Output        Generic structure: gro g96 pdb
-  -p /tmp/tmp84V8B_/test.top  Output        Topology file
+  -o /tmp/tmp5r9TQr/test.gro  Output        Generic structure: gro g96 pdb
+  -p /tmp/tmp5r9TQr/test.top  Output        Topology file
   -i      posre.itp  Output        Include file for topology
   -n      clean.ndx  Output, Opt.  Index file
   -q      clean.pdb  Output, Opt.  Generic structure: gro g96 pdb
@@ -82,7 +82,7 @@ Writing topology
 
 Writing coordinate file...
 
-gcq#49: "I Am Testing Your Grey Matter" (Red Hot Chili Peppers)
+gcq#203: "Take Dehydrated Water On Your Desert Trips" (Space Quest III)
 
 Reading test.pdb...
 Read 106 atoms
@@ -114,7 +114,7 @@ C-terminus: none
 Now there are 13 residues with 230 atoms
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       Great Red Owns Many ACres of Sand 
+               Giving Russians Opium May Alter Current Situation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -129,10 +129,10 @@ Now there are 13 residues with 230 atoms
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /tmp/tmp84V8B_/test.gro  Input         Generic structure: gro g96 pdb tpr
+  -f /tmp/tmp5r9TQr/test.gro  Input         Generic structure: gro g96 pdb tpr
                                    tpb tpa
   -n      index.ndx  Input, Opt.   Index file
-  -o /tmp/tmp84V8B_/test_box.gro  Output        Generic structure: gro g96 pdb
+  -o /tmp/tmp5r9TQr/test_box.gro  Output        Generic structure: gro g96 pdb
  -bf      bfact.dat  Input, Opt.   Generic data file
 
       Option   Type  Value  Description
@@ -165,7 +165,7 @@ Option     Filename  Type          Description
       -label string      A  Add chain label for all residues
 
 
-gcq#49: "I Am Testing Your Grey Matter" (Red Hot Chili Peppers)
+gcq#203: "Take Dehydrated Water On Your Desert Trips" (Space Quest III)
 
 Read 230 atoms
 No velocities found
@@ -182,7 +182,7 @@ new box angles  :  90.00  90.00  90.00 (degrees)
 new box volume  : 159.84               (nm^3)
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       Great Red Owns Many ACres of Sand 
+               Giving Russians Opium May Alter Current Situation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -197,14 +197,14 @@ new box volume  : 159.84               (nm^3)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
- -cp /tmp/tmp84V8B_/test_box.gro  Input, Opt!   Generic structure: gro g96 pdb
+ -cp /tmp/tmp5r9TQr/test_box.gro  Input, Opt!   Generic structure: gro g96 pdb
                                    tpr tpb tpa
  -cs ffamber_tip3p.gro  Input, Opt!, Lib.  Generic structure: gro g96 pdb tpr
                                    tpb tpa
  -ci     insert.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -o /tmp/tmp84V8B_/test_solvated.gro  Output        Generic structure: gro g96
+  -o /tmp/tmp5r9TQr/test_solvated.gro  Output        Generic structure: gro g96
                                    pdb
-  -p /tmp/tmp84V8B_/test.top  In/Out, Opt!  Topology file
+  -p /tmp/tmp5r9TQr/test.top  In/Out, Opt!  Topology file
 
       Option   Type  Value  Description
 ------------------------------------------------------
@@ -219,7 +219,7 @@ Option     Filename  Type          Description
       -shell   real      0  thickness of optional water layer around solute
 
 Reading solute configuration
-Great Red Owns Many ACres of Sand 
+Giving Russians Opium May Alter Current Situation
 Containing 230 atoms in 13 residues
 Initialising van der waals distances...
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/vdwradii.dat
@@ -243,8 +243,8 @@ Checking Protein-Solvent overlap: tested 6523 pairs, removed 264 atoms.
 Checking Solvent-Solvent overlap: tested 227487 pairs, removed 2739 atoms.
 Added 5218 molecules
 Generated solvent containing 15654 atoms in 5218 residues
-Writing generated configuration to /tmp/tmp84V8B_/test_solvated.gro
-Great Red Owns Many ACres of Sand 
+Writing generated configuration to /tmp/tmp5r9TQr/test_solvated.gro
+Giving Russians Opium May Alter Current Situation
 
 Output configuration contains 15884 atoms in 5231 residues
 WARNING: masses will be determined based on residue and atom names,
@@ -256,9 +256,9 @@ Number of SOL molecules:   5218
 
 Processing topology
 
-Back Off! I just backed up /tmp/tmp84V8B_/test.top to /tmp/tmp84V8B_/#test.top.1#
+Back Off! I just backed up /tmp/tmp5r9TQr/test.top to /tmp/tmp5r9TQr/#test.top.1#
 
-gcq#230: "Wild Pointers Couldn't Drag Me Away" (K.A. Feenstra)
+gcq#96: "Exactly" (Pulp Fiction)
 
 Table routines are used for coulomb: FALSE
 Table routines are used for vdw:     FALSE
@@ -274,20 +274,20 @@ There are 0 molecules, 41702 charge groups and 41702 atoms
 There are 0 optimized solvent molecules on node 0
 There are 0 optimized water molecules on node 0
 Grid: 22 x 22 x 22 cells
-Adding line for 5218 solute molecules to topology file (/tmp/tmp84V8B_/test.top)
+Adding line for 5218 solute molecules to topology file (/tmp/tmp5r9TQr/test.top)
 Option     Filename  Type          Description
 ------------------------------------------------------------
   -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp  Input,
                                    Opt!   grompp input file with MD parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmp84V8B_/test_solvated.gro  Input         Generic structure: gro g96
+  -c /tmp/tmp5r9TQr/test_solvated.gro  Input         Generic structure: gro g96
                                    pdb tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmp84V8B_/test.top  Input         Topology file
+  -p /tmp/tmp5r9TQr/test.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmp84V8B_/test_solvated.tpr  Output        Generic run input: tpr tpb
+  -o /tmp/tmp5r9TQr/test_solvated.tpr  Output        Generic run input: tpr tpb
                                    tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
@@ -316,7 +316,7 @@ Generating 1-4 interactions: fudge = 0.5
 Generated 2628 of the 2628 1-4 parameter combinations
 Excluding 3 bonded neighbours for Protein             1
 Excluding 1 bonded neighbours for SOL              5218
-WARNING 1 [file "/tmp/tmp84V8B_/test.top", line 2110]:
+WARNING 1 [file "/tmp/tmp5r9TQr/test.top", line 2110]:
   System has non-zero total charge: 1.000000e+00
 
 Removed 0 1-4 interactions for molecule SOL
@@ -350,11 +350,11 @@ Checking consistency between energy and charge groups...
 writing run input file...
 There was 1 warning
 
-gcq#230: "Wild Pointers Couldn't Drag Me Away" (K.A. Feenstra)
+gcq#186: "Have a Nice Day" (R. McDonald)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-               Go Rough, Oppose Many Angry Chinese Serial killers
+                      GROwing Monsters And Cloning Shrimps
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -384,7 +384,7 @@ Analysing Protein...
 Analysing Other...
                          :-)  G  R  O  M  A  C  S  (-:
 
-               Go Rough, Oppose Many Angry Chinese Serial killers
+                  Green Red Orange Magenta Azure Cyan Skyblue
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -399,11 +399,11 @@ Analysing Other...
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmp84V8B_/test_solvated.tpr  Input         Generic run input: tpr tpb
+  -s /tmp/tmp5r9TQr/test_solvated.tpr  Input         Generic run input: tpr tpb
                                    tpa
   -o       traj.trr  Output        Full precision trajectory: trr trj
   -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmp84V8B_/test_solvated_afterem.gro  Output        Generic structure:
+  -c /tmp/tmp5r9TQr/test_solvated_afterem.gro  Output        Generic structure:
                                    gro g96 pdb
   -e       ener.edr  Output        Generic energy: edr ene
   -g         md.log  Output        Log file
@@ -441,8 +441,8 @@ Option     Filename  Type          Description
                             bombardment on your system
 
 Getting Loaded...
-Reading file /tmp/tmp84V8B_/test_solvated.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmp84V8B_/test_solvated.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_solvated.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_solvated.tpr, VERSION 3.1.4 (single precision)
 Loaded with Money
 
 Steepest Descents:
@@ -487,11 +487,11 @@ Steepest Descents did not converge in 44 steps
   Potential Energy  = -1.96162e+05
 Maximum force:  2.48338e+03
 
-gcq#16: "Stop Drinking My Beer !" (The Amps)
+gcq#170: "When It Starts to Start It'll Never Stop" (Magnapop)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-               GRoups of Organic Molecules in ACtion for Science
+                               Grunge ROck MAChoS
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -506,10 +506,10 @@ gcq#16: "Stop Drinking My Beer !" (The Amps)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmp84V8B_/test_solvated.tpr  Input         Generic run input: tpr tpb
+  -s /tmp/tmp5r9TQr/test_solvated.tpr  Input         Generic run input: tpr tpb
                                    tpa
   -n      index.ndx  Input, Opt.   Index file
-  -o /tmp/tmp84V8B_/test_ions.gro  Output        Generic structure: gro g96 pdb
+  -o /tmp/tmp5r9TQr/test_ions.gro  Output        Generic structure: gro g96 pdb
   -g     genion.log  Output        Log file
 -pot        pot.pdb  Output, Opt.  Protein data bank file
 
@@ -530,8 +530,8 @@ Option     Filename  Type          Description
        -seed    int   1993  Seed for random number generator
 
 WARNING: turning of free energy, will use lambda=0
-Reading file /tmp/tmp84V8B_/test_solvated.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmp84V8B_/test_solvated.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_solvated.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_solvated.tpr, VERSION 3.1.4 (single precision)
 Using a coulomb cut-off of 0.9 nm
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
 Group     0 (      System) has 15884 elements
@@ -605,12 +605,12 @@ Doing single force calculation...
 Replacing solvent molecule 4469 (atom 13637) with Cl
 
 
-gcq#90: "I Don't Want to Catch Anybody Not Drinking." (Monty Python)
+gcq#47: "I Wonder, Should I Get Up..." (J. Lennon)
 
 Select a continuous group of solvent molecules
                          :-)  G  R  O  M  A  C  S  (-:
 
-                      GROwing Monsters And Cloning Shrimps
+                       Great Red Owns Many ACres of Sand 
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -625,11 +625,11 @@ Select a continuous group of solvent molecules
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /tmp/tmp84V8B_/test_ions.gro  Input         Generic structure: gro g96 pdb
+  -f /tmp/tmp5r9TQr/test_ions.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
-  -o /tmp/tmp84V8B_/test_ions2.gro  Output        Generic structure: gro g96
+  -o /tmp/tmp5r9TQr/test_ions2.gro  Output        Generic structure: gro g96
                                    pdb
-  -p /tmp/tmp84V8B_/test_ions.top  Output        Topology file
+  -p /tmp/tmp5r9TQr/test_ions.top  Output        Topology file
   -i      posre.itp  Output        Include file for topology
   -n      clean.ndx  Output, Opt.  Index file
   -q      clean.pdb  Output, Opt.  Generic structure: gro g96 pdb
@@ -665,7 +665,7 @@ Option     Filename  Type          Description
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/xlateat.dat
 13 out of 13 lines of xlateat.dat converted succesfully
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
-No occupancies in /tmp/tmp84V8B_/test_ions.gro
+No occupancies in /tmp/tmp5r9TQr/test_ions.gro
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/FF.dat
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.atp
 Atomtype 1Atomtype 2Atomtype 3Atomtype 4Atomtype 5Atomtype 6Atomtype 7Atomtype 8Atomtype 9Atomtype 10Atomtype 11Atomtype 12Atomtype 13Atomtype 14Atomtype 15Atomtype 16Atomtype 17Atomtype 18Atomtype 19Atomtype 20Atomtype 21Atomtype 22Atomtype 23Atomtype 24Atomtype 25Atomtype 26Atomtype 27Atomtype 28Atomtype 29Atomtype 30Atomtype 31Atomtype 32Atomtype 33Atomtype 34Atomtype 35Atomtype 36Atomtype 37Atomtype 38Atomtype 39Atomtype 40Atomtype 41Atomtype 42Atomtype 43Atomtype 44Atomtype 45Atomtype 46Atomtype 47Atomtype 48Atomtype 49Atomtype 50Atomtype 51Atomtype 52Atomtype 53Atomtype 54Atomtype 55Atomtype 56Atomtype 57Atomtype 58Atomtype 59Atomtype 60Atomtype 61Atomtype 62Atomtype 63Atomtype 64Atomtype 65Atomtype 66Atomtype 67Atomtype 68Atomtype 69Atomtype 70Atomtype 71Atomtype 72Atomtype 73
@@ -780,9 +780,9 @@ Total charge in system -0.000 e
 
 Writing coordinate file...
 
-gcq#180: "That Was Pretty Cool" (Beavis)
+gcq#137: "Shit Happens" (Pulp Fiction)
 
-Reading /tmp/tmp84V8B_/test_ions.gro...
+Reading /tmp/tmp5r9TQr/test_ions.gro...
 Read 'Protein in water', 5324 atoms
 Analyzing pdb file
 Gave chain 1 chain identifier 'A'
@@ -831,14 +831,14 @@ Option     Filename  Type          Description
   -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp  Input,
                                    Opt!   grompp input file with MD parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmp84V8B_/test_ions2.gro  Input         Generic structure: gro g96
+  -c /tmp/tmp5r9TQr/test_ions2.gro  Input         Generic structure: gro g96
                                    pdb tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmp84V8B_/test_ions.top  Input         Topology file
+  -p /tmp/tmp5r9TQr/test_ions.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmp84V8B_/test_ions.tpr  Output        Generic run input: tpr tpb tpa
+  -o /tmp/tmp5r9TQr/test_ions.tpr  Output        Generic run input: tpr tpb tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
       Option   Type  Value  Description
@@ -900,11 +900,11 @@ Or. Res. Fit     has 1 element(s): rest
 Checking consistency between energy and charge groups...
 writing run input file...
 
-gcq#180: "That Was Pretty Cool" (Beavis)
+gcq#137: "Shit Happens" (Pulp Fiction)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Green Red Orange Magenta Azure Cyan Skyblue
+                              S  C  A  M  O  R  G
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -934,7 +934,7 @@ Analysing Protein...
 Analysing Other...
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Green Red Orange Magenta Azure Cyan Skyblue
+                              S  C  A  M  O  R  G
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -949,10 +949,10 @@ Analysing Other...
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmp84V8B_/test_ions.tpr  Input         Generic run input: tpr tpb tpa
+  -s /tmp/tmp5r9TQr/test_ions.tpr  Input         Generic run input: tpr tpb tpa
   -o       traj.trr  Output        Full precision trajectory: trr trj
   -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmp84V8B_/test_ions_afterem.gro  Output        Generic structure: gro
+  -c /tmp/tmp5r9TQr/test_ions_afterem.gro  Output        Generic structure: gro
                                    g96 pdb
   -e       ener.edr  Output        Generic energy: edr ene
   -g         md.log  Output        Log file
@@ -992,8 +992,8 @@ Option     Filename  Type          Description
 
 Back Off! I just backed up md.log to ./#md.log.1#
 Getting Loaded...
-Reading file /tmp/tmp84V8B_/test_ions.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmp84V8B_/test_ions.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_ions.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmp5r9TQr/test_ions.tpr, VERSION 3.1.4 (single precision)
 Loaded with Money
 
 
@@ -1174,7 +1174,7 @@ Steepest Descents did not converge in 211 steps
   Potential Energy  = -1.50649e+05
 Maximum force:  1.84207e+03
 
-gcq#278: "set: No match." (tcsh)
+gcq#144: "I Wrapped a Newspaper Round My Head" (F. Zappa)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
@@ -1182,14 +1182,14 @@ Option     Filename  Type          Description
                                    Input, Opt!   grompp input file with MD
                                    parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmp84V8B_/test_ions_afterem.gro  Input         Generic structure: gro
+  -c /tmp/tmp5r9TQr/test_ions_afterem.gro  Input         Generic structure: gro
                                    g96 pdb tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmp84V8B_/test_ions.top  Input         Topology file
+  -p /tmp/tmp5r9TQr/test_ions.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmp84V8B_/test_equil.tpr  Output        Generic run input: tpr tpb
+  -o /tmp/tmp5r9TQr/test_equil.tpr  Output        Generic run input: tpr tpb
                                    tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
@@ -1253,11 +1253,11 @@ Or. Res. Fit     has 1 element(s): rest
 Checking consistency between energy and charge groups...
 writing run input file...
 
-gcq#278: "set: No match." (tcsh)
+gcq#144: "I Wrapped a Newspaper Round My Head" (F. Zappa)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-               Gromacs Runs One Microsecond At Cannonball Speeds
+               Giant Rising Ordinary Mutants for A Clerical Setup
 
                             :-)  VERSION 3.1.4  (-:
 
