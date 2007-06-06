@@ -20,9 +20,7 @@ import os, sys
 # Specify the input and output PDB filenames
 # NOTE: pdbfile and outpdbfile should be local (not absolute) paths for this project  
 pdbfile = '3gb1_testing.pdb'
-#outpdbfile = os.path.join(os.curdir,'3gb1_out.pdb')
-#pdbfile = '1ENH_enhd.pdb'
-outpdbfile = os.path.join(os.curdir,'out.pdb')
+outpdbfile = os.path.join(os.curdir,'3gb1_testing_protonated.pdb')
 
 # Specify the pH
 pH = 7.0
@@ -33,10 +31,6 @@ prmfile = os.path.abspath(prmfile)
 
 # Specify additional or different parameters than prmfile,  if desired.
 # xtraprms = {'TITR_PH0':'3.0'}
-
-# Read in the parameters
-params = mcce.read_paramfile(prmfile)
-mcce.print_prm(params)
 
 # Perform titration.
 ### work is done in a temporary dir; Setting cleanup=True will erase these temporary files 
