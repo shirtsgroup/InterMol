@@ -1,5 +1,6 @@
 import tempfile
 import os
+import sys
 import commands
 import re
 import math
@@ -30,6 +31,7 @@ TODO
 - Select most likely global protonation state, rather than on a per-residue basis.
 
 REVISION LOG
+- 6-05-2007: VAV;  Fixed xtraprms={} bugs
 - 5-21-2007: JDC: Updating according to current Pande lab style guide.
 - 5-8-2007: DLM: Adding preliminary documentation (above) based on my known knowledge and perusing some of the below. Lots more needs to be done.
 - 5-9-2007: DLM: A bit more documentation, and fixed protonation_state routine so as not to require an absolute path to the pdb file (obtains an absolute path from the file name plus current directory).
@@ -41,7 +43,7 @@ REVISION LOG
 
 """
 
-def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
+def paramgen(pdbpath, mcce_location, fromfile=None, xtraprms={}):
     """Generate a dictionary of parameters used by MCCE.
                 
     REQUIRED ARGUMENTS
@@ -55,7 +57,7 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
         A dictionary containing a list of default MCCE parameters.
                 
     """
-    
+
     # This was just generated from the sample .prm files in the
     # MCCE distribution
     mcce_params={}
@@ -124,20 +126,33 @@ def paramgen(pdbpath,mcce_location, fromfile=None, xtraprms={}):
     
     if fromfile != None:
         # read the params from the chosen file
-        if os.exists(fromfile):
+        if os.path.exists(fromfile):
+            print 'Reading parameters from file',fromfile,'...'
             fileparams = read_paramfile(fromfile)
- 
+            for key in fileparams.keys():
+                print 'key',key,'fileparams[key]',fileparams[key]
+                mcce_params[key] = fileparams[key]
+        else:
+            print 'Can\'t find parameter file',fromfile,'. Exiting...'
+    
+    
     # merge these parms with the PDB- and MCCE-LOCATION-dependent fields
     mcce_params['MCCE_HOME']=mcce_location
     mcce_params['INPDB']=pdbpath
     mcce_params['EXTRA']=mcce_params['MCCE_HOME']+'/extra.tpl'
     mcce_params['RENAME_RULES']=mcce_params['MCCE_HOME']+'/name.txt'
     mcce_params['DELPHI_EXE']=mcce_params['MCCE_HOME']+'/bin/delphi'
-                        
+
+    # Set to "true" the four stages of MCCE.  They are 'f' in the run.prm.* template files
+    mcce_params['DO_ENERGY']   = 't'
+    mcce_params['DO_MONTE']    = 't'
+    mcce_params['DO_PREMCCE']  = 't'
+    mcce_params['DO_ROTAMERS'] = 't'
+        
     # set any xtra parameters we specify
     for key in xtraprms.keys():
         mcce_params[key]=xtraprms[key]
-    print_prm(mcce_params)                    
+        
     return mcce_params
 
 def print_prm(mcceparams):
@@ -146,7 +161,7 @@ def print_prm(mcceparams):
         print sorted
         sorted.sort()
         for i in sorted:
-            print '%-20s%s'%(mcceparams[i]," ("+i+")")
+            print '%-40s%s'%(mcceparams[i]," ("+i+")")
 
 def read_paramfile(paramfile):
         """Reads in a MCCE param file and returns a dictionary of all the fields found"""
@@ -154,30 +169,36 @@ def read_paramfile(paramfile):
         params = {}
         fin = open(paramfile,'r')
         for line in fin.readlines():
-            print 'line', line  
             fields = line.split()
             if len(fields) > 1:
               if (fields[-1][0] == '(' ) & (fields[-1][-1] == ')'):
                 params[ fields[-1][1:-1] ] = fields[0] 
         fin.close()                                
         return params
-         
+
+def write_paramfile(mcceparams, filename):
+        """Write run.prm to file"""
+
+        runfile = open(filename,'wt')        
+        sorted = mcceparams.keys()
+        sorted.sort()
+        for key in sorted:
+            runfile.write('%-40s (%s)\n'%(mcceparams[key],key) )
+        runfile.close()
+        
 def run_mcce(mcceparams):
-        """Runs MCCE in the current directory, using run parameters
+        """Runs MCCE in the specified directory, using run parameters
                 given in variable mcceparams (from the paramgen function).
                 This method will clobber file run.prm in the current directory,
                 as well as any previous MCCE output files.
                 It will generate all sorts of output files, which it is the caller's
                 responsibility to clean up."""
-        runfile=open("run.prm","wt")
-        for i in mcceparams.keys():
-                runfile.write(mcceparams[i]+" ("+i+")\n")
-        runfile.close()
-        output=commands.getoutput(mcceparams['MCCE_HOME']+"/bin/mcce")
-        print output
-        # os.unlink("run.prm")
+        
+        os.chdir(os.getcwd())
+        write_paramfile(mcceparams, 'run.prm')
+        output=commands.getoutput( os.path.join(mcceparams['MCCE_HOME'],'bin/mcce') )
         return output
-
+    
 def ps_mostlikely(fort38path):
         """Finds the set of most likely protonation states from
                 the file fort38path/fort.38. Assumes one set of pH values
@@ -433,18 +454,17 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, xtraprm
         params['TITR_PHD']="1.0" #pH titration interval (i.e. stepsize)
         params['TITR_STEPS']="1"
         
-       
-    
-        # Create a temporary directory and run MCCE
+        # Create a temporary directory with the run.prm file and run MCCE
         tempdir=tempfile.mkdtemp();
         print "Running MCCE in temporary directory %s..." % tempdir
         os.chdir(tempdir)
-        run_mcce(params)
+        output = run_mcce(params)
+        print output
 
         pdbarr = ps_processmcce(tempdir)
 
         # Generate a breakpoint for interactive testing...
-#       raw_input("about to clean house...")
+        #       raw_input("about to clean house...")
         
         # clean up the temp dir
         # In the OLD version of MMCE: There should only be files, no subdirs --Imran(?)
@@ -471,13 +491,12 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, xtraprm
 def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=None, xtraprms={}):
         """Performs a pH titration on all titratable residues in a PDB file."""
                 
-       
         #Convert PDB file name to path, as paramgen expects an absolute path
         pdbpath=os.path.join(os.getcwd(),pdbfile)
         print 'pdbpath', pdbpath
         
         # Set up the parameters for the MCCE run
-        params=paramgen(pdbpath,mccepath, fromfile=None, xtraprms=xtraprms)
+        params=paramgen(pdbpath, mccepath, fromfile=prmfile, xtraprms=xtraprms)
         
         # Calculate a titration curve with the following parameters
         params['TITR_PH0']=str(pHstart)
@@ -489,6 +508,7 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         print "Running MCCE in temporary directory %s..." % tempdir
         os.chdir(tempdir)
         run_mcce(params)
+
 
         pdbarr = ps_processMCCETitration(tempdir)
 
@@ -553,6 +573,7 @@ def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=Tru
         None              (writes outfile to disk))
     """
 
+        print 'in titratePDB: xtraprms', xtraprms
         thisdir = os.getcwd()
         pdbarr = titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=cleanup, prmfile=prmfile, xtraprms=xtraprms)
 
