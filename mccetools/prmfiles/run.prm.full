@@ -40,12 +40,12 @@ Less modified entries (Monte Carlo titration simulation)
 
 # This file contains entries that overwrite those in the parameter directory
 # and extral controls over the program.
-/home1/voelzv/mcce/extra.tpl                             (EXTRA)
+MCCE_INSTALLATION/extra.tpl                             (EXTRA)
 
 # The renaming rule. It is sometimes necessary to divide a big group into
 # separate ionizable groups, or put ligands and cofactor as one group. This
 # can be done by renaming the atom and residue.
-/home/mcce/mcce1.0/name.txt MCCE renaming rule.          (RENAME_RULES)
+MCCE_INSTALLATION/name.txt MCCE renaming rule.          (RENAME_RULES)
 
 # The type of simulation, pH or Eh.
 ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
@@ -70,7 +70,7 @@ ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 #############################################################################
 MODIFYING FOLLOWING ENTRIES REQUIRE ADVANCED KNOWLEDGE:
 -----------------------------------------------------------------------------
-/home1/voelzv/mcce                                          (MCCE_HOME)
+MCCE_INSTALLATION                                          (MCCE_HOME)
 # mcce home directory, the combination of this path and diectric constant 
 # points to the parameter directory
 
@@ -152,7 +152,7 @@ t        Do relaxation on hydrogens                         (RELAX_H)
 
 step 3:
 f        Use SAS + Coulomb's law for ele interaction        (QUICK_ENERGIES)
-/home/mcce/mcce1.0/bin/delphi DelPhi executable             (DELPHI_EXE)
+MCCE_INSTALLATION/bin/delphi DelPhi executable             (DELPHI_EXE)
 80.0     Solvent dielectric constant for DelPhi             (EPSILON_SOLV)
 65       Grids in each DelPhi                               (GRIDS_DELPHI)
 2.0      The target grids per angstrom for DelPhi           (GRIDS_PER_ANG)
@@ -177,10 +177,12 @@ f        Average the pairwise, "f" uses the smaller         (AVERAGE_PAIRWISE)
 0.001    Cut-off occupancy of the reduction                 (MONTE_REDUCE)
 
 ###  Only for Junjun's monte carlo
-6        Number of independent monte carlo sampling         (MONTE_RUNS)
+2        Number of independent monte carlo sampling         (MONTE_RUNS)
 2000     Sampling = n_iter * confs                          (MONTE_NITER)
 20000    Trace energy each MONTE_TRACE steps, 0 no trace    (MONTE_TRACE)
 1000000  Maximum microstates for analytical solution        (NSTATE_MAX)
+t        Do entropy correction                              (MONTE_TSX)
+
 
 ###  Only for Yifan's monte carlo
 t        Using Yifan's monte carlo                          (MONTE_ADV_OPT)
@@ -209,3 +211,4 @@ new.tpl     local parameter file for unrecognized res       (NEWTPL)
 0.5      factor to 1-4 LJ potontial (1.0 is full)           (FACTOR_14LJ)
 1.0      dielectric constant for Coulomb's law              (EPSILON_COLUMB)
 ##############################################################################
+

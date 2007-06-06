@@ -28,8 +28,8 @@ f        step 4: monte carlo sampling                       (DO_MONTE)
 Less modified entries
 ------------------------------------------------------------------------------
 8.0      Protein dielectric constant for DelPhi             (EPSILON_PROT)
-/usr/local/mcce/extra.tpl                                   (EXTRA)
-/usr/local/mcce/name.txt MCCE renaming rule.                (RENAME_RULES)
+MCCE_INSTALLATION/extra.tpl                                (EXTRA)
+MCCE_INSTALLATION/name.txt MCCE renaming rule.             (RENAME_RULES)
 
 ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 0.0      Initial pH                                         (TITR_PH0)
@@ -44,7 +44,7 @@ ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 #############################################################################
 MODIFYING FOLLOWING ENTRIES REQUIRE ADVANCED KNOWLEDGE:
 -----------------------------------------------------------------------------
-/usr/local/mcce                                             (MCCE_HOME)
+MCCE_INSTALLATION                                          (MCCE_HOME)
 t       Minimize output files                               (MINIMIZE_SIZE)
 
 Options specific to each step:
@@ -68,7 +68,7 @@ f        h-bond directed rotamer making, requir 't' on Do rotate  (HDIRECTED)
 1.0      threshold for two conformers being different       (HDIRDIFF)
 36       Limit number of the Hbond conformers               (HDIRLIMT)
 
-0        number of cycles to relax rotamer clash            (HV_RELAX_NCYCLE)
+5        number of cycles to relax rotamer clash            (HV_RELAX_NCYCLE)
 10       time (in fs) for each relaxation iteration         (HV_RELAX_DT)
 10       number of iterations                               (HV_RELAX_NITER)
 2.       relax rotamer if vdw interaction is bigger than this (HV_RELAX_VDW_THR)
@@ -94,7 +94,7 @@ step 3:
 1.4      Radius of the probe                                (RADIUS_PROBE)
 2.0      Ion radius                                         (IONRAD)
 0.15     Salt                                               (SALT)
-/usr/local/mcce/bin/delphi DelPhi executable                (DELPHI_EXE)
+MCCE_INSTALLATION/bin/delphi DelPhi executable             (DELPHI_EXE)
 
 
 step 4:
@@ -105,7 +105,7 @@ step 4:
 100      Annealing = n_start * confs                        (MONTE_NSTART)
 300      Equalibration = n_eq * confs                       (MONTE_NEQ)
 0.001    Cut-off occupancy of the reduction                 (MONTE_REDUCE)
-6        Independent monte carlo sampling                   (MONTE_RUNS)
+2        Independent monte carlo sampling                   (MONTE_RUNS)
 2000     Sampling = n_iter * confs                          (MONTE_NITER)
 50000    Trace energy each MONTE_TRACE steps, 0 no trace    (MONTE_TRACE)
 1000000  Maximum microstates for analytical solution        (NSTATE_MAX)

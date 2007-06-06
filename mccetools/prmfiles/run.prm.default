@@ -28,8 +28,8 @@ f        step 4: monte carlo sampling                       (DO_MONTE)
 Less modified entries
 ------------------------------------------------------------------------------
 8.0      Protein dielectric constant for DelPhi             (EPSILON_PROT)
-/home1/voelzv/mcce/extra.tpl                                (EXTRA)
-/home1/voelzv/mcce/name.txt MCCE renaming rule.             (RENAME_RULES)
+MCCE_INSTALLATION/extra.tpl                                (EXTRA)
+MCCE_INSTALLATION/name.txt MCCE renaming rule.             (RENAME_RULES)
 
 ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 0.0      Initial pH                                         (TITR_PH0)
@@ -44,7 +44,7 @@ ph       "ph" for pH titration, "eh" for eh titration       (TITR_TYPE)
 #############################################################################
 MODIFYING FOLLOWING ENTRIES REQUIRE ADVANCED KNOWLEDGE:
 -----------------------------------------------------------------------------
-/home1/voelzv/mcce                                          (MCCE_HOME)
+MCCE_INSTALLATION                                          (MCCE_HOME)
 t       Minimize output files                               (MINIMIZE_SIZE)
 
 Options specific to each step:
@@ -94,7 +94,7 @@ step 3:
 1.4      Radius of the probe                                (RADIUS_PROBE)
 2.0      Ion radius                                         (IONRAD)
 0.15     Salt                                               (SALT)
-/home1/voelzv/mcce/bin/delphi DelPhi executable             (DELPHI_EXE)
+MCCE_INSTALLATION/bin/delphi DelPhi executable             (DELPHI_EXE)
 
 step 4:
 5.0      Big pairwise threshold to make big list            (BIG_PAIRWISE)
@@ -104,10 +104,11 @@ step 4:
 100      Annealing = n_start * confs                        (MONTE_NSTART)
 300      Equalibration = n_eq * confs                       (MONTE_NEQ)
 0.001    Cut-off occupancy of the reduction                 (MONTE_REDUCE)
-6        Independent monte carlo sampling                   (MONTE_RUNS)
+2        Independent monte carlo sampling                   (MONTE_RUNS)
 2000     Sampling = n_iter * confs                          (MONTE_NITER)
 20000    Trace energy each MONTE_TRACE steps, 0 no trace    (MONTE_TRACE)
 1000000  Maximum microstates for analytical solution        (NSTATE_MAX)
+t        Do entropy correction                              (MONTE_TSX)
 
 # Advanced options:
 1         delphi start conformer number, 0 based            (DELPHI_START)
@@ -120,4 +121,5 @@ new.tpl     local parameter file for unrecognized res       (NEWTPL)
 0.5      factor to 1-4 LJ potontial (1.0 is full)           (FACTOR_14LJ)
 1.0      dielectric constant for Coulomb's law              (EPSILON_COLUMB)
 ##############################################################################
+
 
