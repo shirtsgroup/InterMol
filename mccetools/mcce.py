@@ -457,9 +457,17 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, xtraprm
         # Create a temporary directory with the run.prm file and run MCCE
         tempdir=tempfile.mkdtemp();
         print "Running MCCE in temporary directory %s..." % tempdir
+
+        # remember our curent working directory
+        thisdir = os.getcwd()
+        
+        # run mcce in the temporary directory
         os.chdir(tempdir)
         output = run_mcce(params)
         print output
+        
+        # chdir back to where we came from
+        os.chdir(thisdir)
 
         pdbarr = ps_processmcce(tempdir)
 
@@ -506,8 +514,17 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         # Create a temporary directory and run MCCE
         tempdir=tempfile.mkdtemp();
         print "Running MCCE in temporary directory %s..." % tempdir
+
+        # remember our curent working directory
+        thisdir = os.getcwd()
+        
+        # run mcce in the temporary directory
         os.chdir(tempdir)
-        run_mcce(params)
+        output = run_mcce(params)
+        print output
+        
+        # chdir back to where we came from
+        os.chdir(thisdir)
 
 
         pdbarr = ps_processMCCETitration(tempdir)
