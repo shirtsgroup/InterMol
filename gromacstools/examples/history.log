@@ -1,10 +1,14 @@
-echo 9 | pdb2gmx -f test.pdb -o /tmp/tmp5r9TQr/test.gro -p /tmp/tmp5r9TQr/test.top -ignh
-editconf -bt cubic -f /tmp/tmp5r9TQr/test.gro -o /tmp/tmp5r9TQr/test_box.gro -d 0.9
-genbox -cp /tmp/tmp5r9TQr/test_box.gro -cs ffamber_tip3p.gro -o /tmp/tmp5r9TQr/test_solvated.gro -p /tmp/tmp5r9TQr/test.top
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmp5r9TQr/test_solvated.gro -o /tmp/tmp5r9TQr/test_solvated.tpr -p /tmp/tmp5r9TQr/test.top -check14
-mdrun -v -s /tmp/tmp5r9TQr/test_solvated.tpr -c /tmp/tmp5r9TQr/test_solvated_afterem.gro 
-echo 12 | genion -s /tmp/tmp5r9TQr/test_solvated.tpr -o /tmp/tmp5r9TQr/test_ions.gro -pname Na -np 13 -pq 1 -nname Cl -nn 14 -nq -1 -g genion.log
-echo 9 | pdb2gmx -f /tmp/tmp5r9TQr/test_ions.gro -o /tmp/tmp5r9TQr/test_ions2.gro -p /tmp/tmp5r9TQr/test_ions.top -ignh
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmp5r9TQr/test_ions2.gro -o /tmp/tmp5r9TQr/test_ions.tpr -p /tmp/tmp5r9TQr/test_ions.top -check14
-mdrun -v -s /tmp/tmp5r9TQr/test_ions.tpr -c /tmp/tmp5r9TQr/test_ions_afterem.gro 
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/equilibrate.mdp -c /tmp/tmp5r9TQr/test_ions_afterem.gro -o /tmp/tmp5r9TQr/test_equil.tpr -p /tmp/tmp5r9TQr/test_ions.top -check14
+echo 9 | pdb2gmx -f test.pdb -o /tmp/tmpuMCv9e/test0000.gro -p /tmp/tmpuMCv9e/test0000.top -ignh
+editconf -bt cubic -f /tmp/tmpuMCv9e/test0000.gro -o /tmp/tmpuMCv9e/test0001.gro -d 0.9
+genbox -cp /tmp/tmpuMCv9e/test0001.gro -cs ffamber_tip3p.gro -o /tmp/tmpuMCv9e/test0002.gro -p /tmp/tmpuMCv9e/test0000.top
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp -c /tmp/tmpuMCv9e/test0002.gro -o /tmp/tmpuMCv9e/test0000.tpr -p /tmp/tmpuMCv9e/test0000.top -check14
+mdrun -v -s /tmp/tmpuMCv9e/test0000.tpr -c /tmp/tmpuMCv9e/test0003.gro 
+echo 12 | genion -s /tmp/tmpuMCv9e/test0000.tpr -o /tmp/tmpuMCv9e/test0004.gro -pname Na -np 13 -pq 1 -nname Cl -nn 14 -nq -1 -g genion.log
+echo 9 | pdb2gmx -f /tmp/tmpuMCv9e/test0004.gro -o /tmp/tmpuMCv9e/test0005.gro -p /tmp/tmpuMCv9e/test0001.top -ignh
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp -c /tmp/tmpuMCv9e/test0005.gro -o /tmp/tmpuMCv9e/test0001.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
+mdrun -v -s /tmp/tmpuMCv9e/test0001.tpr -c /tmp/tmpuMCv9e/test0006.gro 
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil1.mdp -c /tmp/tmpuMCv9e/test0006.gro -o /tmp/tmpuMCv9e/test0002.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
+mdrun -v -s /tmp/tmpuMCv9e/test0002.tpr -c /tmp/tmpuMCv9e/test0007.gro 
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil2.mdp -c /tmp/tmpuMCv9e/test0007.gro -o /tmp/tmpuMCv9e/test0003.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
+mdrun -v -s /tmp/tmpuMCv9e/test0003.tpr -c /tmp/tmpuMCv9e/test0008.gro 
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_grompp.mdp -c /tmp/tmpuMCv9e/test0008.gro -o /tmp/tmpuMCv9e/test0004.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14

@@ -19,7 +19,7 @@
 # Vincent Voelz
 # May 21, 2007
 #
-import mmtools.gromacstools.system as system
+from mmtools.gromacstools.System import *
 import os, sys
 
 # SET UP A GROMACS SIMULATION
@@ -28,7 +28,7 @@ forcefield = 'ffamber99p'       # gromacs forcefield name to use for grompp
 salt = 'NaCl'			# salt pair for counterions - supported types are in the <forcefield>.rtp file
 saltconc = 0.150		# salt concentration in solution (Molarity) # JDC: Should use Units class for this after modifying ioncalc.py to use Units too.
 
-g = system.GromacsSystem(pdbfile, useff=forcefield)
+g = System(pdbfile, useff=forcefield)
 # g.setup.setSaltConditions('NaCl', 0.150 )
 # JDC: Presumably you meant to use the variables you defined up there.
 g.setup.setSaltConditions(salt, saltconc)
