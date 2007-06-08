@@ -1,0 +1,43 @@
+title                   = SMP-msv-03 
+cpp                     = cpp
+integrator              = md        ;shoulud be sd
+
+freezegrps		= protein
+freezedim		= Y Y Y 
+
+nsteps                  = 100         ; should be 10000
+nstlist                 = 10
+dt                      = 0.002
+constraints             = hbonds 
+constraint-algorithm    = shake 
+ns_type                 = grid
+
+coulombtype             = reaction-field
+epsilon_r		= 78
+rcoulomb		= 1.2
+rlist			= 1.2 
+
+vdwtype			= switch
+rvdw_switch		= 1.0
+rvdw			= 1.2
+
+tcoupl          = no
+tc_grps         = sol 
+ref_t           = 300  
+tau_t           = 0.0109
+;energygrps		= system
+  
+comm_grps		= sol
+comm_mode		= linear
+nstcomm			= 10
+
+gen_vel			= yes
+gen_temp		= 300
+gen_seed		= -1
+
+nstlog                  = 1000 
+nstenergy               = 1000
+nstxout                 = 1000
+nstvout                 = 1000
+nstxtcout               = 1000
+xtc-precision           = 1000
