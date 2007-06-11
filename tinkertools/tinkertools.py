@@ -608,7 +608,9 @@ OPTIONAL INPUT:
   #Make run script
   runtext=['minimize.x mol 1.0 > mol_min.log\n']
   runtext.append('mv mol.xyz_2 mol.xyz\n')
-  runtext.append('dynamic.x mol %(nsteps)s 1.0 1.0 4 298 1.0 > equil.log\n' % vars() )
+  #Compute how often to output; get two frames out
+  outfreq = 0.5*nsteps/1000
+  runtext.append('dynamic.x mol %(nsteps)s 1.0 %(outfreq)s 4 298 1.0 > equil.log\n' % vars() )
   file=open('run_equilib.sh','w')
   file.writelines(runtext)
   file.close()
@@ -657,20 +659,22 @@ OUTPUT:
   outtext=''
   for lmb in reprlambdas:
     reprkey = os.path.join(  '../', str(lmb), name+str(lmb)+'.key' )
+    reprprm = os.path.join(  '../', str(lmb), name+str(lmb)+'.prm' )
     outtext+='cp %s %s.key\n' % (reprkey, name) 
+    outtext+='cp %s %s%s.prm\n' % (reprprm, name, lmb) 
     outtext+= "printf '%s.arc\\nE\\n' > tmp\n" % name
     outtext+= "analyze.x < tmp > repr%s.log\n" % lmb
      
   return outtext
 
-def setup_calc( keyfile, keyfile_vac, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
+def setup_calc( keyfile, vackeyfile, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, equillen=10000, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
    """Setup a set of amoeba calculations in a target directory; will generate three subdirectories ('nochg_wat','nochg_vac','novdw_wat') within that directory, each containing all of the appropriate run input for calculations at a series of lambda values.
 INPUT:
- - keyfile: Path of a key file containing all relevant water and small molecule parameters. Note that key file should contain an a-axis setting, but this can be large as this should be read from the dyn file.
- - keyfile_vac: Equivalent key file but for vacuum calculations (i.e. no PME)
+ - keyfile: Key file with settings for simulations
+ - vackeyfile: Key file with settings for vacuum simulations
  - targetdir: Directory into which to put output/directories
  - mol_atomtypes: List of atom types in small molecule
- - amoebafile: Path to amoeba prm file (used for getting some LJ parameters for applying combination rules, etc)
+ - amoebafile: Path to amoeba prm file (used for getting some LJ parameters for applying combination rules, etc); uses this file to generate modified amoeba prm files for the individual simulations, with modified interactions for the atoms in mol_atomtypes
  - xyzfile: xyz file to use for calculations
  - dynfile: dyn file to use for calculations
 OPTIONAL INPUT:
@@ -710,13 +714,15 @@ OTHER NOTES:
      #Factor to scale polarization/charges by
      scalefactor = (1. - lmb)
 
-     #Generate output key file there with scaled electrostatics
-     scale_electrostatics( scalefactor, mol_atomtypes, keyfile, os.path.join(opath, 'mol.key') ) 
+     #Generate output parameter file there with scaled electrostatics
+     scale_electrostatics( scalefactor, mol_atomtypes, amoebafile, os.path.join(opath, 'mol%s.prm' % lmb) ) 
 
-     #Add random seed to key file
+     #Add random seed to key file, and parameters
+     os.system('cp %s %s' % (keyfile, os.path.join( opath, 'mol.key' ) ) )
      file=open( os.path.join( opath, 'mol.key' ) , 'a')
      seed = random.randint(0, 5000)
      file.write('RANDOMSEED    %s\n' % seed)
+     file.write('PARAMETERS mol%s.prm\n' % lmb)
      file.close()
 
      #Generate a copy of that file using the lambda value in the filename, as we'll need to do file shuffling later
@@ -725,7 +731,9 @@ OTHER NOTES:
      #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
      runtext='minimize.x mol 1.0 > mol_min.log\n'
      runtext+='mv mol.xyz_2 mol.xyz\n'
-     #NOTE HERE WE ARE NOT DOING CONSTANT PRESSURE EQUILIBRATION FIRST
+     #DO CONSTANT PRESSURE EQUILIBRATION
+     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % simlen
+     #DO PRODUCTION
      runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
      idx = cg_lambda.index(lmb)
@@ -755,12 +763,14 @@ OTHER NOTES:
      scalefactor = (1. - lmb)
 
      #Generate output key file there with scaled electrostatics
-     scale_electrostatics( scalefactor, mol_atomtypes, keyfile_vac, os.path.join(opath, 'mol.key') )
+     scale_electrostatics( scalefactor, mol_atomtypes, amoebafile, os.path.join(opath, 'mol%s.prm' % lmb) )
 
-     #Add random seed to key file
+     #Add random seed to key file, and parameters
+     os.system('cp %s %s' % (vackeyfile, os.path.join( opath, 'mol.key') ) )
      file=open( os.path.join( opath, 'mol.key' ) , 'a')
      seed = random.randint(0, 5000)
      file.write('RANDOMSEED    %s\n' % seed)
+     file.write('PARAMETERS    mol%s.prm\n' % lmb)
      file.close()
 
      #Generate a copy of that file using the lambda value in the filename, as we'll need to do file shuffling later
@@ -824,29 +834,38 @@ OTHER NOTES:
          tmptext.append('vdwpr        %s    %s       %.4f     %.5f\n' % (w,aclass,comb_r,eps_new))
          tmptext.append('halpr        %s    %s       %.4f     %.4f\n' % (w,aclass,ghal,dhal))
 
-     #Now edit the key file we set up for charging to add these parameters at the end; also use new random seed
-     cgfile=os.path.join(targetdir, 'nochg_wat', '1.0', 'mol1.0.key') 
+     #Now edit the key file we set up for charging to add these parameters at the end
+     cgfile=os.path.join(targetdir, 'nochg_wat', '1.0', 'mol1.0.prm') 
      file=open(cgfile,'r')
-     outtext=[]
-     for line in file.readlines():
-       if line.find('RANDOMSEED')>-1:
-          seed=random.randint(0,5000)
-          line='RANDOMSEED    %s\n' % seed
-       outtext.append(line)
+     outtext=file.readlines()
      for line in tmptext:
        outtext.append(line)
-   
      #Write
-     file=open( os.path.join(opath, 'mol.key'), 'w')
+     file=open( os.path.join(opath, 'mol%s.prm' % lmb), 'w')
      file.writelines(outtext)
      file.close()
 
-     #Generate a copy of that file using the lambda value in the filename, as we'll need to do file shuffling later
-     os.system('cp %s %s' % ( os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) )
+     #Add random seed and parameter file name to key file
+     os.system('cp %s %s' % (keyfile, os.path.join(opath, 'mol.key')))
+     file = open( os.path.join(opath, 'mol.key'), 'r')
+     text=file.readlines()
+     text.insert(0, 'parameters mol%s.prm\n' % lmb)
+     seed=random.randint(0,5000)
+     text.insert(len(text)-1, 'RANDOMSEED   %s\n' % seed)
+     file.close()
+     file = open( os.path.join(opath, 'mol.key'), 'w')
+     file.writelines(text)
+     file.close()
+  
+     #Generate copy of key file tagged by lambda
+     os.system('cp %s %s' % (os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) ) 
+
      #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
      runtext='minimize.x mol 1.0 > mol_min.log\n'
      runtext+='mv mol.xyz_2 mol.xyz\n'
-     #NOTE HERE WE ARE NOT DOING CONSTANT PRESSURE EQUILIBRATION FIRST
+     #DO CONSTANT PRESSURE EQUILIBRATION
+     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % simlen
+     #DO PRODUCTION
      runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
      idx = vdw_lambda.index(lmb)
