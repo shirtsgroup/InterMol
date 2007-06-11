@@ -2,7 +2,7 @@ title               =  minimize-default
 cpp                 =  cpp
 
 integrator          =  steep
-nsteps              =  1000
+nsteps              =  10000
 
 ; Energy minimizing stuff
 emtol               =  100.0
@@ -50,6 +50,7 @@ gen_seed            =  173529
 ; but we wanted to increase dt (earlier)
 ; so I've always used all-bonds
 
-constraints = none
+constraints = all-bonds
 constraint_algorithm = lincs
 4
+

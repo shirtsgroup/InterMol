@@ -1,15 +1,15 @@
 title                   = SMP-msv-03 
 cpp                     = cpp
-integrator              = md        ;shoulud be sd
+integrator              = md        ; Dan  had sd
 
-freezegrps		= protein
-freezedim		= Y Y Y 
+freezegrps		= protein           ; Xuhui recommends position restraints for the protein, (not freeze) and then temperature coupling on all the groups.
+freezedim		= Y Y Y
 
-nsteps                  = 100         ; should be 10000
+nsteps                  = 200         ; should be 10000
 nstlist                 = 10
 dt                      = 0.002
-constraints             = hbonds 
-constraint-algorithm    = shake 
+constraints             = hbonds        
+constraint-algorithm    = shake       
 ns_type                 = grid
 
 coulombtype             = reaction-field

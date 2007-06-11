@@ -2,11 +2,11 @@ title                   = SMP-msv-03
 cpp                     = cpp
 integrator              = md
 
-nsteps                  = 100    ; should be 100000
+nsteps                  = 200    ; should be 100000
 nstlist                 = 10
 dt                      = 0.002
-constraints             = hbonds 
-constraint-algorithm    = shake 
+constraints             = hbonds  ; Dan had hbonds 
+;constraint-algorithm    = shake    ;Xuhui uses lincs
 ns_type                 = grid
 
 coulombtype             = reaction-field
@@ -20,15 +20,15 @@ rvdw			= 1.2
 
 tcoupl                  = nose-hoover 
 tc_grps                 = protein sol 
-tau_t                   = 0.5 0.5
+tau_t                   = 0.1 0.1
 ref_t                   = 300 300 
 energygrps		= protein sol
 
-pcoupl			= parrinello-rahman
-pcoupl_type		= isotropic
-tau_p			= 1
-compressibility		= 4.5e-5
-ref_p			= 1
+;pcoupl			= parrinello-rahman
+;pcoupl_type		= isotropic
+;tau_p			= 1
+;compressibility		= 4.5e-5
+;ref_p			= 1
 
 comm_grps		= protein sol
 comm_mode		= linear
@@ -38,10 +38,10 @@ gen_vel			= yes
 gen_temp		= 300
 gen_seed		= -1
 
-nstlog                  = 1000 
-nstenergy               = 1000
-nstxout                 = 1000
-nstvout                 = 1000
-nstxtcout               = 1000
+nstlog                  = 100      ; should 1000 for all  these
+nstenergy               = 100
+nstxout                 = 100
+nstvout                 = 100
+nstxtcout               = 100
 xtc-precision           = 1000
 

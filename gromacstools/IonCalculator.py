@@ -1,8 +1,10 @@
-import sys, os, string
-
 # JDC: It makes things much simpler for other developers if there is only one class per file, and if the filename and class match.  That way, we don't have to hunt for particular classes in files.  The files are less cluttered that way.
 # JDC: Classes should be named starting with a capital letter, such as "IonCalculator".  Maybe 'IonicEnvironmentCalculation' would be more appropriate.
-class ionCalculator(object):
+import sys,os,tempfile, string
+
+from Ion import *
+
+class IonCalculator(object):
     # JDC: This class lacked a docstring, so I created one.
     """A utility object to calculate numbers, concentrations of ions.
     
@@ -137,49 +139,4 @@ class ionCalculator(object):
         # JDC: I scratched my head for a while and couldn't figure out what the quantity in parenthesis represented.  Maybe I'm just tired, but it would be much less confusing if you assigned it to a variable like 'numberOfIonsInBox' and then returned *this* variable instead.        
         return (concentration/waterMolPerLiter)
 
-        
-# JDC: This class should be in a separate file.
-class Ion(object):
-    """A monoatomic ion.    
-    
-    Stores atom name, forcefield atom type, charge, a textual description, and the atomic mass of a single-atom ion.
-
-    """
-    
-    def __init__(self, atomName, atomType, charge):
-        """Initialize the data structures.
-
-        REQUIRED ARGUMENTS
-          atomName - the ion name
-          atomType - the forcefield atom type
-          charge - the partial atomic charge of the ion (in units of electron charge)
-          
-        """
-        
-        # Initialize object data.              # JDC: Every variable should be described the first time it is defined.
-        self.atomName = atomName               # the atom name (e.g. 'Cl')
-        self.atomType = atomType               # the forcefield atom type (e.g. 'amber99_30')
-        self.charge = charge                   # the partial atomic charge for the ion (in units of electron charge)
-        self.atomDescription = None            # a textual description of the ion (e.g. "chloride ion")
-        self.atomicMass = None                 # the mass of the ion (in amu)
-
-        return
-    
-    def __repr__(self):
-        """Self-documented string representation of the internal data structures.
-        
-        """
-        
-        # Construct string representation
-        # JDC: Descriptions are much clearer to construct line-by-line.
-        tmpstr = '%s:\n' % self.atomName
-        tmpstr += '\tatomtype: %s\n' % self.atomType
-        tmpstr += '\tcharge %2.1f\n' % self.charge # JDC: Is this a sufficient number of decimal places?
-        tmpstr += '\tdescription = %s\n' % self.atomDescription
-        tmpstr += '\tatomic mass %2.1f\n' % self.atomicMass # JDC: Is this a sufficint number of decimal places?
-
-        # Return string representation.
-        return tmpstr
-    
-        
         
