@@ -1,4 +1,11 @@
+# Modification history:
+#
+# VAV:  June 11, 2007:  Added set_mdpMinimization(), set_mdpEquilibration(), and set_mdpSimulation()
+
+
 import sys, os, tempfile, string
+
+
 
 class Filenames(object):
     
@@ -16,6 +23,28 @@ class Filenames(object):
     self.infile = infile
     self.infile_basename = os.path.basename(self.infile) 
     self.infile_suffix = self.infile.split('.').pop()
+ 
+    # check to see if the necessary environment variables are defined   
+    try:
+        self.GMXPATH     = os.environ['GMXPATH']    
+	self.GMXLIB      = os.environ['GMXLIB']
+        self.MMTOOLSPATH = os.environ['MMTOOLSPATH']
+    except KeyError:
+	print """Cannot find one or more of the following shell environment variables
+
+    GMXLIB             the pathname of the gmx parameter files.  
+    GMXPATH            the pathname of the Gromacs exectuables
+    MMTOOLSPATH        the pathname of the mmtools library\n"""
+	
+	for env in os.environ.keys():
+	    print '%-16s\t\t%s'%(env,os.environ[env])
+	print '-------------\nExiting....'
+	sys.exit(1)
+    
+    # initialize default mdpfiles
+    self.mdpfile_Minimization  = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/minimize.mdp')
+    self.mdpfile_Equilibration = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/equilibrate.mdp')
+    self.mdpfile_Simulation    = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/simulate.mdp')
     
     # process workdir
     self.workdir = workdir
@@ -48,7 +77,7 @@ class Filenames(object):
         print 'Error:  infile must be either *.pdb or *.gro file'
 	sys.exit(1)
 	
-    comment = """
+    oldway = """
     self.topfile_prep = self.grofile_prep.replace('.gro','.top')
     
     self.grofile_box= self.grofile_prep.replace('.gro','_box.gro')
@@ -126,7 +155,20 @@ class Filenames(object):
   def next_ndx(self):
     """Returns the next name of the ndxfile, without incrementing"""
     return self.ndxfile[0:-8] + string.zfill( (int(self.ndxfile[-8:-4])+1), 4) + self.ndxfile[-4:]
+
   
+  def set_mdpMinimization(self, filename):
+    """Sets the *.mdp filename in the gromacstools/mdp directory to use for minimzation."""
+    self.mdpfile_Minimization  = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/%s'%filename)
+
+  def set_mdpEquilibration(self, filename):
+    """Sets the *.mdp filename in the gromacstools/mdp directory to use for equilibration."""
+    self.mdpfile_Equilibration = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/%s'%filename)
+
+  def set_mdpSimulation(self, filename):
+    """Sets the *.mdp filename in the gromacstools/mdp directory to use for simulation."""
+    self.mdpfile_Simulation    = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/%s'%filename)    
+
        
   def show(self):
     """A printout of the current GROMACS filenames"""
