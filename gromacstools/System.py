@@ -22,6 +22,9 @@
 
 # ----------------------------------------------------------------------
 # TODO:
+# *** MOST IMPORTANT ***
+# * Implement Exceptions!!!  One failed protein should cripple the rest of the pipeline.  
+# *** IMPORTANT BUT LESS SO ***
 # * PROPER documentation of all functions according to style guide
 # * Incorporate Units.py
 # * a better way of keeping track of gromacs preprocessed files!!!
@@ -41,7 +44,12 @@
 
 import sys, os, string, commands
 import tempfile
-import ioncalc
+
+from atomSelect import *
+from Filenames import *
+from IonCalculator import *
+from Setup import *
+from Status import *
 
 
 # ----------------------------------------------------------------------
@@ -53,7 +61,7 @@ import ioncalc
 # ----------------------------------------------------------------------
 
 
-class GromacsSystem:
+class System:
 
   def __init__(self, infile, outdir=None, workdir=None, useff='amber99p',  version='3.1', verbose=True): 
     """A class to initialze, minimize, and equilibrate Gromacs simulations.
@@ -70,11 +78,13 @@ class GromacsSystem:
     
 """
 
-    # process infile name
-    self.infile = infile
-    self.infile_basename = os.path.basename(self.infile) 
-    self.infile_suffix = self.infile.split('.').pop()    
 
+    # initialize status object
+    self.status = Status()
+
+    # initialize setup object
+    self.setup = Setup()
+    
     # process outdir
     if outdir == None:
         self.outdir = os.curdir 
@@ -85,34 +95,23 @@ class GromacsSystem:
     # process workdir
     if workdir == None:
         self.workdir = tempfile.mkdtemp();
-	print "Building GROMACS project in temporary directory %s..." % self.workdir
     else:
         self.workdir = workdir
-        print "Building GROMACS project in directory %s..." % self.workdir
-    output = commands.getoutput('cp %s %s'%(self.infile, os.path.join(self.workdir,self.infile_basename) ))
+
+    # initializee files object  
+    self.files = Filenames(infile, self.workdir)
+
+    # Start Building the GROMACS project
+    print "Building GROMACS project in temporary directory %s..." % self.workdir
+    output = commands.getoutput('cp %s %s'%(self.files.infile, os.path.join(self.workdir, self.files.infile_basename) ))
     print output
- 
+
+    
     # process other options
     self.useff = useff
     self.version = version
     self.verbose = verbose
 
-    # check to see if the necessary environment variables are defined   
-    try:
-        self.GMXPATH     = os.environ['GMXPATH']    
-	self.GMXLIB      = os.environ['GMXLIB']
-        self.MMTOOLSPATH = os.environ['MMTOOLSPATH']
-    except KeyError:
-	print """Cannot find one or more of the following shell environment variables
-
-    GMXLIB             the pathname of the gmx parameter files.  
-    GMXPATH            the pathname of the Gromacs exectuables
-    MMTOOLSPATH        the pathname of the mmtools library\n"""
-	
-	for env in os.environ.keys():
-	    print '%-16s\t\t%s'%(env,os.environ[env])
-	print '-------------\nExiting....'
-	sys.exit(1)
 
     # find available forcefields with this GROMACS installation
     [self.forcefields, self.forcefieldCodes] = self.getForcefields()
@@ -127,76 +126,21 @@ class GromacsSystem:
 	print '\nExiting....'
         sys.exit(1)
   	
-    # initialize default mdpfiles
-    self.mdpfile_Minimization  = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/minimize.mdp')
-    self.mdpfile_Equilibration = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/equilibrate.mdp')
-    self.mdpfile_Simulation    = os.path.join(self.MMTOOLSPATH,'gromacstools/mdp/simulate.mdp')
-    
-    # initialize status object
-    self.status = GromacsSystemStatus()
-
-    # initialize setup object
-    self.setup = GromacsSystemSetup()
-    
+       
     # to keep track of the total charge in the system
     # NOTE: this will be calculated from the pdb2gmx output text
     self.totalChargeBeforeIons = 0.0    
     
     # initialize ionCalculator
-    # This is needed for calculating numbers of counterions from salt concentrations
-    import ioncalc
-    self.ioncalc = ioncalc.ionCalculator(self.useff)
+    ### This is needed for calculating numbers of counterions from salt concentrations
+    self.ioncalc = IonCalculator(self.useff)
 
 
-    # initialize GROMACS file names
-    # NOTE: These names do not correspond to files yet, but will be used
-    #       by self.prepare() as a consistent naming scheme when buiilding the tpr 
-    if self.infile[-4:] == '.pdb':
-        self.grofile_prep = os.path.join(self.workdir, self.infile_basename.replace('.pdb','.gro'))
-    elif self.infile[-4:] == '.gro':
-        self.grofile_prep = os.path.join(self.workdir, self.infile_basename) 
-    else:
-        print 'Error:  infile must be either *.pdb or *.gro file'
-	sys.exit(1)
-    self.topfile_prep = self.grofile_prep.replace('.gro','.top')
-    
-    self.grofile_box= self.grofile_prep.replace('.gro','_box.gro')
-    self.grofile_solvated = self.grofile_prep.replace('.gro','_solvated.gro')
-    self.tprfile_solvated = self.grofile_prep.replace('.gro','_solvated.tpr') 
-    self.grofile_solvated_afterem = self.grofile_solvated.replace('.gro','_afterem.gro')
-
-    self.grofile_ions = self.grofile_prep.replace('.gro','_ions.gro')
-    self.grofile_ions2 = self.grofile_prep.replace('.gro','_ions2.gro')
-    self.topfile_ions = self.topfile_prep.replace('.top','_ions.top')
-
-    self.tprfile_ions = self.grofile_prep.replace('.gro','_ions.tpr')
-    self.grofile_ions_afterem = self.grofile_ions.replace('.gro','_afterem.gro')
-    
-    self.tprfile_equil = self.tprfile_ions.replace('_ions.tpr','_equil.tpr')
-    self.grofile_equil = self.tprfile_equil.replace('.tpr','.gro')
-    
-    
+    # show a listing of all the current gmx files 
     if (verbose):
-      self.printGromacsFiles()
+      self.files.show()
 
  
-  def printGromacsFiles(self):
-    """A printout of the defined GROMACS filenames"""
-    
-    print
-    print 'Files used in the GROMACS pre-processing:'
-    self.printTwoColumnStrings('self.grofile_prep', self.grofile_prep)
-    self.printTwoColumnStrings('self.topfile_prep', self.topfile_prep)
-
-    self.printTwoColumnStrings('self.grofile_box', self.grofile_box)
-    self.printTwoColumnStrings('self.grofile_solvated', self.grofile_solvated )
-    self.printTwoColumnStrings('self.tprfile_solvated', self.tprfile_solvated )
-    self.printTwoColumnStrings('self.grofile_solvated_afterem', self.grofile_solvated_afterem)
-
-    self.printTwoColumnStrings('self.grofile_ions', self.grofile_ions ) 
-    self.printTwoColumnStrings('self.topfile_ions', self.topfile_ions )
-
-
   def printTwoColumnStrings(self,s1,s2):
     """Prints two strings in a fixed-width column."""
     print '%-36s %s'%(s1,s2) 
@@ -208,9 +152,9 @@ class GromacsSystem:
     """Get the forcefields and codes from FF.dat; produce error if this is not found."""
 
     try:
-      fin = open(os.path.join(self.GMXLIB,'FF.dat'),'r')
+      fin = open(os.path.join(self.files.GMXLIB,'FF.dat'),'r')
     except IOError:
-      print "File FF.dat cannot be found in GMXLIB=%s   ..... \nExiting....\n"%self.GMXLIB
+      print "File FF.dat cannot be found in GMXLIB=%s   ..... \nExiting....\n"%self.files.GMXLIB
       sys.exit(1)
     forcefields = {}
     forcefieldCodes = {}
@@ -227,13 +171,13 @@ class GromacsSystem:
   def printForcefields(self):
     """Prints the available forcefields."""
 
-    print 'Available forcefields in $GMXLIB =',os.path.join(self.GMXLIB,'FF.dat')
+    print 'Available forcefields in $GMXLIB =',os.path.join(self.files.GMXLIB,'FF.dat')
     for key,value in self.forcefields.items():
       print '%-16s%s'%(key,value)
     
     
 
-  def prepare(self, outname=None, outdir=None, cleanup=True, verbose=False, debug=False, protocol=None, checkForFatalErrors=True):
+  def prepare(self, outname=None, outdir=None, cleanup=True, verbose=False, debug=False, protocol=None, checkForFatalErrors=True, mockrun=False):
     
     """Prepare an equilibration simulation for this Gromacs system, namely:
     
@@ -246,36 +190,56 @@ class GromacsSystem:
     7.  prepare a molecular dynamics simulation for equilibration...
 
     OPTIONAL ARGUMENTS
-    outname             user-specified name for <outname>.tpr and .gro. Default: "out"
-    outdir              save output files to directory outdir
-    cleanup             if cleanup=True, delete the temporary pre-processing directory        
-
+    
+    ARG                 DEFAULT    DESCRIPTION
+    outname             'out'      user-specified name for <outname>.tpr and .gro. Default: "out"
+    outdir              './'       save output files to directory outdir.  If not specified, outdir is the current directory
+    cleanup             True       if True, delete the temporary pre-processing directory, and erase temporary files 
+    verbose             False      if True, print extra, more detailed progress statements 
+    debug               False      if True, turn on print statements for debugging    
+    protocol            'default'  Currently only 'default' and 'racecar2' are supported:
+				   * 'default':   minimize.mdp -> equilibrate.mdp -> simulate.mdp    
+				   * 'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp
+    checkForFatalErrors	True       Exits the program if any of the gmx produce "Fatal error" in the standard output	    
+			        
+    
     OUTPUT
-
-    Outputs the following files in the current working directory:
-
+  
+    The following files will be written to the outdir:
+      
         out.tpr		GROMACS tpr file
         out.gro		GROMACS gro (structure) file
         equilibrate*	executable script to call mdrun 
-        history.log    logfile containing all the commands used to prepare the simualtion 
+        history.log     logfile containing all the commands used to prepare the simualtion 
         output.log      logfile containg the output of the pre-processing programs
 
 """
-    # do work in the specified working directory
+
+    # PARSE INPUT ARGUMENTS
+    
+    # outdir
+    ### do work in the specified working directory
     if outdir == None:
       cwd = os.path.abspath(os.curdir)  ### remember our original location
       print 'cwd', cwd
     else:
       cwd = os.path.abspath(outdir)
     
-    # specified outdir needs to be absolute to avoid copying errors with command.getoutput()
-    outdir = os.path.abspath(outdir)
-    
-    # specify default outfile name as 'out'
+    # outname    
+    ### specify default outfile name as 'out'
     if outname == None:
       outname = 'out'
-      
-    self.verbose=verbose  
+
+    self.cleanup = cleanup                             # Erase the temporary files when done
+    self.verbose = verbose                             # Print extra, more detailed progress statements 
+    self.debug   = debug                               # Turns on print statements for debugging
+    if protocol == None:                               # Current only 'default' and 'racecar2' are supported:
+      self.protocol = 'default'                        #     'default':   minimize.mdp -> equilibrate.mdp -> simulate.mdp 
+                                                       #     'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp  
+    self.checkForFatalErrors = checkForFatalErrors
+    self.mockrun = mockrun
+    
+    
 
     os.chdir( self.workdir )
     print 'Preparing simulation in directory %s...'%self.workdir
@@ -284,9 +248,9 @@ class GromacsSystem:
     if self.version == '3.1':	
 
         # pdb2gmx, and useTIP3P
-        pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.infile, self.grofile_prep, self.topfile_prep)
-	self.rungmx( pdb2gmx )
-        self.useTIP3P( self.topfile_prep )
+        pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.files.infile, self.files.grofile, self.files.topfile)
+	self.rungmx( pdb2gmx, mockrun=self.mockrun)
+        self.useTIP3P( self.files.topfile )
 	
 	pdb2gmxlines = self.status.loglines[-1][1].split('\n')
 	for line in pdb2gmxlines:
@@ -294,44 +258,53 @@ class GromacsSystem:
 	    self.totalChargeBeforeIons = float(line.split()[2])
 	    
         # make a cubic (periodic boundary conditions) box
-	editconf = 'editconf -bt %s -f %s -o %s -d %s'%(self.setup.boxType, self.grofile_prep, self.grofile_box, self.setup.boxSoluteDistance )
-	self.rungmx( editconf )
+	editconf = 'editconf -bt %s -f %s -o %s -d %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.boxSoluteDistance )
+	self.rungmx( editconf, mockrun=self.mockrun  )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
 
         # solvate the box 
-	editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.grofile_box, self.grofile_solvated, self.topfile_prep)
-	self.rungmx( editconf )
+	editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.files.grofile, self.files.next_gro(), self.files.topfile)
+	self.rungmx( editconf, mockrun=self.mockrun )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
 
         # minimize the system
         ### make a tpr file with grompp
-        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.mdpfile_Minimization, self.grofile_solvated, self.tprfile_solvated, self.topfile_prep)
-	self.rungmx( grompp )	
+        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
+	self.rungmx( grompp, mockrun=self.mockrun )	
         ### run minimization
-        minimize = 'mdrun -v -s %s -c %s '%( self.tprfile_solvated, self.grofile_solvated_afterem )
-	self.rungmx( minimize )
+        minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	self.rungmx( minimize, mockrun=self.mockrun )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
         # add ions to box
 	### Run genion
 	[np, nn, nwaters] = self.counterions()	  
-	genion = 'echo 12 | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.tprfile_solvated, self.grofile_ions, self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
-	self.rungmx( genion )
+	genion = 'echo 12 | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+	self.rungmx( genion, mockrun=self.mockrun )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
         ### generate a new topolgy file for the ion-ated grofile  
-        pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.grofile_ions, self.grofile_ions2, self.topfile_ions)
-	self.rungmx( pdb2gmx )
-        self.useTIP3P( self.topfile_ions )
+        pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.files.grofile, self.files.next_gro(), self.files.next_top())
+	self.rungmx( pdb2gmx, mockrun=self.mockrun )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
+	self.files.increment_top()    # must increment filename for any new gmx file 
+        self.useTIP3P( self.files.topfile )
 		
 	
 	# run minimimzation once more with the new ions
         ### make a tpr file with grompp
-        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.mdpfile_Minimization, self.grofile_ions2, self.tprfile_ions, self.topfile_ions)
-	self.rungmx( grompp )
+        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	self.rungmx( grompp, mockrun=self.mockrun  )
+	self.files.increment_tpr()    # must increment filename for any new gmx file 
         ### run minimization
-        minimize = 'mdrun -v -s %s -c %s '%( self.tprfile_ions, self.grofile_ions_afterem )
-	self.rungmx( minimize )
+        minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	self.rungmx( minimize, mockrun=self.mockrun  )
+	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
 	# setup files for equilibration 
         ### make a tpr file with grompp
-        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.mdpfile_Equilibration, self.grofile_ions_afterem, self.tprfile_equil, self.topfile_ions)
-	self.rungmx( grompp )
+        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	self.rungmx( grompp, mockrun=self.mockrun  )
+	self.files.increment_tpr()    # must increment filename for any new gmx file 
  		
         # copy the necessary files to start an MD run back to the original curdir
 	print
@@ -339,7 +312,7 @@ class GromacsSystem:
 	
 	### the GRO file
 	out_grofile = os.path.join(outdir,outname+'.gro')
-	copycmd = 'cp %s %s'%(self.grofile_ions_afterem, out_grofile)
+	copycmd = 'cp %s %s'%(self.files.grofile, out_grofile)
 	if (self.verbose):
 	  print copycmd 
 	cmdout = commands.getoutput( copycmd )
@@ -348,7 +321,7 @@ class GromacsSystem:
 	    
 	### the TPR file
 	out_tprfile = os.path.join(outdir,outname+'.tpr')
-        copycmd = 'cp %s %s'%(self.tprfile_equil, out_tprfile)
+        copycmd = 'cp %s %s'%(self.files.tprfile, out_tprfile)
 	if (self.verbose): print copycmd 
         cmdout = commands.getoutput( copycmd )
 	if (self.verbose): print cmdout
@@ -392,14 +365,14 @@ class GromacsSystem:
       	
         # pdb2gmx, and useTIP3P
 	# pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -water tip3p -ignh'%(self.forcefieldCodes[self.useff], self.infile, self.grofile_prep, self.topfile_prep)
-	# self.rungmx( pdb2gmx )
+	# self.rungmx( pdb2gmx, mockrun=self.mockrun  )
 	
         # make a cubic (periodic boundary conditions) box
 	### FILL THIS IN! ###
 	
         # solvate the box
 	# editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.grofile_box, self.grofile_solvated, self.topfile_prep)
-	# self.rungmx( editconf )
+	# self.rungmx( editconf, mockrun=self.mockrun  )
 
         # minimize the system
         ### FILL IN!
@@ -416,13 +389,15 @@ class GromacsSystem:
   
   
 
-  def rungmx(self, cmd):
+  def rungmx(self, cmd, mockrun=False):
     """Execute a gromacs executable on the command line, keeping track of the command and output for the logfile"""
   
-    if self.verbose: print '>>',cmd	
-    output=commands.getoutput(cmd)
-    if self.verbose: print output
-    self.status.loglines.append( (cmd, output) )    
+    print '>>',cmd	
+    if mockrun==False:
+      output=commands.getoutput(cmd)
+      if self.verbose: print output
+      self.status.loglines.append( (cmd, output) )    
+    
     return output
   
 
@@ -457,7 +432,7 @@ class GromacsSystem:
   def counterions(self):
     
     # Find out the number of water molecules there are in the box
-    fin = open(self.topfile_prep, 'r')
+    fin = open(self.files.topfile, 'r')
     lines = fin.readlines()
     fin.close()
     foundit = False
@@ -566,98 +541,3 @@ class GromacsSystem:
     ### RIGHT NOW this is a dummy function... will be added later.
     """Simulate the system."""                     
     return
-
-
-class GromacsSystemStatus:
-
-  def __init__(self): 
-    """A class to keep track of the status of of the simulation system."""
-
-    # logffile lines
-    self.loglines = []     # append (cmd, output)
-        
-    # Benchmarks
-    self.groprepDone = False
-    self.genboxDone = False
-    self.genionDone = False
-    self.minimizeDone = False
-    self.equilibrateDone = False
-    self.simulateDone = False
-  
-  
-  def writeHistory(self, logfile):
-    """Writes logfile lines to file in a standard file format"""
-   
-    fout = open(logfile,'w')
-    for line in self.loglines:
-      fout.write(line[0]+'\n')
-    fout.close()
-
-  def writeLog(self, logfile):
-    """Writes logfile lines to file in a standard file format"""
-
-    fout = open(logfile,'w')
-    for line in self.loglines:
-      fout.write(line[1]+'\n')
-    fout.close()
-
-
-    
-
-  def __repr__(self): 
-    """A class to keep trackk of the status of of the simulation system."""
-    
-    return "wowwiw!"
-
-class GromacsSystemSetup:
-
-  def __init__(self, infile=None): 
-    """A class to keep track of parameters important to the system setup."""
-
-    # editconf parms
-    self.boxType = 'cubic'            #  -bt   enum   tric  Box type for -box and -d: tric, cubic, dodecahedron or octahedron
-    self.boxSoluteDistance = '0.9'    #  -d   real      0  Distance between the solute and the box
-    
-    # salt conditions
-    self.salt = 'NaCl'                #  Supported:  'NaCl' or 'SodiumChloride'
-    self.saltconc = 0.050             #  Molar salt concentration
-    self.positiveIonName = 'Na'
-    self.negativeIonName = 'Cl'
-    self.positiveStoichiometry = 1
-    self.negativeStoichiometry = 1
-   
-    # setup from file?  THIS is still a DUMMY function....
-    if infile != None:
-        self.read(infile)
-
-	
-  def setSaltConditions(self, saltname, saltconcentration): 
-    """Set ion names and stoichiometry for the chosen salt."""
-    if saltname == 'NaCl' or saltname=='sodium chloride':
-      self.salt = 'NaCl'                #  Supported:  'NaCl' or 'SodiumChloride'
-      self.saltconc = saltconcentration            #  Molar salt concentration
-      self.positiveIonName = 'Na'
-      self.negativeIonName = 'Cl'
-      self.positiveIonCharge = 1
-      self.negativeIonCharge = -1
-      self.positiveIonStoichiometry = 1
-      self.negativIoneStoichiometry = 1
-
-    else:
-        print 'salt type', salt, 'not supported!  Try \'NaCl\'.  Exiting.'
-	sys.exit(1)
-    return None
-  
-  
-  def read(self, filename): 
-    """Read parameters in from a GromacsSystemSetup text file."""
-    return None
-  
-  def write(self, filename):
-    """Write parameters to a GromacsSystemSetup text file."""
-    return None
-  
-
-  
-  
-
