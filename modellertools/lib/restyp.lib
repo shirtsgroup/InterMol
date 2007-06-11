@@ -105,10 +105,8 @@ HETATM | HEM                 | h |   | HEME | heme ligand
 HETATM | O2                  | # |   | O2   | O2 ligand for heme
 HETATM | CO                  | # |   | CO   | CO ligand for heme
 HETATM | CYS CSS CYX         | C |   | CSS  | cystine
-HETATM | ABU                 | g |   | #### | amino-butyric acid
 HETATM | ACD                 | d |   | #### | acidic unknown
 HETATM | ALB                 | l |   | #### | beta-alanine
-HETATM | ALI                 | a |   | #### | aliphatic unknown
 HETATM | ARO                 | r |   | #### | aromatic unknown
 HETATM | BAS                 | b |   | #### | basic unknown
 HETATM | HYP                 | # |   | #### | hydroxyproline
@@ -141,13 +139,13 @@ HETATM | 156                 | i |   | 0156 | 0156
 HETATM | ATP                 | @ |   | ATP  | ATP
 HETATM | MG                  | $ |   | MG   | magnesium ion
 HETATM | K                   | % |   | K    | potassium ion
-HETATM | ADE                 | # |   | ADE  | 
+HETATM | ADE A               | a |   | ADE  | 
 HETATM | ADP                 | # |   | ADP  | adenosine diphosphate, jjp1/adm jr.
-HETATM | CYT                 | # |   | CYT  | 
+HETATM | CYT C               | c |   | CYT  | 
 HETATM | DEO                 | # |   | DEOT | DEOXYRIBOSE, Wilma Olsen's dihedral model
 HETATM | DMP                 | # |   | DMPA | Dimethylphosphate
 HETATM | DUM                 | # |   | DUM  | DUMMY ATOM
-HETATM | GUA                 | # |   | GUA  | 
+HETATM | GUA G               | g |   | GUA  | 
 HETATM | MP_                 | # |   | MP_0 | Methylphosphate, neutral
 HETATM | MP_                 | # |   | MP_1 | Methylphosphate, anionic
 HETATM | MP_                 | # |   | MP_2 | Methylphosphate, dianionic 
@@ -158,5 +156,5 @@ HETATM | NIC                 | # |   | NICH | reduced nicotinamide, jjp1/adm jr.
 HETATM | PPI                 | # |   | PPI1 | Inorganic phosphate, jjp1/adm jr.
 HETATM | RIB                 | # |   | RIBT | RIBOSE, Wilma Olsen's dihedral model
 HETATM | SOD                 | # |   | SOD  | Sodium Ion
-HETATM | THY                 | # |   | THY  | 
-HETATM | URA                 | # |   | URA  | 
+HETATM | THY T               | t |   | THY  | 
+HETATM | URA U               | u |   | URA  | 
