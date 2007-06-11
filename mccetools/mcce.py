@@ -568,6 +568,9 @@ def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, xtr
             fout.write(line+'\n')
         fout.close()       
 
+        # return from the directory we came from
+        os.chdir(thisdir)
+        
         
 def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=None, xtraprms={}):
         """Performs a pH titration on all titratable residues in a PDB file.
