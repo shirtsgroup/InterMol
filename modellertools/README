@@ -1,3 +1,12 @@
+Setup:
+- go to the Modeller website and download/install the software
+- install the atom_range, inter-het-rsr, and top-commands patches from the modeller wiki
+  - go to http://salilab.org/modeller/wiki/Patches
+  - copy the patch files to the modeller9v1 directory
+  - cd /Library/modeller-9v1
+  - run "patch -p0 < filename" to install the patch
+- copy the .lib files in the modellertools/lib directory into the modeller-9v1/modlib directory
+
 Contents:
 -  Model_PDB.py - contains code for homology modeling using Modeller
 -  single_driver.py - code for testing Model_PDB on a single target/template specified as command line arguments
