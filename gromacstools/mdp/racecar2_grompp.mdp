@@ -25,6 +25,8 @@ tau_t                   = 0.0109 0.0109
 ref_t                   = 300 300 
 energygrps		= protein sol
 
+annealing = no
+
 comm_grps		= protein sol
 comm_mode		= linear
 nstcomm			= 10
