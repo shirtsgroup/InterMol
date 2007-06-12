@@ -20,9 +20,11 @@ rvdw			= 1.2
 
 tcoupl                  = nose-hoover 
 tc_grps                 = protein sol 
-tau_t                   = 0.1 0.1
+tau_t                   = 0.109 0.109
 ref_t                   = 300 300 
 energygrps		= protein sol
+
+annealing = no
 
 ;pcoupl			= parrinello-rahman
 ;pcoupl_type		= isotropic
