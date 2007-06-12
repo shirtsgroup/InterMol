@@ -1,0 +1,33 @@
+; This "race car" minimization mdp file comes from Dan 6/2007
+; modified by Vince
+; to be used with the submillisecond folder project
+
+cpp                      = cpp        ; i needed to change this to run on the Intel MacPro --VAV
+integrator = steep
+nsteps                   = 20
+; should be 2000          
+emtol                    = 100
+emstep                   = 0.01
+nstxout                  = 10
+nstvout                  = 0
+nstfout                  = 0
+nstlog                   = 0
+nstenergy                = 0
+nstxtcout                = 0
+xtc-precision            = 1000
+
+nstlist                  = 10
+ns_type                  = simple
+pbc                      = xyz        ; changed from Dan's 'no', We are using pbc for the submsfolders --VAV
+rlist                    = 1.2
+domain-decomposition     = no
+
+coulombtype              = cut-off
+rcoulomb                 = 1.2
+epsilon-r                = 78
+vdw-type                 = cut-off
+rvdw                     = 1.2
+DispCorr                 = No
+
+constraints              = none  
+;constraint-algorithm	 = shake
