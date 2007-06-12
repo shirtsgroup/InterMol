@@ -674,6 +674,10 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
     params['TITR_PHD']=str(pHstep)
     params['TITR_STEPS']=str(pHiters)
 
+    # Create a temporary directory with the run.prm file and run MCCE
+    tempdir=tempfile.mkdtemp();
+    print "Running MCCE in temporary directory %s..." % tempdir
+
     # remember our curent working directory
     thisdir = os.getcwd()
         
