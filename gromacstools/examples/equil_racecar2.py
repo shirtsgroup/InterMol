@@ -12,11 +12,6 @@ equil_mdpfile = '../mdp/racecar2_equil1.mdp'
 g = System(pdbfile, useff=forcefield, verbose=True)
 g.setup.setSaltConditions(salt, saltconc)
 
-min_mdpfile = os.path.join(g.MMTOOLSPATH,'gromacstools/mdp/racecar2_min1.mdp')
-equil_mdpfile = os.path.join(g.MMTOOLSPATH,'gromacstools/mdp/racecar2_equil1.mdp')
-g.setMinimizationMdpfile( min_mdpfile )
-g.setEquilibrationMdpfile( equil_mdpfile )
-
 
 # prepare a system, writing TPR and GRO files, and *mdrun* script in the current directory
 thisdir = os.path.abspath( os.curdir )

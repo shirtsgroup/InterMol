@@ -179,4 +179,8 @@ class Filenames(object):
     print '%-20s %-20s'%('pdbfile',self.pdbfile)
     print '%-20s %-20s'%('topfile',self.topfile)
     print '%-20s %-20s'%('tprfile',self.tprfile)
+    print '%-20s %-20s'%('ndxfile',self.ndxfile)
+    print '%-20s %-20s'%('mdpfile_Minimization',self.mdpfile_Minimization)
+    print '%-20s %-20s'%('mdpfile_Equilibration',self.mdpfile_Equilibration)
+    print '%-20s %-20s'%('mdpfile_Simulation',self.mdpfile_Simulation)
 

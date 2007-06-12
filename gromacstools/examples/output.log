@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       GRowing Old MAkes el Chrono Sweat
+                  Gromacs Runs On Most of All Computer Systems
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -16,8 +16,8 @@
 Option     Filename  Type          Description
 ------------------------------------------------------------
   -f       test.pdb  Input         Generic structure: gro g96 pdb tpr tpb tpa
-  -o /tmp/tmpuMCv9e/test0000.gro  Output        Generic structure: gro g96 pdb
-  -p /tmp/tmpuMCv9e/test0000.top  Output        Topology file
+  -o /tmp/tmpsgFkCM/test0000.gro  Output        Generic structure: gro g96 pdb
+  -p /tmp/tmpsgFkCM/test0000.top  Output        Topology file
   -i      posre.itp  Output        Include file for topology
   -n      clean.ndx  Output, Opt.  Index file
   -q      clean.pdb  Output, Opt.  Generic structure: gro g96 pdb
@@ -58,9 +58,11 @@ Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/FF.dat
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.atp
 Atomtype 1Atomtype 2Atomtype 3Atomtype 4Atomtype 5Atomtype 6Atomtype 7Atomtype 8Atomtype 9Atomtype 10Atomtype 11Atomtype 12Atomtype 13Atomtype 14Atomtype 15Atomtype 16Atomtype 17Atomtype 18Atomtype 19Atomtype 20Atomtype 21Atomtype 22Atomtype 23Atomtype 24Atomtype 25Atomtype 26Atomtype 27Atomtype 28Atomtype 29Atomtype 30Atomtype 31Atomtype 32Atomtype 33Atomtype 34Atomtype 35Atomtype 36Atomtype 37Atomtype 38Atomtype 39Atomtype 40Atomtype 41Atomtype 42Atomtype 43Atomtype 44Atomtype 45Atomtype 46Atomtype 47Atomtype 48Atomtype 49Atomtype 50Atomtype 51Atomtype 52Atomtype 53Atomtype 54Atomtype 55Atomtype 56Atomtype 57Atomtype 58Atomtype 59Atomtype 60Atomtype 61Atomtype 62Atomtype 63Atomtype 64Atomtype 65Atomtype 66Atomtype 67Atomtype 68Atomtype 69Atomtype 70Atomtype 71Atomtype 72Atomtype 73
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.rtp
-Residue 1Residue 2Residue 3Residue 4Residue 5Residue 6Residue 7Residue 8Residue 9Residue 10Residue 11Residue 12Residue 13Residue 14Residue 15Residue 16Residue 17Residue 18Residue 19Residue 20Residue 21Residue 22Residue 23Residue 24Residue 25Residue 26Residue 27Residue 28Residue 29Residue 30Residue 31Residue 32Residue 33Residue 34Residue 35Residue 36Residue 37Residue 38Residue 39Residue 40Residue 41Residue 42Residue 43Residue 44Residue 45Residue 46Residue 47Residue 48Residue 49Residue 50Residue 51Residue 52Residue 53Residue 54Residue 55Residue 56Residue 57Residue 58Residue 59Residue 60Residue 61Residue 62Residue 63Residue 64Residue 65Residue 66Residue 67Residue 68Residue 69Residue 70Residue 71Residue 72Residue 73Residue 74Residue 75Residue 76Residue 77Residue 78Residue 79Residue 80Residue 81Residue 82Residue 83Residue 84Residue 85Residue 86Residue 87Residue 88Residue 89Residue 90Residue 91Residue 92Residue 93Residue 94Residue 95Residue 96Residue 97Residue 98Residue 99Residue 100Residue 101Residue 102Residue 103Residue 104Residue 105Residue 106Residue 107Residue 108Residue 109Residue 110Residue 111Residue 112Residue 113Residue 114Residue 115Residue 116Residue 117Residue 118Residue 119Residue 120Residue 121Residue 122Residue 123Residue 124Residue 125Residue 126Residue 127Residue 128Residue 129Residue 130Residue 131Residue 132
+Residue 1Residue 2Residue 3Residue 4Residue 5Residue 6Residue 7Residue 8Residue 9Residue 10Residue 11Residue 12Residue 13Residue 14Residue 15Residue 16Residue 17Residue 18Residue 19Residue 20Residue 21Residue 22Residue 23Residue 24Residue 25Residue 26Residue 27Residue 28Residue 29Residue 30Residue 31Residue 32Residue 33Residue 34Residue 35Residue 36Residue 37Residue 38Residue 39Residue 40Residue 41Residue 42Residue 43Residue 44Residue 45Residue 46Residue 47Residue 48Residue 49Residue 50Residue 51Residue 52Residue 53Residue 54Residue 55Residue 56Residue 57Residue 58Residue 59Residue 60Residue 61Residue 62Residue 63Residue 64Residue 65Residue 66Residue 67Residue 68Residue 69Residue 70Residue 71Residue 72Residue 73Residue 74Residue 75Residue 76Residue 77Residue 78Residue 79Residue 80Residue 81Residue 82Residue 83Residue 84Residue 85Residue 86Residue 87Residue 88Residue 89Residue 90Residue 91Residue 92Residue 93Residue 94Residue 95Residue 96Residue 97Residue 98Residue 99Residue 100Residue 101Residue 102Residue 103Residue 104Residue 105Residue 106Residue 107Residue 108Residue 109Residue 110Residue 111Residue 112Residue 113Residue 114Residue 115Residue 116Residue 117Residue 118Residue 119Residue 120Residue 121Residue 122Residue 123Residue 124Residue 125Residue 126Residue 127Residue 128Residue 129Residue 130Residue 131Residue 132Residue 133
 Sorting it all out...
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.hdb
+Error in hdb file: nah = 83
+line = ''
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p-n.tdb
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p-c.tdb
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/specbond.dat
@@ -82,7 +84,7 @@ Writing topology
 
 Writing coordinate file...
 
-gcq#25: "This Puke Stinks Like Beer" (LIVE)
+gcq#163: "Shake Yourself" (YES)
 
 Reading test.pdb...
 Read 106 atoms
@@ -114,7 +116,7 @@ C-terminus: none
 Now there are 13 residues with 230 atoms
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       GRowing Old MAkes el Chrono Sweat
+                  Gromacs Runs On Most of All Computer Systems
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -129,10 +131,10 @@ Now there are 13 residues with 230 atoms
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /tmp/tmpuMCv9e/test0000.gro  Input         Generic structure: gro g96 pdb
+  -f /tmp/tmpsgFkCM/test0000.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
-  -o /tmp/tmpuMCv9e/test0001.gro  Output        Generic structure: gro g96 pdb
+  -o /tmp/tmpsgFkCM/test0001.gro  Output        Generic structure: gro g96 pdb
  -bf      bfact.dat  Input, Opt.   Generic data file
 
       Option   Type  Value  Description
@@ -165,7 +167,7 @@ Option     Filename  Type          Description
       -label string      A  Add chain label for all residues
 
 
-gcq#25: "This Puke Stinks Like Beer" (LIVE)
+gcq#163: "Shake Yourself" (YES)
 
 Read 230 atoms
 No velocities found
@@ -182,7 +184,7 @@ new box angles  :  90.00  90.00  90.00 (degrees)
 new box volume  : 159.84               (nm^3)
                          :-)  G  R  O  M  A  C  S  (-:
 
-                       GRowing Old MAkes el Chrono Sweat
+                  Gromacs Runs On Most of All Computer Systems
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -197,13 +199,13 @@ new box volume  : 159.84               (nm^3)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
- -cp /tmp/tmpuMCv9e/test0001.gro  Input, Opt!   Generic structure: gro g96 pdb
+ -cp /tmp/tmpsgFkCM/test0001.gro  Input, Opt!   Generic structure: gro g96 pdb
                                    tpr tpb tpa
  -cs ffamber_tip3p.gro  Input, Opt!, Lib.  Generic structure: gro g96 pdb tpr
                                    tpb tpa
  -ci     insert.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -o /tmp/tmpuMCv9e/test0002.gro  Output        Generic structure: gro g96 pdb
-  -p /tmp/tmpuMCv9e/test0000.top  In/Out, Opt!  Topology file
+  -o /tmp/tmpsgFkCM/test0002.gro  Output        Generic structure: gro g96 pdb
+  -p /tmp/tmpsgFkCM/test0000.top  In/Out, Opt!  Topology file
 
       Option   Type  Value  Description
 ------------------------------------------------------
@@ -218,7 +220,7 @@ Option     Filename  Type          Description
       -shell   real      0  thickness of optional water layer around solute
 
 Reading solute configuration
-GRowing Old MAkes el Chrono Sweat
+Gromacs Runs On Most of All Computer Systems
 Containing 230 atoms in 13 residues
 Initialising van der waals distances...
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/vdwradii.dat
@@ -242,8 +244,8 @@ Checking Protein-Solvent overlap: tested 6523 pairs, removed 264 atoms.
 Checking Solvent-Solvent overlap: tested 227487 pairs, removed 2739 atoms.
 Added 5218 molecules
 Generated solvent containing 15654 atoms in 5218 residues
-Writing generated configuration to /tmp/tmpuMCv9e/test0002.gro
-GRowing Old MAkes el Chrono Sweat
+Writing generated configuration to /tmp/tmpsgFkCM/test0002.gro
+Gromacs Runs On Most of All Computer Systems
 
 Output configuration contains 15884 atoms in 5231 residues
 WARNING: masses will be determined based on residue and atom names,
@@ -255,9 +257,9 @@ Number of SOL molecules:   5218
 
 Processing topology
 
-Back Off! I just backed up /tmp/tmpuMCv9e/test0000.top to /tmp/tmpuMCv9e/#test0000.top.1#
+Back Off! I just backed up /tmp/tmpsgFkCM/test0000.top to /tmp/tmpsgFkCM/#test0000.top.1#
 
-gcq#9: "Don't Push Me, Cause I'm Close to the Edge" (Grandmaster Flash)
+gcq#57: "Kissing You is Like Kissing Gravel" (Throwing Muses)
 
 Table routines are used for coulomb: FALSE
 Table routines are used for vdw:     FALSE
@@ -273,21 +275,20 @@ There are 0 molecules, 41702 charge groups and 41702 atoms
 There are 0 optimized solvent molecules on node 0
 There are 0 optimized water molecules on node 0
 Grid: 22 x 22 x 22 cells
-Adding line for 5218 solute molecules to topology file (/tmp/tmpuMCv9e/test0000.top)
+Adding line for 5218 solute molecules to topology file (/tmp/tmpsgFkCM/test0000.top)
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp 
-                                   Input, Opt!   grompp input file with MD
-                                   parameters
+  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp  Input,
+                                   Opt!   grompp input file with MD parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmpuMCv9e/test0002.gro  Input         Generic structure: gro g96 pdb
+  -c /tmp/tmpsgFkCM/test0002.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmpuMCv9e/test0000.top  Input         Topology file
+  -p /tmp/tmpsgFkCM/test0000.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmpuMCv9e/test0000.tpr  Output        Generic run input: tpr tpb tpa
+  -o /tmp/tmpsgFkCM/test0000.tpr  Output        Generic run input: tpr tpb tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
       Option   Type  Value  Description
@@ -306,7 +307,7 @@ Option     Filename  Type          Description
                             which should contain a number for each node
     -maxwarn    int     10  Number of warnings after which input processing
                             stops
--[no]check14   bool    yes  Remove 1-4 interactions without Van der Waals
+-[no]check14   bool     no  Remove 1-4 interactions without Van der Waals
 
 Warning: as of GMX v 2.0 unit of compressibility is truly 1/bar
 checking input for internal consistency...
@@ -315,11 +316,9 @@ Generating 1-4 interactions: fudge = 0.5
 Generated 2628 of the 2628 1-4 parameter combinations
 Excluding 3 bonded neighbours for Protein             1
 Excluding 1 bonded neighbours for SOL              5218
-WARNING 1 [file "/tmp/tmpuMCv9e/test0000.top", line 2110]:
+WARNING 1 [file "/tmp/tmpsgFkCM/test0000.top", line 2110]:
   System has non-zero total charge: 1.000000e+00
 
-Removed 0 1-4 interactions for molecule SOL
-Removed 264 1-4 interactions for molecule Protein
 processing coordinates...
 double-checking input for internal consistency...
 renumbering atomtypes...
@@ -328,34 +327,33 @@ Walking down the molecule graph to make shake-blocks
 initialising group options...
 processing index file...
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
-Making dummy/rest group for T-Coupling containing 15884 elements
 Making dummy/rest group for Acceleration containing 15884 elements
 Making dummy/rest group for Freeze containing 15884 elements
-Making dummy/rest group for Energy Mon. containing 15884 elements
 Making dummy/rest group for VCM containing 15884 elements
-Number of degrees of freedom in T-Coupling group rest is 31871.00
+Number of degrees of freedom in T-Coupling group Protein is 460.00
+Number of degrees of freedom in T-Coupling group Other is 31308.00
 Making dummy/rest group for User1 containing 15884 elements
 Making dummy/rest group for User2 containing 15884 elements
-Making dummy/rest group for XTC containing 15884 elements
+Making dummy/rest group for XTC containing 15654 elements
 Making dummy/rest group for Or. Res. Fit containing 15884 elements
-T-Coupling       has 1 element(s): rest
-Energy Mon.      has 1 element(s): rest
+T-Coupling       has 2 element(s): Protein Other
+Energy Mon.      has 2 element(s): Protein Other
 Acceleration     has 1 element(s): rest
 Freeze           has 1 element(s): rest
 User1            has 1 element(s): rest
 User2            has 1 element(s): rest
 VCM              has 1 element(s): rest
-XTC              has 1 element(s): rest
+XTC              has 2 element(s): Protein rest
 Or. Res. Fit     has 1 element(s): rest
 Checking consistency between energy and charge groups...
 writing run input file...
 There was 1 warning
 
-gcq#9: "Don't Push Me, Cause I'm Close to the Edge" (Grandmaster Flash)
+gcq#57: "Kissing You is Like Kissing Gravel" (Throwing Muses)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                   Good gRace! Old Maple Actually Chews Slate
+                   GROningen MAchine for Chemical Simulation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -371,14 +369,13 @@ gcq#9: "Don't Push Me, Cause I'm Close to the Edge" (Grandmaster Flash)
 creating statusfile for 1 node...
 calling cpp...
 processing topology...
-turning H bonds into constraints...
-turning H bonds into constraints...
-#      BONDS:   318
+turning all bonds into constraints...
+turning all bonds into constraints...
 #     ANGLES:   1684
 #      PDIHS:   165
 #     RBDIHS:   2520
-#       LJ14:   609
-#     CONSTR:   372
+#       LJ14:   1401
+#     CONSTR:   690
 #     SETTLE:   10436
 Analysing residue names:
 There are:  5218      OTHER residues
@@ -388,7 +385,7 @@ Analysing Protein...
 Analysing Other...
                          :-)  G  R  O  M  A  C  S  (-:
 
-                   Good gRace! Old Maple Actually Chews Slate
+                   GROningen MAchine for Chemical Simulation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -401,16 +398,12 @@ Analysing Other...
 
                                 :-)  mdrun  (-:
 
-Edgar Luttmann, Stanford University, 2006: AGBNP enabled
-Edgar Luttmann, Stanford University, 2006: velocity Verlet SD enabled
-Edgar Luttmann, Stanford University, 2006: surface area scaled SD enabled
-Edgar Luttmann, Stanford University, 2006: EdGB enabled
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmpuMCv9e/test0000.tpr  Input         Generic run input: tpr tpb tpa
+  -s /tmp/tmpsgFkCM/test0000.tpr  Input         Generic run input: tpr tpb tpa
   -o       traj.trr  Output        Full precision trajectory: trr trj
   -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmpuMCv9e/test0003.gro  Output        Generic structure: gro g96 pdb
+  -c /tmp/tmpsgFkCM/test0003.gro  Output        Generic structure: gro g96 pdb
   -e       ener.edr  Output        Generic energy: edr ene
   -g         md.log  Output        Log file
 -dgdl      dgdl.xvg  Output, Opt.  xvgr/xmgr file
@@ -447,67 +440,48 @@ Option     Filename  Type          Description
                             bombardment on your system
 
 Getting Loaded...
-Reading file /tmp/tmpuMCv9e/test0000.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmpuMCv9e/test0000.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmpsgFkCM/test0000.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmpsgFkCM/test0000.tpr, VERSION 3.1.4 (single precision)
 Loaded with Money
 
 Steepest Descents:
    Tolerance         =  1.00000e+02
-   Number of steps   =           50
-Step=    0, Dmax= 1.0e-02 nm, Epot=  6.82958e+04 Fmax= 5.31653e+04, atom= 12522
-Step=    1, Dmax= 1.0e-02 nm, Epot=  6.03418e+04 Fmax= 2.16834e+04, atom= 12465
-Step=    2, Dmax= 1.2e-02 nm, Epot=  4.89212e+04 Fmax= 8.25276e+03, atom= 4578
-Step=    3, Dmax= 1.4e-02 nm, Epot=  3.71028e+04 Fmax= 3.14741e+03, atom= 2052
-Step=    4, Dmax= 1.7e-02 nm, Epot=  2.64331e+04 Fmax= 1.67045e+04, atom= 228
-Step=    5, Dmax= 2.1e-02 nm, Epot=  2.51004e+04 Fmax= 1.32910e+04, atom= 228
-Step=    6, Dmax= 2.5e-02 nm, Epot=  2.37012e+04 Fmax= 2.37929e+04, atom= 228
-Step=    7, Dmax= 3.0e-02 nm, Epot=  2.26683e+04 Fmax= 2.13942e+04, atom= 228
-Step=    8, Dmax= 3.6e-02 nm, Epot=  2.18152e+04 Fmax= 3.27206e+04, atom= 228
-Step=    9, Dmax= 4.3e-02 nm, Epot=  2.09507e+04 Fmax= 3.20264e+04, atom= 228
-Step=   10, Dmax= 5.2e-02 nm, Epot=  2.05317e+04 Fmax= 4.51279e+04, atom= 228
-Step=   11, Dmax= 6.2e-02 nm, Epot=  1.98675e+04 Fmax= 4.64353e+04, atom= 228
-Step=   12, Dmax= 7.4e-02 nm, Epot=  1.99884e+04 Fmax= 6.16681e+04, atom= 228Step=   13, Dmax= 3.7e-02 nm, Epot=  1.83531e+04 Fmax= 8.79212e+03, atom= 228
-Step=   14, Dmax= 4.5e-02 nm, Epot=  1.75839e+04 Fmax= 5.88297e+04, atom= 228
-Step=   15, Dmax= 5.3e-02 nm, Epot=  1.58047e+04 Fmax= 2.29598e+04, atom= 228
-Step=   16, Dmax= 6.4e-02 nm, Epot=  1.72184e+04 Fmax= 7.30341e+04, atom= 228Step=   17, Dmax= 3.2e-02 nm, Epot=  1.53256e+04 Fmax= 2.53715e+04, atom= 228
-Step=   18, Dmax= 3.9e-02 nm, Epot=  1.49934e+04 Fmax= 3.28211e+04, atom= 228
-Step=   19, Dmax= 4.6e-02 nm, Epot=  1.46375e+04 Fmax= 3.63590e+04, atom= 228
-Step=   20, Dmax= 5.5e-02 nm, Epot=  1.45686e+04 Fmax= 4.62962e+04, atom= 228
-Step=   21, Dmax= 6.7e-02 nm, Epot=  1.44160e+04 Fmax= 5.13415e+04, atom= 228
-Step=   22, Dmax= 8.0e-02 nm, Epot=  1.47959e+04 Fmax= 6.38666e+04, atom= 228Step=   23, Dmax= 4.0e-02 nm, Epot=  1.27988e+04 Fmax= 7.84205e+03, atom= 228
-Step=   24, Dmax= 4.8e-02 nm, Epot=  1.29494e+04 Fmax= 6.37527e+04, atom= 228Step=   25, Dmax= 2.4e-02 nm, Epot=  1.22201e+04 Fmax= 2.66666e+04, atom= 228
-Step=   26, Dmax= 2.9e-02 nm, Epot=  1.17090e+04 Fmax= 1.68023e+04, atom= 228
-Step=   27, Dmax= 3.5e-02 nm, Epot=  1.16504e+04 Fmax= 3.51890e+04, atom= 228
-Step=   28, Dmax= 4.1e-02 nm, Epot=  1.11083e+04 Fmax= 2.72358e+04, atom= 228
-Step=   29, Dmax= 5.0e-02 nm, Epot=  1.14244e+04 Fmax= 4.70238e+04, atom= 228Step=   30, Dmax= 2.5e-02 nm, Epot=  1.05578e+04 Fmax= 1.00766e+04, atom= 228
-Step=   31, Dmax= 3.0e-02 nm, Epot=  1.04287e+04 Fmax= 3.53465e+04, atom= 228
-Step=   32, Dmax= 3.6e-02 nm, Epot=  9.75893e+03 Fmax= 1.87311e+04, atom= 228
-Step=   33, Dmax= 4.3e-02 nm, Epot=  1.01612e+04 Fmax= 4.62129e+04, atom= 228Step=   34, Dmax= 2.1e-02 nm, Epot=  9.42504e+03 Fmax= 1.37634e+04, atom= 228
-Step=   35, Dmax= 2.6e-02 nm, Epot=  9.25305e+03 Fmax= 2.51392e+04, atom= 228
-Step=   36, Dmax= 3.1e-02 nm, Epot=  8.91925e+03 Fmax= 2.16920e+04, atom= 228
-Step=   37, Dmax= 3.7e-02 nm, Epot=  8.93790e+03 Fmax= 3.41879e+04, atom= 228Step=   38, Dmax= 1.9e-02 nm, Epot=  8.53267e+03 Fmax= 6.37163e+03, atom= 228
-Step=   39, Dmax= 2.2e-02 nm, Epot=  8.21587e+03 Fmax= 2.76784e+04, atom= 228
-Step=   40, Dmax= 2.7e-02 nm, Epot=  7.74429e+03 Fmax= 1.29235e+04, atom= 228
-Step=   41, Dmax= 3.2e-02 nm, Epot=  7.86090e+03 Fmax= 3.58744e+04, atom= 228Step=   42, Dmax= 1.6e-02 nm, Epot=  7.50358e+03 Fmax= 1.14759e+04, atom= 228
-Step=   43, Dmax= 1.9e-02 nm, Epot=  7.30218e+03 Fmax= 1.77020e+04, atom= 228
-Step=   44, Dmax= 2.3e-02 nm, Epot=  7.07535e+03 Fmax= 1.74245e+04, atom= 228
-Step=   45, Dmax= 2.8e-02 nm, Epot=  6.96402e+03 Fmax= 2.45377e+04, atom= 228
-Step=   46, Dmax= 3.3e-02 nm, Epot=  6.77832e+03 Fmax= 2.58253e+04, atom= 228
-Step=   47, Dmax= 4.0e-02 nm, Epot=  6.79778e+03 Fmax= 3.42422e+04, atom= 228Step=   48, Dmax= 2.0e-02 nm, Epot=  6.33088e+03 Fmax= 4.40187e+03, atom= 228
-Step=   49, Dmax= 2.4e-02 nm, Epot=  6.00133e+03 Fmax= 3.22778e+04, atom= 228
-Step=   50, Dmax= 2.9e-02 nm, Epot=  5.43187e+03 Fmax= 1.15766e+04, atom= 228
+   Number of steps   =        10000
+Step=    0, Dmax= 1.0e-03 nm, Epot= -1.42100e+05 Fmax= 5.28585e+04, atom= 12522
+Step=    1, Dmax= 1.0e-03 nm, Epot= -1.43066e+05 Fmax= 4.79005e+04, atom= 12522
+Step=    2, Dmax= 1.2e-03 nm, Epot= -1.44253e+05 Fmax= 4.25686e+04, atom= 12522
+Step=    3, Dmax= 1.4e-03 nm, Epot= -1.45711e+05 Fmax= 3.69802e+04, atom= 12522
+Step=    4, Dmax= 1.7e-03 nm, Epot= -1.47530e+05 Fmax= 3.12519e+04, atom= 12522
+Step=    5, Dmax= 2.1e-03 nm, Epot= -1.49764e+05 Fmax= 2.55556e+04, atom= 12522
+Step=    6, Dmax= 2.5e-03 nm, Epot= -1.52526e+05 Fmax= 2.05222e+04, atom= 12465
+Step=    7, Dmax= 3.0e-03 nm, Epot= -1.55865e+05 Fmax= 1.58110e+04, atom= 12465
+Step=    8, Dmax= 3.6e-03 nm, Epot= -1.59796e+05 Fmax= 1.15788e+04, atom= 12465
+Step=    9, Dmax= 4.3e-03 nm, Epot= -1.64376e+05 Fmax= 7.98041e+03, atom= 12465
+Step=   10, Dmax= 5.2e-03 nm, Epot= -1.69617e+05 Fmax= 5.28288e+03, atom= 1395
+Step=   11, Dmax= 6.2e-03 nm, Epot= -1.75329e+05 Fmax= 3.84262e+03, atom= 1395
+Step=   12, Dmax= 7.4e-03 nm, Epot= -1.80892e+05 Fmax= 2.92821e+03, atom= 2669
+Step=   13, Dmax= 8.9e-03 nm, Epot= -1.86122e+05 Fmax= 2.43638e+03, atom= 356
+Step=   14, Dmax= 1.1e-02 nm, Epot= -1.90477e+05 Fmax= 2.14657e+03, atom= 15001
+Step=   15, Dmax= 1.3e-02 nm, Epot= -1.93338e+05 Fmax= 2.12405e+03, atom= 14569
+Step=   16, Dmax= 1.5e-02 nm, Epot= -1.94424e+05 Fmax= 2.03301e+03, atom= 15613
+Step=   17, Dmax= 1.8e-02 nm, Epot= -1.93801e+05 Fmax= 1.90450e+03, atom= 12796Step=   18, Dmax= 9.2e-03 nm, Epot= -1.94362e+05 Fmax= 1.98655e+03, atom= 15613Step=   19, Dmax= 4.6e-03 nm, Epot= -1.94462e+05 Fmax= 2.01716e+03, atom= 15613
+Step=   20, Dmax= 5.5e-03 nm, Epot= -1.94344e+05 Fmax= 1.98024e+03, atom= 15613Step=   21, Dmax= 2.8e-03 nm, Epot= -1.94430e+05 Fmax= 1.99874e+03, atom= 15613Step=   22, Dmax= 1.4e-03 nm, Epot= -1.94455e+05 Fmax= 2.00868e+03, atom= 15613Step=   23, Dmax= 6.9e-04 nm, Epot= -1.94461e+05 Fmax= 2.01028e+03, atom= 15613Step=   24, Dmax= 3.5e-04 nm, Epot= -1.94456e+05 Fmax= 2.01495e+03, atom= 15613Step=   25, Dmax= 1.7e-04 nm, Epot= -1.94456e+05 Fmax= 2.00847e+03, atom= 9562Step=   26, Dmax= 8.7e-05 nm, Epot= -1.94458e+05 Fmax= 2.00513e+03, atom= 15613Step=   27, Dmax= 4.3e-05 nm, Epot= -1.94459e+05 Fmax= 2.04458e+03, atom= 15613Step=   28, Dmax= 2.2e-05 nm, Epot= -1.94461e+05 Fmax= 1.99767e+03, atom= 9562Step=   29, Dmax= 1.1e-05 nm, Epot= -1.94461e+05 Fmax= 2.11378e+03, atom= 15613Step=   30, Dmax= 5.4e-06 nm, Epot= -1.94461e+05 Fmax= 2.12054e+03, atom= 15613Step=   31, Dmax= 2.7e-06 nm, Epot= -1.94462e+05 Fmax= 2.50507e+03, atom= 14278Step=   32, Dmax= 1.4e-06 nm, Epot= -1.94462e+05 Fmax= 3.05043e+03, atom= 11524
+Stepsize too small (6.77066e-07 nm)Converged to machine precision,
+but not to the requested precision (100)
+You might need to increase your constraint accuracy, or turn
+off constraints alltogether (set constraints = none in mdp file)
 
 writing lowest energy coordinates.
 
-Steepest Descents did not converge in 50 steps
-  Potential Energy  =  5.43187e+03
-Maximum force:  1.15766e+04
+Steepest Descents did not converge in 33 steps
+  Potential Energy  = -1.94462e+05
+Maximum force:  2.01716e+03
 
-gcq#213: "I Have a Bad Case Of Purple Diarrhea" (Urban Dance Squad)
+gcq#40: "Yeah, a Wuzz, Or a Jerk" (F. Black)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-               GRoups of Organic Molecules in ACtion for Science
+                     Gyas ROwers Mature At Cryogenic Speed
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -522,9 +496,9 @@ gcq#213: "I Have a Bad Case Of Purple Diarrhea" (Urban Dance Squad)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmpuMCv9e/test0000.tpr  Input         Generic run input: tpr tpb tpa
+  -s /tmp/tmpsgFkCM/test0000.tpr  Input         Generic run input: tpr tpb tpa
   -n      index.ndx  Input, Opt.   Index file
-  -o /tmp/tmpuMCv9e/test0004.gro  Output        Generic structure: gro g96 pdb
+  -o /tmp/tmpsgFkCM/test0004.gro  Output        Generic structure: gro g96 pdb
   -g     genion.log  Output        Log file
 -pot        pot.pdb  Output, Opt.  Protein data bank file
 
@@ -545,9 +519,9 @@ Option     Filename  Type          Description
        -seed    int   1993  Seed for random number generator
 
 WARNING: turning of free energy, will use lambda=0
-Reading file /tmp/tmpuMCv9e/test0000.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmpuMCv9e/test0000.tpr, VERSION 3.1.4 (single precision)
-Using a coulomb cut-off of 1.2 nm
+Reading file /tmp/tmpsgFkCM/test0000.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmpsgFkCM/test0000.tpr, VERSION 3.1.4 (single precision)
+Using a coulomb cut-off of 0.9 nm
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
 Group     0 (      System) has 15884 elements
 Group     1 (     Protein) has   230 elements
@@ -567,65 +541,65 @@ Select a group: Number of (3-atomic) solvent molecules: 5218
 Doing single force calculation...
 Replacing solvent molecule 801 (atom 2633) with Cl
 Doing single force calculation...
+Replacing solvent molecule 4583 (atom 13979) with Na
+Doing single force calculation...
+Replacing solvent molecule 4560 (atom 13910) with Cl
+Doing single force calculation...
 Replacing solvent molecule 4928 (atom 15014) with Na
 Doing single force calculation...
 Replacing solvent molecule 4905 (atom 14945) with Cl
 Doing single force calculation...
-Replacing solvent molecule 1120 (atom 3590) with Na
+Replacing solvent molecule 3121 (atom 9593) with Na
+Doing single force calculation...
+Replacing solvent molecule 4716 (atom 14378) with Cl
+Doing single force calculation...
+Replacing solvent molecule 898 (atom 2924) with Na
+Doing single force calculation...
+Replacing solvent molecule 5064 (atom 15422) with Cl
+Doing single force calculation...
+Replacing solvent molecule 4199 (atom 12827) with Na
 Doing single force calculation...
 Replacing solvent molecule 5123 (atom 15599) with Cl
 Doing single force calculation...
 Replacing solvent molecule 5087 (atom 15491) with Na
 Doing single force calculation...
-Replacing solvent molecule 5064 (atom 15422) with Cl
+Replacing solvent molecule 4775 (atom 14555) with Cl
 Doing single force calculation...
-Replacing solvent molecule 1381 (atom 4373) with Na
-Doing single force calculation...
-Replacing solvent molecule 669 (atom 2237) with Cl
-Doing single force calculation...
-Replacing solvent molecule 4364 (atom 13322) with Na
-Doing single force calculation...
-Replacing solvent molecule 5132 (atom 15626) with Cl
-Doing single force calculation...
-Replacing solvent molecule 3096 (atom 9518) with Na
-Doing single force calculation...
-Replacing solvent molecule 4851 (atom 14783) with Cl
-Doing single force calculation...
-Replacing solvent molecule 4199 (atom 12827) with Na
+Replacing solvent molecule 4739 (atom 14447) with Na
 Doing single force calculation...
 Replacing solvent molecule 3246 (atom 9968) with Cl
 Doing single force calculation...
-Replacing solvent molecule 3615 (atom 11075) with Na
+Replacing solvent molecule 1845 (atom 5765) with Na
 Doing single force calculation...
-Replacing solvent molecule 2275 (atom 7055) with Cl
+Replacing solvent molecule 2143 (atom 6659) with Cl
 Doing single force calculation...
-Replacing solvent molecule 889 (atom 2897) with Na
+Replacing solvent molecule 3920 (atom 11990) with Na
 Doing single force calculation...
 Replacing solvent molecule 62 (atom 416) with Cl
 Doing single force calculation...
-Replacing solvent molecule 898 (atom 2924) with Na
+Replacing solvent molecule 3028 (atom 9314) with Na
 Doing single force calculation...
-Replacing solvent molecule 4716 (atom 14378) with Cl
+Replacing solvent molecule 1007 (atom 3251) with Cl
 Doing single force calculation...
-Replacing solvent molecule 513 (atom 1769) with Na
+Replacing solvent molecule 812 (atom 2666) with Na
 Doing single force calculation...
-Replacing solvent molecule 4560 (atom 13910) with Cl
+Replacing solvent molecule 2624 (atom 8102) with Cl
 Doing single force calculation...
-Replacing solvent molecule 4583 (atom 13979) with Na
+Replacing solvent molecule 388 (atom 1394) with Na
 Doing single force calculation...
-Replacing solvent molecule 4493 (atom 13709) with Cl
+Replacing solvent molecule 4624 (atom 14102) with Cl
 Doing single force calculation...
-Replacing solvent molecule 319 (atom 1187) with Na
+Replacing solvent molecule 2526 (atom 7808) with Na
 Doing single force calculation...
-Replacing solvent molecule 1190 (atom 3800) with Cl
+Replacing solvent molecule 4469 (atom 13637) with Cl
 
 
-gcq#131: "Three Little Fonzies" (Pulp Fiction)
+gcq#114: "This is a Recording" (Your Answering Machine)
 
 Select a continuous group of solvent molecules
                          :-)  G  R  O  M  A  C  S  (-:
 
-                     Gnomes, ROck Monsters And Chili Sauce
+                 Good ROcking Metal Altar for Chronical Sinners
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -640,10 +614,10 @@ Select a continuous group of solvent molecules
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /tmp/tmpuMCv9e/test0004.gro  Input         Generic structure: gro g96 pdb
+  -f /tmp/tmpsgFkCM/test0004.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
-  -o /tmp/tmpuMCv9e/test0005.gro  Output        Generic structure: gro g96 pdb
-  -p /tmp/tmpuMCv9e/test0001.top  Output        Topology file
+  -o /tmp/tmpsgFkCM/test0005.gro  Output        Generic structure: gro g96 pdb
+  -p /tmp/tmpsgFkCM/test0001.top  Output        Topology file
   -i      posre.itp  Output        Include file for topology
   -n      clean.ndx  Output, Opt.  Index file
   -q      clean.pdb  Output, Opt.  Generic structure: gro g96 pdb
@@ -679,14 +653,16 @@ Option     Filename  Type          Description
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/xlateat.dat
 13 out of 13 lines of xlateat.dat converted succesfully
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
-No occupancies in /tmp/tmpuMCv9e/test0004.gro
+No occupancies in /tmp/tmpsgFkCM/test0004.gro
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/FF.dat
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.atp
 Atomtype 1Atomtype 2Atomtype 3Atomtype 4Atomtype 5Atomtype 6Atomtype 7Atomtype 8Atomtype 9Atomtype 10Atomtype 11Atomtype 12Atomtype 13Atomtype 14Atomtype 15Atomtype 16Atomtype 17Atomtype 18Atomtype 19Atomtype 20Atomtype 21Atomtype 22Atomtype 23Atomtype 24Atomtype 25Atomtype 26Atomtype 27Atomtype 28Atomtype 29Atomtype 30Atomtype 31Atomtype 32Atomtype 33Atomtype 34Atomtype 35Atomtype 36Atomtype 37Atomtype 38Atomtype 39Atomtype 40Atomtype 41Atomtype 42Atomtype 43Atomtype 44Atomtype 45Atomtype 46Atomtype 47Atomtype 48Atomtype 49Atomtype 50Atomtype 51Atomtype 52Atomtype 53Atomtype 54Atomtype 55Atomtype 56Atomtype 57Atomtype 58Atomtype 59Atomtype 60Atomtype 61Atomtype 62Atomtype 63Atomtype 64Atomtype 65Atomtype 66Atomtype 67Atomtype 68Atomtype 69Atomtype 70Atomtype 71Atomtype 72Atomtype 73
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.rtp
-Residue 1Residue 2Residue 3Residue 4Residue 5Residue 6Residue 7Residue 8Residue 9Residue 10Residue 11Residue 12Residue 13Residue 14Residue 15Residue 16Residue 17Residue 18Residue 19Residue 20Residue 21Residue 22Residue 23Residue 24Residue 25Residue 26Residue 27Residue 28Residue 29Residue 30Residue 31Residue 32Residue 33Residue 34Residue 35Residue 36Residue 37Residue 38Residue 39Residue 40Residue 41Residue 42Residue 43Residue 44Residue 45Residue 46Residue 47Residue 48Residue 49Residue 50Residue 51Residue 52Residue 53Residue 54Residue 55Residue 56Residue 57Residue 58Residue 59Residue 60Residue 61Residue 62Residue 63Residue 64Residue 65Residue 66Residue 67Residue 68Residue 69Residue 70Residue 71Residue 72Residue 73Residue 74Residue 75Residue 76Residue 77Residue 78Residue 79Residue 80Residue 81Residue 82Residue 83Residue 84Residue 85Residue 86Residue 87Residue 88Residue 89Residue 90Residue 91Residue 92Residue 93Residue 94Residue 95Residue 96Residue 97Residue 98Residue 99Residue 100Residue 101Residue 102Residue 103Residue 104Residue 105Residue 106Residue 107Residue 108Residue 109Residue 110Residue 111Residue 112Residue 113Residue 114Residue 115Residue 116Residue 117Residue 118Residue 119Residue 120Residue 121Residue 122Residue 123Residue 124Residue 125Residue 126Residue 127Residue 128Residue 129Residue 130Residue 131Residue 132
+Residue 1Residue 2Residue 3Residue 4Residue 5Residue 6Residue 7Residue 8Residue 9Residue 10Residue 11Residue 12Residue 13Residue 14Residue 15Residue 16Residue 17Residue 18Residue 19Residue 20Residue 21Residue 22Residue 23Residue 24Residue 25Residue 26Residue 27Residue 28Residue 29Residue 30Residue 31Residue 32Residue 33Residue 34Residue 35Residue 36Residue 37Residue 38Residue 39Residue 40Residue 41Residue 42Residue 43Residue 44Residue 45Residue 46Residue 47Residue 48Residue 49Residue 50Residue 51Residue 52Residue 53Residue 54Residue 55Residue 56Residue 57Residue 58Residue 59Residue 60Residue 61Residue 62Residue 63Residue 64Residue 65Residue 66Residue 67Residue 68Residue 69Residue 70Residue 71Residue 72Residue 73Residue 74Residue 75Residue 76Residue 77Residue 78Residue 79Residue 80Residue 81Residue 82Residue 83Residue 84Residue 85Residue 86Residue 87Residue 88Residue 89Residue 90Residue 91Residue 92Residue 93Residue 94Residue 95Residue 96Residue 97Residue 98Residue 99Residue 100Residue 101Residue 102Residue 103Residue 104Residue 105Residue 106Residue 107Residue 108Residue 109Residue 110Residue 111Residue 112Residue 113Residue 114Residue 115Residue 116Residue 117Residue 118Residue 119Residue 120Residue 121Residue 122Residue 123Residue 124Residue 125Residue 126Residue 127Residue 128Residue 129Residue 130Residue 131Residue 132Residue 133
 Sorting it all out...
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p.hdb
+Error in hdb file: nah = 83
+line = ''
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p-n.tdb
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/ffamber99p-c.tdb
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/specbond.dat
@@ -777,7 +753,7 @@ Writing topology
 Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/specbond.dat
 5 out of 5 lines of specbond.dat converted succesfully
 There are 5191 donors and 5191 acceptors
-There are 6908 hydrogen bonds
+There are 6897 hydrogen bonds
 Making bonds...
 Number of bonds was 10382, now 10382
 Generating angles and dihedrals...
@@ -794,9 +770,9 @@ Total charge in system -0.000 e
 
 Writing coordinate file...
 
-gcq#221: "Your Bones Got a Little Machine" (Pixies)
+gcq#204: "Your Country Needs YOU" (US Army)
 
-Reading /tmp/tmpuMCv9e/test0004.gro...
+Reading /tmp/tmpsgFkCM/test0004.gro...
 Read 'Protein in water', 5324 atoms
 Analyzing pdb file
 Gave chain 1 chain identifier 'A'
@@ -842,18 +818,17 @@ Including chain 2 in system: 27 atoms 27 residues
 Including chain 3 in system: 15573 atoms 5191 residues
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp 
-                                   Input, Opt!   grompp input file with MD
-                                   parameters
+  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp  Input,
+                                   Opt!   grompp input file with MD parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmpuMCv9e/test0005.gro  Input         Generic structure: gro g96 pdb
+  -c /tmp/tmpsgFkCM/test0005.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -n /tmp/tmpuMCv9e/test0000.ndx  Input, Opt!   Index file
+  -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmpuMCv9e/test0001.top  Input         Topology file
+  -p /tmp/tmpsgFkCM/test0001.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmpuMCv9e/test0001.tpr  Output        Generic run input: tpr tpb tpa
+  -o /tmp/tmpsgFkCM/test0001.tpr  Output        Generic run input: tpr tpb tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
       Option   Type  Value  Description
@@ -872,7 +847,7 @@ Option     Filename  Type          Description
                             which should contain a number for each node
     -maxwarn    int     10  Number of warnings after which input processing
                             stops
--[no]check14   bool    yes  Remove 1-4 interactions without Van der Waals
+-[no]check14   bool     no  Remove 1-4 interactions without Van der Waals
 
 
 Back Off! I just backed up mdout.mdp to ./#mdout.mdp.1#
@@ -884,9 +859,6 @@ Generated 2628 of the 2628 1-4 parameter combinations
 Excluding 3 bonded neighbours for Protein_A           1
 Excluding 3 bonded neighbours for Protein_B           1
 Excluding 1 bonded neighbours for SOL              5191
-Removed 0 1-4 interactions for molecule SOL
-Removed 264 1-4 interactions for molecule Protein_A
-Removed 0 1-4 interactions for molecule Protein_B
 processing coordinates...
 double-checking input for internal consistency...
 renumbering atomtypes...
@@ -894,33 +866,33 @@ converting bonded parameters...
 Walking down the molecule graph to make shake-blocks
 initialising group options...
 processing index file...
-Making dummy/rest group for T-Coupling containing 15830 elements
+Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
 Making dummy/rest group for Acceleration containing 15830 elements
 Making dummy/rest group for Freeze containing 15830 elements
-Making dummy/rest group for Energy Mon. containing 15830 elements
 Making dummy/rest group for VCM containing 15830 elements
-Number of degrees of freedom in T-Coupling group rest is 31790.00
+Number of degrees of freedom in T-Coupling group Protein is 460.00
+Number of degrees of freedom in T-Coupling group Other is 31227.00
 Making dummy/rest group for User1 containing 15830 elements
 Making dummy/rest group for User2 containing 15830 elements
-Making dummy/rest group for XTC containing 15830 elements
+Making dummy/rest group for XTC containing 15600 elements
 Making dummy/rest group for Or. Res. Fit containing 15830 elements
-T-Coupling       has 1 element(s): rest
-Energy Mon.      has 1 element(s): rest
+T-Coupling       has 2 element(s): Protein Other
+Energy Mon.      has 2 element(s): Protein Other
 Acceleration     has 1 element(s): rest
 Freeze           has 1 element(s): rest
 User1            has 1 element(s): rest
 User2            has 1 element(s): rest
 VCM              has 1 element(s): rest
-XTC              has 1 element(s): rest
+XTC              has 2 element(s): Protein rest
 Or. Res. Fit     has 1 element(s): rest
 Checking consistency between energy and charge groups...
 writing run input file...
 
-gcq#114: "This is a Recording" (Your Answering Machine)
+gcq#204: "Your Country Needs YOU" (US Army)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                 Good ROcking Metal Altar for Chronical Sinners
+               Giving Russians Opium May Alter Current Situation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -936,19 +908,24 @@ gcq#114: "This is a Recording" (Your Answering Machine)
 creating statusfile for 1 node...
 calling cpp...
 processing topology...
-turning H bonds into constraints...
-turning H bonds into constraints...
-turning H bonds into constraints...
-#      BONDS:   318
+turning all bonds into constraints...
+turning all bonds into constraints...
+turning all bonds into constraints...
 #     ANGLES:   1684
 #      PDIHS:   165
 #     RBDIHS:   2520
-#       LJ14:   609
-#     CONSTR:   372
+#       LJ14:   1401
+#     CONSTR:   690
 #     SETTLE:   10382
+Analysing residue names:
+There are:  5218      OTHER residues
+There are:    13    PROTEIN residues
+There are:     0        DNA residues
+Analysing Protein...
+Analysing Other...
                          :-)  G  R  O  M  A  C  S  (-:
 
-                 Good ROcking Metal Altar for Chronical Sinners
+               Giving Russians Opium May Alter Current Situation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -961,16 +938,12 @@ turning H bonds into constraints...
 
                                 :-)  mdrun  (-:
 
-Edgar Luttmann, Stanford University, 2006: AGBNP enabled
-Edgar Luttmann, Stanford University, 2006: velocity Verlet SD enabled
-Edgar Luttmann, Stanford University, 2006: surface area scaled SD enabled
-Edgar Luttmann, Stanford University, 2006: EdGB enabled
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -s /tmp/tmpuMCv9e/test0001.tpr  Input         Generic run input: tpr tpb tpa
+  -s /tmp/tmpsgFkCM/test0001.tpr  Input         Generic run input: tpr tpb tpa
   -o       traj.trr  Output        Full precision trajectory: trr trj
   -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmpuMCv9e/test0006.gro  Output        Generic structure: gro g96 pdb
+  -c /tmp/tmpsgFkCM/test0006.gro  Output        Generic structure: gro g96 pdb
   -e       ener.edr  Output        Generic energy: edr ene
   -g         md.log  Output        Log file
 -dgdl      dgdl.xvg  Output, Opt.  xvgr/xmgr file
@@ -1009,82 +982,112 @@ Option     Filename  Type          Description
 
 Back Off! I just backed up md.log to ./#md.log.1#
 Getting Loaded...
-Reading file /tmp/tmpuMCv9e/test0001.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmpuMCv9e/test0001.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmpsgFkCM/test0001.tpr, VERSION 3.1.4 (single precision)
+Reading file /tmp/tmpsgFkCM/test0001.tpr, VERSION 3.1.4 (single precision)
 Loaded with Money
 
 
 Back Off! I just backed up ener.edr to ./#ener.edr.1#
 Steepest Descents:
    Tolerance         =  1.00000e+02
-   Number of steps   =           50
-Step=    0, Dmax= 1.0e-02 nm, Epot=  7.54183e+04 Fmax= 6.56928e+04, atom= 248
-Step=    1, Dmax= 1.0e-02 nm, Epot=  6.77506e+04 Fmax= 2.58342e+04, atom= 12509
-Step=    2, Dmax= 1.2e-02 nm, Epot=  5.61366e+04 Fmax= 1.43633e+04, atom= 6579
-Step=    3, Dmax= 1.4e-02 nm, Epot=  4.63896e+04 Fmax= 6.11804e+03, atom= 6579
-Step=    4, Dmax= 1.7e-02 nm, Epot=  3.61645e+04 Fmax= 4.10043e+03, atom= 228
-Step=    5, Dmax= 2.1e-02 nm, Epot=  2.91010e+04 Fmax= 2.85103e+04, atom= 228
-Step=    6, Dmax= 2.5e-02 nm, Epot=  2.78811e+04 Fmax= 9.50146e+03, atom= 228
-Step=    7, Dmax= 3.0e-02 nm, Epot=  2.58857e+04 Fmax= 3.60368e+04, atom= 228
-Step=    8, Dmax= 3.6e-02 nm, Epot=  2.47056e+04 Fmax= 1.83174e+04, atom= 228
-Step=    9, Dmax= 4.3e-02 nm, Epot=  2.41301e+04 Fmax= 4.67426e+04, atom= 228
-Step=   10, Dmax= 5.2e-02 nm, Epot=  2.28747e+04 Fmax= 3.06786e+04, atom= 228
-Step=   11, Dmax= 6.2e-02 nm, Epot=  2.32568e+04 Fmax= 6.14885e+04, atom= 228Step=   12, Dmax= 3.1e-02 nm, Epot=  2.19553e+04 Fmax= 1.56433e+04, atom= 228
-Step=   13, Dmax= 3.7e-02 nm, Epot=  2.14308e+04 Fmax= 4.03320e+04, atom= 228
-Step=   14, Dmax= 4.5e-02 nm, Epot=  2.04486e+04 Fmax= 2.65589e+04, atom= 228
-Step=   15, Dmax= 5.3e-02 nm, Epot=  2.06564e+04 Fmax= 5.33969e+04, atom= 228Step=   16, Dmax= 2.7e-02 nm, Epot=  1.97249e+04 Fmax= 1.35991e+04, atom= 228
-Step=   17, Dmax= 3.2e-02 nm, Epot=  1.92338e+04 Fmax= 3.48059e+04, atom= 228
-Step=   18, Dmax= 3.9e-02 nm, Epot=  1.84590e+04 Fmax= 2.32842e+04, atom= 228
-Step=   19, Dmax= 4.6e-02 nm, Epot=  1.85180e+04 Fmax= 4.60662e+04, atom= 228Step=   20, Dmax= 2.3e-02 nm, Epot=  1.78708e+04 Fmax= 1.15177e+04, atom= 228
-Step=   21, Dmax= 2.8e-02 nm, Epot=  1.73951e+04 Fmax= 3.05734e+04, atom= 228
-Step=   22, Dmax= 3.3e-02 nm, Epot=  1.67532e+04 Fmax= 1.97207e+04, atom= 228
-Step=   23, Dmax= 4.0e-02 nm, Epot=  1.67288e+04 Fmax= 4.06316e+04, atom= 228
-Step=   24, Dmax= 4.8e-02 nm, Epot=  1.60333e+04 Fmax= 3.11893e+04, atom= 228
-Step=   25, Dmax= 5.8e-02 nm, Epot=  1.65205e+04 Fmax= 5.44975e+04, atom= 228Step=   26, Dmax= 2.9e-02 nm, Epot=  1.53255e+04 Fmax= 1.19223e+04, atom= 228
-Step=   27, Dmax= 3.5e-02 nm, Epot=  1.52285e+04 Fmax= 4.01482e+04, atom= 228
-Step=   28, Dmax= 4.1e-02 nm, Epot=  1.43923e+04 Fmax= 2.23473e+04, atom= 228
-Step=   29, Dmax= 5.0e-02 nm, Epot=  1.49488e+04 Fmax= 5.21666e+04, atom= 228Step=   30, Dmax= 2.5e-02 nm, Epot=  1.39587e+04 Fmax= 1.50218e+04, atom= 228
-Step=   31, Dmax= 3.0e-02 nm, Epot=  1.37953e+04 Fmax= 3.01257e+04, atom= 228
-Step=   32, Dmax= 3.6e-02 nm, Epot=  1.33363e+04 Fmax= 2.37913e+04, atom= 228
-Step=   33, Dmax= 4.3e-02 nm, Epot=  1.34704e+04 Fmax= 4.08650e+04, atom= 228Step=   34, Dmax= 2.1e-02 nm, Epot=  1.28706e+04 Fmax= 8.64594e+03, atom= 228
-Step=   35, Dmax= 2.6e-02 nm, Epot=  1.26057e+04 Fmax= 3.03236e+04, atom= 228
-Step=   36, Dmax= 3.1e-02 nm, Epot=  1.20604e+04 Fmax= 1.66065e+04, atom= 228
-Step=   37, Dmax= 3.7e-02 nm, Epot=  1.22328e+04 Fmax= 3.94083e+04, atom= 228Step=   38, Dmax= 1.9e-02 nm, Epot=  1.17492e+04 Fmax= 1.14582e+04, atom= 228
-Step=   39, Dmax= 2.2e-02 nm, Epot=  1.15304e+04 Fmax= 2.24342e+04, atom= 228
-Step=   40, Dmax= 2.7e-02 nm, Epot=  1.12043e+04 Fmax= 1.80392e+04, atom= 228
-Step=   41, Dmax= 3.2e-02 nm, Epot=  1.11627e+04 Fmax= 3.05973e+04, atom= 228
-Step=   42, Dmax= 3.8e-02 nm, Epot=  1.08370e+04 Fmax= 2.73939e+04, atom= 228
-Step=   43, Dmax= 4.6e-02 nm, Epot=  1.10442e+04 Fmax= 4.20059e+04, atom= 228Step=   44, Dmax= 2.3e-02 nm, Epot=  1.03261e+04 Fmax= 7.46796e+03, atom= 228
-Step=   45, Dmax= 2.8e-02 nm, Epot=  1.02206e+04 Fmax= 3.44972e+04, atom= 228
-Step=   46, Dmax= 3.3e-02 nm, Epot=  9.59267e+03 Fmax= 1.60243e+04, atom= 228
-Step=   47, Dmax= 4.0e-02 nm, Epot=  1.00348e+04 Fmax= 4.42039e+04, atom= 228Step=   48, Dmax= 2.0e-02 nm, Epot=  9.35505e+03 Fmax= 1.41549e+04, atom= 228
-Step=   49, Dmax= 2.4e-02 nm, Epot=  9.22393e+03 Fmax= 2.22387e+04, atom= 228
-Step=   50, Dmax= 2.9e-02 nm, Epot=  8.99777e+03 Fmax= 2.12305e+04, atom= 228
+   Number of steps   =        10000
+Step=    0, Dmax= 1.0e-03 nm, Epot=  7.48874e+04 Fmax= 5.70705e+04, atom= 12509
+Step=    1, Dmax= 1.0e-03 nm, Epot=  7.38163e+04 Fmax= 5.20470e+04, atom= 12509
+Step=    2, Dmax= 1.2e-03 nm, Epot=  7.25060e+04 Fmax= 4.65971e+04, atom= 12509
+Step=    3, Dmax= 1.4e-03 nm, Epot=  7.09216e+04 Fmax= 4.07820e+04, atom= 12509
+Step=    4, Dmax= 1.7e-03 nm, Epot=  6.89699e+04 Fmax= 3.47635e+04, atom= 12509
+Step=    5, Dmax= 2.1e-03 nm, Epot=  6.65682e+04 Fmax= 2.86963e+04, atom= 12509
+Step=    6, Dmax= 2.5e-03 nm, Epot=  6.35820e+04 Fmax= 2.27686e+04, atom= 12509
+Step=    7, Dmax= 3.0e-03 nm, Epot=  5.98492e+04 Fmax= 1.80252e+04, atom= 15691
+Step=    8, Dmax= 3.6e-03 nm, Epot=  5.53381e+04 Fmax= 1.39697e+04, atom= 15691
+Step=    9, Dmax= 4.3e-03 nm, Epot=  4.99789e+04 Fmax= 1.05818e+04, atom= 15691
+Step=   10, Dmax= 5.2e-03 nm, Epot=  4.36211e+04 Fmax= 7.85376e+03, atom= 15691
+Step=   11, Dmax= 6.2e-03 nm, Epot=  3.59781e+04 Fmax= 5.71095e+03, atom= 15691
+Step=   12, Dmax= 7.4e-03 nm, Epot=  2.64430e+04 Fmax= 4.10212e+03, atom= 15691
+Step=   13, Dmax= 8.9e-03 nm, Epot=  1.40739e+04 Fmax= 3.59401e+03, atom= 5926
+Step=   14, Dmax= 1.1e-02 nm, Epot=  4.10355e+02 Fmax= 3.41107e+03, atom= 5926
+Step=   15, Dmax= 1.3e-02 nm, Epot= -1.40021e+04 Fmax= 3.12330e+03, atom= 5926
+Step=   16, Dmax= 1.5e-02 nm, Epot= -2.99510e+04 Fmax= 2.68906e+03, atom= 5926
+Step=   17, Dmax= 1.8e-02 nm, Epot= -4.83806e+04 Fmax= 2.40476e+03, atom= 12992
+Step=   18, Dmax= 2.2e-02 nm, Epot= -6.80629e+04 Fmax= 2.04983e+03, atom= 2800
+Step=   19, Dmax= 2.7e-02 nm, Epot= -8.89659e+04 Fmax= 1.93359e+03, atom= 4169
+Step=   20, Dmax= 3.2e-02 nm, Epot= -1.07324e+05 Fmax= 2.72462e+03, atom= 2442
+Step=   21, Dmax= 3.8e-02 nm, Epot= -1.17902e+05 Fmax= 7.97961e+03, atom= 232
+Step=   22, Dmax= 4.6e-02 nm, Epot= -1.21447e+05 Fmax= 1.33077e+04, atom= 235
+Step=   23, Dmax= 5.5e-02 nm, Epot= -1.23795e+05 Fmax= 1.17651e+04, atom= 235
+Step=   24, Dmax= 6.6e-02 nm, Epot= -1.26772e+05 Fmax= 3.31003e+03, atom= 235
+Step=   25, Dmax= 7.9e-02 nm, Epot= -1.34242e+05 Fmax= 6.21022e+04, atom= 235
+Step=   26, Dmax= 9.5e-02 nm, Epot= -1.34238e+05 Fmax= 7.74361e+04, atom= 235Step=   27, Dmax= 4.8e-02 nm, Epot= -1.35244e+05 Fmax= 7.60949e+03, atom= 235
+Step=   28, Dmax= 5.7e-02 nm, Epot= -1.37211e+05 Fmax= 6.00475e+03, atom= 235
+Step=   29, Dmax= 6.9e-02 nm, Epot= -1.36693e+05 Fmax= 2.36689e+04, atom= 235Step=   30, Dmax= 3.4e-02 nm, Epot= -1.38479e+05 Fmax= 4.26030e+03, atom= 51
+Step=   31, Dmax= 4.1e-02 nm, Epot= -1.38408e+05 Fmax= 1.43680e+04, atom= 51Step=   32, Dmax= 2.1e-02 nm, Epot= -1.39636e+05 Fmax= 3.44793e+03, atom= 51
+Step=   33, Dmax= 2.5e-02 nm, Epot= -1.40479e+05 Fmax= 8.12340e+03, atom= 232
+Step=   34, Dmax= 3.0e-02 nm, Epot= -1.41609e+05 Fmax= 4.27290e+03, atom= 1955
+Step=   35, Dmax= 3.6e-02 nm, Epot= -1.42230e+05 Fmax= 2.27934e+04, atom= 232
+Step=   36, Dmax= 4.3e-02 nm, Epot= -1.43138e+05 Fmax= 3.61276e+03, atom= 1955
+Step=   37, Dmax= 5.1e-02 nm, Epot= -1.43099e+05 Fmax= 5.84555e+04, atom= 232Step=   38, Dmax= 2.6e-02 nm, Epot= -1.43970e+05 Fmax= 2.83959e+03, atom= 51
+Step=   39, Dmax= 3.1e-02 nm, Epot= -1.43914e+05 Fmax= 9.74637e+03, atom= 49Step=   40, Dmax= 1.5e-02 nm, Epot= -1.44513e+05 Fmax= 3.15951e+03, atom= 51
+Step=   41, Dmax= 1.8e-02 nm, Epot= -1.44995e+05 Fmax= 4.37550e+03, atom= 51
+Step=   42, Dmax= 2.2e-02 nm, Epot= -1.45406e+05 Fmax= 3.93566e+03, atom= 51
+Step=   43, Dmax= 2.7e-02 nm, Epot= -1.45587e+05 Fmax= 7.35750e+03, atom= 51
+Step=   44, Dmax= 3.2e-02 nm, Epot= -1.46093e+05 Fmax= 4.66692e+03, atom= 51
+Step=   45, Dmax= 3.8e-02 nm, Epot= -1.45675e+05 Fmax= 1.22947e+04, atom= 51Step=   46, Dmax= 1.9e-02 nm, Epot= -1.46450e+05 Fmax= 2.47495e+03, atom= 51
+Step=   47, Dmax= 2.3e-02 nm, Epot= -1.46483e+05 Fmax= 6.48536e+03, atom= 38
+Step=   48, Dmax= 2.8e-02 nm, Epot= -1.46965e+05 Fmax= 4.65704e+03, atom= 51
+Step=   49, Dmax= 3.3e-02 nm, Epot= -1.46658e+05 Fmax= 8.04938e+03, atom= 38Step=   50, Dmax= 1.7e-02 nm, Epot= -1.47262e+05 Fmax= 2.16070e+03, atom= 236
+Step=   51, Dmax= 2.0e-02 nm, Epot= -1.47370e+05 Fmax= 8.69995e+03, atom= 236
+Step=   52, Dmax= 2.4e-02 nm, Epot= -1.47651e+05 Fmax= 4.19265e+03, atom= 236
+Step=   53, Dmax= 2.9e-02 nm, Epot= -1.47802e+05 Fmax= 7.12994e+03, atom= 236
+Step=   54, Dmax= 3.4e-02 nm, Epot= -1.47897e+05 Fmax= 6.25675e+03, atom= 236
+Step=   55, Dmax= 4.1e-02 nm, Epot= -1.48049e+05 Fmax= 4.43659e+03, atom= 236
+Step=   56, Dmax= 4.9e-02 nm, Epot= -1.47858e+05 Fmax= 1.54522e+04, atom= 236Step=   57, Dmax= 2.5e-02 nm, Epot= -1.48185e+05 Fmax= 1.84483e+03, atom= 15055
+Step=   58, Dmax= 3.0e-02 nm, Epot= -1.47826e+05 Fmax= 6.94884e+03, atom= 236Step=   59, Dmax= 1.5e-02 nm, Epot= -1.48226e+05 Fmax= 1.85018e+03, atom= 15055
+Step=   60, Dmax= 1.8e-02 nm, Epot= -1.48152e+05 Fmax= 1.97521e+03, atom= 51Step=   61, Dmax= 8.9e-03 nm, Epot= -1.48243e+05 Fmax= 1.84240e+03, atom= 15055
+Step=   62, Dmax= 1.1e-02 nm, Epot= -1.48284e+05 Fmax= 1.83065e+03, atom= 15055
+Step=   63, Dmax= 1.3e-02 nm, Epot= -1.48364e+05 Fmax= 1.81141e+03, atom= 15055
+Step=   64, Dmax= 1.5e-02 nm, Epot= -1.48338e+05 Fmax= 2.81910e+03, atom= 42Step=   65, Dmax= 7.7e-03 nm, Epot= -1.48455e+05 Fmax= 1.80438e+03, atom= 15055
+Step=   66, Dmax= 9.2e-03 nm, Epot= -1.48498e+05 Fmax= 1.79073e+03, atom= 12056
+Step=   67, Dmax= 1.1e-02 nm, Epot= -1.48521e+05 Fmax= 1.81725e+03, atom= 13781
+Step=   68, Dmax= 1.3e-02 nm, Epot= -1.48518e+05 Fmax= 2.01679e+03, atom= 51Step=   69, Dmax= 6.6e-03 nm, Epot= -1.48546e+05 Fmax= 1.83537e+03, atom= 13781
+Step=   70, Dmax= 8.0e-03 nm, Epot= -1.48624e+05 Fmax= 1.85810e+03, atom= 13781
+Step=   71, Dmax= 9.6e-03 nm, Epot= -1.48674e+05 Fmax= 1.85624e+03, atom= 13781
+Step=   72, Dmax= 1.1e-02 nm, Epot= -1.48691e+05 Fmax= 1.85419e+03, atom= 13781
+Step=   73, Dmax= 1.4e-02 nm, Epot= -1.48708e+05 Fmax= 1.81952e+03, atom= 13537
+Step=   74, Dmax= 1.7e-02 nm, Epot= -1.48767e+05 Fmax= 1.84661e+03, atom= 5687
+Step=   75, Dmax= 2.0e-02 nm, Epot= -1.48313e+05 Fmax= 5.95468e+03, atom= 38Step=   76, Dmax= 9.9e-03 nm, Epot= -1.48810e+05 Fmax= 2.02641e+03, atom= 51
+Step=   77, Dmax= 1.2e-02 nm, Epot= -1.48784e+05 Fmax= 2.63960e+03, atom= 42Step=   78, Dmax= 5.9e-03 nm, Epot= -1.48860e+05 Fmax= 1.93680e+03, atom= 5687
+Step=   79, Dmax= 7.1e-03 nm, Epot= -1.48892e+05 Fmax= 1.96945e+03, atom= 5687
+Step=   80, Dmax= 8.6e-03 nm, Epot= -1.48881e+05 Fmax= 1.99994e+03, atom= 5687Step=   81, Dmax= 4.3e-03 nm, Epot= -1.48890e+05 Fmax= 1.98250e+03, atom= 5687Step=   82, Dmax= 2.1e-03 nm, Epot= -1.48897e+05 Fmax= 1.97535e+03, atom= 5687
+Step=   83, Dmax= 2.6e-03 nm, Epot= -1.48897e+05 Fmax= 1.98366e+03, atom= 5687Step=   84, Dmax= 1.3e-03 nm, Epot= -1.48885e+05 Fmax= 1.97940e+03, atom= 5687Step=   85, Dmax= 6.4e-04 nm, Epot= -1.48894e+05 Fmax= 1.97770e+03, atom= 5687Step=   86, Dmax= 3.2e-04 nm, Epot= -1.48894e+05 Fmax= 1.97679e+03, atom= 5687Step=   87, Dmax= 1.6e-04 nm, Epot= -1.48894e+05 Fmax= 1.97590e+03, atom= 5687Step=   88, Dmax= 8.0e-05 nm, Epot= -1.48897e+05 Fmax= 1.98146e+03, atom= 5687Step=   89, Dmax= 4.0e-05 nm, Epot= -1.48896e+05 Fmax= 1.97523e+03, atom= 5687Step=   90, Dmax= 2.0e-05 nm, Epot= -1.48897e+05 Fmax= 2.01188e+03, atom= 5687Step=   91, Dmax= 1.0e-05 nm, Epot= -1.48896e+05 Fmax= 1.99413e+03, atom= 5687Step=   92, Dmax= 5.0e-06 nm, Epot= -1.48896e+05 Fmax= 1.92166e+03, atom= 15652Step=   93, Dmax= 2.5e-06 nm, Epot= -1.48896e+05 Fmax= 2.28543e+03, atom= 15055Step=   94, Dmax= 1.3e-06 nm, Epot= -1.48896e+05 Fmax= 2.85040e+03, atom= 10663
+Stepsize too small (6.26791e-07 nm)Converged to machine precision,
+but not to the requested precision (100)
+You might need to increase your constraint accuracy, or turn
+off constraints alltogether (set constraints = none in mdp file)
 
 writing lowest energy coordinates.
 
 Back Off! I just backed up traj.trr to ./#traj.trr.1#
 
-Steepest Descents did not converge in 50 steps
-  Potential Energy  =  8.99777e+03
-Maximum force:  2.12305e+04
+Steepest Descents did not converge in 95 steps
+  Potential Energy  = -1.48897e+05
+Maximum force:  1.97535e+03
 
-gcq#122: "The Path Of the Righteous Man is Beset On All Sides With the Iniquities Of the Selfish and the Tyranny Of Evil Men." (Pulp Fiction)
+gcq#64: "Meet Me At the Coffee Shop" (Red Hot Chili Peppers)
 
 Option     Filename  Type          Description
 ------------------------------------------------------------
-  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil1.mdp 
+  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/equilibrate.mdp 
                                    Input, Opt!   grompp input file with MD
                                    parameters
  -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmpuMCv9e/test0006.gro  Input         Generic structure: gro g96 pdb
+  -c /tmp/tmpsgFkCM/test0006.gro  Input         Generic structure: gro g96 pdb
                                    tpr tpb tpa
   -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -n /tmp/tmpuMCv9e/test0000.ndx  Input, Opt!   Index file
+  -n      index.ndx  Input, Opt.   Index file
 -deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmpuMCv9e/test0001.top  Input         Topology file
+  -p /tmp/tmpsgFkCM/test0001.top  Input         Topology file
  -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmpuMCv9e/test0002.tpr  Output        Generic run input: tpr tpb tpa
+  -o /tmp/tmpsgFkCM/test0002.tpr  Output        Generic run input: tpr tpb tpa
   -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
 
       Option   Type  Value  Description
@@ -1103,7 +1106,7 @@ Option     Filename  Type          Description
                             which should contain a number for each node
     -maxwarn    int     10  Number of warnings after which input processing
                             stops
--[no]check14   bool    yes  Remove 1-4 interactions without Van der Waals
+-[no]check14   bool     no  Remove 1-4 interactions without Van der Waals
 
 
 Back Off! I just backed up mdout.mdp to ./#mdout.mdp.2#
@@ -1115,275 +1118,40 @@ Generated 2628 of the 2628 1-4 parameter combinations
 Excluding 3 bonded neighbours for Protein_A           1
 Excluding 3 bonded neighbours for Protein_B           1
 Excluding 1 bonded neighbours for SOL              5191
-Removed 0 1-4 interactions for molecule SOL
-Removed 264 1-4 interactions for molecule Protein_A
-Removed 0 1-4 interactions for molecule Protein_B
 processing coordinates...
 double-checking input for internal consistency...
-Setting gen_seed to 340615
-2 300.000000 47490 340615 
-3
-4 300.000000 47490 340615 
-Velocities were taken from a Maxwell distribution at 300 K
 renumbering atomtypes...
 converting bonded parameters...
 Walking down the molecule graph to make shake-blocks
 initialising group options...
 processing index file...
-Making dummy/rest group for T-Coupling containing 257 elements
-Making dummy/rest group for Acceleration containing 15830 elements
-Making dummy/rest group for Freeze containing 15573 elements
-Making dummy/rest group for Energy Mon. containing 15830 elements
-Making dummy/rest group for VCM containing 257 elements
-Number of degrees of freedom in T-Coupling group sol is nan
-Number of degrees of freedom in T-Coupling group rest is nan
-Making dummy/rest group for User1 containing 15830 elements
-Making dummy/rest group for User2 containing 15830 elements
-Making dummy/rest group for XTC containing 15830 elements
-Making dummy/rest group for Or. Res. Fit containing 15830 elements
-T-Coupling       has 2 element(s): sol rest
-Energy Mon.      has 1 element(s): rest
-Acceleration     has 1 element(s): rest
-Freeze           has 2 element(s): protein rest
-User1            has 1 element(s): rest
-User2            has 1 element(s): rest
-VCM              has 2 element(s): sol rest
-XTC              has 1 element(s): rest
-Or. Res. Fit     has 1 element(s): rest
-Checking consistency between energy and charge groups...
-writing run input file...
-
-gcq#122: "The Path Of the Righteous Man is Beset On All Sides With the Iniquities Of the Selfish and the Tyranny Of Evil Men." (Pulp Fiction)
-
-                         :-)  G  R  O  M  A  C  S  (-:
-
-                     Gnomes, ROck Monsters And Chili Sauce
-
-                            :-)  VERSION 3.1.4  (-:
-
-
-       Copyright (c) 1991-2002, University of Groningen, The Netherlands
-         This program is free software; you can redistribute it and/or
-          modify it under the terms of the GNU General Public License
-         as published by the Free Software Foundation; either version 2
-             of the License, or (at your option) any later version.
-
-                                :-)  grompp  (-:
-
-creating statusfile for 1 node...
-calling cpp...
-processing topology...
-turning H bonds into constraints...
-turning H bonds into constraints...
-turning H bonds into constraints...
-#      BONDS:   318
-#     ANGLES:   1684
-#      PDIHS:   165
-#     RBDIHS:   2520
-#       LJ14:   609
-#     CONSTR:   372
-#     SETTLE:   10382
-                         :-)  G  R  O  M  A  C  S  (-:
-
-                     Gnomes, ROck Monsters And Chili Sauce
-
-                            :-)  VERSION 3.1.4  (-:
-
-
-       Copyright (c) 1991-2002, University of Groningen, The Netherlands
-         This program is free software; you can redistribute it and/or
-          modify it under the terms of the GNU General Public License
-         as published by the Free Software Foundation; either version 2
-             of the License, or (at your option) any later version.
-
-                                :-)  mdrun  (-:
-
-Edgar Luttmann, Stanford University, 2006: AGBNP enabled
-Edgar Luttmann, Stanford University, 2006: velocity Verlet SD enabled
-Edgar Luttmann, Stanford University, 2006: surface area scaled SD enabled
-Edgar Luttmann, Stanford University, 2006: EdGB enabled
-Option     Filename  Type          Description
-------------------------------------------------------------
-  -s /tmp/tmpuMCv9e/test0002.tpr  Input         Generic run input: tpr tpb tpa
-  -o       traj.trr  Output        Full precision trajectory: trr trj
-  -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmpuMCv9e/test0007.gro  Output        Generic structure: gro g96 pdb
-  -e       ener.edr  Output        Generic energy: edr ene
-  -g         md.log  Output        Log file
--dgdl      dgdl.xvg  Output, Opt.  xvgr/xmgr file
--table    table.xvg  Input, Opt.   xvgr/xmgr file
--rerun    rerun.xtc  Input, Opt.   Generic trajectory: xtc trr trj gro g96 pdb
- -ei        sam.edi  Input, Opt.   ED sampling input
- -eo        sam.edo  Output, Opt.  ED sampling output
-  -j       wham.gct  Input, Opt.   General coupling stuff
- -jo        bam.gct  Input, Opt.   General coupling stuff
--ffout      gct.xvg  Output, Opt.  xvgr/xmgr file
--devout   deviatie.xvg  Output, Opt.  xvgr/xmgr file
--runav  runaver.xvg  Output, Opt.  xvgr/xmgr file
- -pi       pull.ppa  Input, Opt.   Pull parameters
- -po    pullout.ppa  Output, Opt.  Pull parameters
- -pd       pull.pdo  Output, Opt.  Pull data output
- -pn       pull.ndx  Input, Opt.   Index file
--mtx         nm.mtx  Output, Opt.  Hessian matrix
-
-      Option   Type  Value  Description
-------------------------------------------------------
-      -[no]h   bool     no  Print help info and quit
-      -[no]X   bool     no  Use dialog box GUI to edit command line options
-       -nice    int     19  Set the nicelevel
-     -deffnm string         Set the default filename for all file options
-         -np    int      1  Number of nodes, must be the same as used for
-                            grompp
-      -[no]v   bool    yes  Be loud and noisy
--[no]compact   bool    yes  Write a compact log file
-  -[no]multi   bool     no  Do multiple simulations in parallel (only with -np
-                            > 1)
-   -[no]glas   bool     no  Do glass simulation with special long range
-                            corrections
- -[no]ionize   bool     no  Do a simulation including the effect of an X-Ray
-                            bombardment on your system
-
-
-Back Off! I just backed up md.log to ./#md.log.2#
-Getting Loaded...
-Reading file /tmp/tmpuMCv9e/test0002.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmpuMCv9e/test0002.tpr, VERSION 3.1.4 (single precision)
-Loaded with Money
-
-
-Back Off! I just backed up ener.edr to ./#ener.edr.2#
-starting mdrun 'Protein in water'
-100 steps,      0.2 ps.
-
-
-Back Off! I just backed up traj.trr to ./#traj.trr.2#
-step 0step 10, remaining runtime:    24 s               step 20, remaining runtime:    15 s               step 30, remaining runtime:    13 s               step 40, remaining runtime:    11 s               step 50, remaining runtime:     9 s               step 60, remaining runtime:     7 s               step 70, remaining runtime:     5 s               step 80, remaining runtime:     3 s               step 90, remaining runtime:     1 s               Writing final coordinates.
-step 100, remaining runtime:     0 s               
-
-
-	M E G A - F L O P S   A C C O U N T I N G
-
-   RF=Reaction-field  Free=Free Energy  SC=Softcore
-   T=Tabulated        S=Solvent         W=Water     WW=Water-Water
-
-           Computing:      M-Number      M-Flop's  % Flop's
-         LJ + Coulomb      0.020503      0.779114     0.0
-           Coulomb(T)      4.908752    201.258832     0.8
-        Coulomb(T)(W)      0.022311      2.744253     0.0
-      LJ(T) + Coul(T)      3.726572    249.680324     1.0
-   LJ(T) + Coul(T)(W)      2.650400    394.909600     1.5
-  LJ(T) + Coul(T)(WW)     61.570876  23766.358136    93.1
-      Innerloop-Iatom     12.401603    124.016030     0.5
-             NS-Pairs     18.721988    393.161748     1.5
-         Reset In Box      0.174130      1.567170     0.0
-              Shift-X      3.197660     19.185960     0.1
-               CG-CoM      0.059906      1.737274     0.0
-                Bonds      0.010706      0.460358     0.0
-               Angles      0.042521      6.930923     0.0
-              Propers      0.003333      0.763257     0.0
-         RB-Dihedrals      0.050904     12.573288     0.0
-               Virial      1.601557     28.828026     0.1
-               Update      1.598830     49.563730     0.2
-              Stop-CM      0.158300      1.583000     0.0
-            Calc-Ekin      1.614660     43.595820     0.2
-                Shake      0.013309      0.399270     0.0
-              Shake-V      1.598830     23.982450     0.1
-           Shake-Init      0.012772      0.127720     0.0
-            Shake-Vir      1.598830     28.778940     0.1
-               Settle      0.534673    172.699379     0.7
-          Total                 25525.68460   100.0
-
-               NODE (s)   Real (s)      (%)
-       Time:     18.870     19.000     99.3
-               (Mnbf/s)   (GFlops) (ps/NODE hour) (NODE hour/ns)
-Performance:     30.250      1.353     38.156     26.208
-
-gcq#113: "Ease Myself Into the Body Bag" (P.J. Harvey)
-
-Option     Filename  Type          Description
-------------------------------------------------------------
-  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil2.mdp 
-                                   Input, Opt!   grompp input file with MD
-                                   parameters
- -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmpuMCv9e/test0007.gro  Input         Generic structure: gro g96 pdb
-                                   tpr tpb tpa
-  -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -n /tmp/tmpuMCv9e/test0000.ndx  Input, Opt!   Index file
--deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmpuMCv9e/test0001.top  Input         Topology file
- -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmpuMCv9e/test0003.tpr  Output        Generic run input: tpr tpb tpa
-  -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
-
-      Option   Type  Value  Description
-------------------------------------------------------
-      -[no]h   bool     no  Print help info and quit
-      -[no]X   bool     no  Use dialog box GUI to edit command line options
-       -nice    int      0  Set the nicelevel
-      -[no]v   bool    yes  Be loud and noisy
-       -time   real     -1  Take frame at or first after this time.
-         -np    int      1  Generate statusfile for # nodes
--[no]shuffle   bool     no  Shuffle molecules over nodes
-   -[no]sort   bool     no  Sort molecules according to X coordinate
--[no]rmdumbds  bool    yes  Remove constant bonded interactions with dummies
-       -load string         Releative load capacity of each node on a parallel
-                            machine. Be sure to use quotes around the string,
-                            which should contain a number for each node
-    -maxwarn    int     10  Number of warnings after which input processing
-                            stops
--[no]check14   bool    yes  Remove 1-4 interactions without Van der Waals
-
-
-Back Off! I just backed up mdout.mdp to ./#mdout.mdp.3#
-Warning: as of GMX v 2.0 unit of compressibility is truly 1/bar
-checking input for internal consistency...
-Generated 2628 of the 2628 non-bonded parameter combinations
-Generating 1-4 interactions: fudge = 0.5
-Generated 2628 of the 2628 1-4 parameter combinations
-Excluding 3 bonded neighbours for Protein_A           1
-Excluding 3 bonded neighbours for Protein_B           1
-Excluding 1 bonded neighbours for SOL              5191
-Removed 0 1-4 interactions for molecule SOL
-Removed 264 1-4 interactions for molecule Protein_A
-Removed 0 1-4 interactions for molecule Protein_B
-processing coordinates...
-double-checking input for internal consistency...
-Setting gen_seed to 340643
-2 300.000000 47490 340643 
-3
-4 300.000000 47490 340643 
-Velocities were taken from a Maxwell distribution at 300 K
-renumbering atomtypes...
-converting bonded parameters...
-Walking down the molecule graph to make shake-blocks
-initialising group options...
-processing index file...
+Opening library file /Users/vincentvoelz/local/gromacs-3.1.4/share/top/aminoacids.dat
 Making dummy/rest group for Acceleration containing 15830 elements
 Making dummy/rest group for Freeze containing 15830 elements
-Number of degrees of freedom in T-Coupling group protein is 644.00
-Number of degrees of freedom in T-Coupling group sol is 31143.00
+Making dummy/rest group for VCM containing 15830 elements
+Number of degrees of freedom in T-Coupling group Protein is 460.00
+Number of degrees of freedom in T-Coupling group Other is 31227.00
 Making dummy/rest group for User1 containing 15830 elements
 Making dummy/rest group for User2 containing 15830 elements
-Making dummy/rest group for XTC containing 15830 elements
+Making dummy/rest group for XTC containing 15600 elements
 Making dummy/rest group for Or. Res. Fit containing 15830 elements
-T-Coupling       has 2 element(s): protein sol
-Energy Mon.      has 2 element(s): protein sol
+T-Coupling       has 2 element(s): Protein Other
+Energy Mon.      has 2 element(s): Protein Other
 Acceleration     has 1 element(s): rest
 Freeze           has 1 element(s): rest
 User1            has 1 element(s): rest
 User2            has 1 element(s): rest
-VCM              has 2 element(s): protein sol
-XTC              has 1 element(s): rest
+VCM              has 1 element(s): rest
+XTC              has 2 element(s): Protein rest
 Or. Res. Fit     has 1 element(s): rest
 Checking consistency between energy and charge groups...
 writing run input file...
 
-gcq#203: "Take Dehydrated Water On Your Desert Trips" (Space Quest III)
+gcq#64: "Meet Me At the Coffee Shop" (Red Hot Chili Peppers)
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                 Good ROcking Metal Altar for Chronical Sinners
+                   GROningen MAchine for Chemical Simulation
 
                             :-)  VERSION 3.1.4  (-:
 
@@ -1399,241 +1167,18 @@ gcq#203: "Take Dehydrated Water On Your Desert Trips" (Space Quest III)
 creating statusfile for 1 node...
 calling cpp...
 processing topology...
-turning H bonds into constraints...
-turning H bonds into constraints...
-turning H bonds into constraints...
-#      BONDS:   318
+turning all bonds into constraints...
+turning all bonds into constraints...
+turning all bonds into constraints...
 #     ANGLES:   1684
 #      PDIHS:   165
 #     RBDIHS:   2520
-#       LJ14:   609
-#     CONSTR:   372
+#       LJ14:   1401
+#     CONSTR:   690
 #     SETTLE:   10382
-                         :-)  G  R  O  M  A  C  S  (-:
-
-               Giving Russians Opium May Alter Current Situation
-
-                            :-)  VERSION 3.1.4  (-:
-
-
-       Copyright (c) 1991-2002, University of Groningen, The Netherlands
-         This program is free software; you can redistribute it and/or
-          modify it under the terms of the GNU General Public License
-         as published by the Free Software Foundation; either version 2
-             of the License, or (at your option) any later version.
-
-                                :-)  mdrun  (-:
-
-Edgar Luttmann, Stanford University, 2006: AGBNP enabled
-Edgar Luttmann, Stanford University, 2006: velocity Verlet SD enabled
-Edgar Luttmann, Stanford University, 2006: surface area scaled SD enabled
-Edgar Luttmann, Stanford University, 2006: EdGB enabled
-Option     Filename  Type          Description
-------------------------------------------------------------
-  -s /tmp/tmpuMCv9e/test0003.tpr  Input         Generic run input: tpr tpb tpa
-  -o       traj.trr  Output        Full precision trajectory: trr trj
-  -x       traj.xtc  Output, Opt.  Compressed trajectory (portable xdr format)
-  -c /tmp/tmpuMCv9e/test0008.gro  Output        Generic structure: gro g96 pdb
-  -e       ener.edr  Output        Generic energy: edr ene
-  -g         md.log  Output        Log file
--dgdl      dgdl.xvg  Output, Opt.  xvgr/xmgr file
--table    table.xvg  Input, Opt.   xvgr/xmgr file
--rerun    rerun.xtc  Input, Opt.   Generic trajectory: xtc trr trj gro g96 pdb
- -ei        sam.edi  Input, Opt.   ED sampling input
- -eo        sam.edo  Output, Opt.  ED sampling output
-  -j       wham.gct  Input, Opt.   General coupling stuff
- -jo        bam.gct  Input, Opt.   General coupling stuff
--ffout      gct.xvg  Output, Opt.  xvgr/xmgr file
--devout   deviatie.xvg  Output, Opt.  xvgr/xmgr file
--runav  runaver.xvg  Output, Opt.  xvgr/xmgr file
- -pi       pull.ppa  Input, Opt.   Pull parameters
- -po    pullout.ppa  Output, Opt.  Pull parameters
- -pd       pull.pdo  Output, Opt.  Pull data output
- -pn       pull.ndx  Input, Opt.   Index file
--mtx         nm.mtx  Output, Opt.  Hessian matrix
-
-      Option   Type  Value  Description
-------------------------------------------------------
-      -[no]h   bool     no  Print help info and quit
-      -[no]X   bool     no  Use dialog box GUI to edit command line options
-       -nice    int     19  Set the nicelevel
-     -deffnm string         Set the default filename for all file options
-         -np    int      1  Number of nodes, must be the same as used for
-                            grompp
-      -[no]v   bool    yes  Be loud and noisy
--[no]compact   bool    yes  Write a compact log file
-  -[no]multi   bool     no  Do multiple simulations in parallel (only with -np
-                            > 1)
-   -[no]glas   bool     no  Do glass simulation with special long range
-                            corrections
- -[no]ionize   bool     no  Do a simulation including the effect of an X-Ray
-                            bombardment on your system
-
-
-Back Off! I just backed up md.log to ./#md.log.3#
-Getting Loaded...
-Reading file /tmp/tmpuMCv9e/test0003.tpr, VERSION 3.1.4 (single precision)
-Reading file /tmp/tmpuMCv9e/test0003.tpr, VERSION 3.1.4 (single precision)
-Loaded with Money
-
-
-Back Off! I just backed up ener.edr to ./#ener.edr.3#
-starting mdrun 'Protein in water'
-100 steps,      0.2 ps.
-
-
-Back Off! I just backed up traj.trr to ./#traj.trr.3#
-
-Back Off! I just backed up traj.xtc to ./#traj.xtc.1#
-step 0step 10, remaining runtime:    16 s               step 20, remaining runtime:    15 s               step 30, remaining runtime:    13 s               step 40, remaining runtime:    10 s               step 50, remaining runtime:     8 s               step 60, remaining runtime:     7 s               step 70, remaining runtime:     5 s               step 80, remaining runtime:     3 s               step 90, remaining runtime:     1 s               Writing final coordinates.
-step 100, remaining runtime:     0 s               
-
-
-	M E G A - F L O P S   A C C O U N T I N G
-
-   RF=Reaction-field  Free=Free Energy  SC=Softcore
-   T=Tabulated        S=Solvent         W=Water     WW=Water-Water
-
-           Computing:      M-Number      M-Flop's  % Flop's
-         LJ + Coulomb      0.020503      0.779114     0.0
-           Coulomb(T)      4.899501    200.879541     0.8
-        Coulomb(T)(W)      0.022172      2.727156     0.0
-      LJ(T) + Coul(T)      3.732316    250.065172     1.0
-   LJ(T) + Coul(T)(W)      2.675543    398.655907     1.6
-  LJ(T) + Coul(T)(WW)     61.381397  23693.219242    92.9
-      Innerloop-Iatom     12.437887    124.378870     0.5
-             NS-Pairs     18.657593    391.809453     1.5
-         Reset In Box      0.174130      1.567170     0.0
-              Shift-X      3.197660     19.185960     0.1
-               CG-CoM      0.059906      1.737274     0.0
-                Bonds      0.010706      0.460358     0.0
-               Angles      0.042521      6.930923     0.0
-              Propers      0.003333      0.763257     0.0
-         RB-Dihedrals      0.050904     12.573288     0.0
-               Virial      1.601557     28.828026     0.1
-      Ext.ens. Update      1.598830     86.336820     0.3
-              Stop-CM      0.158300      1.583000     0.0
-            Calc-Ekin      1.614660     43.595820     0.2
-                Shake      0.029039      0.871170     0.0
-              Shake-V      1.598830     23.982450     0.1
-           Shake-Init      0.012772      0.127720     0.0
-            Shake-Vir      1.598830     28.778940     0.1
-               Settle      0.534673    172.699379     0.7
-          Total                 25492.53601   100.0
-
-               NODE (s)   Real (s)      (%)
-       Time:     18.830     19.000     99.1
-               (Mnbf/s)   (GFlops) (ps/NODE hour) (NODE hour/ns)
-Performance:     30.227      1.354     38.237     26.153
-
-gcq#194: "You Crashed Into the Swamps" (Silicon Graphics)
-
-Option     Filename  Type          Description
-------------------------------------------------------------
-  -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_grompp.mdp 
-                                   Input, Opt!   grompp input file with MD
-                                   parameters
- -po      mdout.mdp  Output        grompp input file with MD parameters
-  -c /tmp/tmpuMCv9e/test0008.gro  Input         Generic structure: gro g96 pdb
-                                   tpr tpb tpa
-  -r       conf.gro  Input, Opt.   Generic structure: gro g96 pdb tpr tpb tpa
-  -n /tmp/tmpuMCv9e/test0000.ndx  Input, Opt!   Index file
--deshuf  deshuf.ndx  Output, Opt.  Index file
-  -p /tmp/tmpuMCv9e/test0001.top  Input         Topology file
- -pp  processed.top  Output, Opt.  Topology file
-  -o /tmp/tmpuMCv9e/test0004.tpr  Output        Generic run input: tpr tpb tpa
-  -t       traj.trr  Input, Opt.   Full precision trajectory: trr trj
-
-      Option   Type  Value  Description
-------------------------------------------------------
-      -[no]h   bool     no  Print help info and quit
-      -[no]X   bool     no  Use dialog box GUI to edit command line options
-       -nice    int      0  Set the nicelevel
-      -[no]v   bool    yes  Be loud and noisy
-       -time   real     -1  Take frame at or first after this time.
-         -np    int      1  Generate statusfile for # nodes
--[no]shuffle   bool     no  Shuffle molecules over nodes
-   -[no]sort   bool     no  Sort molecules according to X coordinate
--[no]rmdumbds  bool    yes  Remove constant bonded interactions with dummies
-       -load string         Releative load capacity of each node on a parallel
-                            machine. Be sure to use quotes around the string,
-                            which should contain a number for each node
-    -maxwarn    int     10  Number of warnings after which input processing
-                            stops
--[no]check14   bool    yes  Remove 1-4 interactions without Van der Waals
-
-
-Back Off! I just backed up mdout.mdp to ./#mdout.mdp.4#
-Warning: as of GMX v 2.0 unit of compressibility is truly 1/bar
-checking input for internal consistency...
-Generated 2628 of the 2628 non-bonded parameter combinations
-Generating 1-4 interactions: fudge = 0.5
-Generated 2628 of the 2628 1-4 parameter combinations
-Excluding 3 bonded neighbours for Protein_A           1
-Excluding 3 bonded neighbours for Protein_B           1
-Excluding 1 bonded neighbours for SOL              5191
-Removed 0 1-4 interactions for molecule SOL
-Removed 264 1-4 interactions for molecule Protein_A
-Removed 0 1-4 interactions for molecule Protein_B
-processing coordinates...
-double-checking input for internal consistency...
-Setting gen_seed to 340672
-2 300.000000 47490 340672 
-3
-4 300.000000 47490 340672 
-Velocities were taken from a Maxwell distribution at 300 K
-renumbering atomtypes...
-converting bonded parameters...
-Walking down the molecule graph to make shake-blocks
-initialising group options...
-processing index file...
-Making dummy/rest group for Acceleration containing 15830 elements
-Making dummy/rest group for Freeze containing 15830 elements
-Number of degrees of freedom in T-Coupling group protein is 644.00
-Number of degrees of freedom in T-Coupling group sol is 31143.00
-Making dummy/rest group for User1 containing 15830 elements
-Making dummy/rest group for User2 containing 15830 elements
-Making dummy/rest group for XTC containing 15830 elements
-Making dummy/rest group for Or. Res. Fit containing 15830 elements
-T-Coupling       has 2 element(s): protein sol
-Energy Mon.      has 2 element(s): protein sol
-Acceleration     has 1 element(s): rest
-Freeze           has 1 element(s): rest
-User1            has 1 element(s): rest
-User2            has 1 element(s): rest
-VCM              has 2 element(s): protein sol
-XTC              has 1 element(s): rest
-Or. Res. Fit     has 1 element(s): rest
-Checking consistency between energy and charge groups...
-writing run input file...
-
-gcq#194: "You Crashed Into the Swamps" (Silicon Graphics)
-
-                         :-)  G  R  O  M  A  C  S  (-:
-
-              GROningen Mixture of Alchemy and Childrens' Stories
-
-                            :-)  VERSION 3.1.4  (-:
-
-
-       Copyright (c) 1991-2002, University of Groningen, The Netherlands
-         This program is free software; you can redistribute it and/or
-          modify it under the terms of the GNU General Public License
-         as published by the Free Software Foundation; either version 2
-             of the License, or (at your option) any later version.
-
-                                :-)  grompp  (-:
-
-creating statusfile for 1 node...
-calling cpp...
-processing topology...
-turning H bonds into constraints...
-turning H bonds into constraints...
-turning H bonds into constraints...
-#      BONDS:   318
-#     ANGLES:   1684
-#      PDIHS:   165
-#     RBDIHS:   2520
-#       LJ14:   609
-#     CONSTR:   372
-#     SETTLE:   10382
+Analysing residue names:
+There are:  5218      OTHER residues
+There are:    13    PROTEIN residues
+There are:     0        DNA residues
+Analysing Protein...
+Analysing Other...

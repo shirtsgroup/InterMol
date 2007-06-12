@@ -1,14 +1,10 @@
-echo 9 | pdb2gmx -f test.pdb -o /tmp/tmpuMCv9e/test0000.gro -p /tmp/tmpuMCv9e/test0000.top -ignh
-editconf -bt cubic -f /tmp/tmpuMCv9e/test0000.gro -o /tmp/tmpuMCv9e/test0001.gro -d 0.9
-genbox -cp /tmp/tmpuMCv9e/test0001.gro -cs ffamber_tip3p.gro -o /tmp/tmpuMCv9e/test0002.gro -p /tmp/tmpuMCv9e/test0000.top
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp -c /tmp/tmpuMCv9e/test0002.gro -o /tmp/tmpuMCv9e/test0000.tpr -p /tmp/tmpuMCv9e/test0000.top -check14
-mdrun -v -s /tmp/tmpuMCv9e/test0000.tpr -c /tmp/tmpuMCv9e/test0003.gro 
-echo 12 | genion -s /tmp/tmpuMCv9e/test0000.tpr -o /tmp/tmpuMCv9e/test0004.gro -pname Na -np 13 -pq 1 -nname Cl -nn 14 -nq -1 -g genion.log
-echo 9 | pdb2gmx -f /tmp/tmpuMCv9e/test0004.gro -o /tmp/tmpuMCv9e/test0005.gro -p /tmp/tmpuMCv9e/test0001.top -ignh
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_min1.mdp -c /tmp/tmpuMCv9e/test0005.gro -o /tmp/tmpuMCv9e/test0001.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
-mdrun -v -s /tmp/tmpuMCv9e/test0001.tpr -c /tmp/tmpuMCv9e/test0006.gro 
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil1.mdp -c /tmp/tmpuMCv9e/test0006.gro -o /tmp/tmpuMCv9e/test0002.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
-mdrun -v -s /tmp/tmpuMCv9e/test0002.tpr -c /tmp/tmpuMCv9e/test0007.gro 
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_equil2.mdp -c /tmp/tmpuMCv9e/test0007.gro -o /tmp/tmpuMCv9e/test0003.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
-mdrun -v -s /tmp/tmpuMCv9e/test0003.tpr -c /tmp/tmpuMCv9e/test0008.gro 
-grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/racecar2_grompp.mdp -c /tmp/tmpuMCv9e/test0008.gro -o /tmp/tmpuMCv9e/test0004.tpr -p /tmp/tmpuMCv9e/test0001.top -n /tmp/tmpuMCv9e/test0000.ndx -check14
+echo 9 | pdb2gmx -f test.pdb -o /tmp/tmpsgFkCM/test0000.gro -p /tmp/tmpsgFkCM/test0000.top -ignh
+editconf -bt cubic -f /tmp/tmpsgFkCM/test0000.gro -o /tmp/tmpsgFkCM/test0001.gro -d 0.9
+genbox -cp /tmp/tmpsgFkCM/test0001.gro -cs ffamber_tip3p.gro -o /tmp/tmpsgFkCM/test0002.gro -p /tmp/tmpsgFkCM/test0000.top
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmpsgFkCM/test0002.gro -o /tmp/tmpsgFkCM/test0000.tpr -p /tmp/tmpsgFkCM/test0000.top 
+mdrun -v -s /tmp/tmpsgFkCM/test0000.tpr -c /tmp/tmpsgFkCM/test0003.gro 
+echo 12 | genion -s /tmp/tmpsgFkCM/test0000.tpr -o /tmp/tmpsgFkCM/test0004.gro -pname Na -np 13 -pq 1 -nname Cl -nn 14 -nq -1 -g genion.log
+echo 9 | pdb2gmx -f /tmp/tmpsgFkCM/test0004.gro -o /tmp/tmpsgFkCM/test0005.gro -p /tmp/tmpsgFkCM/test0001.top -ignh
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/minimize.mdp -c /tmp/tmpsgFkCM/test0005.gro -o /tmp/tmpsgFkCM/test0001.tpr -p /tmp/tmpsgFkCM/test0001.top 
+mdrun -v -s /tmp/tmpsgFkCM/test0001.tpr -c /tmp/tmpsgFkCM/test0006.gro 
+grompp -f /Users/vincentvoelz/scripts/mmtools/gromacstools/mdp/equilibrate.mdp -c /tmp/tmpsgFkCM/test0006.gro -o /tmp/tmpsgFkCM/test0002.tpr -p /tmp/tmpsgFkCM/test0001.top 

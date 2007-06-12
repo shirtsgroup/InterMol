@@ -2,10 +2,15 @@ import sys, os
 
 # Modification history
 #
-# VAV:  June 7, 2007:  Added __main__ interface, and getIndexGroupText() to return strings (not print to stdout), fixed formatAtomList() (addded spaces)
-# VAV:  June 8, 2007:  Fixed grofile-reading bug where the last line wasn't being read!
+# VAV:  June 12, 2007:  changed AtomSelection.generateIndex() to return None if error (not 0)
+# VAV:  June 11, 2007:  Fixed getSelections() so it returns IndexGrop objects, not just their indiex number 
+# VAV:  June 7,  2007:  Added __main__ interface, and getIndexGroupText() to return strings (not print to stdout), fixed formatAtomList() (addded spaces)
+# VAV:  June 8,  2007:  Fixed grofile-reading bug where the last line wasn't being read!
 #
-# TO DO   make the 'all' keyword work!!!!!
+#
+# TO DO:
+# * make the 'all' keyword works
+# * encapsulate in an Objeect file with methods 
 
 class IndexGroup( object ):
     """ class for one index group in an index file"""
@@ -128,7 +133,7 @@ class AtomSelection( object ):
         if atomlist : 
             myNewIndex = IndexGroup( name, atomlist )
         else:
-            myNewIndex = 0
+            myNewIndex = None
  
         return myNewIndex
 
@@ -191,7 +196,7 @@ def getSelections( file, grofile ):
     indexGroups = []
 
     for selection in selections:
-        iGroup = AtomSelection( selection, grofile ).index 
+        iGroup = AtomSelection( selection, grofile ).index
         indexGroups.append( iGroup ) 
 
     return indexGroups
