@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import modelPDB
+import mmtools.modellertools.modelPDB as modelPDB
 import sys
 
 files = [["1YRI.pdb", "1YRI_wtv.seq"],

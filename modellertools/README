@@ -1,6 +1,6 @@
 Setup:
 - go to the Modeller website and download/install the software
-- install the atom_range, inter-het-rsr, and top-commands patches from the modeller wiki
+- install the atom_range, inter-het-rsr, and top-commands patches from the modeller wiki (don't install the RNA patch as that will cause conflicts with d-amino acids, which are denoted by lowercase letters)
   - go to http://salilab.org/modeller/wiki/Patches
   - copy the patch files to the modeller9v1 directory
   - cd /Library/modeller-9v1
