@@ -24,7 +24,8 @@ print sequence
 
 # Create work directory.
 import os
-os.mkdir(workdir)
+if os.path.exists(workdir)==False:
+    os.mkdir(workdir)
 
 import mmtools.ambertools.ImplicitSolventSimulation as amber
 
