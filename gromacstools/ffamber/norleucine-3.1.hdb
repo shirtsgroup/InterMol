@@ -1,0 +1,8 @@
+NLE     6
+	1	1	N       -C      CA
+	1	5	CA      N       CB      C
+	2	6	CB      CA      CG
+	2	6	CG      CB      CD
+	2	6	CD      CG      CE
+	3	4	CE      CD      CB
+
