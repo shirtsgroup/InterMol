@@ -20,6 +20,7 @@
 # - Turn off MODELLER debug output.
 #=============================================================================================
 # CHANGELOG:
+# 2007-06-20 JDC Fixed a bug in processing of SEQADV, but still not sure it's robust.
 # 2007-06-19 JDC Added new method modelMissingAtoms to model missing atoms and residues.
 # 2007-05-20 GRB Created, debugged.
 #=============================================================================================
@@ -180,34 +181,6 @@ for [pdb_file, seq_file] in files:
         if not first_residue:
             raise RuntimeError, "No DBREF field found in PDB file -- noncompliant with PDB 2.1 format."
 
-        # Get the complete sequence from the SEQRES fields and store in a dictionary.
-        print "Processing SEQRES fields..."
-        sequence = { }
-        seqNum = first_residue
-        resid = None
-        for line in lines:
-            if line[0:6] == 'SEQRES':
-                # DEBUG
-                print line,
-                # Parse line into fields.
-                field = { }
-                field['serNum'] = int(line[8:10])
-                field['chainID'] = line[11:12]
-                field['numRes'] = line[13:17]
-                field['resNames'] = line[19:70].split()
-
-                # Add these residues to the sequence if they belong to the chain of interest.
-                if chain == field['chainID']:
-                    for resName in field['resNames']:
-                        sequence[seqNum] = resName
-                        seqNum += 1
-        # DEBUG
-        print "sequence:"
-        ordered = sequence.keys()
-        ordered.sort()
-        for key in ordered:
-            print "%5d %3s" % (key, sequence[key])
-
         # Process SEQADV records, if present.
         # COLUMNS       DATA TYPE       FIELD      DEFINITION
         # -----------------------------------------------------------------
@@ -239,8 +212,40 @@ for [pdb_file, seq_file] in files:
                 field['dbSeq'] = line[43:48]
                 field['conflict'] = line[49:70]
 
-                # Apply change.
-                sequence[field['seqNum']] = field['resName']
+                # If SEQADV has an earlier-numbered residue than DBREF, change the first or last residue number.
+                if (chain == field['chainID']) and (field['seqNum'] < first_residue):
+                    first_residue = field['seqNum']
+                if (chain == field['chainID']) and (field['seqNum'] > last_residue):
+                    last_residue = field['seqNum']                    
+
+        # Get the complete sequence from the SEQRES fields and store in a dictionary.
+        print "Processing SEQRES fields..."
+        sequence = { }
+        seqNum = first_residue
+        resid = None
+        for line in lines:
+            if line[0:6] == 'SEQRES':
+                # DEBUG
+                print line,
+                # Parse line into fields.
+                field = { }
+                field['serNum'] = int(line[8:10])
+                field['chainID'] = line[11:12]
+                field['numRes'] = line[13:17]
+                field['resNames'] = line[19:70].split()
+
+                # Add these residues to the sequence if they belong to the chain of interest.
+                if chain == field['chainID']:
+                    for resName in field['resNames']:
+                        sequence[seqNum] = resName
+                        seqNum += 1
+
+        # DEBUG
+        print "sequence:"
+        ordered = sequence.keys()
+        ordered.sort()
+        for key in ordered:
+            print "%5d %3s" % (key, sequence[key])
 
         # TODO: Check to ensure sequence is contiguous.
 
