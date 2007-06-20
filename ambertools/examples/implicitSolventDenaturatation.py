@@ -31,7 +31,11 @@ import mmtools.ambertools.ImplicitSolventSimulation as amber
 
 # Set up the system.
 print "Creating system..."
-sim = amber.ImplicitSolventSimulation(sequence = sequence, leaprc_filename = "leaprc.ff03", gbradii = "amber6", workdir = workdir, debug = True)
+# Create the system from given sequence in extended state
+#sim = amber.ImplicitSolventSimulation(sequence = sequence, leaprc_filename = "leaprc.ff03", gbradii = "amber6", workdir = workdir, debug = True)
+# Create the system from PDB file.
+# Note that the residues must match AMBER three-letter code naming convention (see AMBER manual).
+sim = amber.ImplicitSolventSimulation(initial_pdb_filename = initial_pdb_filename, sequence = sequence, leaprc_filename = "leaprc.ff03", gbradii = "amber6", workdir = workdir, debug = True)
 
 # Minimize the system.
 print "minimizing..."
