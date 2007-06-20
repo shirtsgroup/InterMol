@@ -91,7 +91,7 @@ for [pdb_file, seq_file] in files:
 
         return _res3to1[threeLetterCode.upper()]
 
-    def getCompleteSequenceOld(self, pdbFilename, chain=' '):
+    def getCompleteSequenceSimple(self, pdbFilename, chain=' '):
         """Extract the complete sequence from a PDB file.
 
         sequence = getCompleteSequence(pdbfilename, chain=' ')
@@ -181,11 +181,14 @@ for [pdb_file, seq_file] in files:
             raise RuntimeError, "No DBREF field found in PDB file -- noncompliant with PDB 2.1 format."
 
         # Get the complete sequence from the SEQRES fields and store in a dictionary.
+        print "Processing SEQRES fields..."
         sequence = { }
-        seqNum = 1
+        seqNum = first_residue
         resid = None
         for line in lines:
             if line[0:6] == 'SEQRES':
+                # DEBUG
+                print line,
                 # Parse line into fields.
                 field = { }
                 field['serNum'] = int(line[8:10])
@@ -198,6 +201,12 @@ for [pdb_file, seq_file] in files:
                     for resName in field['resNames']:
                         sequence[seqNum] = resName
                         seqNum += 1
+        # DEBUG
+        print "sequence:"
+        ordered = sequence.keys()
+        ordered.sort()
+        for key in ordered:
+            print "%5d %3s" % (key, sequence[key])
 
         # Process SEQADV records, if present.
         # COLUMNS       DATA TYPE       FIELD      DEFINITION
@@ -215,7 +224,8 @@ for [pdb_file, seq_file] in files:
         # 50 - 70       LString         conflict  Conflict comment.        
         for line in lines:
             if line[0:6] == 'SEQADV':
-                print line
+                # DEBUG
+                print line,
                 # Parse line into fields.
                 field = { }
                 field['idCode'] = line[7:11]
@@ -509,7 +519,7 @@ for [pdb_file, seq_file] in files:
         projName = os.path.abspath(projName) # full path to working directory
 
         # Get the complete sequence.
-        first_residue_id, completeSequence = self.getCompleteSequence(pdbFilename, chain)
+        completeSequence = self.getCompleteSequenceSimple(pdbFilename, chain)
         nResidues = len(completeSequence)
         print "PDB sequence: " + completeSequence
 
