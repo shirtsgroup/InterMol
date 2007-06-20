@@ -103,12 +103,16 @@ class ImplicitSolventSimulation(object):
         # Return contents of mdin file.
         return mdin
     
-    def __init__(self, sequence, leaprc_filename = "leaprc.ff03", gbradii = "amber6", workdir = ".", amberhome = None, debug = False):
+    def __init__(self, initial_pdb_filename = None, sequence = None, leaprc_filename = "leaprc.ff03", gbradii = "amber6", workdir = ".", amberhome = None, debug = False):
         """\
         Setup an implicit solvent simulation using AMBER with LEaP.
         
-        ARGUMENTS
-            sequence - name of the sequence to generate a system for
+        REQUIRED ARGUMENTS
+          One of the following is required:
+            sequence - Protein sequence (three-letter code, separated by spaces, all caps) used to generate protein in extended conformation.
+            initial_pdb_filename - Name of PDB file with AMBER-compatible three-letter residues names used to generate protein in given conformation.
+          If both are specified, the given sequence is used instead of the sequence present initial_pdb_filename.
+          In both cases, hydrogen atoms are stripped out.
         
         OPTIONAL ARGUMENTS
             leaprc_filename - leaprc file used to select forcefield (default: leaprc.ff03)
@@ -118,7 +122,17 @@ class ImplicitSolventSimulation(object):
             amberhome - location of AMBER root installation (default: taken from AMBERHOME environment variable)
             debug - print extra debug information (default: False)
         """
-    
+
+        ### Check arguments.
+
+        if not (sequence or initial_pdb_filename):
+            raise "Either 'sequence' or 'initial_pdb_filename' must be specified."
+
+        if initial_pdb_filename:
+            # get absolute path for specified initial pdb filename
+            import os.path
+            initial_pdb_filename = os.path.abspath(initial_pdb_filename)            
+
         ### Check arguments and store them
 
         import os.path
@@ -150,6 +164,21 @@ class ImplicitSolventSimulation(object):
             raise "Could not find 'sander' executable at %s" % self.sander
         if not os.path.exists(self.ambpdb):
             raise "Could not find 'ambpdb' executable at %s" % self.ambpdb
+
+        ### Copy PDB file excluding hydrogen atoms.
+        if initial_pdb_filename:
+            # Read the PDB file into memory.
+            initial_pdb_file = open(initial_pdb_filename, 'r')            
+            lines = initial_pdb_file.readlines()            
+            initial_pdb_file.close()
+            # Write non-hydrogen atoms.
+            import os.path
+            outfile = open(os.path.join(self.workdir, 'stripped.pdb'), 'w')
+            for line in lines:
+                if (line[0:6] == 'ATOM  ') and (line[13:14] != 'H') and (line[13:15] != 'OC') and (not (line[17:21] == 'CILE' and line[13:15] == 'CD')):
+                    outfile.write(line)
+            outfile.close()
+
         ### Set up the system in LEaP
         
         # Create a LEaP input file.
@@ -162,7 +191,25 @@ class ImplicitSolventSimulation(object):
             pass
         else:
             raise "Unrecognized gbradii argument '%s'." % gbradii
-        
+
+        if sequence and not initial_pdb_filename:
+            # Build the protein in the extended conformation from the specified sequence.
+            create_system_leap_commands = """\
+# create a sequence in the extended conformation
+system = sequence { %(sequence)s }
+""" % vars()
+        elif sequence and initial_pdb_filename:
+            # Build the protein from the given initial PDB file using given sequence.
+            create_system_leap_commands = """\
+# load the sequence and initial conformation from the given PDB filename
+system = loadPdbUsingSeq stripped.pdb { %(sequence)s }
+""" % vars()
+        elif initial_pdb_filename and not sequence:
+            # Instruct LEaP to build the protein from the given initial PDB file.            
+            create_system_leap_commands = """\
+system = loadPdb stripped.pdb
+""" % vars()
+            
         date = ""        
         
         leap_in = """\
@@ -174,8 +221,7 @@ source %(leaprc_filename)s
 
 %(aux_gb_leap_commands)s
 
-# create a sequence in the extended conformation
-system = sequence { %(sequence)s }
+%(create_system_leap_commands)s
 
 # check unit before writing
 check system
@@ -193,7 +239,12 @@ quit
         output = commands.getoutput(command)
         print "> %s" % command
         print output    
-            
+
+        # Convert to PDB
+        command = "cd %(workdir)s ; cat initial.crd | %(ambpdb)s -p prmtop > initial.pdb" % { 'workdir' : self.workdir, 'ambpdb' : self.ambpdb }
+        print "Executing > %s" % command
+        output = commands.getoutput(command)
+        
         return
 
     def minimize(self, useropts = None):
