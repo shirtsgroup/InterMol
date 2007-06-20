@@ -390,7 +390,7 @@ for [pdb_file, seq_file] in files:
         if debug:
             import commands
             print "alignment file:"
-            print commands.getoutput('cat alignment_file')
+            print commands.getoutput('cat %(alignment_filename)s' % vars())
         
         # Call MODELLER to generate topology, transfer coordinates, and build from internal coordinates.
         import modeller
