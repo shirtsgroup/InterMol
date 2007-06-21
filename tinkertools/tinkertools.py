@@ -55,9 +55,9 @@ import tempfile
 from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
-import re
 import os
 import commands
+from math import *
 
 #Seed random number generator
 random.seed()
@@ -359,6 +359,12 @@ Returns:
    text=file.readlines()
    file.close()
 
+   #If there are redundant atoms in the list, only look them up once (make a new, non-redundant list)
+   tmplist = []
+   for elem in atomlist:
+     if tmplist.count(elem)==0: tmplist.append(elem)
+   atomlist = tmplist
+
    #Sort list to make sure atoms are consecutive to avoid having to loop over file multiple times
    atomlist.sort()
    vdwdict={}
@@ -379,6 +385,7 @@ Returns:
            typedict[atom]=tmp[2]
          else: ct+=1
        else:ct+=1
+
 
    #Now we have the type dictionary, so go on to look for vdw information
    #Now sort atom list by class
@@ -407,11 +414,12 @@ Returns:
    return vdwdict,typedict
         
 
-def get_nonwater_types(xyzfile, waterlist=[22,23]):
+def get_nonwater_types(xyzfile, waterlist=[22,23], include_redundant = False):
    """Read a tinker XYZ file and return a list of types of non-water atoms. 
 INPUT:
 - xyz file name
 - optional: List of types of water atoms. If not provided, types are assumed to be 22 and 23 (as in amoeba.prm and in the TEMPLATE.key file used by this).
+- optional: include_redundant: Provide a full list of atom types, including those which are used more than once. Default: False.
 RETURNS:
 - atomlist: List of types of atoms.
 Works by parsing through the file and checking all the atom types; adding any to the list that are not the water atom types. 
@@ -431,8 +439,11 @@ Works by parsing through the file and checking all the atom types; adding any to
      #Check to make sure it isn't water
      if waterlist.count(typenum)>0: water=True
      if not water:
-        if mol_atomtypes.count(typenum)==0: mol_atomtypes.append(typenum) 
-   
+        if not include_redundant:
+          if mol_atomtypes.count(typenum)==0: mol_atomtypes.append(typenum) 
+        else:
+          mol_atomtypes.append(typenum)   
+
    return mol_atomtypes
 
 def generate_parameter_file( template, amoebaprm, nonwatertypes, outfile ):
@@ -459,6 +470,7 @@ OUTPUT:
    addtext=[]
    
    #Obtain vdw classes
+   
    (dum, type_to_class) = read_LJ_params(amoebaprm, nonwatertypes)
    vdwclasses = type_to_class.values()
 
@@ -732,7 +744,7 @@ OTHER NOTES:
      runtext='minimize.x mol 1.0 > mol_min.log\n'
      runtext+='mv mol.xyz_2 mol.xyz\n'
      #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % simlen
+     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % equillen
      #DO PRODUCTION
      runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
@@ -864,7 +876,7 @@ OTHER NOTES:
      runtext='minimize.x mol 1.0 > mol_min.log\n'
      runtext+='mv mol.xyz_2 mol.xyz\n'
      #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % simlen
+     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % equillen
      #DO PRODUCTION
      runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
@@ -895,4 +907,105 @@ def read_potential_energy(file):
        poten.append(float(line.split()[4]))
   #Convert to numarray
   return array(poten)
-  
+ 
+
+def get_volume(dynfile):
+   """Read a dyn file and return the current simulation volume."""
+   file = open(dynfile, 'r')
+   text = file.readlines()
+   file.close()
+
+   ct=0
+   while text[ct].find('Periodic Box Dimensions')==-1:
+     ct+=1
+   ct+=1
+
+   volline = text[ct].replace('D','e') #Swap to scientific notation
+   tmp = volline.split()
+   volume = float(tmp[0])*float(tmp[1])*float(tmp[2])
+   return volume
+
+def number_waters(xyzfile, waterlist = [ 22, 23 ] ):
+   """Read an xyz file and return the number of water ATOMS (water atom types are assumed to be 22 and 23, unless otherwise specified in the optional waterlist argument)."""
+
+   file=open(xyzfile,'r')
+   text=file.readlines()
+   file.close()
+   text=text[1:] #Strip header
+
+   waterct = 0
+   for line in text:
+     tmp=line.split()
+     typenum=int(tmp[5])
+     water=False
+     #If it is water, count it
+     if waterlist.count(typenum)>0: waterct+=1
+
+   return waterct
+
+
+def LRcorrection(dynfile, arcfile, amoebaprm, cutoff):
+   """Return the analytical LR correction to the potential energy (equivalently chemical potential) for hydration of a solute in water, evaluated from the last snapshot in the specified arc file, using the box volume in the dyn file. Uses amoeba parameter file to obtain the interaction parameters, and assumes that the water atom types are 22 and 23.
+INPUT:
+- dynfile: Path of dyn file from which to extract box volume
+- arcfile: Path of arc file from which to use the final frame for computing the correction (note that coordinates are irrelevant; this is only used for the number of waters and the solute atom types and number).
+- amoebaprm: Amoeba parameter file
+- Cutoff: LR cutoff that was used for the simulations."""
+
+   #Obtain number of atoms in simulation box
+   line = commands.getoutput('head -1 %(arcfile)s' % vars())
+   numatoms = int( line.split()[0] )
+
+   #Obtain box volume
+   boxvol = get_volume(dynfile)
+
+   #Create temporary directory and an xyz file there containing the last frame in the arc file
+   tempdir = tempfile.mkdtemp()
+   linenum = numatoms+1
+   xyzfile = os.path.join(tempdir, 'mol.xyz')
+   print commands.getoutput('tail -%(linenum)s %(arcfile)s > %(xyzfile)s' % vars() )    
+
+   #Obtain list of all non-water atom types   
+   mol_atomtypes = get_nonwater_types(xyzfile, include_redundant = True)
+
+   #Figure out number of water atoms
+   numwaters = number_waters(xyzfile)
+
+   #Compute prefactor for correction
+   prefactor = -2.*pi*numwaters/boxvol*cutoff**(-4)
+
+   #Read vdw parameters for water+nonwater types
+   (vdwparams, typedict) = read_LJ_params(amoebaprm, mol_atomtypes+[22,23] )
+
+   #List of water atoms, including redundancies
+   wateratoms = [ 22, 23, 23]
+
+   #Loop over solute atoms, then solvent atoms, and compute and accumulate eps_ij*Rij**7
+   sum = 0.
+
+   for solute_atom in mol_atomtypes:
+     #Grab r and epsilon for solute atom
+     atomr=float(vdwparams[solute_atom]['r'])
+     atomeps=float(vdwparams[solute_atom]['eps'])
+
+     #Loop over water atoms
+     for water_atom in wateratoms:
+       #Grab r and epsilon for atoms
+       watr=float(vdwparams[water_atom]['r'])
+       wateps=float(vdwparams[water_atom]['eps'])
+       
+       #Use combination rules to compute combined r and epsilon
+       comb_eps=4*(atomeps*wateps)/(sqrt(atomeps)+sqrt(wateps))**2
+       comb_r=(atomr**3+watr**3)/(atomr**2+watr**2)
+
+       #Add to sum
+       sum += comb_eps*comb_r**7
+
+   
+   #Cleanup temp dir
+   os.system('rm -r %(tempdir)s' % vars() )   
+
+   #Compute final value
+   correction = prefactor*sum
+   return correction
+
