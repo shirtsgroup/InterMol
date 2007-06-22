@@ -1004,6 +1004,7 @@ def get_volume(dynfile):
 
    """
 
+   print "dynfile: %s" % dynfile
    # Read the contents of the .dyn file.
    file = open(dynfile, 'r')
    lines = file.readlines()
@@ -1032,17 +1033,17 @@ def get_volume(dynfile):
    # Return volume.
    return volume
 
-def number_waters(xyzfile, waterlist = [ 22, 23 ] ):
-   """Determine the number of water atoms in a Tinker .xyz file.
+def get_number_of_solvent_molecules(xyzfile, solvent_atom_types = [ 22, 23, 23 ]):
+   """Determine the number of solvent molecules in a Tinker .xyz file.
 
    ARGUMENTS
      xyzfile (string) - filename of the Tinker .xyz file
 
    OPTIONAL ARGUMENTS
-     waterlist (list of integers) - atom types for water atoms (default: [22, 23])
+     solvent_atom_types (list of integers) - atom types in solvent molecules (default: [22, 23, 23])
 
    RETURNS
-     number_of_water_atoms (integer) - the number of water atoms in the Tinker .xyz file
+     nsolvent (integer) - the number of solventmolecules in the Tinker .xyz file
 
    """
 
@@ -1054,54 +1055,65 @@ def number_waters(xyzfile, waterlist = [ 22, 23 ] ):
    # Strip header line.
    lines.pop(0)
 
-   # Count number of atoms
-   number_of_water_atoms = 0
+   # Count number of water molecules.
+   nsolvent_atoms = 0   
    for line in lines:
      tmp = line.split()
      typenum = int(tmp[5])
 
      # If it is water, count it
-     if waterlist.count(typenum)>0:
-        number_of_water_atoms += 1
+     if solvent_atom_types.count(typenum)>0:
+        nsolvent_atoms += 1
 
-   # Return number of water atoms in the .xyz file.
-   return number_of_water_atoms
+   # Determine number of molecules from number of atoms.
+   nsolvent = nsolvent_atoms / len(solvent_atom_types)
 
-def LRcorrection(dynfile, arcfile, amoebaprm, cutoff):
+   # Return number of solvent molecules in the .xyz file.
+   return nsolvent
+
+def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cutoff = 9.0 * Units.A):
    """Compute the analytical long-range dispersion correction to the free energy of solvation for a solute for the Halgren 14-7 buffered potential from Tinker output.
 
    REQUIRED ARGUMENTS
+     basedir (string) - path to base directory in which default filenames are found
+
+   OPTIONAL ARGUMENTS
      dynfile (string) - path to Tinker .dyn file (from which box volume is extracted)
-     arcfile (string) - path to Tinker .arc file (the final frame of which is used to determine the number of waters and solute atom types and number)
+     xyzfile (string) - path to Tinker .xyz file (used to determine the number of waters and solute atom types and number)
      amoebaprm (string) - AMOEBA parameter file
      cutoff (Units: length) - nonbonded cutoff used in simulations
+
+   RETURNS
+     correction (Units: energy) - energy correction
      
    NOTES
-     A sharp cutoff is assumed, and factors of near-unity are assumed to be unity.
+     A sharp cutoff is assumed, and factors of near-unity are assumed to be unity (a safe assumption with default gamma and delta).
 
    """
+
+   # Construct default names of files if not specified.
+   if not xyzfile: xyzfile = os.path.join(basedir, 'mol.xyz')
+   if not dynfile: dynfile = os.path.join(basedir, 'mol.dyn')
+   if not amoebaprm: amoebaprm = os.path.join(basedir, 'mol0.0.prm')
+
+   # TODO: Read gamma and delta corrections.
    
-   # Determine the number of atoms in the simulation box from .arc file.
-   line = commands.getoutput('head -1 %(arcfile)s' % vars())
+   # Determine the number of atoms in the simulation box from .xyz file.
+   line = commands.getoutput('head -1 %(xyzfile)s' % vars())
    numatoms = int( line.split()[0] )
 
    # Determine box volume from .dyn file.
    boxvol = get_volume(dynfile)
-
-   # Create temporary directory and an .xyz file there containing the last frame in the .arc file
-   tempdir = tempfile.mkdtemp()
-   linenum = numatoms+1
-   xyzfile = os.path.join(tempdir, 'mol.xyz')
-   print commands.getoutput('tail -%(linenum)s %(arcfile)s > %(xyzfile)s' % vars() )    
+   print "boxvol = %f A^3" % (boxvol / (Units.A**3))
 
    # Obtain list of all non-water atom types.
    solute_atomtypes = get_nonwater_types(xyzfile, include_redundant = True)
 
-   # Determine number of water atoms.
-   numwaters = number_waters(xyzfile)
-
-   # Compute prefactor for correction.
-   prefactor = -2. * pi * (numwaters/boxvol) * cutoff**(-4)
+   # Determine number of water molecules.
+   numwaters = get_number_of_solvent_molecules(xyzfile)
+   print "numwaters = %d" % numwaters
+   print "free volume / water = %f A^3" % ((boxvol / numwaters) / Units.A**3)
+   print "density = %f g / cm^3" % ((numwaters / boxvol) * (18.0 * Units.amu) / (Units.g / Units.cm**3))
 
    # Read vdw parameters for solute and water types.
    (vdwparams, typedict) = read_LJ_params(amoebaprm, solute_atomtypes+[22,23])
@@ -1109,31 +1121,50 @@ def LRcorrection(dynfile, arcfile, amoebaprm, cutoff):
    # List of water atoms, including redundancies.
    wateratoms = [22, 23, 23]
 
+   # Define U(r) function for Halgren
+   def U(r, eps, Rstar, gamma = 0.12, delta = 0.07):
+      rho = r / Rstar
+      return eps * ((1.+delta)/(rho+delta))**7 * ((1+gamma)/(rho**7 + gamma)-2)         
+   # Define integrand I(r) = 4 pi r^2 rho U(r)
+   def integrand(r, eps, Rstar, numwaters, boxvol):
+      surface_area = 4. * pi * r**2
+      number_density = numwaters / boxvol
+      return surface_area * number_density * U(r, eps, Rstar)
+
    # Loop over solute atoms, then solvent atoms, and compute and accumulate eps_ij*Rij**7
+   from scipy.integrate import quad
+   from scipy.integrate import inf   
+
    correction = 0.0
    for solute_atom in solute_atomtypes:
      # Grab r and epsilon for solute atom
-     r_i = float(vdwparams[solute_atom]['r']) * Units.A
+     Rstar_i = float(vdwparams[solute_atom]['r']) * Units.A
      eps_i = float(vdwparams[solute_atom]['eps']) * Units.kcal / Units.mol
 
      # Loop over water atoms.
      for water_atom in wateratoms:
        # Grab r and epsilon for water atoms.
-       r_j = float(vdwparams[water_atom]['r']) * Units.A
+       Rstar_j = float(vdwparams[water_atom]['r']) * Units.A
        eps_j = float(vdwparams[water_atom]['eps']) * Units.kcal / Units.mol
        
-       # Use Halgren combination rules to compute combined r and epsilon
+       # Use Halgren combination rules to compute effective pair r and epsilon.
        eps = 4. * (eps_i*eps_j) / (sqrt(eps_i) + sqrt(eps_j))**2
-       r = (r_i**3 + r_j**3) / (r_i**2 + r_j**2)
+       Rstar = (Rstar_i**3 + Rstar_j**3) / (Rstar_i**2 + Rstar_j**2)
+
+       # Numerically integrate
+       density = numwaters / boxvol # water number density
+       integral = quad(lambda x: integrand(x, eps, Rstar, numwaters, boxvol), cutoff, 10 * cutoff, epsabs = 1.0e-4 * Units.kcal/Units.mol)
+       contribution = integral[0]
+       
+#       print "%d: r = %f A" % (solute_atom, Rstar / Units.A)
+#       print "%d: eps = %f kcal/mol" % (solute_atom, eps / (Units.kcal/Units.mol))
+#       print "%d:     %f kcal/mol" % (solute_atom, prefactor * eps * (Rstar**7) / (Units.kcal/Units.mol))
+#       print "%d:     %f kcal/mol" % (solute_atom, contribution / (Units.kcal/Units.mol))
+#       print ""
 
        # Accumulate contribution.
-       correction += eps * (r**7)
-   
-   # Cleanup temp dir.
-   os.system('rm -r %(tempdir)s' % vars() )   
-
-   # Incorporate prefactor.
-   correction *= prefactor
+       #correction += -2. * pi * (numwaters/boxvol) * cutoff**(-4) * eps * (Rstar**7)
+       correction += contribution
 
    return correction
 
@@ -1162,9 +1193,10 @@ def pV_correction(directory, pressure = 1.0 * Units.atm):
    # Determine box volumes for each lambda value
    V_0 = get_volume(dynfile_0)
    V_1 = get_volume(dynfile_1)
-      
+
+   print "%e %e" % (V_0, V_1)
    # Compute work done by system in going from lambda = 0 to lambda = 1.
-   work = p * (V_1 - V_0)
+   work = pressure * (V_1 - V_0)
 
    return work
 
