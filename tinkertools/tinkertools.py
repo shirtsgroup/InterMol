@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
 #==================================================================================
-#Tinker tools, written by D. Mobley, 2007.
+# Tinker tools, written by D. Mobley, UCSF, 2007.
+# Updates contributed by John D. Chodera, Stanford, 2007.
 # 
-#A variety of functions here; most are used by the main function, setup_calcs, as illustrated in the attached driver.py script.
+# A variety of functions here; most are used by the main function, setup_calcs, as illustrated in the attached driver.py script.
 #
-#Currently, the attached driver.py script uses these tools to set up a sample calculation as follows
+# Currently, the attached driver.py script uses these tools to set up a sample calculation as follows
 # - Begin from an xyz and dyn file that are assumed to be pre-equilibrated to the correct density, etc. in amoeba and already have the correct atom types (perhaps coming from pre-equilibration in another force field, or with a different water model, etc).
 # - Figure out non-water atom types present by reading the xyz file.
 # - Take a TEMPLATE key file associated with the repository, and the amoeba parameter file, and edit the TEMPLATE file to generate a key file for this molecule by copying over amoeba parameters for any non-water atoms; water parameters are assumed to already be in the TEMPLATE.key file. Do the same with a vacuum TEMPLATE file to generate a key file suitable for vacuum calculations. These are done by the function 'generate_parameter_file'
@@ -20,33 +21,39 @@
 #     electrostatics already turned off). Generate LJ parameters at each lambda using the combination
 #     rules and our modified scheme for soft-core scaling using modification of gamma and delta for the       Halgren potentials. Create key files and run files.
 #   - For each of these calculations above, put a different random number seed in the run key file at each lambda value.
-
+#
 # Later, added additional tools to help with earlier setup:
 # - name_to_mol2 to generate an initial mol2 file with conformer for a small molecule based on the IUPAC name.
 # - mol2_to_xyz to generate an xyz file from a mol2 file and amoeba parameters, after prompting user for help identifying appropriate amoeba parameters for each atom.
 # - solvate_molecule to solvate a molecule in desired size box of water with roughly right density
-
+#
 # Repository also contains several parameter sets
 # - amoeba.prm, with a bugfix in the name of the oxygen on phenol (insignificant)
 # - amoeba_fastwater.prm, where polarization/multipoles on water are replaced with fixed charges derived by J. Chodera to minimize uncertainty in transforming polarizable into fixed-charge water
-
-#LIMITATIONS:
+#
+# LIMITATIONS:
 # - There is currently no separate constant pressure equilibration (or separate equilibration at all) at each lambda value. Equilibration would be done by just throwing out some of the production data. Leaving out separate constant pressure equilibration at each lambda, though, will introduce significant errors as the ligand sizes become significant relative to the simulation box size (because then the water densities won't be right). Ultimately we will need to add a separate constant rpessure equilibration step at each lambda.
-
-#CHANGELOG:
-# - 6/1/2007: DLM adding additional tools for doing several additional setup tasks:
+#
+# CHANGELOG:
+# - 2007-06-21: JDC Heavily modified code to conform to Pande lab Python style guide.
+# - 2007-06-01: DLM adding additional tools for doing several additional setup tasks:
 #   (1): Generate initial conformation for specified small molecule using OpeneEye tools (added name_to_mol2 function to do this).
 #   (2): Create an xyz file from an amoeba parameter file and mol2 file (with user input for appropriate amoeba atom types)
 #   (3): Generate solvated box of suitable size using output from (2) (function: solvate_molecule)
 #   (4): Run pre-equilibration of molecule using fixed-charge (nonpolarizable) version of AMOEBA water
-
-#DEPENDENCIES:
+#
+# DEPENDENCIES:
 # - OpenEye: OEChem, Omega, Lexichem (oeiupac)
+# - mmtools: utilities.Units, utilities.Constants
+#
+# TODO
+# - (JDC) What else uses generate_conf?  Can we streamline name_to_mol2?
+# - Change "from X import *" to "import X" to reduce namespace clutter.
 #==================================================================================
 
 
 #===================================================================================
-#IMPORTS
+# IMPORTS
 #===================================================================================
 from numarray import *
 import re
@@ -58,128 +65,174 @@ from openeye.oeiupac import *
 import os
 import commands
 from math import *
+import mmtools.utilities.Units as Units
+import mmtools.utilities.Constants as Constants
 
-#Seed random number generator
+#===================================================================================
+# INITIALIZER
+#===================================================================================
+
+# Initialize random number generator.
 random.seed()
+
 #=================================================================================
-#Tools for generating initial configuration of systems
+# Tools for generating initial configuration of systems
 #=================================================================================
 
-def generate_conf(mol,outmol2,name=None):
-   """Takes an input OEMol molecule; uses openeye tools to generate an output mol2 file with coordinates for the atoms. Optionally, put the name specified in the name argumet into the name field of the resulting mol2 file."""
-   #Initialize omega
-   omega=OEOmega()
-   #Only get one conformer out -- all we care about now is coordinates, not conformers
-   omega.SetMaxConfs(1)
-   #Don't include input in output
-   omega.SetIncludeInput(False)
-   
-   # Run Omega on the molecule to generate a set of reasonable conformations.
-   omega(mol)
-   # Write the molecule to its own mol2 file.
-   if name: mol.SetTitle(name)
+def generate_conf(molecule, output_mol2_filename):
+   """Generate a mol2 file from OEMol molecule, building conformation with Omega.
+
+   ARGUMENTS
+     molecule (OEMol) - the input molecule (coordinates need not be defined)
+     output_mol2_filename (string) - filename of mol2 file to be written
+
+   NOTES
+     OpenEye's Omega is used to build a single conformation for the given molecule.
+
+   EXAMPLES
+     
+   """
+
+   # Generate a single new conformation using Omega.
+   omega = OEOmega() # Initialize Omega.   
+   omega.SetMaxConfs(1) # Generate a single conformation.
+   omega.SetIncludeInput(False) # Omit the input conformation from the output.
+   omega(molecule) # Run Omega to generate conformations for molecule.
+
+   # Write the molecule to a mol2 file.
    output_molecule_stream = oemolostream()
-   output_molecule_stream.open(outmol2)
-   OEWriteMolecule(output_molecule_stream, mol)
+   output_molecule_stream.open(output_mol2_filename)
+   OEWriteMolecule(output_molecule_stream, molecule)
    output_molecule_stream.close()
 
+   return
 
-def name_to_mol2(name, outmol2):
-   """Use OEChem to convert the name of a molecule into an initial sybyl mol2 file with conformation generated by Omega. Write resulting molecule to output mol2 file."""
-   mol = OEMol() #Create molecule
-   status = OEParseIUPACName( mol, name )
+def name_to_mol2(IUPAC_name, output_mol2_filename):
+   """Generate a mol2 file of a small molecule from its IUPAC name.
 
-   #Check aromaticity
-   OEAssignAromaticFlags(mol)
+   ARGUMENTS
+     IUPAC_name (string) - IUPAC name of molecule to generate
+     output_mol2_filename (string) - filename of mol2 file to be written
 
-   #Add hydrogens
-   OEAddExplicitHydrogens(mol)
+   NOTES
+     OpenEye LexiChem's OEParseIUPACName is used to generate the molecle, and Omega is used to generate a single conformation.
 
-   #Generate conf with Omega and write
-   generate_conf(mol, outmol2, name=name)
+   EXAMPLES
+     # Generate a mol2 file for phenol.
+     name_to_mol2('phenol', 'phenol.mol2')
+     
+   """
+
+   # Create an OEMol molecule from IUPAC name.
+   molecule = OEMol() # create a molecule
+   status = OEParseIUPACName(molecule, IUPAC_name) # populate the molecule from the IUPAC name
+   OEAssignAromaticFlags(molecule) # check aromaticity.
+   OEAddExplicitHydrogens(molecule) # add hydrogens
+   molecule.SetTitle(IUPAC_name) # Set molecule title to IUPAC name.
+
+   # Generate conformation with Omega and write to mol2 file.
+   generate_conf(molecule, output_mol2_filename)
+
+   return
 
 def mol2_to_xyz(mol2file, amoebaprm, outxyz, amoebaname = None):
-   """Take an input mol2 file containing coordinates for some molecule and an amoeba parameter file; pick amoeba atom types out of key file; prompt user for input to identify amoeba atom types for appropriate atoms. Write out a tinker xyz file containing info from mol2 file. Requires that the molecule name as in the mol2 file match the name used for the molecule parameters in the tinker atom types section.
-Limitations:
-- Currently ignores case in molecular naming
-Optional argument: Take amoebaname of molecule. Otherwise looks for amoeba parameters using the molecule name as read from the mol2 file. Specify this when the amoeba name for the molecule is different from that in the mol2 file."""
+   """   
+   Take an input mol2 file containing coordinates for some molecule and an amoeba parameter file;
+   pick amoeba atom types out of key file;
+   prompt user for input to identify amoeba atom types for appropriate atoms.
+   Write out a tinker xyz file containing info from mol2 file.
+   If 'amoebaname' is not specified, looks for amoeba parameters using the molecule name as read from the mol2 file. Specify this when the amoeba name for the molecule is different from that in the mol2 file.
 
-   #Create molecule
+   REQUIRED ARGUMENTS
+     mol2file (string) - name of mol2 file containing coordinates
+     amoebaprm (string) - name of AMOEBA parameter file containing atom parameters
+     outxyz (string) - name of Tinker .xyz file to be written
+
+   OPTIONAL ARGUMENTS
+     amoebaname (string) - Name given the molecule in AMOEBA parameter file amoebaprm.  
+
+   NOTES
+     Requires that the molecule name as in the mol2 file match the name used for the molecule parameters in the tinker atom types section.
+
+   LIMITATIONS
+     Currently ignores case in molecular naming
+
+   """
+
+   # Create molecule.
    mol = OEMol()
 
-   #Load molecule from mol2 file
+   # Load molecule from mol2 file.
    input_molecule_stream=oemolistream()
    input_molecule_stream.open(mol2file)
    OEReadMolecule( input_molecule_stream, mol)
     
-   #Molecule name
+   # Determine AMOEBA molecule name (for amoebaprm file) from mol2 file title or, if specified, 'amoebaname' optional argument.
    if not amoebaname:
      name = mol.GetTitle()
    else: name = amoebaname
    print "\nMolecule: %s" % name
  
-   #Open AMOEBA parameter file and store portion of atoms section dealing with this molecule; ignore case when looking through names
-   amoebaatoms=[]
-   file=open(amoebaprm,'r')
+   # Open AMOEBA parameter file and store portion of atoms section dealing with this molecule; ignore case when looking through names.
+   amoebaatoms = []
+   file = open(amoebaprm,'r')
    for line in file.readlines():
-     #May want to improve this; it is not particularly robust, for acetamide, for example, it also matches n-methylacetamide...
-     if line.upper().find( name.upper() )>-1 and line.find('atom')==0:
-       amoebaatoms.append(line)
+      # May want to improve this; it is not particularly robust, for acetamide, for example, it also matches n-methylacetamide...
+      if line.upper().find( name.upper() )>-1 and line.find('atom')==0:
+         amoebaatoms.append(line)
    file.close()
 
-   #Turn this into a dictionary by AMOEBA atom type key
-   amoeba_key_to_type={}
-   #re to parse
+   # Turn this into a dictionary by AMOEBA atom type key
+   amoeba_key_to_type = {}
+   # re to parse
    atoms = re.compile(r'atom\s+(?P<type>\d+)\s+\d+\s+\w+\s+"(?P<name>.*)".*')
    for line in amoebaatoms:
-     m = atoms.match(line)
-     if m:
-       #Get atom key/name
-       key = m.group('name')
-       #Remove molecule name and following space
-       key = key[ len(name)+1: ]
-       amoeba_key_to_type[key] = int( m.group('type') )
-     else: #Lines should match; if they don't, raise an exception
-       print "Error: No match found in this line:", line
-       ParseError="Atom line from parameter file does not match expected pattern."
-       raise ParseError
+      m = atoms.match(line)
+      if m:
+         # Get atom key/name
+         key = m.group('name')
+         # Remove molecule name and following space
+         key = key[ len(name)+1: ]
+         amoeba_key_to_type[key] = int( m.group('type') )
+      else: # Lines should match; if they don't, raise an exception
+         print "Error: No match found in this line:", line
+         raise "Atom line from parameter file does not match expected pattern."
 
-   #Store amoeba types for atoms
-   amoeba_types=[]
+   # Store amoeba types for atoms.
+   amoeba_types = []
    for atom in mol.GetAtoms():
-     print "\nPlease choose AMOEBA atom type for atom name %s with type %s, from the following options:" % (atom.GetName(), atom.GetType())
-     keys = amoeba_key_to_type.keys()
-     keys.sort()
-     for key in keys:
-       print "  %s: %s" % ( amoeba_key_to_type[key], key)
-     type=int( raw_input() )
-     if not amoeba_key_to_type.values().count(type)==1:
-       print "Error: Please enter valid numeric type."
-       type = int( raw_input() )
-     if not amoeba_key_to_type.values().count(type)==1: raise TypeError
-     amoeba_types.append(type)
-     print "Using type: %s" % type
+      print "\nPlease choose AMOEBA atom type for atom name %s with type %s, from the following options:" % (atom.GetName(), atom.GetType())
+      keys = amoeba_key_to_type.keys()
+      keys.sort()
+      for key in keys:
+         print "  %s: %s" % ( amoeba_key_to_type[key], key)
+      type = int( raw_input() )
+      if not amoeba_key_to_type.values().count(type)==1:
+         print "Error: Please enter valid numeric type."
+         type = int( raw_input() )
+      if not amoeba_key_to_type.values().count(type)==1: raise TypeError
+      amoeba_types.append(type)
+      print "Using type: %s" % type
    
-
-        
+   # Determine number of atoms in molecule.
    numatoms = mol.NumAtoms()
 
-   #Storage for xyz file
-   xyztext=[]
-   #Add header to xyz file
+   # Storage for xyz file.
+   xyztext = []
+   # Add header to xyz file
    xyztext.append('  %s  %s - for AMOEBA, auto-generated from mol2\n' % (numatoms, name))
 
    #Build a dictionary storing which other atoms each atom is bonded to
    connected_atoms={}
    for bond in mol.GetBonds():
-     start = bond.GetBgn().GetIdx()
-     end = bond.GetEnd().GetIdx()
-     if not connected_atoms.has_key(start): connected_atoms[start]=[]
-     connected_atoms[start].append(end)
-     if not connected_atoms.has_key(end): connected_atoms[end]=[]
-     connected_atoms[end].append(start)
+      start = bond.GetBgn().GetIdx()
+      end = bond.GetEnd().GetIdx()
+      if not connected_atoms.has_key(start): connected_atoms[start]=[]
+      connected_atoms[start].append(end)
+      if not connected_atoms.has_key(end): connected_atoms[end]=[]
+      connected_atoms[end].append(start)
 
-   #Loop over atoms in our molecule; print number, type and coordinates of each to xyz file, as well as bonds
+   # Loop over atoms in our molecule; print number, type and coordinates of each to xyz file, as well as bonds.
    coords = mol.GetCoords()
    for atom in mol.GetAtoms():
       idx = atom.GetIdx()
@@ -187,96 +240,114 @@ Optional argument: Take amoebaname of molecule. Otherwise looks for amoeba param
       #Compute connected atoms
       connections = ''
       for num in connected_atoms[ idx ]:
-        connections += str(num+1)+'    ' 
+         connections += str(num+1)+'    ' 
       #Coordinates
       coordstext = ''
       for c in coords[ idx ]:
          coordstext += "%12.6f" % around(c,6)
- 
+         
       atype = amoeba_types[ idx ]
       aname = atom.GetName()
       numtxt = "%5s" % tinkernum
-      #Store line
+
+      # Store line
       xyztext.append( '%(numtxt)s   %(aname)s %(coordstext)s   %(atype)s   %(connections)s\n' % vars())
 
-   file=open(outxyz,'w')
+   # Write .xyz file.
+   file = open(outxyz,'w')
    file.writelines(xyztext)
    file.close()
-   
+
+   return
   
-def solvate_molecule(xyzfile, prmfile, outxyzfile, boxsize = 24):
-   """Take an input xyz file; generate a box of solvent of specified size and correct density from tiling of water boxes; soak molecule into box; write new xyz file. Uses gromacs tools genbox and trjconv for generating box. Optional argument: box size, in A. Default: 24. Uses spc water as the water with which to tile.
-INPUT:
-- xyzfile: Input solute coordinates
-- prmfile: Amoeba parameters
-- outxyzfile: Output xyz file name
-- Optional boxsize, in angstroms.
-"""
+def solvate_molecule(xyzfile, prmfile, outxyzfile, boxsize = 24.0 * Units.A):
+   """
+   Take an input xyz file;
+   generate a box of solvent of specified size and correct density from tiling of water boxes;
+   soak molecule into box;
+   write new xyz file.
 
-   boxsize=boxsize/10. #In NM for gromacs
+   ARGUMENTS
+     xyzfile (string) - input solute coordinates
+     prmfile (string) - Amoeba parameters
+     outxyzfile (string) - Output xyz file name
 
-   curdir=os.getcwd()
-   #Make working directory
-   tempdir = tempfile.mkdtemp() 
+   OPTIONAL ARGUMENTS
+     boxsize (Units: length) - box edge length (default: 24.0 * Units.A)
+     
+   NOTES
+     Uses gromacs tools genbox and trjconv for generating box.
+     Uses spc water as the water with which to tile.
+   """
 
-   #Copy amoeba file there from
+   # Get absolute path to AMOEBA parameter file.
    prmfile = os.path.join(curdir,prmfile)
 
-   #Cd there
+   # Store current directory.
+   curdir = os.getcwd()
+
+   # Make temporary working directory.
+   tempdir = tempfile.mkdtemp() 
+
+   # Change to temporary working directory.
    os.chdir(tempdir)
  
-   #Generate temporray gro file with box size in it
-   grotext=['tmp gro file\n', ' 0\n', '  %.4f  %.4f  %.4f\n' % (boxsize, boxsize, boxsize)]
-   file=open('box.gro','w')
+   # Generate temporay gro file with box size (in nm).
+   grotext=['tmp gro file\n', ' 0\n', '  %.4f  %.4f  %.4f\n' % (boxsize / Units.nm, boxsize / Units.nm, boxsize / Units.nm)]
+   file = open('box.gro','w')
    file.writelines(grotext)
    file.close()
 
-   #Use genbox to solvate
+   # Use genbox to create solvent in box.
    commands.getoutput('genbox -cp box.gro -cs spc216.gro -o solv.gro')
    
-   #Convert to pdb
+   # Convert solvated .gro file to PDB.
    commands.getoutput('echo "0" | trjconv -f solv.gro -s solv.gro -o solv.pdb')
 
-   #Convert to xyz
-   file=open('in','w')
+   # Convert solvent PDB file to to Tinker .xyz using Tinker pdbxyz.
+   file = open('in','w')
    file.write('solv.pdb\n%(prmfile)s\n' % vars())
    file.close()
    commands.getoutput("pdbxyz.x < in")
-   #Now it is solv.xyz
+   # Now it is solv.xyz
 
-   #Edit and change water types to use amoeba names/numbering
-   out=[]
+   # Edit and change water types to use amoeba names/numbering.
+   out = []
    file=open('solv.xyz','r')
    for line in file.readlines():
-     if line.find('OW')>-1: line = line.replace(' 0 ', ' 22 ')
-     elif line.find('HW')>-1: 
-        line=line.replace('HW1','HW ')
-        line=line.replace('HW2','HW ')
-        line = line.replace(' 0 ', ' 23 ')
-     out.append(line)
+      if line.find('OW')>-1: line = line.replace(' 0 ', ' 22 ')
+      elif line.find('HW')>-1: 
+         line=line.replace('HW1','HW ')
+         line=line.replace('HW2','HW ')
+         line = line.replace(' 0 ', ' 23 ')
+      out.append(line)
    file.close()
    file=open('solv_names.xyz','w')
    file.writelines(out)
    file.close()
 
-   #Copy solute here
+   # Copy solute here.
    os.system('cp %s solute.xyz' % os.path.join(curdir,xyzfile))
 
-   #Soak solute into box
-   file=open('in','w')
+   # Soak solute into box using Tinker xyzedit.
+   file = open('in','w')
    file.write('solute.xyz\n%(prmfile)s\n17\nsolv_names.xyz\n' % vars())
    file.close()
    commands.getoutput('xyzedit.x < in')
 
-   #Move output  back to working directory
+   # Move output back to working directory
    os.system('mv solute.xyz_2 %s' % (os.path.join(curdir,outxyzfile)) )
+
+   # Restore working directory.
    os.chdir(curdir)
 
-   #Clean up
+   # Clean up temporary directory.
    os.system('rm -r %(tempdir)s' % vars())
 
+   return
+
 #==================================================================================
-#Tools for setting up parameter files
+# Tools for setting up parameter files
 #==================================================================================
 
 def scale_electrostatics(scalefactor,atomlist,infile,outfile):
@@ -575,7 +646,7 @@ OUTPUT:
    file.close()
 
 #==================================================================================
-#Setting up a calculation
+# Setting up a calculation
 #==================================================================================
 
 def equilibrate( xyzfile, prmfile, workdir, template, boxsize=24, nsteps=50000):
@@ -893,119 +964,207 @@ OTHER NOTES:
 
 
 #==================================================================================
-#Tools for analysis
+# Tools for analysis of Tinker trajectories.
 #==================================================================================
 
 def read_potential_energy(file):
-  """Read total potential energy from Tinker output (stdout, stored to a log file) and return it as a (numarray) array of floats with length equal to the number of frames."""
-  infile=open(file,'r')
-  intext=infile.readlines()
+  """Read the total potential energies of all frames reported in a Tinker .log file, returnning them as a numarray array of floats.
+
+  ARGUMENTS
+    file (string) - name of the Tinker .log file
+
+  RETURNS
+    potential_energies (numarray 1D float array) - array of potential energies, with length equal to number of frames
+
+  """
+
+  # Read lines from Tinker .log file.
+  infile = open(file,'r')
+  lines = infile.readlines()
   infile.close()
-  poten=[]
-  for line in intext:
+
+  # Construct Python list of potential energies.
+  potential_energies = []
+  for line in lines:
     if line.find('Total Potential Energy :')>-1:
-       poten.append(float(line.split()[4]))
-  #Convert to numarray
-  return array(poten)
+       potential_energies.append(float(line.split()[4]))
+
+  # Return numarray version of potential energy array.
+  return array(potential_energies)
  
 
 def get_volume(dynfile):
-   """Read a dyn file and return the current simulation volume."""
+   """Get the box volume from a Tinker .dyn file.
+
+   ARGUMENTS
+     dynfile (string) - filename of Tinker .dyn file.
+
+   RETURNS
+     volume (Units: length^3) - box volume
+
+   """
+
+   # Read the contents of the .dyn file.
    file = open(dynfile, 'r')
-   text = file.readlines()
+   lines = file.readlines()
    file.close()
 
-   ct=0
-   while text[ct].find('Periodic Box Dimensions')==-1:
-     ct+=1
-   ct+=1
+   # Locate the line containing the box dimensions.
+   line_index = 0
+   for line in lines:
+      if line.find('Periodic Box Dimensions') != -1:
+         break
+      line_index += 1
+   # Get the line containing box dimensions.
+   line = lines[line_index + 1]
 
-   volline = text[ct].replace('D','e') #Swap to scientific notation
-   tmp = volline.split()
-   volume = float(tmp[0])*float(tmp[1])*float(tmp[2])
+   # Swap to scientific notation.
+   line = line.replace('D','e')
+
+   # Extract box dimensions.
+   box_dimensions = line.split()
+
+   # Compute volume.
+   volume = 1.0
+   for box_dimension in box_dimensions:
+      volume *= float(box_dimension) * Units.A
+
+   # Return volume.
    return volume
 
 def number_waters(xyzfile, waterlist = [ 22, 23 ] ):
-   """Read an xyz file and return the number of water ATOMS (water atom types are assumed to be 22 and 23, unless otherwise specified in the optional waterlist argument)."""
+   """Determine the number of water atoms in a Tinker .xyz file.
 
-   file=open(xyzfile,'r')
-   text=file.readlines()
+   ARGUMENTS
+     xyzfile (string) - filename of the Tinker .xyz file
+
+   OPTIONAL ARGUMENTS
+     waterlist (list of integers) - atom types for water atoms (default: [22, 23])
+
+   RETURNS
+     number_of_water_atoms (integer) - the number of water atoms in the Tinker .xyz file
+
+   """
+
+   # Read the .xyz file into memory.
+   file = open(xyzfile,'r')
+   lines = file.readlines()
    file.close()
-   text=text[1:] #Strip header
 
-   waterct = 0
-   for line in text:
-     tmp=line.split()
-     typenum=int(tmp[5])
-     water=False
-     #If it is water, count it
-     if waterlist.count(typenum)>0: waterct+=1
+   # Strip header line.
+   lines.pop(0)
 
-   return waterct
+   # Count number of atoms
+   number_of_water_atoms = 0
+   for line in lines:
+     tmp = line.split()
+     typenum = int(tmp[5])
 
+     # If it is water, count it
+     if waterlist.count(typenum)>0:
+        number_of_water_atoms += 1
+
+   # Return number of water atoms in the .xyz file.
+   return number_of_water_atoms
 
 def LRcorrection(dynfile, arcfile, amoebaprm, cutoff):
-   """Return the analytical LR correction to the potential energy (equivalently chemical potential) for hydration of a solute in water, evaluated from the last snapshot in the specified arc file, using the box volume in the dyn file. Uses amoeba parameter file to obtain the interaction parameters, and assumes that the water atom types are 22 and 23.
-INPUT:
-- dynfile: Path of dyn file from which to extract box volume
-- arcfile: Path of arc file from which to use the final frame for computing the correction (note that coordinates are irrelevant; this is only used for the number of waters and the solute atom types and number).
-- amoebaprm: Amoeba parameter file
-- Cutoff: LR cutoff that was used for the simulations."""
+   """Compute the analytical long-range dispersion correction to the free energy of solvation for a solute for the Halgren 14-7 buffered potential from Tinker output.
 
-   #Obtain number of atoms in simulation box
+   REQUIRED ARGUMENTS
+     dynfile (string) - path to Tinker .dyn file (from which box volume is extracted)
+     arcfile (string) - path to Tinker .arc file (the final frame of which is used to determine the number of waters and solute atom types and number)
+     amoebaprm (string) - AMOEBA parameter file
+     cutoff (Units: length) - nonbonded cutoff used in simulations
+     
+   NOTES
+     A sharp cutoff is assumed, and factors of near-unity are assumed to be unity.
+
+   """
+   
+   # Determine the number of atoms in the simulation box from .arc file.
    line = commands.getoutput('head -1 %(arcfile)s' % vars())
    numatoms = int( line.split()[0] )
 
-   #Obtain box volume
+   # Determine box volume from .dyn file.
    boxvol = get_volume(dynfile)
 
-   #Create temporary directory and an xyz file there containing the last frame in the arc file
+   # Create temporary directory and an .xyz file there containing the last frame in the .arc file
    tempdir = tempfile.mkdtemp()
    linenum = numatoms+1
    xyzfile = os.path.join(tempdir, 'mol.xyz')
    print commands.getoutput('tail -%(linenum)s %(arcfile)s > %(xyzfile)s' % vars() )    
 
-   #Obtain list of all non-water atom types   
-   mol_atomtypes = get_nonwater_types(xyzfile, include_redundant = True)
+   # Obtain list of all non-water atom types.
+   solute_atomtypes = get_nonwater_types(xyzfile, include_redundant = True)
 
-   #Figure out number of water atoms
+   # Determine number of water atoms.
    numwaters = number_waters(xyzfile)
 
-   #Compute prefactor for correction
-   prefactor = -2.*pi*numwaters/boxvol*cutoff**(-4)
+   # Compute prefactor for correction.
+   prefactor = -2. * pi * (numwaters/boxvol) * cutoff**(-4)
 
-   #Read vdw parameters for water+nonwater types
-   (vdwparams, typedict) = read_LJ_params(amoebaprm, mol_atomtypes+[22,23] )
+   # Read vdw parameters for solute and water types.
+   (vdwparams, typedict) = read_LJ_params(amoebaprm, solute_atomtypes+[22,23])
 
-   #List of water atoms, including redundancies
-   wateratoms = [ 22, 23, 23]
+   # List of water atoms, including redundancies.
+   wateratoms = [22, 23, 23]
 
-   #Loop over solute atoms, then solvent atoms, and compute and accumulate eps_ij*Rij**7
-   sum = 0.
+   # Loop over solute atoms, then solvent atoms, and compute and accumulate eps_ij*Rij**7
+   correction = 0.0
+   for solute_atom in solute_atomtypes:
+     # Grab r and epsilon for solute atom
+     r_i = float(vdwparams[solute_atom]['r']) * Units.A
+     eps_i = float(vdwparams[solute_atom]['eps']) * Units.kcal / Units.mol
 
-   for solute_atom in mol_atomtypes:
-     #Grab r and epsilon for solute atom
-     atomr=float(vdwparams[solute_atom]['r'])
-     atomeps=float(vdwparams[solute_atom]['eps'])
-
-     #Loop over water atoms
+     # Loop over water atoms.
      for water_atom in wateratoms:
-       #Grab r and epsilon for atoms
-       watr=float(vdwparams[water_atom]['r'])
-       wateps=float(vdwparams[water_atom]['eps'])
+       # Grab r and epsilon for water atoms.
+       r_j = float(vdwparams[water_atom]['r']) * Units.A
+       eps_j = float(vdwparams[water_atom]['eps']) * Units.kcal / Units.mol
        
-       #Use combination rules to compute combined r and epsilon
-       comb_eps=4*(atomeps*wateps)/(sqrt(atomeps)+sqrt(wateps))**2
-       comb_r=(atomr**3+watr**3)/(atomr**2+watr**2)
+       # Use Halgren combination rules to compute combined r and epsilon
+       eps = 4. * (eps_i*eps_j) / (sqrt(eps_i) + sqrt(eps_j))**2
+       r = (r_i**3 + r_j**3) / (r_i**2 + r_j**2)
 
-       #Add to sum
-       sum += comb_eps*comb_r**7
-
+       # Accumulate contribution.
+       correction += eps * (r**7)
    
-   #Cleanup temp dir
+   # Cleanup temp dir.
    os.system('rm -r %(tempdir)s' % vars() )   
 
-   #Compute final value
-   correction = prefactor*sum
+   # Incorporate prefactor.
+   correction *= prefactor
+
    return correction
+
+def pV_correction(directory, pressure = 1.0 * Units.atm):
+   """Compute the pressure-volume contribution the the hydration free energy.
+
+   ARGUMENTS
+     directory (string) - directory containing all lambda value directories
+
+   OPTIONAL ARGUMENTS
+     pressure (Units: pressure) - pressure (default: 1.0 * Units.atm)
+
+   RETURNS
+     pV_work (Units: energy) - pV work done by system for going from lambda = 0 to lambda = 1
+
+   """
+
+   # Determine directories for lambda = 0 and lambda = 1.
+   lambda_0_dir = os.path.join(directory, '0.0')
+   lambda_1_dir = os.path.join(directory, '1.0')
+
+   # Determine .dyn file locations
+   dynfile_0 = os.path.join(lambda_0_dir, 'mol.dyn')
+   dynfile_1 = os.path.join(lambda_1_dir, 'mol.dyn')
+
+   # Determine box volumes for each lambda value
+   V_0 = get_volume(dynfile_0)
+   V_1 = get_volume(dynfile_1)
+      
+   # Compute work done by system in going from lambda = 0 to lambda = 1.
+   work = p * (V_1 - V_0)
+
+   return work
 
