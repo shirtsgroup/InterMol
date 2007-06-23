@@ -680,7 +680,6 @@ OPTIONAL INPUT:
   seed = random.randint(0, 5000)
   text.insert(7, 'RANDOMSEED    %s\n' % seed)
 
-
   #Store key file
   file=open( os.path.join(workdir,'mol.key'), 'w')
   file.writelines(text)
@@ -750,7 +749,7 @@ OUTPUT:
      
   return outtext
 
-def setup_calc( keyfile, vackeyfile, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, equillen=10000, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
+def setup_calc( keyfile, vackeyfile, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, blocklen = 10000, equillen=10000, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
    """Setup a set of amoeba calculations in a target directory; will generate three subdirectories ('nochg_wat','nochg_vac','novdw_wat') within that directory, each containing all of the appropriate run input for calculations at a series of lambda values.
 INPUT:
  - keyfile: Key file with settings for simulations
@@ -791,8 +790,8 @@ OTHER NOTES:
      opath=os.path.join(cgdir, str(lmb))
      if not os.path.exists(opath): os.mkdir(opath)
      #Copy xyz and dyn files there
-     os.system('cp %s %s' % (xyzfile, os.path.join(opath, 'mol.xyz')))     
-     os.system('cp %s %s' % (dynfile, os.path.join(opath, 'mol.dyn')))     
+     os.system('cp %s %s' % (xyzfile, os.path.join(opath, 'initial.xyz')))
+     os.system('cp %s %s' % (dynfile, os.path.join(opath, 'initial.dyn')))          
 
      #Factor to scale polarization/charges by
      scalefactor = (1. - lmb)
@@ -812,12 +811,36 @@ OTHER NOTES:
      os.system('cp %s %s' % ( os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) ) 
 
      #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext='minimize.x mol 1.0 > mol_min.log\n'
-     runtext+='mv mol.xyz_2 mol.xyz\n'
+     runtext=''
+     runtext+='cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
+     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
+     #runtext+='rm -f mol.arc\n'     
+     #runtext+='mv mol.xyz_2 mol.xyz\n'
      #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % equillen
-     #DO PRODUCTION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
+     runtext+='dynamic.x mol %s 1 0.1 4 298 1  > equil.log\n' % equillen
+     runtext+='mv mol.arc equil.arc\n' # move away arc file
+     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
+     #DO PRODUCTION AND REPROCESSING IN BLOCKS
+     runtext += 'touch mol.log\n'
+     cumulative_length = 0
+     while cumulative_length < simlen:
+        name = 'mol'
+        reprkey = os.path.join(  '../', str(lmb), name+str(lmb)+'.key' )
+        reprprm = os.path.join(  '../', str(lmb), name+str(lmb)+'.prm' )
+        runtext+='cp %s %s.key\n' % (reprkey, name) 
+        runtext+='cp %s %s%s.prm\n' % (reprprm, name, lmb) 
+
+        runtext+='dynamic.x mol %s 1 0.1 2 298  >> mol.log\n' % min(blocklen, simlen - cumulative_length)
+        runtext+='tcsh reprocess.sh\n'
+        runtext+='rm -f mol.uind\n'
+        cumulative_length += blocklen        
+
+     #Write run script
+     file=open( os.path.join(opath, 'run.sh'), 'w')
+     file.write('#!/bin/tcsh\n')     
+     file.write(runtext)
+     file.close()
+
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
      idx = cg_lambda.index(lmb)
      nbrs=[lmb]
@@ -825,11 +848,11 @@ OTHER NOTES:
      if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
      reprtext = get_reprocessing_text( 'mol', nbrs ) 
 
-     #Write run script
-     file=open( os.path.join(opath, 'run.sh'), 'w')
-     file.write(runtext)
+     # Write reprocess script.
+     file=open( os.path.join(opath, 'reprocess.sh'), 'w')
+     file.write('#!/bin/tcsh\n')
      file.write(reprtext)
-     file.close()
+     file.close
 
    #Charging in vacuum
    print 'Setting up charging in vacuum...'
@@ -841,7 +864,8 @@ OTHER NOTES:
      if not os.path.exists(opath): os.mkdir(opath)
      #Copy xyz file there after stripping it of waters
      stripatoms( wateratoms, xyzfile, os.path.join(opath, 'mol.xyz'))
-      
+     os.system('cp %s %s' % (os.path.join(opath, 'mol.xyz'), os.path.join(opath, 'initial.xyz')))
+     
      #Factor to scale polarization/charges by
      scalefactor = (1. - lmb)
 
@@ -860,9 +884,17 @@ OTHER NOTES:
      os.system('cp %s %s' % ( os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) )
 
      #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext='minimize.x mol 1.0 > mol_min.log\n'
-     runtext+='mv mol.xyz_2 mol.xyz\n'
-     runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
+     runtext=''
+     runtext+='cp initial.xyz mol.xyz\n'
+     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
+     #runtext+='rm -f mol.arc\n'          
+     #runtext+='mv mol.xyz_2 mol.xyz\n'
+     #EQUILIBRATION
+     runtext+='dynamic.x mol %s 1 0.1 2 298 > equil.log\n' % equillen * 10
+     runtext+='mv mol.arc equil.arc\n' # move away arc file
+     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
+     #PRODUCTION
+     runtext+='dynamic.x mol %s 1 0.1 2 298 > mol.log\n' % simlen * 10
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
      nbrs=[lmb]
      if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
@@ -883,8 +915,8 @@ OTHER NOTES:
      opath=os.path.join(vdwdir, str(lmb))
      if not os.path.exists(opath): os.mkdir(opath)
      #Copy xyz and dyn files there
-     os.system('cp %s %s' % (xyzfile, os.path.join(opath, 'mol.xyz')))
-     os.system('cp %s %s' % (dynfile, os.path.join(opath, 'mol.dyn')))
+     os.system('cp %s %s' % (xyzfile, os.path.join(opath, 'initial.xyz')))
+     os.system('cp %s %s' % (dynfile, os.path.join(opath, 'initial.dyn')))
    
      #Compute gamma and delta for halgren potentials
      ghal = 0.12+alpha*lmb**lpow
@@ -944,24 +976,48 @@ OTHER NOTES:
      os.system('cp %s %s' % (os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) ) 
 
      #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext='minimize.x mol 1.0 > mol_min.log\n'
-     runtext+='mv mol.xyz_2 mol.xyz\n'
+     runtext=''
+     runtext+='cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
+     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
+     #runtext+='rm -f mol.arc\n'
+     #runtext+='mv mol.xyz_2 mol.xyz\n'
      #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 1000 4 298 1  > equil.log\n' % equillen
-     #DO PRODUCTION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 1  > mol.log\n' % simlen
+     runtext+='dynamic.x mol %s 1 0.1 4 298 1  > equil.log\n' % equillen
+     runtext+='mv mol.arc equil.arc\n' # move away arc file     
+     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
+     #DO PRODUCTION AND REPROCESSING IN BLOCKS
+     runtext += 'touch mol.log\n'
+     cumulative_length = 0
+     while cumulative_length < simlen:
+        name = 'mol'
+        reprkey = os.path.join(  '../', str(lmb), name+str(lmb)+'.key' )
+        reprprm = os.path.join(  '../', str(lmb), name+str(lmb)+'.prm' )
+        runtext+='cp %s %s.key\n' % (reprkey, name) 
+        runtext+='cp %s %s%s.prm\n' % (reprprm, name, lmb)
+
+        runtext+='dynamic.x mol %s 1 0.1 2 298 1  >> mol.log\n' % min(blocklen, simlen - cumulative_length)
+        runtext+='rm -f mol.uind\n'
+        runtext+='tcsh reprocess.sh\n'        
+        cumulative_length += blocklen
+        
+     #Write run script
+     file=open( os.path.join(opath, 'run.sh'), 'w')
+     file.write('#!/bin/tcsh\n')     
+     file.write(runtext)
+     file.close()
+
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
      idx = vdw_lambda.index(lmb)
      nbrs=[lmb]
      if idx+1 < len(vdw_lambda): nbrs.append(vdw_lambda[idx+1])
      if idx-1 >=0 : nbrs.append(vdw_lambda[idx-1])
      reprtext = get_reprocessing_text( 'mol', nbrs )
-     #Write run script
-     file=open( os.path.join(opath, 'run.sh'), 'w')
-     file.write(runtext)
-     file.write(reprtext)
-     file.close()
 
+     # Write reprocess script.
+     file=open( os.path.join(opath, 'reprocess.sh'), 'w')
+     file.write('#!/bin/tcsh\n')
+     file.write(reprtext)
+     file.close
 
 #==================================================================================
 # Tools for analysis of Tinker trajectories.

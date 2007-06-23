@@ -118,18 +118,18 @@ atom         40   31    C      "isoPropanol >CH-"         6     12.000    4
 atom         41   25    H      "isoPropanol >CH-"         1      1.008    1
 atom         42   26    O      "isoPropanol O"            8     15.995    2
 atom         43   27    H      "isoPropanol HO"           1      1.008    1
-atom         44   32    N      "Ammonia N"                7     13.003    4 
+atom         44   32    N      "Ammonia N"                7     13.003    3 #DLM fixed: was 4
 atom         45   33    H      "Ammonia H3N"              1      1.008    1
 atom         46   34    M      "Amine Lone Pair"          0      1.000    1
 atom         47   28    C      "Methyl Amine CH3"         6     12.000    4
 atom         48   35    H      "Methyl Amine H3C"         1      1.008    1
-atom         49   36    N      "Methyl Amine N"           7     13.003    4 
+atom         49   36    N      "Methyl Amine N"           7     13.003    3 #DLM fixed: was 4
 atom         50   37    H      "Methyl Amine H2N"         1      1.008    1
 atom         51   28    C      "Ethyl Amine CH3"          6     12.000    4
 atom         52   29    H      "Ethyl Amine H3C"          1      1.008    1
 atom         53   28    C      "Ethyl Amine CH2"          6     12.000    4
 atom         54   35    H      "Ethyl Amine H2C"          1      1.008    1
-atom         55   36    N      "Ethyl Amine N"            7     13.003    4 
+atom         55   36    N      "Ethyl Amine N"            7     13.003    3 #DLM fixed: was 4
 atom         56   37    H      "Ethyl Amine H2N"          1      1.008    1
 atom         57   28    C      "Propyl Amine CH3"         6     12.000    4
 atom         58   29    H      "Propyl Amine H3C"         1      1.008    1 #There is a missing nitrogen parameter
@@ -137,16 +137,16 @@ atom         59   28    C      "Propyl Amine Me-CH2"      6     12.000    4
 atom         60   30    H      "Propyl Amine Me-CH2"      1      1.008    1
 atom         61   28    C      "Dimethyl Amine CH3"       6     12.000    4
 atom         62   35    H      "Dimethyl Amine H3C"       1      1.008    1
-atom         63   36    N      "Dimethyl Amine N"         7     13.003    4 
+atom         63   36    N      "Dimethyl Amine N"         7     13.003    3 #DLM fixed: was 4
 atom         64   37    H      "Dimethyl Amine HN"        1      1.008    1
 atom         65   28    C      "Trimethyl Amine CH3"      6     12.000    4
 atom         66   35    H      "Trimethyl Amine H3C"      1      1.008    1
-atom         67   36    N      "Trimethyl Amine N"        7     13.003    4
+atom         67   36    N      "Trimethyl Amine N"        7     13.003    3 #DLM fixed: was 4
 atom         68   28    C      "Pyrrolidine C-CH2-C"      6     12.000    4
 atom         69   38    H      "Pyrrolidine H-CH2-C"      1      1.008    1
 atom         70   28    C      "Pyrrolidine CH2-N"        6     12.000    4
 atom         71   38    H      "Pyrrolidine H2C-N"        1      1.008    1
-atom         72   36    N      "Pyrrolidine N"            7     13.003    4
+atom         72   36    N      "Pyrrolidine N"            7     13.003    3 #DLM fixed: was 4
 atom         73   37    H      "Pyrrolidine HN"           1      1.008    1
 atom         74   28    C      "NMePyrrolidine CH2-N"     6     12.000    4
 atom         75   38    H      "NMePyrrolidine H2C-N"     1      1.008    1
@@ -413,8 +413,8 @@ vdw          40               2.800     0.0260     0.91
 vdw          41               3.300     0.1120
 vdw          42               3.710     0.1100
 vdw          43               2.590     0.0220     0.90
+vdw          45               2.930     0.0260     0.91
 vdw          44               2.950     0.0260     0.91
-vdw          45               2.930     0.0260     0.91 #DLM: Fixed order here
 vdw          46               3.405     0.1100
 vdw          47               2.655     0.0150     0.91
 vdw          48               3.820     0.1060
