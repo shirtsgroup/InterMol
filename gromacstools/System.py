@@ -608,8 +608,19 @@ class System:
     lines.pop()     # skip box size lines
     protein_residues = []
     solvent_residues = []
+    res = -1
+    lastRes = -1
     for line in lines:    # these lines should all have atoms on them
-      res = int(line[0:5])
+      # for first line, get res number, after that just increment
+      if res == -1:
+        res = int(line[0:5])
+        lastRes = res
+
+      # if current res# from reading line != lastRes then move to next res
+      if lastRes != int(line[0:5]):
+        res += 1
+        lastRes = int(line[0:5])
+
       if (line[5:8] == 'SOL') or (line[5:8] == 'HOH'):
           if solvent_residues.count(res) == 0:
 	    solvent_residues.append(res)

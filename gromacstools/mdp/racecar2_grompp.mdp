@@ -2,7 +2,7 @@ title                   = SMP-msv-03
 cpp                     = cpp
 integrator              = md
 
-nsteps                  = 1000    ; should be 100000
+nsteps                  = 100000    ; should be 100000
 nstlist                 = 10
 dt                      = 0.002
 constraints             = hbonds       ; Dan had hboinds here
@@ -35,9 +35,10 @@ gen_vel			= yes
 gen_temp		= 300
 gen_seed		= -1
 
-nstlog                  = 1 
-nstenergy               = 1
-nstxout                 = 1
-nstvout                 = 1
-nstxtcout               = 1
+nstlog                  = 10000 
+nstenergy               = 10000 
+nstxout                 = 10000 
+nstvout                 = 10000 
+nstxtcout               = 10000 
+xtc_grps                = protein
 xtc-precision           = 1000

@@ -6,6 +6,7 @@ import sys, os
 # VAV:  June 11, 2007:  Fixed getSelections() so it returns IndexGrop objects, not just their indiex number 
 # VAV:  June 7,  2007:  Added __main__ interface, and getIndexGroupText() to return strings (not print to stdout), fixed formatAtomList() (addded spaces)
 # VAV:  June 8,  2007:  Fixed grofile-reading bug where the last line wasn't being read!
+# GRB:  June 22, 2007:  Change code allow for atom/res #'s with 6+ digits
 #
 #
 # TO DO:
@@ -73,6 +74,10 @@ class AtomSelection( object ):
         self.residues = []
         self.includeHydrogen = True
 	self.onlyCA = False
+
+        self.lastAtom = -1
+        self.lastRes = -1
+        self.lastReadRes = -1
 
         self.parse()
         self.index = self.generateIndex()
@@ -144,8 +149,26 @@ class AtomSelection( object ):
         isHydrogen = False
         isCA = False
 
-        resnum = line[0:5].strip()
-        atomnum = line[15:20].strip()
+        # only get res/atom numbers first time
+        resnum = ""
+        if self.lastRes == -1:
+          resnum = line[0:5].strip()
+          self.lastReadRes = int(resnum)
+          self.lastRes = int(resnum)
+        else:
+           # if current res# from reading line != lastRes then move to next res
+           if self.lastReadRes != int(line[0:5]):
+             self.lastReadRes = int(line[0:5])
+             resnum = str(self.lastRes + 1)
+           else:
+             resnum = str(self.lastRes)
+        self.lastRes = int(resnum)
+        if self.lastAtom == -1:
+          atomnum = line[15:20].strip()
+        else:
+          atomnum = str(self.lastAtom + 1)
+        self.lastAtom = int(atomnum)
+
         atomname = line[9:15].strip()
         if "H" in atomname : isHydrogen = True
         if "CA" in atomname : isCA = True

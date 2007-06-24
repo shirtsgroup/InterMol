@@ -6,7 +6,7 @@ class Setup(object):
     """A class to keep track of parameters important to the system setup."""
 
     # editconf parms
-    self.boxType = 'cubic'            #  -bt   enum   tric  Box type for -box and -d: tric, cubic, dodecahedron or octahedron
+    self.boxType = 'octahedron'            #  -bt   enum   tric  Box type for -box and -d: tric, cubic, dodecahedron or octahedron
     self.boxSoluteDistance = '0.9'    #  -d   real      0  Distance between the solute and the box
     
     # salt conditions
