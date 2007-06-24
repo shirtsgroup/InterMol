@@ -468,6 +468,7 @@ Returns:
      
    #Look for atoms in order
    for atom in atomlist:
+     print "Looking up atom %d..." % atom
      #Look for LJ parameters by atom class, store under atom type
      fnd=False
      while not fnd:
@@ -515,6 +516,8 @@ Works by parsing through the file and checking all the atom types; adding any to
         else:
           mol_atomtypes.append(typenum)   
 
+   print "solute atom types: "
+   print mol_atomtypes
    return mol_atomtypes
 
 def generate_parameter_file( template, amoebaprm, nonwatertypes, outfile ):
@@ -890,12 +893,13 @@ OTHER NOTES:
      #runtext+='rm -f mol.arc\n'          
      #runtext+='mv mol.xyz_2 mol.xyz\n'
      #EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 > equil.log\n' % equillen * 10
+     runtext+='dynamic.x mol %s 1 0.1 2 298 > equil.log\n' % (equillen * 10)
      runtext+='mv mol.arc equil.arc\n' # move away arc file
      runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
      #PRODUCTION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 > mol.log\n' % simlen * 10
+     runtext+='dynamic.x mol %s 1 0.1 2 298 > mol.log\n' % (simlen * 10)
      #reprocessing -- get text for reprocessing at neighboring lambda values and self.
+     idx = cg_lambda.index(lmb)
      nbrs=[lmb]
      if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
      if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
