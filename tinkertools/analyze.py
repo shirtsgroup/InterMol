@@ -55,13 +55,6 @@ def estimate_free_energy_difference(basedir):
         repr_filename = os.path.join(subdir, 'repr%s.log' % lambda_value)
         U_t = tinkertools.read_potential_energy(repr_filename)
 
-        # Compute statistical inefficiency
-        g = AlchemicalTools.statisticalInefficiency(U_t, U_t)
-        print "Statistical inefficiency g = %f" % g
-
-        # Get indices of statistically uncorrelated subsample.
-        indices = range(0, len(U_t), ceil(g))
-
         # Read U_{n+1}
         if n < nlambda-1:
             repr_filename = os.path.join(subdir, 'repr%s.log' % lambda_values[n+1])
@@ -74,7 +67,7 @@ def estimate_free_energy_difference(basedir):
             
             # Determine uncorrelated work measurements.
             g = AlchemicalTools.statisticalInefficiency(DeltaU, DeltaU)
-            uncorrelated_indices = range(0, len(common_indices), ceil(g))
+            uncorrelated_indices = range(0, len(common_indices), int(ceil(g)))
             print "There are %d uncorrelated forward work measurements." % len(uncorrelated_indices)                        
 
             # Store work values
@@ -92,7 +85,7 @@ def estimate_free_energy_difference(basedir):
             
             # Determine uncorrelated work measurements.
             g = AlchemicalTools.statisticalInefficiency(DeltaU, DeltaU)
-            uncorrelated_indices = range(0, len(common_indices), ceil(g))
+            uncorrelated_indices = range(0, len(common_indices), int(ceil(g)))
             print "There are %d uncorrelated reverse work measurements." % len(uncorrelated_indices)                        
 
             # Store work values
@@ -144,15 +137,16 @@ for leg in cycle:
     # Compute alchemical contribution to this leg of the cycle
     (DeltaF_leg, dDeltaF_leg) = estimate_free_energy_difference(os.path.join(basedir, leg))
     DeltaF_leg *= sign[leg]
-
-    # Compute pV correction to this leg of the cycle
-    pV_correction = tinkertools.pV_correction(os.path.join(basedir, leg), pressure = 1.0 * Units.atm)
-    pV_correction *= sign[leg]
-    print "pV correction: %e kcal/mol" % (pV_correction / (Units.kcal/Units.mol))
-
-    # Accumulate free energy difference
-    DeltaF += DeltaF_leg + pV_correction / (Units.kcal/Units.mol)
+    DeltaF += DeltaF_leg
     d2DeltaF += dDeltaF_leg**2
+    
+    if leg != 'nochg_vac':
+        # Compute pV correction to this leg of the cycle
+        pV_correction = tinkertools.pV_correction(os.path.join(basedir, leg), pressure = 1.0 * Units.atm)
+        pV_correction *= sign[leg]
+        print "pV correction: %e kcal/mol" % (pV_correction / (Units.kcal/Units.mol))
+        DeltaF += pV_correction / (Units.kcal/Units.mol)
+
 dDeltaF = sqrt(d2DeltaF)
 
 # Compute LR correction.
