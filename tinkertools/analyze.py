@@ -15,7 +15,7 @@ from math import *
 import AlchemicalTools
 
 # PARAMETERS
-basedir = 'N-methylacetamide0' # base directory for free energy calculation to analyze
+basedir = 'methanol0' # base directory for free energy calculation to analyze
 temperature = 298.0 * Units.K
 beta = 1.0 / (Constants.kB * temperature)
 print "(1/beta) = %f kcal/mol" % ((1./beta) / (Units.kcal/Units.mol))
@@ -132,15 +132,23 @@ def estimate_free_energy_difference(basedir):
 
 # MAIN
 cycle = ['nochg_vac', 'novdw_wat', 'nochg_wat']
+sign = dict()
+sign['nochg_vac'] = 1.0
+sign['novdw_wat'] = -1.0
+sign['nochg_wat'] = -1.0
 DeltaF = 0.0
 d2DeltaF = 0.0
 for leg in cycle:
+    print leg
+
     # Compute alchemical contribution to this leg of the cycle
     (DeltaF_leg, dDeltaF_leg) = estimate_free_energy_difference(os.path.join(basedir, leg))
+    DeltaF_leg *= sign[leg]
 
     # Compute pV correction to this leg of the cycle
     pV_correction = tinkertools.pV_correction(os.path.join(basedir, leg), pressure = 1.0 * Units.atm)
-    print "pV correction: vdw_wat %e kcal/mol" % (vdw_wat_pV_correction / (Units.kcal/Units.mol))
+    pV_correction *= sign[leg]
+    print "pV correction: %e kcal/mol" % (pV_correction / (Units.kcal/Units.mol))
 
     # Accumulate free energy difference
     DeltaF += DeltaF_leg + pV_correction / (Units.kcal/Units.mol)
@@ -149,8 +157,9 @@ dDeltaF = sqrt(d2DeltaF)
 
 # Compute LR correction.
 import os.path
-LR_correction = tinkertools.LR_correction(os.path.join(basedir,'novdw_wat','0.0'))
+LR_correction = tinkertools.LR_correction(os.path.join(basedir,'nochg_wat','0.0'))
+dDeltaF += LR_correction
 print "LR correction = %f kcal/mol" % (LR_correction / (Units.kcal/Units.mol))
 
-
+print "DeltaF = %.3f +- %.3f kcal/mol" % (DeltaF, dDeltaF)
 
