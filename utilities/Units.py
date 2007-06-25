@@ -208,6 +208,7 @@ deg = degrees # abbreviation of degrees
 meter = 1.0 # meter
 metre = meter # English spelling of meter
 m = meter # common abbreviation for meter
+length = meter # funamental unit of length
 
 # Commonly-used SI unit abbreviations
 cm = centi * meter # centimeter
@@ -438,7 +439,6 @@ statvolt = erg / esu
 ampere = Coulomb / second # ampere
 amperes = ampere # plural of ampere
 amp = ampere # commonly-used abbreviation for ampere
-A = ampere # commonly-used abbreviation for ampere
 Ampere = ampere
 
 #=============================================================================================

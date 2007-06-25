@@ -114,7 +114,7 @@ mu_p = 1.4106171e-26 * Units.joule / Units.tesla
 mu_mu = 4.490474e-26 * Units.joule / Units.tesla
 
 # proton gyromagnetic ratio
-gamma_p = 2.6751987e8 / Units.second / Units.tesla
+gamma_p = 2.6751987e+8 / Units.second / Units.tesla
 
 # molar gas constant
 R = 8.31441 * Units.J / Units.mol / Units.K
@@ -123,7 +123,7 @@ R = 8.31441 * Units.J / Units.mol / Units.K
 V_m = R * 273.15 * Units.K / (1.0 * Units.atm)
 
 # Boltzmann constant
-kB = R / N_A
+kB = R
 k_B = kB # alias
 
 # gravitational constant
