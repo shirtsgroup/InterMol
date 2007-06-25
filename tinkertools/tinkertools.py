@@ -1131,7 +1131,7 @@ def get_number_of_solvent_molecules(xyzfile, solvent_atom_types = [ 22, 23, 23 ]
    # Return number of solvent molecules in the .xyz file.
    return nsolvent
 
-def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cutoff = 9.0 * Units.A):
+def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cutoff = 9.0 * Units.A, taper = 0.9):
    """Compute the analytical long-range dispersion correction to the free energy of solvation for a solute for the Halgren 14-7 buffered potential from Tinker output.
 
    REQUIRED ARGUMENTS
@@ -1141,7 +1141,8 @@ def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cut
      dynfile (string) - path to Tinker .dyn file (from which box volume is extracted)
      xyzfile (string) - path to Tinker .xyz file (used to determine the number of waters and solute atom types and number)
      amoebaprm (string) - AMOEBA parameter file
-     cutoff (Units: length) - nonbonded cutoff used in simulations
+     cutoff (Units: length) - nonbonded cutoff used in simulations (default: 9.0 * Units.A)
+     taper (float) - fraction of cutoff at which tapering begins (default: 0.9)
 
    RETURNS
      correction (Units: energy) - energy correction
@@ -1184,13 +1185,45 @@ def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cut
    # Define U(r) function for Halgren
    def U(r, eps, Rstar, gamma = 0.12, delta = 0.07):
       rho = r / Rstar
-      return eps * ((1.+delta)/(rho+delta))**7 * ((1+gamma)/(rho**7 + gamma)-2)         
-   # Define integrand I(r) = 4 pi r^2 rho U(r)
-   def integrand(r, eps, Rstar, numwaters, boxvol):
+      ehal = eps * ((1.+delta)/(rho+delta))**7 * ((1+gamma)/(rho**7 + gamma)-2)
+      return ehal
+   # Define Tinker AMOEBA VDW switch function.
+   def switch(r, cut, off):
+      """Compute fifth-order Tinker switching function.
+
+      ARGUMENTS:
+         r (float) - distance (in A)
+         cut (float) - distance at which switch is turned on
+         off (float) - distance at which hard cutoff happens
+
+      RETURNS
+         switch (float) - from 0 to 1
+      """
+      
+      if (r <= cut):
+         switch = 1.0
+      elif (r > cut) and (r <= off):
+         denom = (off-cut)**5
+         cut2 = cut**2
+         off2 = off**2
+         c0 = off*off2 * (off2-5.0*off*cut+10.0*cut2) / denom
+         c1 = -30.0 * off2*cut2 / denom
+         c2 = 30.0 * (off2*cut+off*cut2) / denom
+         c3 = -10.0 * (off2+4.0*off*cut+cut2) / denom
+         c4 = 15.0 * (off+cut) / denom
+         c5 = -6.0 / denom
+         switch = c5*(r**5) + c4*(r**4) + c3*(r**3) + c2*(r**2) + c1*r + c0         
+      else:
+         switch = 0.0
+      return switch      
+   # Define integrand I(r) = 4 pi r^2 rho U(r) (1 - switch)
+   def integrand(r, eps, Rstar, numwaters, boxvol, taper = 0.9, cutoff = 0.9 * Units.A):
       surface_area = 4. * pi * r**2
       number_density = numwaters / boxvol
-      return surface_area * number_density * U(r, eps, Rstar)
-
+      scale = 1.0 - switch(r / Units.A, taper * cutoff / Units.A, cutoff / Units.A)      
+      #return surface_area * number_density * U(r, eps, Rstar)
+      return surface_area * number_density * U(r, eps, Rstar) * scale
+      
    # Loop over solute atoms, then solvent atoms, and compute and accumulate eps_ij*Rij**7
    from scipy.integrate import quad
    from scipy.integrate import inf   
@@ -1213,7 +1246,8 @@ def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cut
 
        # Numerically integrate
        density = numwaters / boxvol # water number density
-       integral = quad(lambda x: integrand(x, eps, Rstar, numwaters, boxvol), cutoff, 10 * cutoff, epsabs = 1.0e-4 * Units.kcal/Units.mol)
+       #integral = quad(lambda x: integrand(x, eps, Rstar, numwaters, boxvol), cutoff, 10 * cutoff, epsabs = 1.0e-4 * Units.kcal/Units.mol)
+       integral = quad(lambda x: integrand(x, eps, Rstar, numwaters, boxvol, taper, cutoff), taper * cutoff, 10 * cutoff, epsabs = 1.0e-4 * Units.kcal/Units.mol)
        contribution = integral[0]
        
 #       print "%d: r = %f A" % (solute_atom, Rstar / Units.A)
@@ -1223,7 +1257,7 @@ def LR_correction(basedir, dynfile = None, xyzfile = None, amoebaprm = None, cut
 #       print ""
 
        # Accumulate contribution.
-       #correction += -2. * pi * (numwaters/boxvol) * cutoff**(-4) * eps * (Rstar**7)
+       #contribution += -2. * pi * (numwaters/boxvol) * cutoff**(-4) * eps * (Rstar**7)
        correction += contribution
 
    return correction

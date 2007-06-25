@@ -124,22 +124,28 @@ def estimate_free_energy_difference(basedir):
     return (DeltaF, dDeltaF)
 
 # MAIN
+
+# Define the legs of the thermodynamic cycle, where there is a separate subdirectory for each.
 cycle = ['nochg_vac', 'novdw_wat', 'nochg_wat']
+# Set the signs for each leg of the thermodynamic cycle contributing to the overall cycle of interest
 sign = dict()
 sign['nochg_vac'] = 1.0
 sign['novdw_wat'] = -1.0
 sign['nochg_wat'] = -1.0
+
+# Accumulate free energy across each leg of the cycle.
 DeltaF = 0.0
 d2DeltaF = 0.0
 for leg in cycle:
     print leg
 
-    # Compute alchemical contribution to this leg of the cycle
+    # Compute alchemical contribution from this leg of the cycle
     (DeltaF_leg, dDeltaF_leg) = estimate_free_energy_difference(os.path.join(basedir, leg))
     DeltaF_leg *= sign[leg]
+    # Accumulate free energy difference and uncertainty.
     DeltaF += DeltaF_leg
     d2DeltaF += dDeltaF_leg**2
-    
+
     if leg != 'nochg_vac':
         # Compute pV correction to this leg of the cycle
         pV_correction = tinkertools.pV_correction(os.path.join(basedir, leg), pressure = 1.0 * Units.atm)
@@ -147,13 +153,15 @@ for leg in cycle:
         print "pV correction: %e kcal/mol" % (pV_correction / (Units.kcal/Units.mol))
         DeltaF += pV_correction / (Units.kcal/Units.mol)
 
+# Compute uncertainty from squared uncertainty.
 dDeltaF = sqrt(d2DeltaF)
 
-# Compute LR correction.
+# Compute NVT LR correction using the fully-interacting endpoint.
 import os.path
 LR_correction = tinkertools.LR_correction(os.path.join(basedir,'nochg_wat','0.0'))
 dDeltaF += LR_correction
 print "LR correction = %f kcal/mol" % (LR_correction / (Units.kcal/Units.mol))
 
+# Report total free energy contribution.
 print "DeltaF = %.3f +- %.3f kcal/mol" % (DeltaF, dDeltaF)
 
