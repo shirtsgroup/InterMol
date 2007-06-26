@@ -15,7 +15,7 @@ from math import *
 import AlchemicalTools
 
 # PARAMETERS
-basedir = 'methanol0' # base directory for free energy calculation to analyze
+basedir = 'methylamine0' # base directory for free energy calculation to analyze
 temperature = 298.0 * Units.K
 beta = 1.0 / (Constants.kB * temperature)
 print "(1/beta) = %f kcal/mol" % ((1./beta) / (Units.kcal/Units.mol))
