@@ -18,7 +18,10 @@
 #           ffamber/norleucine.hdb
 #           ffamber/norleucine.rtp
 
-
+# ----------------------------------------------------------------------
+# Change Log:
+# ----------------------------------------------------------------------
+# 06/26/07 GRB - added code to allow use of absolute box size
 
 # ----------------------------------------------------------------------
 # TODO:
@@ -262,8 +265,11 @@ class System:
 	  if line[0:12] == 'Total charge':
 	    self.totalChargeBeforeIons = float(line.split()[2])
 	    
-        # make a cubic (periodic boundary conditions) box
-	editconf = 'editconf -bt %s -f %s -o %s -d %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.boxSoluteDistance )
+        # make a (periodic boundary conditions) box
+        if self.setup.useAbsBoxSize:
+	    editconf = 'editconf -bt %s -f %s -o %s -box %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.absBoxSize )
+        else:
+       	    editconf = 'editconf -bt %s -f %s -o %s -d %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.boxSoluteDistance )
 	self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 
