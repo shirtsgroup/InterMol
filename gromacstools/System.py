@@ -490,6 +490,7 @@ class System:
     fout = open( topfile, 'w')
     for line in lines:
       if line[0:8] == '#include':
+        print line
         if line.count('#include "%s.itp"'%self.useff) > 0:
             fout.write('#include "%s.itp"\n#include "ffamber_tip3p.itp"\n'%self.useff)
         elif line.count('#include "flexspc.itp"') > 0:
@@ -497,7 +498,11 @@ class System:
         elif line.count('#include "spc.itp"') > 0:
            continue
         else:
-            finclude = open( (line.split()[1]).replace('"','') , 'r')
+            ifile = line.split()[1].replace('"','')
+            if os.path.isfile(ifile):
+              finclude = open( ifile , 'r')
+            else:
+              finclude = open(os.path.join(self.files.GMXLIB,ifile),'r')
             includelines =  finclude.readlines()
             for iline in includelines:
                 fout.write( iline )
