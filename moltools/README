@@ -1,1 +1,5 @@
 Tools for dealing with small molecules and mol2 files.
+
+Stuff here:
+- ligtools.py: Contains get_ligand.py, tool to obtain a specified ligand (by residue name/number) from a pdb file, name it, perceive aromaticity and protonate, and return it as an OEMol.
+- make_2d_image.py: Tool to take a chemical name and make a 2d image of it. Uses OpenEye image libraries, which are a bit ugly and only make bitmaps. Should find some opensource tool which can be used for these.
