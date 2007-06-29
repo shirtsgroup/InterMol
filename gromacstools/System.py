@@ -289,7 +289,8 @@ class System:
 	
         # add ions to box
 	### Run genion
-	[np, nn, nwaters] = self.counterions()	  
+	[np, nn, nwaters] = self.counterions()	 
+        #Note that the following is fragile: 12 won't work if the protein has multiple chains or if there is a ligand also present. 
 	genion = 'echo 12 | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
 	self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
