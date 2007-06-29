@@ -102,6 +102,7 @@ def am1bcc_charge_mol2(ligmol2, outmol2, cleanup = True, judgetypes = None, nc =
 def ligmol2_to_gromacs(ligmol2, outname, cleanup = True, showWarnings = True):
    """Take a specified ligand mol2 file containing partial charges and AMBER atom types; convert it to gromacs topology and coordinate files. Uses antechamber (which must be in path), then parmchk and tleap which also must be in path. From this, generates prmtop and crd files. Then uses the amb2gmx.pl script to convert to GROMACS (hence requiring a full AMBER installation)."""
    workdir = tempfile.mkdtemp()
+   print workdir
    commands.getoutput('cp %s %s' % (ligmol2, os.path.join(workdir, 'tmp.mol2')))
    dir = os.getcwd()
    os.chdir(workdir)
@@ -121,13 +122,15 @@ quit"""
    file.close()
 
    tleapout = commands.getoutput('tleap -f leap.in')
+   print tleapout
    tleapout = tleapout.split('\n')
    if showWarnings:
      for line in tleapout:
        tmp = line.upper()
        if tmp.find('WARNING')>-1: print line
        if tmp.find('ERROR')>-1: print line
-
+  
+   raw_input()
    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
    commands.getoutput('%s --prmtop tmp.prmtop --crd tmp.crd --outname tmp' % amb2gmx)
 
@@ -228,4 +231,52 @@ def top_to_itp(topfile, outputitp, moleculetype = None):
        outtext.append(line)
      else:
        outtext.append(line)
-       linenum +=1     
+       linenum +=1    
+
+def set_subst_name(mol2file, name):
+   """Edit specified mol2 file to change the subst_name to name; the OE tools fail to modify this."""
+   file = open(mol2file, 'r')
+   text = file.readlines()
+   file.close()
+   
+   atomsec = []
+   ct = 0
+   while text[ct].find('<TRIPOS>ATOM')==-1:
+     ct+=1
+   ct+=1
+   atomstart = ct
+   while text[ct].find('<TRIPOS>BOND')==-1:
+     ct+=1
+   atomend = ct
+
+   atomsec = text[atomstart:atomend]
+   outtext=text[0:atomstart]
+   repltext = atomsec[0].split()[7] # mol2 file uses space delimited, not fixed-width
+
+   for line in atomsec:
+     #If we blindly search and replace, we'll tend to clobber stuff, as the subst_name might be "1" or something lame like that that will occur all over. 
+     #If it only occurs once, just replace it
+     if line.count(repltext)==1:
+       outtext.append( line.replace(repltext, name) )
+     else:
+       #Otherwise grab the string left and right of the subst_name and sandwich the new subst_name in between. This can probably be done easier in Python 2.5 with partition, but 2.4 is still used someplaces.
+       #Loop through the line and tag locations of every non-space entry
+       blockstart=[]
+       ct=0
+       c=' '
+       for ct in range(len(line)):
+         lastc = c
+         c = line[ct]
+         if lastc.isspace() and not c.isspace():
+           blockstart.append(ct)
+       line = line[0:blockstart[7]] + line[blockstart[7]:].replace(repltext, name, 1)
+       outtext.append(line) 
+                  
+
+   for line in text[atomend:]:
+     outtext.append(line)
+   #Write new mol2
+   file = open(mol2file,'w')
+   file.writelines(outtext)
+   file.close()
+     
