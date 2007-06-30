@@ -48,10 +48,13 @@ molecules = tmp
 # report results
 cum_DDG2 = 0.0
 cum_d2DDG = 0.0
-print "%24s %12s   %12s   %12s" % ('molecule', 'AMOEBA', 'experiment', 'difference')    
+print "%24s %12s   %12s   %12s" % ('molecule', 'AMOEBA', 'experiment', 'difference')
+datafile = open('amoeba-experiment.data','w')
+errorfile = open('amoeba-experiment.errors','w')
 for molecule in molecules:
 
-    DeltaG_amoeba = datasets['amoeba'][molecule]['total']['DeltaG']
+    #DeltaG_amoeba = datasets['amoeba'][molecule]['total']['DeltaG'] - datasets['amoeba'][molecule]['dispersion-correction']
+    DeltaG_amoeba = datasets['amoeba'][molecule]['total']['DeltaG'] 
     dDeltaG_amoeba = datasets['amoeba'][molecule]['total']['dDeltaG']    
 
     DeltaG_exp = datasets['exptvals'][molecule]
@@ -66,7 +69,21 @@ for molecule in molecules:
     cum_DDG2 += DDG**2 
     cum_d2DDG += dDDG**2 * DDG**2
 
+    datafile.write("%16.8f %16.8f %16.8f %16.8f\n" % (DeltaG_exp, DeltaG_amoeba, dDeltaG_exp, dDeltaG_amoeba))
+    errorfile.write("%16.8f %16.8f\n" % (dDeltaG_exp, dDeltaG_amoeba))
+
+
+datafile.close()
+errorfile.close()
+
 print ""
 DDG = sqrt(cum_DDG2 / nmolecules)
 dDDG = sqrt(cum_d2DDG / (nmolecules * cum_DDG2))
 print "%24s %6.2f +- %4.2f" % ('RMS', DDG, dDDG)
+
+# Compute mean size of polarization correction
+correction_sum = 0.0
+for molecule in molecules:
+    correction_sum += datasets['amoeba'][molecule]['dispersion-correction']
+correction_sum /= nmolecules
+print "average correction: %f kcal/mol" % correction_sum

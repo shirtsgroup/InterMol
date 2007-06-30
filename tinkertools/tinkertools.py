@@ -752,7 +752,26 @@ OUTPUT:
      
   return outtext
 
-def setup_calc( keyfile, vackeyfile, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, blocklen = 10000, equillen=10000, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
+def write_file(filename, contents):
+   """Write the given contents to a text file.
+
+   ARGUMENTS
+       filename (string) - name of the file to write to, creating if it doesn't exist
+       contents (string) - contents of the file to be written
+   """
+
+   # Open the file for writing
+   file = open(filename, 'w')
+
+   # Write the file contents
+   file.write(contents)
+
+   # Close the file
+   file.close()
+
+   return
+
+def setup_calc( keyfile, vackeyfile, targetdir, mol_atomtypes, amoebafile, xyzfile, dynfile, simlen = 100000, blocklen = 10000, equillen=10000, vacuum_multiplier = 100, save_interval = 0.1, temperature = 298, cg_lambda = [0.0,0.106,0.226,0.368,0.553,0.8,1.0], vdw_lambda = [0.0,0.1,0.15,0.25,0.3,0.35,0.375,0.4,0.45,0.5,0.55,0.6,0.7,0.8,0.9,1.0], wateratoms=[22,23]):
    """Setup a set of amoeba calculations in a target directory; will generate three subdirectories ('nochg_wat','nochg_vac','novdw_wat') within that directory, each containing all of the appropriate run input for calculations at a series of lambda values.
 INPUT:
  - keyfile: Key file with settings for simulations
@@ -767,6 +786,9 @@ OPTIONAL INPUT:
   - cg_lambda: Array of lambda values for charging
   - vdw_lambda: Array of lambda values for LJ calcs
   - wateratoms: Atom types of water atoms; default 22 and 23
+  - vacuum_multiplier (integer): vacuum simulations will be this factor longer in length than the solvated simulations (default: 100)
+  - save_interval (float): interval (in ps) at which data is written (default: 0.1 ps)
+  - temperature (float): temperature for simulations (in K) (default: 298)
 OUTPUT: 
   - Set of directories/scripts for running calculations, with appropriate files. Note that all output xyz/key/dyn files will be named "mol.xxx" for consistency.
 OTHER NOTES:
@@ -776,6 +798,10 @@ OTHER NOTES:
    alpha=0.88
    lpow=1.0
 
+   #Maximum random number seed.
+   # Limited by fortran integer type.
+   # Set for a signed 4-byte int.
+   maxseed = (2**31)-1
 
    #Check target dir exists; if not, make it
    if not os.path.isdir(targetdir): os.mkdir(targetdir)
@@ -805,7 +831,7 @@ OTHER NOTES:
      #Add random seed to key file, and parameters
      os.system('cp %s %s' % (keyfile, os.path.join( opath, 'mol.key' ) ) )
      file=open( os.path.join( opath, 'mol.key' ) , 'a')
-     seed = random.randint(0, 5000)
+     seed = random.randint(0, maxseed)
      file.write('RANDOMSEED    %s\n' % seed)
      file.write('PARAMETERS mol%s.prm\n' % lmb)
      file.close()
@@ -813,50 +839,38 @@ OTHER NOTES:
      #Generate a copy of that file using the lambda value in the filename, as we'll need to do file shuffling later
      os.system('cp %s %s' % ( os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) ) 
 
-     #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext=''
-     runtext+='cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
-     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
-     #runtext+='rm -f mol.arc\n'     
-     #runtext+='mv mol.xyz_2 mol.xyz\n'
-     #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 0.1 4 298 1  > equil.log\n' % equillen
-     runtext+='mv mol.arc equil.arc\n' # move away arc file
-     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
-     #DO PRODUCTION AND REPROCESSING IN BLOCKS
-     runtext += 'touch mol.log\n'
-     cumulative_length = 0
-     while cumulative_length < simlen:
-        name = 'mol'
-        reprkey = os.path.join(  '../', str(lmb), name+str(lmb)+'.key' )
-        reprprm = os.path.join(  '../', str(lmb), name+str(lmb)+'.prm' )
-        runtext+='cp %s %s.key\n' % (reprkey, name) 
-        runtext+='cp %s %s%s.prm\n' % (reprprm, name, lmb) 
-
-        runtext+='dynamic.x mol %s 1 0.1 2 298  >> mol.log\n' % min(blocklen, simlen - cumulative_length)
-        runtext+='tcsh reprocess.sh\n'
-        runtext+='rm -f mol.uind\n'
-        cumulative_length += blocklen        
-
-     #Write run script
-     file=open( os.path.join(opath, 'run.sh'), 'w')
-     file.write('#!/bin/tcsh\n')     
-     file.write(runtext)
-     file.close()
-
-     #reprocessing -- get text for reprocessing at neighboring lambda values and self.
-     idx = cg_lambda.index(lmb)
-     nbrs=[lmb]
-     if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
-     if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
-     reprtext = get_reprocessing_text( 'mol', nbrs ) 
-
-     # Write reprocess script.
-     file=open( os.path.join(opath, 'reprocess.sh'), 'w')
-     file.write('#!/bin/tcsh\n')
-     file.write(reprtext)
-     file.close
-
+     # Generate equilibration script.     
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)
+     runtext += 'dynamic.x mol %s 1 %s 4 %s 1 > equil.log\n' % (equillen, save_interval, temperature) # NPT equilibration
+     runtext += 'mv mol.arc equil.arc\n' # save .arc file
+     runtext += 'cp mol.dyn equil.dyn\n' # save .dyn file
+     runtext += 'touch mol.log\n' # create production dynamics log file if it doesn't exist
+     filename = os.path.join(opath, 'equilibrate.sh')     
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)
+     
+     # Generate production script for a small chunk of dynamics.
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)     
+     runtext += 'dynamic.x mol %s 1 %s 2 %s >> mol.log\n' % (blocklen, save_interval, temperature) # NVT production
+     filename = os.path.join(opath, 'extend.sh')
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)
+     
+     # Generate reprocessing script.
+#     idx = cg_lambda.index(lmb)
+#     nbrs=[]
+#     if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
+#     if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
+#     nbrs.append(cg_lambda[idx]) # append our own index last    
+#     reprtext = get_reprocessing_text( 'mol', nbrs )
+     reprtext = get_reprocessing_text( 'mol', cg_lambda ) # Reprocess with all lambda values
+     filename = os.path.join(opath, 'reprocess.sh')
+     write_file(filename, reprtext)
+     os.system('chmod 755 %s' % filename)
+     
    #Charging in vacuum
    print 'Setting up charging in vacuum...'
    cgdir=os.path.join(targetdir, 'nochg_vac')
@@ -878,7 +892,7 @@ OTHER NOTES:
      #Add random seed to key file, and parameters
      os.system('cp %s %s' % (vackeyfile, os.path.join( opath, 'mol.key') ) )
      file=open( os.path.join( opath, 'mol.key' ) , 'a')
-     seed = random.randint(0, 5000)
+     seed = random.randint(0, maxseed)
      file.write('RANDOMSEED    %s\n' % seed)
      file.write('PARAMETERS    mol%s.prm\n' % lmb)
      file.close()
@@ -886,30 +900,37 @@ OTHER NOTES:
      #Generate a copy of that file using the lambda value in the filename, as we'll need to do file shuffling later
      os.system('cp %s %s' % ( os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) )
 
-     #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext=''
-     runtext+='cp initial.xyz mol.xyz\n'
-     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
-     #runtext+='rm -f mol.arc\n'          
-     #runtext+='mv mol.xyz_2 mol.xyz\n'
-     #EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 > equil.log\n' % (equillen * 10)
-     runtext+='mv mol.arc equil.arc\n' # move away arc file
-     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
-     #PRODUCTION
-     runtext+='dynamic.x mol %s 1 0.1 2 298 > mol.log\n' % (simlen * 10)
-     #reprocessing -- get text for reprocessing at neighboring lambda values and self.
-     idx = cg_lambda.index(lmb)
-     nbrs=[lmb]
-     if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
-     if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
-     reprtext = get_reprocessing_text( 'mol', nbrs )
+     # Generate equilibration script.     
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp initial.xyz mol.xyz\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)
+     runtext += 'dynamic.x mol %s 1 %f %s > equil.log\n' % (equillen * vacuum_multiplier, save_interval * vacuum_multiplier, temperature) # NVT equilibration (since vacuum simulation)
+     runtext += 'mv mol.arc equil.arc\n' # save .arc file
+     runtext += 'cp mol.dyn equil.dyn\n' # save .dyn file
+     runtext += 'touch mol.log\n' # create production dynamics log file if it doesn't exist
+     filename = os.path.join(opath, 'equilibrate.sh')     
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)     
 
-     #Write run script
-     file=open( os.path.join(opath, 'run.sh'), 'w')
-     file.write(runtext)
-     file.write(reprtext)
-     file.close()
+     # Generate production script for a small chunk of dynamics.
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)     
+     runtext += 'dynamic.x mol %s 1 %f %s  >> mol.log\n' % (blocklen * vacuum_multiplier, save_interval * vacuum_multiplier, temperature) # NVT production
+     filename = os.path.join(opath, 'extend.sh')
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)     
+     
+     # Generate reprocessing script.
+#     idx = cg_lambda.index(lmb)
+#     nbrs=[]
+#     if idx+1 < len(cg_lambda): nbrs.append(cg_lambda[idx+1])
+#     if idx-1 >=0 : nbrs.append(cg_lambda[idx-1])
+#     nbrs.append(cg_lambda[idx])     
+#     reprtext = get_reprocessing_text( 'mol', nbrs )
+     reprtext = get_reprocessing_text( 'mol', cg_lambda ) # Reprocess with all lambda values
+     filename = os.path.join(opath, 'reprocess.sh')
+     write_file(filename, reprtext)
+     os.system('chmod 755 %s' % filename)     
 
    #Set up LJ calculation
    print 'Setting up vdW calculation...'
@@ -932,7 +953,7 @@ OTHER NOTES:
      #Use combination rules to compute modified r and epsilon for each pair of interactions between
      #water and other
      for w in wateratoms:
-              #Get r and eps for water atom type
+      #Get r and eps for water atom type
       watr=float(watvdwparams[w]['r'])
       wateps=float(watvdwparams[w]['eps'])
       for at in mol_atomtypes:
@@ -947,7 +968,6 @@ OTHER NOTES:
          comb_r=(atomr**3+watr**3)/(atomr**2+watr**2)
          #Compute scaled epsilon
          eps_new=comb_eps*(1.-lmb)**4
-
 
          #Store data to output text array to insert in key file later
          tmptext.append('vdwpr        %s    %s       %.4f     %.5f\n' % (w,aclass,comb_r,eps_new))
@@ -969,7 +989,7 @@ OTHER NOTES:
      file = open( os.path.join(opath, 'mol.key'), 'r')
      text=file.readlines()
      text.insert(0, 'parameters mol%s.prm\n' % lmb)
-     seed=random.randint(0,5000)
+     seed=random.randint(0, maxseed)
      text.insert(len(text)-1, 'RANDOMSEED   %s\n' % seed)
      file.close()
      file = open( os.path.join(opath, 'mol.key'), 'w')
@@ -979,50 +999,38 @@ OTHER NOTES:
      #Generate copy of key file tagged by lambda
      os.system('cp %s %s' % (os.path.join(opath, 'mol.key'), os.path.join(opath, 'mol%s.key' % lmb) ) ) 
 
-     #GENERATE RUN SCRIPT HERE; ALSO NEEDS TO HAVE REPROCESSING STUFF IN IT
-     runtext=''
-     runtext+='cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
-     #runtext+='minimize.x mol 1.0 > mol_min.log\n'
-     #runtext+='rm -f mol.arc\n'
-     #runtext+='mv mol.xyz_2 mol.xyz\n'
-     #DO CONSTANT PRESSURE EQUILIBRATION
-     runtext+='dynamic.x mol %s 1 0.1 4 298 1  > equil.log\n' % equillen
-     runtext+='mv mol.arc equil.arc\n' # move away arc file     
-     runtext+='cp mol.dyn equil.dyn\n' # save .dyn file
-     #DO PRODUCTION AND REPROCESSING IN BLOCKS
-     runtext += 'touch mol.log\n'
-     cumulative_length = 0
-     while cumulative_length < simlen:
-        name = 'mol'
-        reprkey = os.path.join(  '../', str(lmb), name+str(lmb)+'.key' )
-        reprprm = os.path.join(  '../', str(lmb), name+str(lmb)+'.prm' )
-        runtext+='cp %s %s.key\n' % (reprkey, name) 
-        runtext+='cp %s %s%s.prm\n' % (reprprm, name, lmb)
-
-        runtext+='dynamic.x mol %s 1 0.1 2 298 1  >> mol.log\n' % min(blocklen, simlen - cumulative_length)
-        runtext+='rm -f mol.uind\n'
-        runtext+='tcsh reprocess.sh\n'        
-        cumulative_length += blocklen
-        
-     #Write run script
-     file=open( os.path.join(opath, 'run.sh'), 'w')
-     file.write('#!/bin/tcsh\n')     
-     file.write(runtext)
-     file.close()
-
-     #reprocessing -- get text for reprocessing at neighboring lambda values and self.
-     idx = vdw_lambda.index(lmb)
-     nbrs=[lmb]
-     if idx+1 < len(vdw_lambda): nbrs.append(vdw_lambda[idx+1])
-     if idx-1 >=0 : nbrs.append(vdw_lambda[idx-1])
-     reprtext = get_reprocessing_text( 'mol', nbrs )
-
-     # Write reprocess script.
-     file=open( os.path.join(opath, 'reprocess.sh'), 'w')
-     file.write('#!/bin/tcsh\n')
-     file.write(reprtext)
-     file.close
-
+     # Generate equilibration script.     
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp initial.xyz mol.xyz; cp initial.dyn mol.dyn\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)
+     runtext += 'dynamic.x mol %s 1 %s 4 %s 1 > equil.log\n' % (equillen, save_interval, temperature) # NPT equilibration
+     runtext += 'mv mol.arc equil.arc\n' # save .arc file
+     runtext += 'cp mol.dyn equil.dyn\n' # save .dyn file
+     runtext += 'touch mol.log\n' # create production dynamics log file if it doesn't exist
+     filename = os.path.join(opath, 'equilibrate.sh')     
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)
+     
+     # Generate production script for a small chunk of dynamics.
+     runtext = '#!/bin/tcsh\n'
+     runtext += 'cp mol%s.key mol.key\n' % str(lmb)     
+     runtext += 'dynamic.x mol %s 1 %s 2 %s >> mol.log\n' % (blocklen, save_interval, temperature) # NVT production
+     filename = os.path.join(opath, 'extend.sh')
+     write_file(filename, runtext)
+     os.system('chmod 755 %s' % filename)
+     
+     # Generate reprocessing script.
+#     idx = vdw_lambda.index(lmb)
+#     nbrs=[]
+#     if idx+1 < len(vdw_lambda): nbrs.append(vdw_lambda[idx+1])
+#     if idx-1 >=0 : nbrs.append(vdw_lambda[idx-1])
+#     nbrs.append(vdw_lambda[idx])
+#     reprtext = get_reprocessing_text( 'mol', nbrs )
+     reprtext = get_reprocessing_text( 'mol', vdw_lambda ) # reprocess with all lambda values
+     filename = os.path.join(opath, 'reprocess.sh')
+     write_file(filename, reprtext)
+     os.system('chmod 755 %s' % filename)
+     
 #==================================================================================
 # Tools for analysis of Tinker trajectories.
 #==================================================================================

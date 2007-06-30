@@ -3,15 +3,14 @@
 import os
 from tinkertools import *
 
-calcnum = 1 #Number of calculations per molecule
+calcnum = 3 #Number of calculations per molecule
 key = './TEMPLATE.key'
 keyvac = './TEMPLATE_vac.key'
 
-
-
 #Full set
-names = [ 'methane', 'butane', 'methanol', 'ethanol', 'toluene', 'p-cresol', 'methyl sulfide', 'acetamide', 'ammonia', 'methylamine', 'dimethylamine', 'trimethylamine', 'pyrrolidine', 'N-methylacetamide', 'N,N-dimethylformamide', 'acetic acid', 'formaldehyde', 'acetaldehyde', 'hydrogen sulfide', 'dimethyl sulfide', 'dimethyl disulfide', 'methyl ethyl sulfide', 'benzene', 'ethylbenzene', '1H-imidazole', 'ethylamine']
-
+#names = [ 'methane', 'butane', 'methanol', 'ethanol', 'toluene', 'p-cresol', 'methyl sulfide', 'acetamide', 'ammonia', 'methylamine', 'dimethylamine', 'trimethylamine', 'pyrrolidine', 'N-methylacetamide', 'N,N-dimethylformamide', 'acetic acid', 'formaldehyde', 'acetaldehyde', 'hydrogen sulfide', 'dimethyl sulfide', 'dimethyl disulfide', 'methyl ethyl sulfide', 'benzene', 'ethylbenzene', '1H-imidazole', 'ethylamine']
+# Without amines
+names = [ 'methane', 'butane', 'methanol', 'ethanol', 'toluene', 'p-cresol', 'methyl sulfide', 'acetamide', 'ammonia', 'N-methylacetamide', 'N,N-dimethylformamide', 'acetic acid', 'formaldehyde', 'acetaldehyde', 'hydrogen sulfide', 'dimethyl sulfide', 'dimethyl disulfide', 'methyl ethyl sulfide', 'benzene', 'ethylbenzene', '1H-imidazole']
 
 #Convert names to names we actually use (remove commas, spaces)
 tmp =[]
@@ -26,7 +25,7 @@ ErrorLog=[] #Storage for errors (i.e. if equilibration didn't finish)
 
 for name in names:
   print name
-  for num in range(calcnum):
+  for num in range(1,calcnum):
     print "  ", num
     equildir = os.path.join('equilibrate', name+str(num))
     targetdir = os.path.join('production', name+str(num))
@@ -58,3 +57,4 @@ for name in names:
 file = open('ErrorLog.txt','w')
 file.writelines(ErrorLog)
 file.close()
+
