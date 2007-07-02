@@ -361,6 +361,8 @@ atom        283   59    H      "3-Formylindole HC7"       1      1.008    1
 atom        284   39    C      "3-Formylindole C=O"       6     12.000    3
 atom        285   67    O      "3-Formylindole O=C"       8     15.995    1
 atom        286   49    H      "3-Formylindole HC=O"      1      1.008    1
+atom        287   22    O      "Water O"                  8     15.995    2 #DLM added additional water entries so can compute hydration free energy of water in water
+atom        288   23    H      "Water H2O"                1      1.008    1
 
 
       ################################
@@ -2319,6 +2321,18 @@ multipole   286  284  285             -0.06217
                                        0.04404
                                        0.00000    0.03288
                                        0.00320    0.00000   -0.07692
+#DLM copying water multipoles here
+multipole    287   288  -288          -0.51966
+                                       0.00000    0.00000    0.14279
+                                       0.37928    
+                                       0.00000   -0.41809
+                                       0.00000    0.00000    0.03881
+multipole    288   287   288           0.25983
+                                      -0.03859    0.00000   -0.05818
+                                      -0.03673    
+                                       0.00000   -0.10739
+                                      -0.00203    0.00000    0.14412
+
 
 
       ########################################
@@ -2610,3 +2624,7 @@ polarize    283               0.496       276
 polarize    284               1.334       272  285  286
 polarize    285               0.837       284
 polarize    286               0.496       284
+#DLM copying water polarizability here
+polarize    287               0.837        288
+polarize    288               0.496        287
+
