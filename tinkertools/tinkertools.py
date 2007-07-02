@@ -280,11 +280,12 @@ def solvate_molecule(xyzfile, prmfile, outxyzfile, boxsize = 24.0 * Units.A):
      Uses spc water as the water with which to tile.
    """
 
-   # Get absolute path to AMOEBA parameter file.
-   prmfile = os.path.join(curdir,prmfile)
 
    # Store current directory.
    curdir = os.getcwd()
+
+   # Get absolute path to AMOEBA parameter file.
+   prmfile = os.path.join(curdir,prmfile)
 
    # Make temporary working directory.
    tempdir = tempfile.mkdtemp() 

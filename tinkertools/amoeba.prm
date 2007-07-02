@@ -115,7 +115,7 @@ atom         37   30    H      "Propanol Me-CH2"          1      1.008    1
 atom         38   28    C      "isoPropanol CH3"          6     12.000    4
 atom         39   29    H      "isoPropanol H3C"          1      1.008    1
 atom         40   31    C      "isoPropanol >CH-"         6     12.000    4
-atom         41   25    H      "isoPropanol >CH-"         1      1.008    1
+atom         41   25    H      "isoPropanol >HC-"         1      1.008    1 #DLM fixed description here
 atom         42   26    O      "isoPropanol O"            8     15.995    2
 atom         43   27    H      "isoPropanol HO"           1      1.008    1
 atom         44   32    N      "Ammonia N"                7     13.003    4 
