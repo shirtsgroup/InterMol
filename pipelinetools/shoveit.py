@@ -64,16 +64,15 @@ def shoveit(protein, outdir, forcefield='ffamber99p'):
     # Prepare a Gromacs simulation according to the pipelineProtein specs 
     # prepare_gmx(protein.pdbfile, protein.seqfile, protein.modelPDBout) 
 
-
     # run mcce
-    if (0):
+    if (1):
         mcceOut = os.path.abspath(mcceOut)
         prmFile = '../../mccetools/prmfiles/run.prm.quick'
         prmFile = os.path.abspath(prmFile)
         mcce.protonatePDB(modelPDBOut, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
 
     # run gromacs setup
-    if (0):
+    if (1):
         gromacsOut = baseName + "_final.pdb"
         # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
         g = System(mcceOut, useff=forcefield)
@@ -92,7 +91,7 @@ def shoveit(protein, outdir, forcefield='ffamber99p'):
             os.mkdir(thisOutDir)
         g.prepare(outname=gromacsOut, outdir=thisOutDir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
 
-    if(0):
+    if(1):
         # cleanup    if not DEBUG:
         os.remove(modelPDBOut)
         os.remove(mcceOut)
