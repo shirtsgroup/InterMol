@@ -415,7 +415,7 @@ class System:
 
 	### the mdrun script
 	equilibrate = 'mdrun -v -s %s -c %s '%( out_tprfile, out_grofile )
-	equilscript = os.path.join(outdir,'equilibrate')
+	equilscript = os.path.join(outdir,'production')
 	fout = open(equilscript,'w')
 	fout.write(equilibrate+'\n')
 	fout.close()
