@@ -398,7 +398,21 @@ class System:
 	if (self.verbose): print copycmd 
 	cmdout = commands.getoutput( copycmd )
 	if (self.verbose): print cmdout
+
+	### the TOP file
+	out_topfile = os.path.join(outdir,outname+'.top')
+	copycmd = 'cp %s %s'%(self.files.topfile, out_topfile)
+	if (self.verbose): print copycmd 
+	cmdout = commands.getoutput( copycmd )
+	if (self.verbose): print cmdout
 	    
+	### the NDX file
+	out_ndxfile = os.path.join(outdir,outname+'.ndx')
+	copycmd = 'cp %s %s'%(self.files.ndxfile, out_ndxfile)
+	if (self.verbose): print copycmd 
+	cmdout = commands.getoutput( copycmd )
+	if (self.verbose): print cmdout
+
 	### the mdrun script
 	equilibrate = 'mdrun -v -s %s -c %s '%( out_tprfile, out_grofile )
 	equilscript = os.path.join(outdir,'equilibrate')
