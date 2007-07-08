@@ -21,6 +21,7 @@
 # ----------------------------------------------------------------------
 # Change Log:
 # ----------------------------------------------------------------------
+# 07/08/07 VAV - RE-fixed the make_ndx() function to include ions!!!!
 # 06/26/07 GRB - added code to allow use of absolute box size
 
 # ----------------------------------------------------------------------
@@ -28,6 +29,7 @@
 # *** MOST IMPORTANT ***
 # * Implement Exceptions!!!  One failed protein should cripple the rest of the pipeline.  
 # *** IMPORTANT BUT LESS SO ***
+# * make_ndx() doesn't look to see all the Ion types available.  Fix for robustness 
 # * PROPER documentation of all functions according to style guide
 # * Incorporate Units.py
 # * a better way of keeping track of gromacs preprocessed files!!!
@@ -602,12 +604,13 @@ class System:
     return [np, nn, (nwaters-np-nn)]
 
 
-  def make_ndx(self, grofile, ndxfile, groups=['protein','sol']):
+  def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol']):
     """Make an *.ndx file with atom groups corresponding to a list of commmon-sense names
     given in the groups=[] list.  Supported group names so far:
     
-        protein            All protein atoms (including ions!)
+        protein            All protein atoms
 	sol                All solvent atoms.  (protein + sol) shouuld equal (system) !
+        ions               All ions
 	
     Note: This subroutine assumes it's being called from the current working directory
     """
@@ -620,6 +623,7 @@ class System:
     lines.pop()     # skip box size lines
     protein_residues = []
     solvent_residues = []
+    ion_residues = []
     res = -1
     lastRes = -1
     for line in lines:    # these lines should all have atoms on them
@@ -636,13 +640,16 @@ class System:
       if (line[5:8] == 'SOL') or (line[5:8] == 'HOH'):
           if solvent_residues.count(res) == 0:
 	    solvent_residues.append(res)
+      elif (line[5:8] == 'Na ') or (line[5:8] == 'Cl '):
+          if ion_residues.count(res) == 0:
+	    ion_residues.append(res)
       else:
 	  if protein_residues.count(res) == 0:
 	    protein_residues.append(res)
 	
     if self.verbose:
       print 'protein_residues', protein_residues
-      print 
+      print 'ion_residues', ion_residues
       print 'solvent_residues', solvent_residues
     
     # write a atomSelect-style selections file:
@@ -671,6 +678,12 @@ class System:
 	for res in solvent_residues[0:-1]:
 	    fout.write('%d, '%res)  
 	fout.write('%d\n\n'%solvent_residues[-1])
+	
+    if groups.count('ions') > 0:     
+        fout.write( '[ ions ]\nresidues ' )
+	for res in ion_residues[0:-1]:
+	    fout.write('%d, '%res)  
+	fout.write('%d\n\n'%ion_residues[-1])
 	
     fout.close()
    
