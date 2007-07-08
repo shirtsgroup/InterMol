@@ -54,6 +54,29 @@ def protonate(inpdbfile, outpdbfile, pH):
     mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
 
 
+def build_gmx(protein, outdir, forcefield='ffamber99p'):
+    """Builds a gromacs project according to the specs in the pipelineProtein object.  Assumes
+    the protein.pdbfile is in the right (AMBER) format."""
+
+    baseName = protein.getBasename( protein.pdbfile )
+    gromacsOut = baseName + "_final"
+    g = System(protein.pdbfile, useff=forcefield)
+    g.setup.setSaltConditions(protein.salt, protein.saltconc)
+    if protein.boxProtocol == 'small':
+        g.setup.set_boxType = 'octahedron'
+        g.setup.set_boxSoluteDistance(1.5)   # periodic box margin distance, in nanometers
+    elif protein.boxProtocol == 'big':
+        g.setup.set_boxType = 'octahedron'
+        g.setup.setUseAbsBoxSize(True)
+        g.setup.setAbsBoxSize('8.0')   # periodic box absolute size, in nanometers (string)
+
+    print 'Writing equilibration directory to',thisOutDir,'...'
+    if os.path.exists(thisOutDir) == False:
+        os.mkdir(thisOutDir)
+    g.prepare(outname=gromacsOut, outdir=outdir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
+
+
+
 def shoveit(protein, outdir, forcefield='ffamber99p'):
     """Shoves a pipelineProtein object through the entire
        MODELLER -> MCCE --> gromacs pipeline."""
@@ -108,6 +131,7 @@ def shoveit(protein, outdir, forcefield='ffamber99p'):
         # cleanup    if not DEBUG:
         os.remove(modelPDBOut)
         os.remove(mcceOut)
+
 
 
 #----------------------------------
