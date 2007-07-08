@@ -6,8 +6,8 @@
 
 
 # GLOBAL IMPORTS
+import mmtools.modellertools.modelPDB as modelPDB
 import mmtools.mccetools.mcce as mcce
-
 from mmtools.gromacstools.System import *
 
 import os
@@ -17,6 +17,97 @@ import sys
 
 # DEBUG flag: if true then save outputs
 DEBUG = True
+
+#-----------------------------------
+# FUNCTIONS
+#-----------------------------------
+
+
+def thread_model(pdbTemplate, sequence, outPdbFile):
+
+
+    # use either a sequence file or a sequence string
+    if os.path.exists(sequence):
+        sequenceFilename = sequence
+    else:
+        tmpdir = tempfile.mkdtemp()
+        sequenceFilename = os.path.join(tmpdir,'sequence')
+        fseq = open(sequenceFilename,'w')
+        fseq.write(sequence)
+        fseq.close()
+
+    myModel = modelPDB.ModelPDB()
+    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile)
+
+    # cleanup
+    if not os.path.exists(sequence):
+        os.remove(sequenceFilename)
+        os.rmdir(tmpdir)
+
+
+def protonate(inpdbfile, outpdbfile, pH):
+    """Generate a protonated PDB file from a template PDB using MCCE."""
+
+    mcceOut = os.path.abspath(outpdbfile)
+    prmFile = '../mccetools/prmfiles/run.prm.quick'
+    prmFile = os.path.abspath(prmFile)
+    mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
+
+
+def shoveit(protein, outdir, forcefield='ffamber99p'):
+    """Shoves a pipelineProtein object through the entire
+       MODELLER -> MCCE --> gromacs pipeline."""
+
+
+    print 'before:'
+    protein.print_info()
+
+    protein.setup(outdir)
+
+    print 'after:'
+    protein.print_info()
+
+    # Build a PDB model from the pdbTemplate using MODELLER
+    thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout)
+
+    # Find the best protonation state using MCCE
+    # protonate(protein.pdbfile, protein.seqfile, protein.modelPDBout)
+
+    # Prepare a Gromacs simulation according to the pipelineProtein specs
+    # prepare_gmx(protein.pdbfile, protein.seqfile, protein.modelPDBout)
+
+    # run mcce
+    if (1):
+        mcceOut = os.path.abspath(mcceOut)
+        prmFile = '../../mccetools/prmfiles/run.prm.quick'
+        prmFile = os.path.abspath(prmFile)
+        mcce.protonatePDB(modelPDBOut, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
+
+    # run gromacs setup
+    if (1):
+        gromacsOut = baseName + "_final.pdb"
+        # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
+        g = System(mcceOut, useff=forcefield)
+        g.setup.setSaltConditions(protein.salt, protein.saltconc)
+        if protein.boxProtocol == 'small':
+            g.setup.set_boxType = 'octahedron'
+            g.setup.set_boxSoluteDistance(1.5)   # periodic box margin distance, in nanometers
+        elif protein.boxProtocol == 'big':
+            g.setup.set_boxType = 'octahedron'
+            g.setup.setUseAbsBoxSize(True)
+            g.setup.setAbsBoxSize('7.0')   # periodic box absolute size, in nanometers (string)
+
+        thisOutDir = os.path.join(thisdir, baseName)
+        print 'Writing equilibration directory to',thisOutDir,'...'
+        if os.path.exists(thisOutDir) == False:
+            os.mkdir(thisOutDir)
+        g.prepare(outname=gromacsOut, outdir=thisOutDir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
+
+
+    if(1):
+        # cleanup    if not DEBUG:
+        os.remove(modelPDBOut)
+        os.remove(mcceOut)
 
 
 #----------------------------------

@@ -1,5 +1,5 @@
 #=============================================================================================
-# thread.py 
+# thread_model.py 
 #
 # Threads a protein sequence onto a template PDB structure
 #=============================================================================================
@@ -20,38 +20,14 @@ __version__ = "$Revision: $"
 
 import sys, os
 import random, math, string, tempfile
-
 from optparse import OptionParser    # For parsing of command line arguments
-
 from mmtools.utilities import Units
-import mmtools.modellertools.modelPDB as modelPDB 
+import pipeline
 
 
 #=============================================================================================
 # FUNCTIONS 
 #=============================================================================================
-
-
-def thread_model(pdbTemplate, sequence, outPdbFile):
-
-
-    # use either a sequence file or a sequence string
-    if os.path.exists(sequence):
-        sequenceFilename = sequence
-    else:
-        tmpdir = tempfile.mkdtemp()
-        sequenceFilename = os.path.join(tmpdir,'sequence')
-        fseq = open(sequenceFilename,'w')
-        fseq.write(sequence)
-        fseq.close()
-
-    myModel = modelPDB.ModelPDB()
-    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile)
- 
-    # cleanup
-    if not os.path.exists(sequence):
-        os.remove(sequenceFilename)
-        os.rmdir(tmpdir)
 
 #===========================================================================
 # MAIN
@@ -94,5 +70,5 @@ are in your PYTHONPATH.
         parser.error("Must specify all options.\n")
 
     # Send arguments to gencoil()
-    thread( options.pdb_template, options.sequence, options.outpdb )
+    pipeline.thread_model( options.pdb_template, options.sequence, options.outpdb )
  

@@ -20,26 +20,14 @@ __version__ = "$Revision: $"
 
 import sys, os
 import random, math, string, tempfile
-
 from optparse import OptionParser    # For parsing of command line arguments
-
 from mmtools.utilities import Units
-import mmtools.mccetools.mcce as mcce 
+import pipeline
 
 
 #=============================================================================================
 # FUNCTIONS 
 #=============================================================================================
-
-
-def protonate(inpdbfile, outpdbfile, pH):
-    """Generate a protonated PDB file from a template PDB using MCCE."""
-
-    mcceOut = os.path.abspath(outpdbfile)
-    prmFile = '../mccetools/prmfiles/run.prm.quick'
-    prmFile = os.path.abspath(prmFile)
-    mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
-
 
 
 #===========================================================================
@@ -75,5 +63,5 @@ Generate a PDB structure with the correct protonation state using MCCE.
         parser.error("Must specify all options.\n")
 
     # Send arguments to gencoil()
-    protonate( options.inpdb, options.outpdb, options.pH )
+    pipeline.protonate( options.inpdb, options.outpdb, options.pH )
  

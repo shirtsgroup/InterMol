@@ -11,6 +11,7 @@
 #=============================================================================================
 # TODO
 # - Need a replacement PDB + dihedral manipulation scheme to replace the ZAM modules
+# ONCE WE DO THIS, we can put this functionality in the pipeline module!
 #=============================================================================================
 # VERSION CONTROL INFORMATION
 __version__ = "$Revision: $"                                                                         

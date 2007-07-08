@@ -19,17 +19,8 @@ __version__ = "$Revision: $"
 import os, os.path, sys
 
 # GLOBAL IMPORTS
-import mmtools.mccetools.mcce as mcce
-
-# import mmtools.gromacstools.system as system     # the old gromacstools way
-from mmtools.gromacstools.System import *
-
 from optparse import OptionParser    # For parsing of command line arguments
-
-# pipeline tools
-from pipeline import * 
-from thread_model import *
-
+import pipeline 
 
 #=============================================================================================
 
@@ -40,62 +31,6 @@ DEBUG = True
 #---------------------------------
 # FUNCTIONS
 #---------------------------------
-
-
-def shoveit(protein, outdir, forcefield='ffamber99p'):
-    """Shoves a pipelineProtein object through the entire
-       MODELLER -> MCCE --> gromacs pipeline."""
-
-
-    print 'before:'
-    protein.print_info()
-
-    protein.setup(outdir)
-
-    print 'after:'
-    protein.print_info()
-
-    # Build a PDB model from the pdbTemplate using MODELLER   
-    thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout) 
-
-    # Find the best protonation state using MCCE  
-    # protonate(protein.pdbfile, protein.seqfile, protein.modelPDBout) 
-
-    # Prepare a Gromacs simulation according to the pipelineProtein specs 
-    # prepare_gmx(protein.pdbfile, protein.seqfile, protein.modelPDBout) 
-
-    # run mcce
-    if (1):
-        mcceOut = os.path.abspath(mcceOut)
-        prmFile = '../../mccetools/prmfiles/run.prm.quick'
-        prmFile = os.path.abspath(prmFile)
-        mcce.protonatePDB(modelPDBOut, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
-
-    # run gromacs setup
-    if (1):
-        gromacsOut = baseName + "_final.pdb"
-        # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
-        g = System(mcceOut, useff=forcefield)
-        g.setup.setSaltConditions(protein.salt, protein.saltconc)
-        if protein.boxProtocol == 'small':
-            g.setup.set_boxType = 'octahedron'
-            g.setup.set_boxSoluteDistance(1.5)   # periodic box margin distance, in nanometers
-        elif protein.boxProtocol == 'big':
-            g.setup.set_boxType = 'octahedron'
-            g.setup.setUseAbsBoxSize(True)
-            g.setup.setAbsBoxSize('7.0')   # periodic box absolute size, in nanometers (string)
-
-        thisOutDir = os.path.join(thisdir, baseName)
-        print 'Writing equilibration directory to',thisOutDir,'...'
-        if os.path.exists(thisOutDir) == False:
-            os.mkdir(thisOutDir)
-        g.prepare(outname=gromacsOut, outdir=thisOutDir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
-
-    if(1):
-        # cleanup    if not DEBUG:
-        os.remove(modelPDBOut)
-        os.remove(mcceOut)
-
 
 
 #----------------------------------
@@ -150,7 +85,7 @@ For detailed help:  shoveit.py -h
     if ((not options.pdbfile) or (not options.sequence) or (not options.outdir)):
         parser.error("Must specify the pdbfile, the sequence and the outdir.\n")
    
-    pProtein  = PipelineProtein( pdb=options.pdbfile, seq=options.sequence, salt=options.salt, saltconc=float(options.saltconc), pH=float(options.pH), boxProtocol=options.boxProtocol)
+    pProtein  = pipeline.PipelineProtein( pdb=options.pdbfile, seq=options.sequence, salt=options.salt, saltconc=float(options.saltconc), pH=float(options.pH), boxProtocol=options.boxProtocol)
 
-    shoveit( pProtein, options.outdir, forcefield=options.forcefield )
+    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield )
 
