@@ -48,10 +48,12 @@ def thread_model(pdbTemplate, sequence, outPdbFile):
 def protonate(inpdbfile, outpdbfile, pH):
     """Generate a protonated PDB file from a template PDB using MCCE."""
 
+    thisdir = os.path.abspath(os.curdir)
     mcceOut = os.path.abspath(outpdbfile)
     prmFile = '../mccetools/prmfiles/run.prm.quick'
     prmFile = os.path.abspath(prmFile)
     mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
+    os.chdir(thisdir)
 
 
 def build_gmx(protein, outdir, forcefield='ffamber99p'):
@@ -70,9 +72,8 @@ def build_gmx(protein, outdir, forcefield='ffamber99p'):
         g.setup.setUseAbsBoxSize(True)
         g.setup.setAbsBoxSize('8.0')   # periodic box absolute size, in nanometers (string)
 
-    print 'Writing equilibration directory to',thisOutDir,'...'
-    if os.path.exists(thisOutDir) == False:
-        os.mkdir(thisOutDir)
+    if os.path.exists(outdir) == False:
+        os.mkdir(outdir)
     g.prepare(outname=gromacsOut, outdir=outdir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
 
 
