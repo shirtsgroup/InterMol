@@ -1,5 +1,7 @@
 # Modification history:
 #
+# VAV:  June 26, 2007:  Added ndx, top, and mdp outfile names (for the final file copy of files to form a production run)
+# VAV:  June 14, 2007:  Added set_outputName(), set_runscriptName()
 # VAV:  June 11, 2007:  Added set_mdpMinimization(), set_mdpEquilibration(), and set_mdpSimulation()
 
 
@@ -76,27 +78,34 @@ class Filenames(object):
     else:
         print 'Error:  infile must be either *.pdb or *.gro file'
 	sys.exit(1)
+
 	
-    oldway = """
-    self.topfile_prep = self.grofile_prep.replace('.gro','.top')
-    
-    self.grofile_box= self.grofile_prep.replace('.gro','_box.gro')
-    self.grofile_solvated = self.grofile_prep.replace('.gro','_solvated.gro')
-    self.tprfile_solvated = self.grofile_prep.replace('.gro','_solvated.tpr') 
-    self.grofile_solvated_afterem = self.grofile_solvated.replace('.gro','_afterem.gro')
+    # OUTPUT Filenames #
+    self.output_basename = 'out'
+    self.output_grofile = '%s.gro' % self.output_basename
+    self.output_tprfile = '%s.tpr' % self.output_basename
+    self.output_trrfile = '%s.trr' % self.output_basename
+    self.output_xtcfile = '%s.xtc' % self.output_basename
+    self.output_runscript = 'production'
 
-    self.grofile_ions = self.grofile_prep.replace('.gro','_ions.gro')
-    self.grofile_ions2 = self.grofile_prep.replace('.gro','_ions2.gro')
-    self.topfile_ions = self.topfile_prep.replace('.top','_ions.top')
 
-    self.tprfile_ions = self.grofile_prep.replace('.gro','_ions.tpr')
-    self.grofile_ions_afterem = self.grofile_ions.replace('.gro','_afterem.gro')
-    
-    self.tprfile_equil = self.tprfile_ions.replace('_ions.tpr','_equil.tpr')
-    self.grofile_equil = self.tprfile_equil.replace('.tpr','.gro')
-    
-    """
+  def set_outputName(self, outname):
+    """Sets the output basename for the *.gro, *.tpr, *.trr, *.xtc, etc."""
+    self.output_basename = outname
+    self.output_grofile = '%s.gro' % self.output_basename
+    self.output_tprfile = '%s.tpr' % self.output_basename
+    self.output_ndxfile = '%s.ndx' % self.output_basename
+    self.output_topfile = '%s.top' % self.output_basename
+    self.output_trrfile = '%s.trr' % self.output_basename
+    self.output_xtcfile = '%s.xtc' % self.output_basename
+    self.output_mdpfile = '%s.mdp' % self.output_basename
 
+
+  def set_runscriptName(self, runscriptName):
+    """Sets the name the exectuable mdrun script to run a production simulation."""
+    self.output_runscript = runscriptName
+      
+    
   def increment(self, fileExtensions):
     """For each file extension in the list fileExtensions=[ 'gro', 'tpr', ...],
     increment the the fiilename from "filename0001.gro" --> "filename0002.gro", e.g."""
