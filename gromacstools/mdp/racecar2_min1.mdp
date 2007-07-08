@@ -4,8 +4,7 @@
 
 cpp                      = cpp        ; i needed to change this to run on the Intel MacPro --VAV
 integrator = steep
-nsteps                   = 20
-; should be 2000          
+nsteps                   = 2000        ; should be 2000          
 emtol                    = 100
 emstep                   = 0.01
 nstxout                  = 10
