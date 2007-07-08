@@ -2,14 +2,14 @@ title                   = SMP-msv-03
 cpp                     = cpp
 integrator              = md        ; Dan  had sd
 
-freezegrps		= protein           ; Xuhui recommends position restraints for the protein, (not freeze) and then temperature coupling on all the groups.
+freezegrps		= protein   ; NOTES:  Xuhui recommends position restraints for the protein, (not freeze) and then temperature coupling on all the groups.
 freezedim		= Y Y Y
 
-nsteps                  = 200         ; should be 10000
+nsteps                  = 5000        ; should be 5000
 nstlist                 = 10
 dt                      = 0.002
 constraints             = hbonds        
-constraint-algorithm    = shake       
+constraint-algorithm    = shake     ; NOTES: Xuhui uses lincs...  in any case, constraint-algorithm MUST BE DEFINED!     
 ns_type                 = grid
 
 coulombtype             = reaction-field
@@ -29,7 +29,7 @@ tau_t           = 0.0109
   
 comm_grps		= sol
 comm_mode		= linear
-nstcomm			= 10
+nstcomm			= 1
 
 gen_vel			= yes
 gen_temp		= 300
