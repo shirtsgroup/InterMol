@@ -1,1 +1,0 @@
-mdrun -v -s /Users/vincentvoelz/scripts/mmtools/gromacstools/examples/prod.tpr -c /Users/vincentvoelz/scripts/mmtools/gromacstools/examples/prod.gro 
