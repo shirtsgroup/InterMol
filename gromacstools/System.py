@@ -290,10 +290,24 @@ class System:
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
         # add ions to box
-	### Run genion
 	[np, nn, nwaters] = self.counterions()	 
+	### get the solvent atomgroup number from genion
+	genion = 'echo q | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+	genion_lines = os.commands.getoutput(genion).split('\n')
+	groupstr = None
+	for line in genion_lines:
+	  if line[0:5] == 'Group':
+	    fields = line.replace(')',' ').replace('(',' ').split()
+	    if fields[2] == 'SOL':
+	      groupstr = fields[1]	    
+	if groupstr == None:
+	    print 'Cannot find atomgroup number for SOL from genion output:'
+	    for line in genion_lines:
+	       print '>>>>', line
+            raise IOError
+	       
         #Note that the following is fragile: 12 won't work if the protein has multiple chains or if there is a ligand also present. 
-	genion = 'echo 12 | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+	genion = 'echo %s | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(groupstr, self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
 	self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
         ### generate a new topolgy file for the ion-ated grofile  
@@ -406,12 +420,14 @@ class System:
 	cmdout = commands.getoutput( copycmd )
 	if (self.verbose): print cmdout
 	    
+
 	### the NDX file
 	out_ndxfile = os.path.join(outdir,outname+'.ndx')
 	copycmd = 'cp %s %s'%(self.files.ndxfile, out_ndxfile)
 	if (self.verbose): print copycmd 
 	cmdout = commands.getoutput( copycmd )
 	if (self.verbose): print cmdout
+
 
 	### the mdrun script
 	equilibrate = 'mdrun -v -s %s -c %s '%( out_tprfile, out_grofile )
@@ -422,7 +438,7 @@ class System:
 	os.chmod(equilscript, 0775)
 	if self.verbose==True:
 	    print cmdout
-	    
+
 	    
         # write logfiles
 	self.status.writeLog( os.path.join(outdir,'output.log') )
