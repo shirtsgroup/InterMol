@@ -65,11 +65,10 @@ def shoveItThrough(protein, forcefield):
     # run gromacs setup
     if (1):
         outname = baseName + "_final"
-        # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
         g = System(protein.pdbfile, useff=forcefield)
         g.setup.setSaltConditions(protein.salt, protein.saltconc)
         g.setup.set_boxSoluteDistance(0.9)   # <--- ***Greg!!!*** <--- periodic box margin distance, in nanometers 
-        outdir = os.path.join(thisdir, baseName)
+        outdir = os.path.abspath(os.path.join(thisdir, baseName))
         print 'Writing equilibration directory to',outdir,'...'
         if os.path.exists(outdir) == False:
             os.mkdir(outdir)
