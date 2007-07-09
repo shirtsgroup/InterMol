@@ -293,7 +293,7 @@ class System:
 	[np, nn, nwaters] = self.counterions()	 
 	### get the solvent atomgroup number from genion
 	genion = 'echo q | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
-	genion_lines = os.commands.getoutput(genion).split('\n')
+	genion_lines = commands.getoutput(genion).split('\n')
 	groupstr = None
 	for line in genion_lines:
 	  if line[0:5] == 'Group':
@@ -431,7 +431,7 @@ class System:
 
 	### the mdrun script
 	equilibrate = 'mdrun -v -s %s -c %s '%( out_tprfile, out_grofile )
-	equilscript = os.path.join(outdir,'production')
+	equilscript = outdir+'/'+'production'
 	fout = open(equilscript,'w')
 	fout.write(equilibrate+'\n')
 	fout.close()
