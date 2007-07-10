@@ -1,13 +1,17 @@
 import tempfile
 import commands
 from openeye.oechem import *
+from openeye.oeomega import *
 from openeye.oeiupac import *
+from openeye.oeshape import *
 import os
 
 """Ligtools:
 - get_ligand: Takes a pdb file, extracts specified ligand and tries to protonate and assign bond types. Optionally writes out a output file (of type specified by the filename, i.e. mol2 or pdb) of it; also returns it as an OE mol.
 - add_ligand_to_gro: Add a ligand at the end of an existing gro file.
 - lig_mol2_to_gromacs: Convert a ligand mol2 file to gromacs top and gro files using antechamber and amb2gmx.pl. 
+- generate_conf_from_file: Generates (and optionally writes to file) a ligand conformation (or more than one) for a molecule file of arbitrary (OE readable) type; returns it.
+- fit_mol_to_refmol: Fit a OE molecule (multi-conformer) to a reference molecule (single conformer, i.e. a ligand structure from a pdb file); write out an output file of the best N matches, where N is specified.
 
 Requirements: 
 - Amber and Antechamber installations in your path
@@ -279,4 +283,75 @@ def set_subst_name(mol2file, name):
    file = open(mol2file,'w')
    file.writelines(outtext)
    file.close()
-     
+
+
+def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1):
+   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1."""
+
+   #Open input file
+   input_molecule_stream=oemolistream()
+   input_molecule_stream.open(infile)
+
+   #Initialize omega
+   omega=OEOmega()
+
+   #Adjst to desired number of conformerst
+   if maxconfs:
+     #Note that with my Omega version, although this "works", it doesn't actually control the maximum number of conformers if larger than 120; things top out at 120. Weird.
+     omega.SetMaxConfs(maxconfs)
+   else:
+     omega.SetMaxConfs(1)
+   #Don't include input in output
+   omega.SetIncludeInput(False)
+  
+   #Create molecule
+   molecule = OEMol()
+   
+   name = OECreateIUPACName(molecule) #Attempt to figure out IUPAC name for this; parts that cannot be recognized will be named 'BLAH'
+   molecule.SetTitle(name) #Set title to IUPAC name
+
+   OEReadMolecule(input_molecule_stream, molecule)
+   # Run Omega on the molecule to generate a set of reasonable conformations.
+   omega(molecule)
+
+   # Write the molecule to its own mol2 file.
+   if GenerateOutfile:
+    output_molecule_stream = oemolostream()
+    output_molecule_stream.open(outfile)
+    OEWriteMolecule(output_molecule_stream, molecule)
+    output_molecule_stream.close()
+   
+   return molecule
+
+def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
+   """Fit a multi conformer OE molecule (second argument) to a reference OE molecule using the OE Shape toolkit; write the resulting matches to specified outfile. Optionally specify the maximum number of conformers, 'maxconfs', to only get the best maxconfs matches written to that output file. Scores will be printed to stdout. Loosely based on OE Shape tookit documentation."""
+
+   outfs = oemolostream(outfile)
+   #Set up storage for overlay
+   best = OEBestOverlay()
+   #Set reference molecule
+   best.SetRefMol(refmol)
+
+   print "Ref. Title:", refmol.GetTitle()
+   print "Fit Title:", fitmol_conformers.GetTitle()
+   print "Num confs:", fitmol_conformers.NumConfs()
+
+   resCount = 0
+
+   #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it.
+   scoreiter = OEBestOverlayScoreIter()
+   OESortOverlayScores(scoreiter, best.Overlay(fitmol_conformers), OEHighestTanimoto())
+   for score in scoreiter:
+      #Get the particular conformation of this match; transform it to overlay onto the reference structure
+      outmol = OEGraphMol(fitmol_conformers.GetConf(OEHasConfIdx(score.fitconfidx)))
+      score.Transform(outmol)
+
+      #Write output
+      OEWriteMolecule(outfs, outmol)
+
+      print "FitConfIdx: %-4d" %score.fitconfidx,
+      print "RefConfIdx: %-4d" % score.refconfidx,
+      print "Tanimoto: %.2f" % score.tanimoto
+      resCount +=1
+
+      if resCount == maxconfs: break 
