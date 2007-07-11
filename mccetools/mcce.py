@@ -491,7 +491,7 @@ def get_coords(atomname,residue):
     raise "Atom not found!"        
 
 def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
-    """Rename CYS to CYX if it participates in a disulfide bond, as judged by distance range (inclusive).
+    """Rename CYS to CYX if it participates in a disulfide bond, as judged by distance range (inclusive). DLM modification: Also check for CYD, which is what MCCE names disulfides; we want to use the same checking criteria for those.
     
     ARGUMENTS
         npdb - nested PDB file
@@ -503,13 +503,13 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
         
     residues_to_rename=set([])
     for i in range(len(npdb)):
-        if (npdb[i][0][17:20] != 'CYS'):
+        if (npdb[i][0][17:20] != 'CYS' and npdb[i][0][17:20] != 'CYD' ): #DLM edit: added CYD
             continue
         # Found a cysteine, now track down the sulfur
         iX,iY,iZ=get_coords('SG',npdb[i])
                 
         for j in range(i+1,len(npdb)):
-            if (npdb[j][0][17:20]!= 'CYS'):
+            if (npdb[j][0][17:20]!= 'CYS' and npdb[j][0][17:20]!='CYD'): #DLM edit: added CYD
                 continue
             (jX,jY,jZ) = get_coords('SG',npdb[j])
                 
@@ -524,6 +524,7 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
     # Rename the residues we selected
     for i in residues_to_rename:
         npdb[i]=map(lambda x:x.replace('CYS','CYS2'),npdb[i])           
+        npdb[i]=map(lambda x:x.replace('CYD','CYS2'),npdb[i])           
         
     return
 
