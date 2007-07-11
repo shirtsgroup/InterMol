@@ -23,6 +23,8 @@ __version__ = "$Revision: $"
 #         - Can now read in *.gro templates for box volumes
 #         - Can now write solvated structures to *.pdb format
 #         - Added --tol option to specify the minimum distance (A) that the solvent can be packed 
+#         - PDB reading and writing now peeled off into mmtools/pdbtools.py
+#         - atom["resName"] is now 4-letter code
 #=============================================================================================
 # IMPORTS
 import sys
@@ -36,6 +38,8 @@ import math
 
 
 from mmtools.gromacstools.GromacsData import *
+
+from mmtools.pdbtools import *
 
 #=============================================================================================
 
@@ -99,105 +103,6 @@ def getPresentSequence(pdbfilename, chain=' '):
 
     # Return dictionary of present residues.
     return sequence
-
-def readAtomsFromPDB(pdbfilename):
-    """Read atom records from the PDB and return them in a list.
-
-    present_sequence = getPresentSequence(pdbfilename, chain=' ')
-    
-    REQUIRED ARGUMENTS
-      pdbfilename - the filename of the PDB file to import from
-
-    OPTIONAL ARGUMENTS
-      chain - the one-character chain ID of the chain to import (default ' ')
-
-    RETURN VALUES
-      sequence (dictionary) - sequence[residue_id] is the one-letter code corresponding to residue index residue_id
-
-    The ATOM records are read, and the sequence for which there are atomic coordinates is stored.
-
-    """
-
-    # Read the PDB file into memory.
-    pdbfile = open(pdbfilename, 'r')
-    lines = pdbfile.readlines()
-    pdbfile.close()
-
-    # Read atoms.
-    atoms = [ ]
-    for line in lines:
-        if line[0:6] == "ATOM  ":
-            # Parse line into fields.
-            atom = { }
-            atom["serial"] = int(line[6:11])
-            atom["name"] = line[12:16]
-            atom["altLoc"] = line[16:17]
-            atom["resName"] = line[17:20]
-            atom["chainID"] = line[21:22]
-            atom["resSeq"] = int(line[22:26])
-            atom["iCode"] = line[26:27]
-            atom["x"] = float(line[30:38])
-            atom["y"] = float(line[38:46])
-            atom["z"] = float(line[46:54])
-
-            atom["occupancy"] = 1.0
-            if (line[54:60].strip() != ''):
-              atom["occupancy"] = float(line[54:60])
-              
-            atom["tempFactor"] = 0.0
-            if (line[60:66].strip() != ''):
-              atom["tempFactor"] = float(line[60:66])
-            
-            atom["segID"] = line[72:76]
-            atom["element"] = line[76:78]
-            atom["charge"] = line[78:80]
-            
-            atoms.append(atom)
-            
-    # Return list of atoms.
-    return atoms
-
-def writeAtomsToPDB(pdbfilename, atoms, renumber = False):
-  """Write atom records to PDB file.
-
-  REQUIRED ARGUMENTS
-    pdbfilename - the name of the PDB file to write
-    atoms - a list of atom dictionaries -- see readAtomsFromPdb
-
-  OPTIONAL ARGUMENTS
-    if renumber is True, then the atom and residue numbers will be renumbered starting with 1
-
-  RETURN VALUES
-    none
-
-  EXAMPLE
-  writeAtomsToPdb(pdbfilename, atoms)
-  
-  """
-
-  # Renumber if desired.
-  if (renumber):
-    first_residue = atoms[0]["resSeq"]
-    serial = 1
-    resSeq = 0
-    last_resSeq = None
-    for atom in atoms:
-      atom["serial"] = serial
-      serial += 1
-
-      if(atom["resSeq"] != last_resSeq):
-        resSeq += 1
-        last_resSeq = atom["resSeq"]
-      atom["resSeq"] = resSeq      
-      
-  # Read the PDB file into memory.
-  pdbfile = open(pdbfilename, 'w')
-  
-  # Write atoms.
-  for atom in atoms:
-    pdbfile.write('ATOM  %(serial)5d %(name)4s%(altLoc)c%(resName)3s %(chainID)c%(resSeq)4d%(iCode)c   %(x)8.3f%(y)8.3f%(z)8.3f%(occupancy)6.2f%(tempFactor)6.2f%(element)2s%(charge)2s\n' % atom)
-
-  pdbfile.close()
 
 
 def readAmberCrd(crd_filename):
@@ -476,12 +381,12 @@ def resolvate_from_template(reference_pdb, reference_crd, source_pdb, output_crd
         reference_water_residue_atoms.append(atom)
   # for the gromacs files, the first non-solute residue is an ion, so we must skip these
   else:    
-    # find the first residue with resName 'HOH'       
+    # find the first residue with resName 'HOH' or 'SOL'       
     first_water_residue = None
     atom_index = 0
     while first_water_residue==None:
       atom = atoms[atom_index]
-      if (atom['resName'] == 'HOH'):
+      if (atom['resName'].strip() == 'HOH') or (atom['resName'].strip() == 'SOL'):
           first_water_residue = atom['resSeq']
       atom_index += 1
     # chosose this water residue for wat.pdb
@@ -592,55 +497,57 @@ def resolvate_from_template(reference_pdb, reference_crd, source_pdb, output_crd
   
 
 
-#=============================================================================================
-# MAIN
-#=============================================================================================
-# Create command-line argument options.
-usage_string = """
-Resolvate a given PDB file to produce a solvated AMBER .crd file, or a PDB file.
-Numbers of water molecules are determined from reference PDB file, and box volume from reference AMBER .crd file.
-The reference file for the box volume can also be a GROMACS *.gro file. 
+if __name__ == '__main__':
+    
+    #=============================================================================================
+    # MAIN
+    #=============================================================================================
+    # Create command-line argument options.
+    usage_string = """
+    Resolvate a given PDB file to produce a solvated AMBER .crd file, or a PDB file.
+    Numbers of water molecules are determined from reference PDB file, and box volume from reference AMBER .crd file.
+    The reference file for the box volume can also be a GROMACS *.gro file. 
+    
+    usage: %prog --refpdb REFERENCE.pdb --refcrd REFERENCE.crd --source SOURCE.pdb --output OUTPUT.crd --tol 0.6
+    
+    example: %prog --refpdb system.pdb --refcrd system.crd --source extracted.pdb --output resolvated.crd --tol 0.6
+    example: %prog --refpdb system.pdb --refcrd system.gro --source extracted.pdb --output resolvated.pdb --tol 0.6
+    """
+    
+    version_string = "%prog %__version__"
+    
+    parser = OptionParser(usage=usage_string, version=version_string)
+    
+    parser.add_option("-p", "--refpdb", metavar='REFERENCE.pdb',
+                      action="store", type="string", dest='reference_pdb', default=None,
+                      help="Reference PDB file (to determine number of waters).")
+    parser.add_option("-c", "--refcrd", metavar='REFERENCE.crd',
+                      action="store", type="string", dest='reference_crd', default=None,
+                      help="Reference AMBER .crd file of GROMACS *.gro (to determine box dimensions).")
+    parser.add_option("-s", "--source", metavar='SOURCE.pdb',
+                      action="store", type="string", dest='source_pdb', default=None,
+                      help="PDB file to resolvate.")
+    parser.add_option("-o", "--output", metavar='OUTPUT.crd',
+                      action="store", type="string", dest='output_crd', default=None,
+                      help="Name of solvated AMBER .crd file to generate.")
+    parser.add_option("-t", "--tol", metavar='TOLERANCE',
+                      action="store", type="float", dest='tolerance', default=2.0,
+                      help="Minimum distance (in Angstroms) allowed when packing. Optional." )
+    # Parse command-line arguments.
+    (options,args) = parser.parse_args()
+    
+    # Perform minimal error checking.
+    if ((not options.reference_pdb) or (not options.reference_crd) or (not options.source_pdb) or (not options.output_crd)):
+      parser.print_help()
+      parser.error("All options must be specified.\n")
+    
+    reference_pdb = options.reference_pdb
+    reference_crd = options.reference_crd
+    source_pdb = options.source_pdb
+    output_crd = options.output_crd
+    tolerance = options.tolerance
 
-usage: %prog --refpdb REFERENCE.pdb --refcrd REFERENCE.crd --source SOURCE.pdb --output OUTPUT.crd --tol 0.6
-
-example: %prog --refpdb system.pdb --refcrd system.crd --source extracted.pdb --output resolvated.crd --tol 0.6
-example: %prog --refpdb system.pdb --refcrd system.gro --source extracted.pdb --output resolvated.pdb --tol 0.6
-"""
-
-version_string = "%prog %__version__"
-
-parser = OptionParser(usage=usage_string, version=version_string)
-
-parser.add_option("-p", "--refpdb", metavar='REFERENCE.pdb',
-                  action="store", type="string", dest='reference_pdb', default=None,
-                  help="Reference PDB file (to determine number of waters).")
-parser.add_option("-c", "--refcrd", metavar='REFERENCE.crd',
-                  action="store", type="string", dest='reference_crd', default=None,
-                  help="Reference AMBER .crd file of GROMACS *.gro (to determine box dimensions).")
-parser.add_option("-s", "--source", metavar='SOURCE.pdb',
-                  action="store", type="string", dest='source_pdb', default=None,
-                  help="PDB file to resolvate.")
-parser.add_option("-o", "--output", metavar='OUTPUT.crd',
-                  action="store", type="string", dest='output_crd', default=None,
-                  help="Name of solvated AMBER .crd file to generate.")
-parser.add_option("-t", "--tol", metavar='TOLERANCE',
-                  action="store", type="float", dest='tolerance', default=2.0,
-                  help="Minimum distance (in Angstroms) allowed when packing. Optional." )
-# Parse command-line arguments.
-(options,args) = parser.parse_args()
-
-# Perform minimal error checking.
-if ((not options.reference_pdb) or (not options.reference_crd) or (not options.source_pdb) or (not options.output_crd)):
-  parser.print_help()
-  parser.error("All options must be specified.\n")
-
-reference_pdb = options.reference_pdb
-reference_crd = options.reference_crd
-source_pdb = options.source_pdb
-output_crd = options.output_crd
-tolerance = options.tolerance
-
-resolvate_from_template(reference_pdb, reference_crd, source_pdb, output_crd, tolerance=tolerance)
+    resolvate_from_template(reference_pdb, reference_crd, source_pdb, output_crd, tolerance=tolerance)
 
   
 
