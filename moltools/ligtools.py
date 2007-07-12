@@ -19,8 +19,8 @@ Requirements:
 
 By D. Mobley, 6/28/2007."""
 
-def get_ligand(pdbfile, resnum = None, resname = None, outfile = None):
-   """Open specified pdb file (from provided path), and output the HETATM entries and associated connect entries for the specified ligand. Ligand can be specified by residue number, residue name, or both. Return an OE molecule containing the ligand. If outfile is provided, writes the molecule to the output file also."""
+def get_ligand(pdbfile, resnum = None, resname = None, outfile = None, chain = None):
+   """Open specified pdb file (from provided path), and output the HETATM entries and associated connect entries for the specified ligand. Ligand can be specified by residue number, residue name, or both. Return an OE molecule containing the ligand. If outfile is provided, writes the molecule to the output file also. Also optionally provide a chain ID which, if specified, will search for the specified residue number/name together with the chain ID."""
 
    file = open(pdbfile,'r')
    lines = file.readlines()
@@ -36,18 +36,22 @@ def get_ligand(pdbfile, resnum = None, resname = None, outfile = None):
         tresname = line[17:20].split()[0]
         tresnum = int(line[22:26].split()[0])
         tatom = int(line[6:11].split()[0])
-        if resnum and resname:
-          if tresname == resname and tresnum == resnum:
-            ofile.write(line)
-            ligatoms.append(tatom)
-        elif resnum:
-          if tresnum == resnum: 
-            ofile.write(line)
-            ligatoms.append(tatom)
-        elif resname:
-          if tresname == resname: 
-            ofile.write(line)
-            ligatoms.append(tatom)
+        tchain = line[21]
+        match = True
+        if chain:
+          if tchain != chain:
+            match = False
+        if resnum:
+          if tresnum != resnum:
+            match = False
+        if resname:
+          if tresname != resname:
+            match = False
+
+        if match:
+          ofile.write(line)
+          ligatoms.append(tatom)
+        
       #Also grab associated CONECT entries
       if fieldtype == 'CONECT':
          anums = line.replace('CONECT','').split()
@@ -285,8 +289,8 @@ def set_subst_name(mol2file, name):
    file.close()
 
 
-def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1):
-   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1."""
+def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1, threshold=None):
+   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1. Optionally also specify RMS threshold (allowing i.e. more conformers to be generated)"""
 
    #Open input file
    input_molecule_stream=oemolistream()
@@ -303,7 +307,11 @@ def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, max
      omega.SetMaxConfs(1)
    #Don't include input in output
    omega.SetIncludeInput(False)
-  
+
+   #Adjust RMS threshold
+   if threshold:
+     omega.SetRMSThreshold(threshold) 
+ 
    #Create molecule
    molecule = OEMol()
    
