@@ -75,6 +75,8 @@ import mmtools.utilities.Constants as Constants
 # Initialize random number generator.
 random.seed()
 
+#Seed random number generator
+random.seed()
 #=================================================================================
 # Tools for generating initial configuration of systems
 #=================================================================================
@@ -346,6 +348,182 @@ def solvate_molecule(xyzfile, prmfile, outxyzfile, boxsize = 24.0 * Units.A):
    os.system('rm -r %(tempdir)s' % vars())
 
    return
+
+def mol2_to_xyz(mol2file, amoebaprm, outxyz, amoebaname = None):
+   """Take an input mol2 file containing coordinates for some molecule and an amoeba parameter file; pick amoeba atom types out of key file; prompt user for input to identify amoeba atom types for appropriate atoms. Write out a tinker xyz file containing info from mol2 file. Requires that the molecule name as in the mol2 file match the name used for the molecule parameters in the tinker atom types section.
+Limitations:
+- Currently ignores case in molecular naming
+Optional argument: Take amoebaname of molecule. Otherwise looks for amoeba parameters using the molecule name as read from the mol2 file. Specify this when the amoeba name for the molecule is different from that in the mol2 file."""
+
+   #Create molecule
+   mol = OEMol()
+
+   #Load molecule from mol2 file
+   input_molecule_stream=oemolistream()
+   input_molecule_stream.open(mol2file)
+   OEReadMolecule( input_molecule_stream, mol)
+    
+   #Molecule name
+   if not amoebaname:
+     name = mol.GetTitle()
+   else: name = amoebaname
+   print "\nMolecule: %s" % name
+ 
+   #Open AMOEBA parameter file and store portion of atoms section dealing with this molecule; ignore case when looking through names
+   amoebaatoms=[]
+   file=open(amoebaprm,'r')
+   for line in file.readlines():
+     #May want to improve this; it is not particularly robust, for acetamide, for example, it also matches n-methylacetamide...
+     if line.upper().find( name.upper() )>-1 and line.find('atom')==0:
+       amoebaatoms.append(line)
+   file.close()
+
+   #Turn this into a dictionary by AMOEBA atom type key
+   amoeba_key_to_type={}
+   #re to parse
+   atoms = re.compile(r'atom\s+(?P<type>\d+)\s+\d+\s+\w+\s+"(?P<name>.*)".*')
+   for line in amoebaatoms:
+     m = atoms.match(line)
+     if m:
+       #Get atom key/name
+       key = m.group('name')
+       #Remove molecule name and following space
+       key = key[ len(name)+1: ]
+       amoeba_key_to_type[key] = int( m.group('type') )
+     else: #Lines should match; if they don't, raise an exception
+       print "Error: No match found in this line:", line
+       ParseError="Atom line from parameter file does not match expected pattern."
+       raise ParseError
+
+   #Store amoeba types for atoms
+   amoeba_types=[]
+   for atom in mol.GetAtoms():
+     print "\nPlease choose AMOEBA atom type for atom %s with type %s, from the following options:" % (atom.GetType(), atom.GetName())
+     keys = amoeba_key_to_type.keys()
+     keys.sort()
+     for key in keys:
+       print "  %s: %s" % ( amoeba_key_to_type[key], key)
+     type=int( raw_input() )
+     if not amoeba_key_to_type.values().count(type)==1:
+       print "Error: Please enter valid numeric type."
+       type = int( raw_input() )
+     if not amoeba_key_to_type.values().count(type)==1: raise TypeError
+     amoeba_types.append(type)
+   
+
+        
+   numatoms = mol.NumAtoms()
+
+   #Storage for xyz file
+   xyztext=[]
+   #Add header to xyz file
+   xyztext.append('  %s  %s - for AMOEBA, auto-generated from mol2\n' % (numatoms, name))
+
+   #Build a dictionary storing which other atoms each atom is bonded to
+   connected_atoms={}
+   for bond in mol.GetBonds():
+     start = bond.GetBgn().GetIdx()
+     end = bond.GetEnd().GetIdx()
+     if not connected_atoms.has_key(start): connected_atoms[start]=[]
+     connected_atoms[start].append(end)
+     if not connected_atoms.has_key(end): connected_atoms[end]=[]
+     connected_atoms[end].append(start)
+
+   #Loop over atoms in our molecule; print number, type and coordinates of each to xyz file, as well as bonds
+   coords = mol.GetCoords()
+   for atom in mol.GetAtoms():
+      idx = atom.GetIdx()
+      tinkernum = idx+1
+      #Compute connected atoms
+      connections = ''
+      for num in connected_atoms[ idx ]:
+        connections += str(num+1)+'    ' 
+      #Coordinates
+      coordstext = ''
+      for c in coords[ idx ]:
+         coordstext += "%12.6f" % around(c,6)
+ 
+      atype = amoeba_types[ idx ]
+      aname = atom.GetName()
+      numtxt = "%5s" % tinkernum
+      #Store line
+      xyztext.append( '%(numtxt)s   %(aname)s %(coordstext)s   %(atype)s   %(connections)s\n' % vars())
+
+   file=open(outxyz,'w')
+   file.writelines(xyztext)
+   file.close()
+   
+  
+def solvate_molecule(xyzfile, prmfile, outxyzfile, boxsize = 24):
+   """Take an input xyz file; generate a box of solvent of specified size and correct density from tiling of water boxes; soak molecule into box; write new xyz file. Uses gromacs tools genbox and trjconv for generating box. Optional argument: box size, in A. Default: 24. Uses spc water as the water with which to tile.
+INPUT:
+- xyzfile: Input solute coordinates
+- prmfile: Amoeba parameters
+- outxyzfile: Output xyz file name
+- Optional boxsize, in angstroms.
+"""
+
+   boxsize=boxsize/10. #In NM for gromacs
+
+   curdir=os.getcwd()
+   #Make working directory
+   tempdir = tempfile.mkdtemp() 
+
+   #Copy amoeba file there from
+   prmfile = os.path.join(curdir,prmfile)
+
+   #Cd there
+   os.chdir(tempdir)
+ 
+   #Generate temporray gro file with box size in it
+   grotext=['tmp gro file\n', ' 0\n', '  %.4f  %.4f  %.4f\n' % (boxsize, boxsize, boxsize)]
+   file=open('box.gro','w')
+   file.writelines(grotext)
+   file.close()
+
+   #Use genbox to solvate
+   commands.getoutput('genbox -cp box.gro -cs spc216.gro -o solv.gro')
+   
+   #Convert to pdb
+   commands.getoutput('echo "0" | trjconv -f solv.gro -s solv.gro -o solv.pdb')
+
+   #Convert to xyz
+   file=open('in','w')
+   file.write('solv.pdb\n%(prmfile)s\n' % vars())
+   file.close()
+   commands.getoutput("pdbxyz.x < in")
+   #Now it is solv.xyz
+
+   #Edit and change water types to use amoeba names/numbering
+   out=[]
+   file=open('solv.xyz','r')
+   for line in file.readlines():
+     if line.find('OW')>-1: line = line.replace(' 0 ', ' 22 ')
+     elif line.find('HW')>-1: 
+        line=line.replace('HW1','HW ')
+        line=line.replace('HW2','HW ')
+        line = line.replace(' 0 ', ' 23 ')
+     out.append(line)
+   file.close()
+   file=open('solv_names.xyz','w')
+   file.writelines(out)
+   file.close()
+
+   #Copy solute here
+   os.system('cp %s solute.xyz' % os.path.join(curdir,xyzfile))
+
+   #Soak solute into box
+   file=open('in','w')
+   file.write('solute.xyz\n%(prmfile)s\n17\nsolv_names.xyz\n' % vars())
+   file.close()
+   commands.getoutput('xyzedit.x < in')
+
+   #Move output  back to working directory
+   os.system('mv solute.xyz_2 %s' % (os.path.join(curdir,outxyzfile)) )
+   os.chdir(curdir)
+
+   #Clean up
+   os.system('rm -r %(tempdir)s' % vars())
 
 #==================================================================================
 # Tools for setting up parameter files
@@ -705,7 +883,6 @@ OPTIONAL INPUT:
   os.system('./run_equilib.sh')
   #Back to original dir
   os.chdir(startdir)
-  
 
 def stripatoms(atomlist,filein, fileout):
   """Strip all atom types listed in atomlist from the xyz file 'filein' and write a new xyz file 'fileout' that contains only the remaining atoms."""
