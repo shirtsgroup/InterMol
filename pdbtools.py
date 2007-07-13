@@ -220,18 +220,28 @@ def setChargedNames(atoms, chargedRes):
 def writeGrofileFromPDB(pdbfile, grofile):
     """Take in a PDB file and write it as a *.gro file."""
     
-    atoms = readAtomsFromPDB(pdbfile)
-    gstruct = GromacsStructure(name=grofile, header="title" )
-    for atom in atoms:
-        gatomlist = []
-        gatomlist.append( GromacsAtom(self, resnum=atom["resSeq"], resname=atom["resName"], atomname=atom["name"], atomnum=atom["serial"],
-                                      x=(atom["x"]/10.), y=(atom["y"]/10.), z=(atom["z"]/10.), vx=0.0, vy=0.0, vz=0.0) )
-        gatoms = GromacsAtoms( gatomlist )
-        gstruct.appendatoms( gatoms )
+    gstruct = GromacsStructureFromPDB(pdbfile)
     gstruct.write(grofile)
+   
+def GromacsStructureFromPDB(pdbfile):
+    """Take in a PDB file a GromacsStructure class."""
+    atoms = readAtomsFromPDB(pdbfile)
+    gstruct = GromacsStructure(name=pdbfile, header="title" )
+    gatoms = GromacsAtoms()
+    for atom in atoms:
+        gatoms.append( GromacsAtom(resnum=atom["resSeq"], resname=atom["resName"], atomname=atom["name"], atomnum=atom["serial"],
+                                      x=(atom["x"]/10.), y=(atom["y"]/10.), z=(atom["z"]/10.), vx=0.0, vy=0.0, vz=0.0) )
+    gstruct.appendatoms( gatoms )
+    return gstruct 
+
+def GromacsStructureFromGrofile(grofile):
+
+    gstruct = GromacsStructure(name=grofile, header="title" )
+    gstruct.load(grofile)
+    return gstruct
+ 
     
-    
-def writePDBFromGrofile(grofile, pdbfile):
+def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False):
     """Take in a *.gro Grofile file and write it as a PDB file."""
     
     gstruct = GromacsStructure(name=grofile, header="title" )
@@ -256,7 +266,14 @@ def writePDBFromGrofile(grofile, pdbfile):
         atom["element"] = '  '
         atom["charge"] = '   '
 
-        atoms.append(atom)
+        if (atom["resName"].count('HOH')>0) or (atom["resName"].count('SOL')>0):
+          if not stripWaters:
+            atoms.append(atom)
+        elif (atom["resName"].count('Cl')>0) or (atom["resName"].count('Na')>0):
+          if not stripIons:
+            atoms.append(atom)
+        else:
+            atoms.append(atom)
 
     writeAtomsToPDB(pdbfile, atoms, renumber = True)
         
