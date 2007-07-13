@@ -363,6 +363,8 @@ def resolvate_from_template(reference_pdb, reference_crd, source_pdb, output_crd
   # Compute box parameters.
   print 'box_dimensions', box_dimensions
   (box_x, box_y, box_z) = box_dimensions
+  # create a slightly-smaller box to prevent too-close waters on the pbc borders
+  (box_x, box_y, box_z) = (box_x-tolerance, box_y-tolerance, box_z-tolerance)
   (center_x, center_y, center_z) = (box_x/2.0, box_y/2.0, box_z/2.0)
   
   # Get date.
