@@ -505,12 +505,18 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
     for i in range(len(npdb)):
         if (npdb[i][0][17:20] != 'CYS' and npdb[i][0][17:20] != 'CYD' ): #DLM edit: added CYD
             continue
+        #Make sure it is named CYS
+        npdb[i] = map(lambda x:x.replace('CYD', 'CYS'), npdb[i])
+
         # Found a cysteine, now track down the sulfur
         iX,iY,iZ=get_coords('SG',npdb[i])
                 
         for j in range(i+1,len(npdb)):
             if (npdb[j][0][17:20]!= 'CYS' and npdb[j][0][17:20]!='CYD'): #DLM edit: added CYD
                 continue
+            #Make sure it is named CYS
+            npdb[j] = map(lambda x:x.replace('CYD', 'CYS'), npdb[j])
+
             (jX,jY,jZ) = get_coords('SG',npdb[j])
                 
             dX=iX-jX
@@ -524,7 +530,6 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
     # Rename the residues we selected
     for i in residues_to_rename:
         npdb[i]=map(lambda x:x.replace('CYS','CYS2'),npdb[i])           
-        npdb[i]=map(lambda x:x.replace('CYD','CYS2'),npdb[i])           
         
     return
 
