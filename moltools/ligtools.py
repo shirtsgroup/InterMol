@@ -289,8 +289,8 @@ def set_subst_name(mol2file, name):
    file.close()
 
 
-def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1, threshold=None):
-   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1. Optionally also specify RMS threshold (allowing i.e. more conformers to be generated)"""
+def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1, threshold=None, TorsionLib = None):
+   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1. Optionally also specify RMS threshold (allowing i.e. more conformers to be generated). Optionally also specify TorsionLib, the path to an Omega torsion library, to perform an *additional* drive of any torsions specified there (that is, this will be applied after applyign Omega's standard torsion library)."""
 
    #Open input file
    input_molecule_stream=oemolistream()
@@ -308,6 +308,11 @@ def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, max
    #Don't include input in output
    omega.SetIncludeInput(False)
 
+   #TEMP HACK ADJUST TORSION LIBRARY
+   #omega.SetTorsionLibrary('/dmobley/HCVP/ligsetup/torsionlib')
+   #omega.SetTorsionDrive(True)
+   #omega.SetEnergyWindow(100)
+
    #Adjust RMS threshold
    if threshold:
      omega.SetRMSThreshold(threshold) 
@@ -321,6 +326,11 @@ def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, max
    OEReadMolecule(input_molecule_stream, molecule)
    # Run Omega on the molecule to generate a set of reasonable conformations.
    omega(molecule)
+
+   #If desired, do an additional torsion drive
+   if TorsionLib:
+     omega.SetTorsionLibrary(TorsionLib)
+     omega(molecule)
 
    # Write the molecule to its own mol2 file.
    if GenerateOutfile:
