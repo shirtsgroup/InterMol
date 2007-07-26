@@ -373,3 +373,32 @@ def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
       resCount +=1
 
       if resCount == maxconfs: break 
+
+#Function definition for splitting mol2 files by pose
+def split_mol2_poses(infile,outpath,outname):
+  """Pass this an input multi-conformer mol2 file, and it will split it into single-pose mol2 files which it will write to the output directory. Relevant stuff:
+- infile: Name of input file
+- outpath: Path to output directory, which must already exist
+- outname: Prefix (without .mol2) of output file names. i.e. "name" will lead to output files "name0.mol2", "name1.mol2", etc., in the output directory."""
+  file=open(infile,'r')
+  outmol=[]
+  ct=0
+  for line in file.readlines():
+    if line.find('MOLECULE')>-1:
+       #Write output file every time we get to a new name MOLECULE field, but only if there is stuff here (i.e. we aren't at the first occurrence
+       if len(outmol)>3:
+         ofile=open(os.path.join(outpath,outname+str(ct)+'.mol2'),'w')
+         ofile.writelines(outmol)
+         ofile.close()
+         outmol=[]
+         ct+=1
+    outmol.append(line)
+  #Do last one too
+  file.close()
+  ofile=open(os.path.join(outpath,outname+str(ct)+'.mol2'),'w')
+  ofile.writelines(outmol)
+  ofile.close()
+
+  #Return resulting number of files
+  return ct+1
+
