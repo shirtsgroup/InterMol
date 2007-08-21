@@ -9,6 +9,7 @@
 import mmtools.modellertools.modelPDB as modelPDB
 import mmtools.mccetools.mcce as mcce
 from mmtools.gromacstools.System import *
+from mmtools import pdbtools
 
 import os
 import os.path
@@ -23,8 +24,10 @@ DEBUG = True
 #-----------------------------------
 
 
-def thread_model(pdbTemplate, sequence, outPdbFile):
-
+def thread_model(pdbTemplate, sequence, outPdbFile, captermini=False):
+    """Uses Modeller to thread a sequence onto a template structure.
+    If captermini=True, will cap the N- and C- termnini with ACE and NH2, respectively. """
+    
 
     # use either a sequence file or a sequence string
     if os.path.exists(sequence):
@@ -37,8 +40,12 @@ def thread_model(pdbTemplate, sequence, outPdbFile):
         fseq.close()
 
     myModel = modelPDB.ModelPDB()
-    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile)
-
+    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile, captermini=captermini)
+    
+    # if capping, rebuild the PDB with ACE and NME residue names 
+    if (captermini):
+        pdbtools.rebuildPatchedTermini(outPdbFile)
+        
     # cleanup
     if not os.path.exists(sequence):
         os.remove(sequenceFilename)
@@ -52,7 +59,7 @@ def protonate(inpdbfile, outpdbfile, pH):
     mcceOut = os.path.abspath(outpdbfile)
     prmFile = '../mccetools/prmfiles/run.prm.quick'
     prmFile = os.path.abspath(prmFile)
-    mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
+    mcce.protonatePDB(inpdbfile, mcceOut, pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile, labeledPDBOnly=False)
     os.chdir(thisdir)
 
 
@@ -62,7 +69,7 @@ def build_gmx(protein, outdir, forcefield='ffamber99p'):
 
     baseName = protein.getBasename( protein.pdbfile )
     gromacsOut = baseName + "_final"
-    g = System(protein.pdbfile, useff=forcefield)
+    g = System(protein.pdbfile, finalOutputDir=outdir, useff=forcefield)
     g.setup.setSaltConditions(protein.salt, protein.saltconc)
     if protein.boxProtocol == 'small':
         g.setup.set_boxType = 'octahedron'
@@ -78,10 +85,21 @@ def build_gmx(protein, outdir, forcefield='ffamber99p'):
 
 
 
-def shoveit(protein, outdir, forcefield='ffamber99p'):
-    """Shoves a pipelineProtein object through the entire
-       MODELLER -> MCCE --> gromacs pipeline."""
+def shoveit(protein, outdir, forcefield='ffamber99p', captermini=False):
+    """Shoves a pipelineProtein object through the entire MODELLER -> MCCE --> gromacs pipeline.
 
+    For capping the termini with ACE and NH2, the Modeller program has a nice way of doing
+    residue 'patches', so ithis will be used for adding the caps.  WE need to do the following:
+
+    1. Thread the sequence via Modeller, WITHOUT capping --> PDB
+    2. Calculate the protonation state via MCCE --> return a non-renamed PDB, and renaming rules
+    3. Use Modeller to cap the ends
+    4. Apply the renaming rules for protonation states that came from MCCE  
+
+    VV: THIS HASN'T BEEN IMPLEMENTED YET -- I'm working on it!!!!!! 8/21/07
+    """
+
+    thisdir = os.curdir
 
     print 'before:'
     protein.print_info()
@@ -94,24 +112,18 @@ def shoveit(protein, outdir, forcefield='ffamber99p'):
     # Build a PDB model from the pdbTemplate using MODELLER
     thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout)
 
-    # Find the best protonation state using MCCE
-    # protonate(protein.pdbfile, protein.seqfile, protein.modelPDBout)
-
-    # Prepare a Gromacs simulation according to the pipelineProtein specs
-    # prepare_gmx(protein.pdbfile, protein.seqfile, protein.modelPDBout)
-
     # run mcce
     if (1):
-        mcceOut = os.path.abspath(mcceOut)
+        mcceOut = os.path.abspath(protein.mccePDBout)
         prmFile = '../../mccetools/prmfiles/run.prm.quick'
         prmFile = os.path.abspath(prmFile)
-        mcce.protonatePDB(modelPDBOut, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=True, prmfile=prmFile)
+        mcce.protonatePDB(protein.modelPDBout, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=False, prmfile=prmFile, labeledPDBOnly=False)
 
     # run gromacs setup
     if (1):
-        gromacsOut = baseName + "_final.pdb"
+        gromacsOut = protein.basename + "_final.pdb"
         # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
-        g = System(mcceOut, useff=forcefield)
+        g = System(mcceOut, finalOutputDir=outdir, useff=forcefield)
         g.setup.setSaltConditions(protein.salt, protein.saltconc)
         if protein.boxProtocol == 'small':
             g.setup.set_boxType = 'octahedron'
@@ -121,17 +133,24 @@ def shoveit(protein, outdir, forcefield='ffamber99p'):
             g.setup.setUseAbsBoxSize(True)
             g.setup.setAbsBoxSize('7.0')   # periodic box absolute size, in nanometers (string)
 
-        thisOutDir = os.path.join(thisdir, baseName)
+        thisOutDir = os.path.join(thisdir, protein.basename)
         print 'Writing equilibration directory to',thisOutDir,'...'
         if os.path.exists(thisOutDir) == False:
             os.mkdir(thisOutDir)
-        g.prepare(outname=gromacsOut, outdir=thisOutDir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
-
+        os.chdir(thisOutDir)
+        g.prepare(verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
+     
 
     if(1):
-        # cleanup    if not DEBUG:
-        os.remove(modelPDBOut)
-        os.remove(mcceOut)
+        # cleanup
+        if not DEBUG:
+            if os.path.exists(protein.modelPDBout):
+                os.remove(protein.modelPDBout)
+            if os.path.exists(protein.mccePDBout):
+                os.remove(protein.mccePDBout)
+
+    os.chdir(thisdir)
+
 
 
 
