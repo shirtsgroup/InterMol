@@ -295,8 +295,8 @@ class System:
 	self.copyFilesToOutputDir()
 	    
         # write logfiles
-	self.status.writeLog( os.path.join(outdir,'output.log') )
-        self.status.writeHistory( os.path.join(outdir,'history.log') )
+	self.status.writeLog( os.path.join(self.finalOutputDir,'output.log') )
+        self.status.writeHistory( os.path.join(self.finalOutputDir,'history.log') )
 	    
 	    
         # Clean up the working directory
