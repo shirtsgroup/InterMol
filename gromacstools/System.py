@@ -289,10 +289,10 @@ class System:
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
         # do the rest of the preparation steps
-	postSolvationPreparationSteps()
+	self.postSolvationPreparationSteps()
 
         # copy the final files to the final output directory
-	copyFilesToOutputDir()
+	self.copyFilesToOutputDir()
 	    
         # write logfiles
 	self.status.writeLog( os.path.join(outdir,'output.log') )
