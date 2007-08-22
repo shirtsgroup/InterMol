@@ -86,5 +86,5 @@ if __name__ == '__main__':
    
     pProtein  = pipeline.PipelineProtein( pdb=options.pdbfile, seq=options.sequence, salt=options.salt, saltconc=float(options.saltconc), pH=float(options.pH), boxProtocol=options.boxProtocol)
 
-    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield, captermini=captermini)
+    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield, captermini=options.captermini)
 
