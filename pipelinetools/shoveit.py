@@ -40,15 +40,11 @@ DEBUG = True
 
 if __name__ == '__main__':
 
-    # Create command-line argument options.
-    usage_string = """%prog --pdb PDBFILE --seq SEQUENCE --outdir OUTDIR--salt SALT_TYPE --saltconc SALT_CONC --pH PHVALUE --boxprotocol PROTOCOL 
-Shoves a protein all the way through the MODELLER -> MCCE -> gromacs pipeline.
-For detailed help:  shoveit.py -h
-"""
-
+    # Parse command-line argument options.
     version_string = "%prog %__version__"
 
-    parser = OptionParser(usage=usage_string, version=version_string)
+    parser = OptionParser(version=version_string)
+
 
     parser.add_option("-p", "--pdb", metavar='PDBFILE',
             action="store", type="string", dest='pdbfile', default=None,
@@ -77,15 +73,18 @@ For detailed help:  shoveit.py -h
     parser.add_option("-f", "--forcefield", metavar='FORCEFIELD',
             action="store", type="string", dest='forcefield', default='ffamber99p', \
             help="Forcefield to build gromacs projects with.  Optional.  Default='ffamber99p'.") 
+    parser.add_option("-t", "--termini_caps", action="store_true", dest="captermini", default=False)
 
     # Parse command-line arguments.
     (options,args) = parser.parse_args()
 
     # Perform minimal error checking.
     if ((not options.pdbfile) or (not options.sequence) or (not options.outdir)):
+        parser.print_help()
         parser.error("Must specify the pdbfile, the sequence and the outdir.\n")
+        
    
     pProtein  = pipeline.PipelineProtein( pdb=options.pdbfile, seq=options.sequence, salt=options.salt, saltconc=float(options.saltconc), pH=float(options.pH), boxProtocol=options.boxProtocol)
 
-    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield )
+    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield, captermini=captermini)
 
