@@ -128,9 +128,8 @@ class System:
     self.useff = useff
     self.version = version
     self.verbose = verbose
-    
     self.protocol = 'default'    # keyword for Preparation protocol 
-    
+
     # find available forcefields with this GROMACS installation
     [self.forcefields, self.forcefieldCodes] = self.getForcefields()
     
@@ -208,14 +207,17 @@ class System:
 
     OPTIONAL ARGUMENTS
     
-    ARG                 DEFAULT    DESCRIPTION
-    cleanup             True       if True, delete the temporary pre-processing directory, and erase temporary files 
-    verbose             False      if True, print extra, more detailed progress statements 
-    debug               False      if True, turn on print statements for debugging    
-    protocol            'default'  Currently only 'default' and 'racecar2' are supported:
-				   * 'default':   minimize.mdp -> equilibrate.mdp -> simulate.mdp    
-				   * 'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp
-    checkForFatalErrors	True       Exits the program if any of the gmx produce "Fatal error" in the standard output	    
+    ARG                 DEFAULT     DESCRIPTION
+    cleanup             True        if True, delete the temporary pre-processing directory, and erase temporary files 
+    verbose             False       if True, print extra, more detailed progress statements 
+    debug               False       if True, turn on print statements for debugging    
+    protocol            'racecar2'  Currently 'quicktest', 'racecar2', 'implicitPS3'  and 'default' supported:
+				    * 'default':   minimize.mdp -> equilibrate.mdp
+				    * 'quicktest':   quicktest_min1.mdp -> quicktest_equil1.mdp -> quicktest_equil2.mdp -> quicktest_grompp.mdp
+				    * 'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp
+                                    * 'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp
+
+    checkForFatalErrors	True        Exits the program if any of the gmx produce "Fatal error" in the standard output	    
 			        
     
     OUTPUT
@@ -239,8 +241,9 @@ class System:
     self.debug   = debug            # Turns on print statements for debugging
     if protocol == None:            # Current only 'default' and 'racecar2' are supported:
       self.protocol = 'default'     #     'default':   minimize.mdp -> equilibrate.mdp -> simulate.mdp 
-    else:                           #     'racecar2':  racecar2_min1.mdp
-      self.protocol = protocol      #               -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp  
+    else:                           #     'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp -> racecar2_equil2.mdp -> racecar2_grompp.mdp  
+      self.protocol = protocol      #     'quicktest':  quicktest_min1.mdp -> quicktest_equil1.mdp -> quicktest_equil2.mdp -> quicktest_grompp.mdp 
+                                    #     'implicitPS3'
     self.checkForFatalErrors = checkForFatalErrors
     self.mockrun = mockrun
     
@@ -248,6 +251,16 @@ class System:
         self.files.set_mdpMinimization('racecar2_min1.mdp')
 	self.files.set_mdpEquilibration('racecar2_equil1.mdp')    # equil2 comes later....    
         self.files.set_mdpSimulation('racecar2_grompp.mdp')  
+
+    if self.protocol=='quicktest':
+        self.files.set_mdpMinimization('quicktest_min1.mdp')
+        self.files.set_mdpEquilibration('quicktest_equil1.mdp')    # equil2 comes later....    
+        self.files.set_mdpSimulation('quicktest_grompp.mdp')
+
+    if self.protocol=='implicitPS3':
+        self.files.set_mdpMinimization('implicitPS3_min1.mdp')
+        self.files.set_mdpEquilibration('implicitPS3_equil1.mdp')
+        self.files.set_mdpSimulation('implicitPS3_grompp.mdp')
 
     # From now on, do work in the working directory
     os.chdir( self.workdir )
@@ -274,22 +287,25 @@ class System:
 	self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 
-        # solvate the box 
-	editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.files.grofile, self.files.next_gro(), self.files.topfile)
-	self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-	self.files.increment_gro()    # must increment filename for any new gmx file 
+        if self.protocol=='implicitPS3':
+            self.implicitSolvationPreparationSteps()
+        else:
+            # solvate the box 
+	    editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.files.grofile, self.files.next_gro(), self.files.topfile)
+	    self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+	    self.files.increment_gro()    # must increment filename for any new gmx file 
 
-        # minimize the system
-        ### make a tpr file with grompp
-        grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
-	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )	
-        ### run minimization
-        minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
-	self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-	self.files.increment_gro()    # must increment filename for any new gmx file 
+            # minimize the system
+            ### make a tpr file with grompp
+            grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
+	    self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )	
+            ### run minimization
+            minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	    self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+	    self.files.increment_gro()    # must increment filename for any new gmx file 
 	
-        # do the rest of the preparation steps
-	self.postSolvationPreparationSteps()
+            # do the rest of the preparation steps
+            self.postSolvationPreparationSteps()
 
         # copy the final files to the final output directory
 	self.copyFilesToOutputDir()
@@ -352,7 +368,7 @@ class System:
     if protocol == None:            # Current only 'default' and 'racecar2' are supported:
       self.protocol = 'default'     #     'default':   minimize.mdp -> equilibrate.mdp -> simulate.mdp 
     else:                           #     'racecar2':  racecar2_min1.mdp -> racecar2_equil1.mdp
-      self.protocol = protocol      #               -> racecar2_equil2.mdp -> racecar2_grompp.mdp
+      self.protocol = protocol      #     'quicktest': quicktest_min1.mdp -> quicktest_equil1.mdp -> quicktest_equil2.mdp -> quicktest_grompp.mdp
     self.checkForFatalErrors = checkForFatalErrors
     self.mockrun = mockrun
     
@@ -360,6 +376,11 @@ class System:
         self.files.set_mdpMinimization('racecar2_min1.mdp')
 	self.files.set_mdpEquilibration('racecar2_equil1.mdp')    # equil2 comes later....    
         self.files.set_mdpSimulation('racecar2_grompp.mdp')  
+
+    elif self.protocol=='quicktest':
+        self.files.set_mdpMinimization('quicktest_min1.mdp')
+	self.files.set_mdpEquilibration('quicktest_equil1.mdp')    # equil2 comes later....    
+        self.files.set_mdpSimulation('quicktest_grompp.mdp')  
 
     os.chdir( self.workdir )
     print 'Preparing simulation in directory %s...'%self.workdir
@@ -430,7 +451,7 @@ class System:
     self.files.increment_top()    # must increment filename for any new gmx file 
     self.useTIP3P( self.files.topfile )
 	    
-    if self.protocol == 'racecar2':
+    if (self.protocol == 'racecar2') | (self.protocol == 'quicktest'):
 
 	# run minimimzation once more with the new ions
 	### make a tpr file with grompp
@@ -456,7 +477,13 @@ class System:
 	self.make_ndx( self.files.grofile, self.files.ndxfile )
 	
 	# run equilibration phase 2: protein and sol.  
-	self.files.set_mdpEquilibration('racecar2_equil2.mdp')
+	if (self.protocol == 'racecar2'):
+            self.files.set_mdpEquilibration('racecar2_equil2.mdp')
+        elif (self.protocol == 'quicktest'): 
+            self.files.set_mdpEquilibration('quicktest_equil2.mdp')
+        else:
+            raise "Protocol Error!"
+
 	### make a tpr file with grompp
 	grompp = 'grompp -f %s -c %s -o %s -p %s -n %s'%(self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
@@ -558,6 +585,8 @@ class System:
   def rungmx(self, cmd, mockrun=False, checkForFatalErrors=True):
     """Execute a gromacs executable on the command line, keeping track of the command and output for the logfile"""
   
+    origdir = os.curdir
+    os.chdir( os.environ['GMXPATH'] )
     print '>>',cmd	
     if mockrun==False:
       output=commands.getoutput(cmd)
@@ -573,6 +602,7 @@ class System:
           print 'Exiting...'
 	  sys.exit(1)
 	  
+    os.chdir( origdir )
     return output
   
 
@@ -740,7 +770,7 @@ class System:
 	  if protein_residues.count(res) == 0:
 	    protein_residues.append(res)
 	
-    if self.verbose:
+    if self.debug:
       print 'protein_residues', protein_residues
       print 'ion_residues', ion_residues
       print 'solvent_residues', solvent_residues
