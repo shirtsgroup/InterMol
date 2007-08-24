@@ -261,6 +261,7 @@ class System:
         self.files.set_mdpMinimization('implicitPS3_min1.mdp')
         self.files.set_mdpEquilibration('implicitPS3_equil1.mdp')
         self.files.set_mdpSimulation('implicitPS3_grompp.mdp')
+	os.environ['GMXPATH'] = os.environ['GMXPATH_PS3']
 
     # From now on, do work in the working directory
     os.chdir( self.workdir )
@@ -270,7 +271,7 @@ class System:
     if self.version == '3.1':	
 
         # pdb2gmx, and useTIP3P
-        pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.files.infile, self.files.grofile, self.files.topfile)
+        pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.infile, self.files.grofile, self.files.topfile)
 	self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors)
         self.useTIP3P( self.files.topfile )
 	
@@ -281,9 +282,9 @@ class System:
 	    
         # make a (periodic boundary conditions) box
         if self.setup.useAbsBoxSize:
-	    editconf = 'editconf -bt %s -f %s -o %s -box %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.absBoxSize )
+	    editconf = '%s/editconf -bt %s -f %s -o %s -box %s'%(os.environ['GMXPATH'], self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.absBoxSize )
         else:
-       	    editconf = 'editconf -bt %s -f %s -o %s -d %s'%(self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.boxSoluteDistance )
+       	    editconf = '%s/editconf -bt %s -f %s -o %s -d %s'%(os.environ['GMXPATH'], self.setup.boxType, self.files.grofile, self.files.next_gro(), self.setup.boxSoluteDistance )
 	self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 
@@ -291,16 +292,16 @@ class System:
             self.implicitSolvationPreparationSteps()
         else:
             # solvate the box 
-	    editconf = 'genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(self.files.grofile, self.files.next_gro(), self.files.topfile)
+	    editconf = '%s/genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.topfile)
 	    self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	    self.files.increment_gro()    # must increment filename for any new gmx file 
 
             # minimize the system
             ### make a tpr file with grompp
-            grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
+            grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
 	    self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )	
             ### run minimization
-            minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+            minimize = '%s/mdrun -v -s %s -c %s '%(os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
 	    self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
 	    self.files.increment_gro()    # must increment filename for any new gmx file 
 	
@@ -387,7 +388,7 @@ class System:
 
     # convert the solvated PDB or gro to a gromacs *.gro and *.top 
     # pdb2gmx, and useTIP3P
-    pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.files.infile, self.files.grofile, self.files.topfile)
+    pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.infile, self.files.grofile, self.files.topfile)
     self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors)
     self.useTIP3P( self.files.topfile )
     pdb2gmxlines = self.status.loglines[-1][1].split('\n')
@@ -398,10 +399,10 @@ class System:
             self.totalChargeBeforeIons = float(line.split()[4]) 
 
     # minimize the system        ### make a tpr file with grompp
-    grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
+    grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
     self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
     ### run minimization
-    minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+    minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
     self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
     self.files.increment_gro()    # must increment filename for any new gmx file 
 
@@ -440,12 +441,12 @@ class System:
     solgroup = self.getSolventGroupFromGenion()
 
     # add ions	   
-    genion = 'echo %d | genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+    genion = 'echo %d | %s/genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
     self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
     self.files.increment_gro()    # must increment filename for any new gmx file 
 
     ### generate a new topolgy file for the ion-ated grofile  
-    pdb2gmx = 'echo %s | pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], self.files.grofile, self.files.next_gro(), self.files.next_top())
+    pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.next_top())
     self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
     self.files.increment_gro()    # must increment filename for any new gmx file 
     self.files.increment_top()    # must increment filename for any new gmx file 
@@ -455,21 +456,21 @@ class System:
 
 	# run minimimzation once more with the new ions
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 	### run minimization
-	minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
 	self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 
 	# run equilibration phase 1: just water with frozen protein.  
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 	### run minimization
-	minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	minimize = '%s/mdrun -v -s %s -c %s '%(os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
 	self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
@@ -485,11 +486,11 @@ class System:
             raise "Protocol Error!"
 
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s -n %s'%(self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s -n %s'%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 	### run minimization
-	minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
 	self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 
@@ -499,7 +500,7 @@ class System:
 		
 	# setup files for simulation 
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s -n %s'%(self.files.mdpfile_Simulation, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s -n %s'%(os.environ['GMXPATH'], self.files.mdpfile_Simulation, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 		
@@ -508,17 +509,17 @@ class System:
       
 	# run minimimzation once more with the new ions
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 	### run minimization
-	minimize = 'mdrun -v -s %s -c %s '%( self.files.tprfile, self.files.next_gro() )
+	minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
 	self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_gro()    # must increment filename for any new gmx file 
 	
 	# setup files for equilibration 
 	### make a tpr file with grompp
-	grompp = 'grompp -f %s -c %s -o %s -p %s '%(self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
+	grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
 	self.files.increment_tpr()    # must increment filename for any new gmx file 
 		
