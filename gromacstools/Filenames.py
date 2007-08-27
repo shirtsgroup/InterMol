@@ -1,5 +1,6 @@
 # Modification history:
 #
+# VAV:  8/27/2007:  Added self.mdpfile to store auto-numbers temporary *.mdp files to working dir, if needed
 # VAV:  June 26, 2007:  Added ndx, top, and mdp outfile names (for the final file copy of files to form a production run)
 # VAV:  June 14, 2007:  Added set_outputName(), set_runscriptName()
 # VAV:  June 11, 2007:  Added set_mdpMinimization(), set_mdpEquilibration(), and set_mdpSimulation()
@@ -58,6 +59,7 @@ class Filenames(object):
     self.topfile = ''
     self.tprfile = ''
     self.ndxfile = ''
+    self.mdpfile = ''    # This is to hold any temporary mdp file one might need 
     
     # initialize file names
     # NOTE: These names do not correspond to files yet, but will be used
@@ -69,12 +71,14 @@ class Filenames(object):
         self.topfile = os.path.join(self.workdir, self.infile_basename.replace('.pdb','0000.top') )
         self.tprfile = os.path.join(self.workdir, self.infile_basename.replace('.pdb','0000.tpr') )
         self.ndxfile = os.path.join(self.workdir, self.infile_basename.replace('.pdb','0000.ndx') )
+        self.mdpfile = os.path.join(self.workdir, self.infile_basename.replace('.pdb','0000.mdp') )
     elif self.infile[-4:] == '.gro':
         self.grofile = os.path.join(self.workdir, self.infile_basename.replace('.gro','0000.gro') )
         self.pdbfile = os.path.join(self.workdir, self.infile_basename.replace('.gro','0000.pdb') )
         self.topfile = os.path.join(self.workdir, self.infile_basename.replace('.gro','0000.top') )
         self.tprfile = os.path.join(self.workdir, self.infile_basename.replace('.gro','0000.tpr') )
         self.ndxfile = os.path.join(self.workdir, self.infile_basename.replace('.gro','0000.ndx') )
+        self.mdpfile = os.path.join(self.workdir, self.infile_basename.replace('.pdb','0000.mdp') )
     else:
         print 'Error:  infile must be either *.pdb or *.gro file'
 	sys.exit(1)
@@ -121,6 +125,8 @@ class Filenames(object):
 	self.increment_tpr()
       elif ext=='ndx':
 	self.increment_ndx()
+      elif ext=='mdp':
+	self.increment_mdp()
       else:
 	print 'File extension',ext,'not supported!  Exiting....'
 	sys.exit(1)
@@ -145,6 +151,10 @@ class Filenames(object):
     """Increments the current ndx file"""
     self.ndxfile = self.ndxfile[0:-8] + string.zfill( (int(self.ndxfile[-8:-4])+1), 4) + self.ndxfile[-4:]
     
+  def increment_mdp(self):
+    """Increments the current mdp file"""
+    self.mdpfile = self.mdpfile[0:-8] + string.zfill( (int(self.mdpfile[-8:-4])+1), 4) + self.mdpfile[-4:]
+    
   def next_gro(self):
     """Returns the next name of the grofile, without incrementing"""
     return self.grofile[0:-8] + string.zfill( (int(self.grofile[-8:-4])+1), 4) + self.grofile[-4:]
@@ -164,6 +174,10 @@ class Filenames(object):
   def next_ndx(self):
     """Returns the next name of the ndxfile, without incrementing"""
     return self.ndxfile[0:-8] + string.zfill( (int(self.ndxfile[-8:-4])+1), 4) + self.ndxfile[-4:]
+
+  def next_mdp(self):
+    """Returns the next name of the ndxfile, without incrementing"""
+    return self.mdpfile[0:-8] + string.zfill( (int(self.mdpfile[-8:-4])+1), 4) + self.mdpfile[-4:]
 
   
   def set_mdpMinimization(self, filename):
