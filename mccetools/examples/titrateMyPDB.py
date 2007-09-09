@@ -15,7 +15,8 @@ import os, sys
 # Specify the input and output PDB filenames
 # NOTE: pdbfile and outpdbfile should be local (not absolute) paths for this project  
 #pdbfile = '1b0d_cleaned.pdb'
-pdbfile = 'AAAKAAKAAKAA.pdb'
+#pdbfile = 'AAAKAAKAAKAA.pdb'
+pdbfile = "emin_ligonly_final.pdb"
 
 # Specify the pH
 pH = 7.0
@@ -39,8 +40,5 @@ pHstep = 1.0
 pHiters = 14
 result = mcce.titrate(pdbfile, pHstart, pHstep, pHiters, os.environ['MCCE_LOCATION'], cleanup=False, prmfile=prmfile)
 print result
-
-
-
 
 
