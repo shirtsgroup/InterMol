@@ -322,7 +322,7 @@ def renumber_atoms(pdbarr):
         pdbarr[i]=pdbarr[i][0:6]+str(i+1).rjust(5)+pdbarr[i][11:]        
 
 
-def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, xtraprms={}):
+def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}):
     """Performs a pH titration on all titratable residues in a PDB file."""
     
     #Convert PDB file name to path, as paramgen expects an absolute path
@@ -340,7 +340,7 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeled
     print "Running MCCE in temporary directory %s..." % tempdir
 
     # remember our curent working directory
-    thisdir = os.getcwd()
+    thisdir = '%s'%os.path.abspath(os.getcwd())
         
     # run mcce in the temporary directory
     os.chdir(tempdir)
@@ -350,7 +350,7 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeled
     # chdir back to where we came from
     os.chdir(thisdir)
 
-    pdbarr = ps_processmcce(tempdir, labeledPDBOnly=labeledPDBOnly )
+    pdbarr = ps_processmcce(tempdir, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini )
 
     # Generate a breakpoint for interactive testing...
     #       raw_input("about to clean house...")
@@ -427,7 +427,7 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         
     return pdbarr
 
-def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, xtraprms={}):
+def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}):
     """Determine the most likely protonation state for a given protein structure.
 
     REQUIRED ARGUMENTS
@@ -448,7 +448,7 @@ def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, lab
     thisdir = os.getcwd()
     
     # Determine most likely protonation state, storing result in 'pdbarr'.
-    pdbarr = protonation_state(pdbfile,pH,mccepath,cleanup=cleanup, prmfile=prmfile, labeledPDBOnly=labeledPDBOnly, xtraprms=xtraprms)
+    pdbarr = protonation_state(pdbfile,pH,mccepath,cleanup=cleanup, prmfile=prmfile, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini, xtraprms=xtraprms)
     
     # Write PDB file name to absolute path
     outpath=os.path.join(thisdir,outfile)
@@ -492,7 +492,7 @@ def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=Tru
         
     return
 
-def ps_processmcce(tempdir, labeledPDBOnly=False):
+def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True):
     """Handles the file processing work for protonation_state
     
     ARGUMENTS
@@ -509,6 +509,7 @@ def ps_processmcce(tempdir, labeledPDBOnly=False):
     f=open(tempdir+"/step2_out.pdb","rt")
     pdbarr=filter(lambda x:rx.search(x),f.readlines())
     f.close()
+        
         
     # Label the lines of the PDB file with charge state
     rxn=re.compile(neut)
@@ -530,7 +531,7 @@ def ps_processmcce(tempdir, labeledPDBOnly=False):
     if labeledPDBOnly:
         return pdbarr
     else:
-        pdbarr=rename.rename_residues(pdbarr)
+        pdbarr=rename.rename_residues(pdbarr, renameTermini=renameTermini)
         pdbarr=rename.pdb_cleanup(pdbarr)
         return pdbarr
 
