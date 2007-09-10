@@ -28,6 +28,11 @@ def thread_model(pdbTemplate, sequence, outPdbFile, captermini=False):
     """Uses Modeller to thread a sequence onto a template structure.
     If captermini=True, will cap the N- and C- termnini with ACE and NH2, respectively. """
     
+    print 'DEBUG:::'
+    print 'pdbTemplate', pdbTemplate
+    print 'outPdbFile', outPdbFile 
+    print 'os.curdir', os.curdir
+    print 'os.listdir', os.listdir('./')
 
     # use either a sequence file or a sequence string
     if os.path.exists(sequence):
@@ -63,13 +68,17 @@ def protonate(inpdbfile, outpdbfile, pH):
     os.chdir(thisdir)
 
 
-def build_gmx(protein, outdir, forcefield='ffamber99p'):
+def build_gmx(protein, outdir, forcefield='ffamber99p', protocol='racecar2'):
     """Builds a gromacs project according to the specs in the pipelineProtein object.  Assumes
     the protein.pdbfile is in the right (AMBER) format."""
 
+
+    if os.path.exists(outdir) == False:
+        os.mkdir(outdir)
+
     baseName = protein.getBasename( protein.pdbfile )
     gromacsOut = baseName + "_final"
-    g = System(protein.pdbfile, finalOutputDir=outdir, useff=forcefield)
+    g = System(protein.pdbfile, finalOutputDir=outdir, finalOutputName=gromacsOut, useff=forcefield)
     g.setup.setSaltConditions(protein.salt, protein.saltconc)
     if protein.boxProtocol == 'small':
         g.setup.set_boxType = 'octahedron'
@@ -79,51 +88,47 @@ def build_gmx(protein, outdir, forcefield='ffamber99p'):
         g.setup.setUseAbsBoxSize(True)
         g.setup.setAbsBoxSize('8.0')   # periodic box absolute size, in nanometers (string)
 
-    if os.path.exists(outdir) == False:
-        os.mkdir(outdir)
     g.prepare(outname=gromacsOut, outdir=outdir, verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
 
 
 
-def shoveit(protein, outdir, forcefield='ffamber99p', captermini=False):
+def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', captermini=False, debug=False, verbose=True, cleanup=False, implicitOptions=None, useTable=None):
     """Shoves a pipelineProtein object through the entire MODELLER -> MCCE --> gromacs pipeline.
 
-    For capping the termini with ACE and NH2, the Modeller program has a nice way of doing
-    residue 'patches', so ithis will be used for adding the caps.  WE need to do the following:
+    For capping the termini with ACE and NH2:
+    
+    The Modeller program has a nice way of doing
+    residue 'patches', so this will be used for adding the caps.  The program will do the following:
 
-    1. Thread the sequence via Modeller, WITHOUT capping --> PDB
-    2. Calculate the protonation state via MCCE --> return a non-renamed PDB, and renaming rules
-    3. Use Modeller to cap the ends
-    4. Apply the renaming rules for protonation states that came from MCCE  
-
-    VV: THIS HASN'T BEEN IMPLEMENTED YET -- I'm working on it!!!!!! 8/21/07
+    1. Thread the sequence via Modeller, which will patch the termini caps--> PDB
+    2. Calculate the protonation state via MCCE (which will know how to handle ACE and NH2 residues because
+       of the patches ace.tpl and nh2.tpl in param04 and param08 --> PDB with ffamber-named residues
+    3. feed through gromacstools in normal fashion
     """
 
-    thisdir = os.curdir
-
-    print 'before:'
-    protein.print_info()
-
-    protein.setup(outdir)
-
-    print 'after:'
+    thisdir = '%s'%os.path.abspath(os.curdir)
+    protein.setup(outdir)    # Set up modelPDBout filenames and such using the basename of the outdir
     protein.print_info()
 
     # Build a PDB model from the pdbTemplate using MODELLER
-    thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout)
+    thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout, captermini=captermini)
+    
 
     # run mcce
+    mcceOut = os.path.abspath(protein.mccePDBout)
     if (1):
-        mcceOut = os.path.abspath(protein.mccePDBout)
         prmFile = '../../mccetools/prmfiles/run.prm.quick'
         prmFile = os.path.abspath(prmFile)
-        mcce.protonatePDB(protein.modelPDBout, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=False, prmfile=prmFile, labeledPDBOnly=False)
-
+        if (captermini):
+            mcce.protonatePDB(protein.modelPDBout, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=cleanup, prmfile=prmFile, renameTermini=False)
+        else:
+            mcce.protonatePDB(protein.modelPDBout, mcceOut, protein.pH, os.environ['MCCE_LOCATION'], cleanup=cleanup, prmfile=prmFile)
+       
     # run gromacs setup
     if (1):
         gromacsOut = protein.basename + "_final.pdb"
         # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
-        g = System(mcceOut, finalOutputDir=outdir, useff=forcefield)
+        g = System(mcceOut, finalOutputDir=outdir, finalOutputName=protein.basename, useff=forcefield)
         g.setup.setSaltConditions(protein.salt, protein.saltconc)
         if protein.boxProtocol == 'small':
             g.setup.set_boxType = 'octahedron'
@@ -138,7 +143,7 @@ def shoveit(protein, outdir, forcefield='ffamber99p', captermini=False):
         if os.path.exists(thisOutDir) == False:
             os.mkdir(thisOutDir)
         os.chdir(thisOutDir)
-        g.prepare(verbose=True, cleanup=False, debug=DEBUG, protocol='racecar2', checkForFatalErrors=True)
+        g.prepare(verbose=verbose, cleanup=cleanup, debug=debug, protocol=protocol, checkForFatalErrors=True, implicitOptions=implicitOptions, useTable=useTable)
      
 
     if(1):
@@ -149,7 +154,7 @@ def shoveit(protein, outdir, forcefield='ffamber99p', captermini=False):
             if os.path.exists(protein.mccePDBout):
                 os.remove(protein.mccePDBout)
 
-    os.chdir(thisdir)
+    os.chdir(thisdir) 
 
 
 
@@ -183,10 +188,16 @@ class PipelineProtein:
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
-        # determine base name
-        self.basename = self.getBasename(self.seqfile)
+        
+        # determine base name from the sequence file
+        fields = self.seqfile.split('/')
+        if fields[-1] == '':
+            fields.pop()
+        self.basename = fields[-1].replace('.seq','')
+
         self.modelPDBout = os.path.join(outdir,(self.basename+"_model.pdb"))
         self.mccePDBout  = os.path.join(outdir,(self.basename+"_mcce.pdb"))
+
 
     def getBasename(self, filename):
         """Gets the basename of any file names 'basename.suffix'."""
@@ -195,14 +206,17 @@ class PipelineProtein:
          
     def print_info(self):
         """Prints info about the PipelineProtein object"""
+        print self.info()
 
-        print 'pdbfile', self.pdbfile
-        print 'seqfile', self.seqfile
-        print 'salt', self.salt
-        print 'saltconc', self.saltconc 
-        print 'pH', self.pH 
-        print 'boxProtocol', self.boxProtocol 
-        print 'modelPDBout', self.modelPDBout 
-        print 'mccePDBout', self.mccePDBout 
-
-
+    def info(self):
+        """Returns a string with information about this PipelineProtein object"""
+        s = ''
+        s = s + '%-16s = %s\n'%('pdbfile', self.pdbfile)
+        s = s + '%-16s = %s\n'%('seqfile', self.seqfile)
+        s = s + '%-16s = %s\n'%('salt', self.salt)
+        s = s + '%-16s = %s\n'%('saltconc', self.saltconc)
+        s = s + '%-16s = %s\n'%('pH', self.pH)
+        s = s + '%-16s = %s\n'%('boxProtocol', self.boxProtocol)
+        s = s + '%-16s = %s\n'%('modelPDB_out', self.modelPDBout)
+        s = s + '%-16s = %s\n'%('mccePDBout', self.mccePDBout)
+        return s
