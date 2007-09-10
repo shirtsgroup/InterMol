@@ -10,8 +10,6 @@
 # REQUIREMENTS
 #=============================================================================================
 # TODO
-# - Need a replacement PDB + dihedral manipulation scheme to replace the ZAM modules
-# ONCE WE DO THIS, we can put this functionality in the pipeline module!
 #=============================================================================================
 # VERSION CONTROL INFORMATION
 __version__ = "$Revision: $"                                                                         
@@ -26,9 +24,9 @@ import numpy
 from optparse import OptionParser    # For parsing of command line arguments
 
 from mmtools.utilities import Units
- 
+
+# We need ZAM functions to modify dihedral angles, etc. 
 sys.path.append('/Users/vincentvoelz/scott/scripts')
-    # For now, we need ZAM functions to modify dihedral angles, etc.
 import protein, proteinfunc, proteinconst, pdbtools, coords
 
 #=============================================================================================
@@ -77,8 +75,8 @@ def gencoil(sequence, outdir, nconf=10, temperature=300.0, dimension=None):
     kB = 1.987 * Units.calorie    # (...per mol per degree)  
     kT = kB * temperature * Units.K / Units.kcal
     kT_ref = kB * 300. * Units.K / Units.kcal    # our reference is 300K
-    print 'effective kT =', kT
-    print 'reference kT =', kT_ref
+    print 'effective kT =', kT,     '(%3.1f)'%temperature
+    print 'reference kT =', kT_ref, '(300.0 K)'
 
     if os.path.exists(sequence):
         fseq = open(sequence,'r')
@@ -95,6 +93,11 @@ def gencoil(sequence, outdir, nconf=10, temperature=300.0, dimension=None):
     Verbose = False
     PrintEvery = 50     # print progress to screen every PrintEvery iterations
     EquilIters = 100    # start writing PDB files after EquilIters
+    AngleRange = 180.0  # Range of angles to take phi-psi MC moves from
+    
+    print 'Running %d iterations to equilibrate before accepting viable conformations...'%EquilIters
+    print 'Conformations of atoms less than 0.65 Angstroms are not accepted.'
+    print 'Angle range to take phi-psi MC moves from: %f'%AngleRange
 
     # Prepare output directory files
     if not os.path.exists(outdir):
@@ -104,15 +107,15 @@ def gencoil(sequence, outdir, nconf=10, temperature=300.0, dimension=None):
     eneheader = '%-16s %-16s %-16s %-16s %-8s\n'%('iteration','LogProb','num_overlaps','dimension','wrotePDB')
     fene.write(eneheader)
 
-    # Create a Protein Object
+    # Create a ZAM Protein Object
     p = protein.ProteinClass(Seq=glycineString)
 
     # mess up the angles to start with
     for i in range(0,len(p)):
         Phi, Psi = p.PhiPsi(i)
         if not Phi is None and not Psi is None:
-            Phi += 180. * (2.*random.random() - 1.)
-            Psi += 180. * (2.*random.random() - 1.)
+            Phi += AngleRange * (2.*random.random() - 1.)
+            Psi += AngleRange * (2.*random.random() - 1.)
             p.RotateToPhiPsi(i, Phi, Psi)
 
     npdb = 0

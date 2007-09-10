@@ -11,6 +11,15 @@
 #=============================================================================================
 # VERSION CONTROL INFORMATION
 __version__ = "$Revision: $"                                                                     
+#
+# HISTORY
+# 8-23-2007   VAV: Added captermini and debug flags to shoveit.py
+
+
+
+
+
+
 
 #=============================================================================================
 # IMPORTS
@@ -73,7 +82,9 @@ if __name__ == '__main__':
     parser.add_option("-f", "--forcefield", metavar='FORCEFIELD',
             action="store", type="string", dest='forcefield', default='ffamber99p', \
             help="Forcefield to build gromacs projects with.  Optional.  Default='ffamber99p'.") 
-    parser.add_option("-t", "--termini_caps", action="store_true", dest="captermini", default=False)
+    parser.add_option("-t", "--termini_caps", action="store_true", dest="captermini", default=False, help="Flag for building ACE and NH2 termini caps.")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Turn on debug mode.")
+    parser.add_option("-m", "--protocol", action="store", dest="protocol", default='racecar2', help="The mdp protocol. Default is 'racecar2'.  Also supported: 'quicktest' or 'default'.")
 
     # Parse command-line arguments.
     (options,args) = parser.parse_args()
@@ -86,5 +97,5 @@ if __name__ == '__main__':
    
     pProtein  = pipeline.PipelineProtein( pdb=options.pdbfile, seq=options.sequence, salt=options.salt, saltconc=float(options.saltconc), pH=float(options.pH), boxProtocol=options.boxProtocol)
 
-    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield, captermini=options.captermini)
+    pipeline.shoveit( pProtein, options.outdir, forcefield=options.forcefield, captermini=options.captermini, debug=options.debug, protocol=options.protocol)
 
