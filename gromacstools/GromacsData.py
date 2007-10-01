@@ -407,47 +407,71 @@ def version():
 	print "GROMACS module: version %s, %s" % (VERSION, DATE)	
 	return
 
-def xtc2gro(xtcfile,tprfile,index,verbose,group):
+def xtc2gro( xtcfile, tprfile, index, tmpgrofile, verbose = False, group = 0, prec = 3 ):
 	# take a tpr and an xtc, split into a list of gro files, return a GromacsStructure object from that 
 	# list with index 'index' 
 	# the "group" variable if true says which group in the index file to get; default is zero
-	if not group: group=0
+	# We keep track of the 't=' in the outputted gro file and only keep/consider the latest time in order
+	# to deal with repeated frames.
 
-	def splitlist(l,chunksize):
-	        min=0
-	        max=chunksize
-	       	splitted=[]
-	        while max<=len(l):
-	                splitted.append(l[min:max])
-	                min=max
-	                max=max+chunksize
+	# This little function splits a list 'lst' into chunks of 'chunksize' elements. A list of the chunks
+	# is returned. For instance, 
+	#
+	# 	>> a = splitlst( ( 1, 2, 3, 4) , 2 )
+	#       >> print a
+	# 	[(1, 2), (3, 4)]
+	#
+	def splitlist( lst, chunksize ):
+	        min = 0
+	        max = chunksize
+	       	splitted = []
+	        while max <= len( lst ):
+	                splitted.append( lst[ min:max ] )
+	                min = max
+	                max = max + chunksize
         	return splitted
 
-	grolist=[]
-	tmpgrofilename=xtcfile+".TMP.gro"
-	if verbose: print "looking for tpr file", tprfile
-	if not exists(tprfile): raise TprFileNotFound
-	if verbose: print "looking for xtc file", xtcfile
-	if not exists(xtcfile): raise XtcFileNotFound
+	grolist = []
+	if not tmpgrofile :
+		tmpgrofilename = xtcfile + ".TMP.gro"
+	else :
+		tmpgrofilename = tmpgrofile + ".gro"
+	tmpgrofilename = tmpgrofilename.replace( ".gro.gro", ".gro" )
 
-	if not exists(tmpgrofilename): # no need to run trjconv multiple times
-		# should we be able to specify the precision?
-		prec=3
+	if verbose: print "looking for tpr file", tprfile
+	if not exists( tprfile ): raise TprFileNotFound
+
+	if verbose: print "looking for xtc file", xtcfile
+	if not exists( xtcfile ): raise XtcFileNotFound
+
+	if not exists( tmpgrofilename ): # no need to run trjconv multiple times
 		try:
-			trjconv="echo 0 | trjconv -s %s -f %s -o %s -ndec %d" % (tprfile,xtcfile,tmpgrofilename,prec)
-			if verbose: print "trying command",trjconv
-			else: trjconv=trjconv+" >& /dev/null"
-			system(trjconv)
+			args = ( tprfile, xtcfile, tmpgrofilename, prec )
+			trjconv = "echo 0 | trjconv -s %s -f %s -o %s -ndec %d" % args
+
+			if verbose: print "trying command '%s'" % trjconv
+			else: trjconv = trjconv + " >& /dev/null"
+
+			system( trjconv )
+
 		except:
 			raise TrjconvError
 	
-	biggro=open(tmpgrofilename)
-	biggrolist=biggro.readlines()
+	biggro = open( tmpgrofilename )
+	biggrolisti = biggro.readlines()
 	biggro.close()
-	unlink(tmpgrofilename)
-	natoms=int(biggrolist[1])	
-	splittedgrolist=splitlist(biggrolist,natoms+3)
-	tmpdir="tmp/"
+
+	unlink( tmpgrofilename )
+	natoms = int( biggrolist[1] )	
+	splittedgrolist = splitlist( biggrolist, natoms + 3 )
+	tmpdir = "tmp/"
+
+	# Grab frames which are contiguous in time, not repeats. Use only most recent
+	# frames.
+	golist = []
+	for gro in splittedgrolist :
+		title = gro[0]
+		print title
 
 	#print "my list is:"
 	#for item in splittedgrolist: print item
