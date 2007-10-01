@@ -407,7 +407,7 @@ def version():
 	print "GROMACS module: version %s, %s" % (VERSION, DATE)	
 	return
 
-def xtc2gro( xtcfile, tprfile, index, tmpgrofile, verbose = False, group = 0, prec = 3 ):
+def xtc2gro( xtcfile, tprfile, index, prefix = "echo 0", verbose = False, group = 0, prec = 3 ):
 	# take a tpr and an xtc, split into a list of gro files, return a GromacsStructure object from that 
 	# list with index 'index' 
 	# the "group" variable if true says which group in the index file to get; default is zero
@@ -432,11 +432,7 @@ def xtc2gro( xtcfile, tprfile, index, tmpgrofile, verbose = False, group = 0, pr
         	return splitted
 
 	grolist = []
-	if not tmpgrofile :
-		tmpgrofilename = xtcfile + ".TMP.gro"
-	else :
-		tmpgrofilename = tmpgrofile + ".gro"
-	tmpgrofilename = tmpgrofilename.replace( ".gro.gro", ".gro" )
+	tmpgrofilename = xtcfile + ".TMP.gro"
 
 	if verbose: print "looking for tpr file", tprfile
 	if not exists( tprfile ): raise TprFileNotFound
@@ -446,11 +442,11 @@ def xtc2gro( xtcfile, tprfile, index, tmpgrofile, verbose = False, group = 0, pr
 
 	if not exists( tmpgrofilename ): # no need to run trjconv multiple times
 		try:
-			args = ( tprfile, xtcfile, tmpgrofilename, prec )
-			trjconv = "echo 0 | trjconv -s %s -f %s -o %s -ndec %d" % args
+			args = ( prefix, tprfile, xtcfile, tmpgrofilename, prec )
+			trjconv = "%s | trjconv -s %s -f %s -o %s -ndec %d" % args
+			trjconv += ">& /dev/null"
 
 			if verbose: print "trying command '%s'" % trjconv
-			else: trjconv = trjconv + " >& /dev/null"
 
 			system( trjconv )
 
