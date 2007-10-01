@@ -481,7 +481,6 @@ def xtc2gro( xtcfile, tprfile, index, prefix = "echo 0", verbose = False, group 
 	pslist = pslist[ 0:-1 ]
 	finalgrolist = []
 	for ps in pslist :
-		print ps
 		finalgrolist.append( grolist[ ps ] )
 
 	#print "my list is:"
