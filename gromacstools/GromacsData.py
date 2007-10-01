@@ -444,7 +444,7 @@ def xtc2gro( xtcfile, tprfile, index, prefix = "echo 0", verbose = False, group 
 		try:
 			args = ( prefix, tprfile, xtcfile, tmpgrofilename, prec )
 			trjconv = "%s | trjconv -s %s -f %s -o %s -ndec %d" % args
-			trjconv += ">& /dev/null"
+			trjconv += " >& /dev/null"
 
 			if verbose: print "trying command '%s'" % trjconv
 
@@ -454,7 +454,7 @@ def xtc2gro( xtcfile, tprfile, index, prefix = "echo 0", verbose = False, group 
 			raise TrjconvError
 	
 	biggro = open( tmpgrofilename )
-	biggrolisti = biggro.readlines()
+	biggrolist = biggro.readlines()
 	biggro.close()
 
 	unlink( tmpgrofilename )
@@ -463,19 +463,34 @@ def xtc2gro( xtcfile, tprfile, index, prefix = "echo 0", verbose = False, group 
 	tmpdir = "tmp/"
 
 	# Grab frames which are contiguous in time, not repeats. Use only most recent
-	# frames.
-	golist = []
+	# frames. This is done with the dictionary 'grolist', where the keys are the
+	# (string) times.
+	grolist = {}
 	for gro in splittedgrolist :
 		title = gro[0]
-		print title
+
+		# WARNING!! This won't work if your frame resolution is greater than 
+		# ps ..
+		picoseconds = int( float( title.split()[-1].strip() ) )
+				
+		grolist[ picoseconds ] = gro
+
+	pslist = grolist.keys()
+	pslist.sort()
+	# do not include the last frame
+	pslist = pslist[ 0:-1 ]
+	finalgrolist = []
+	for ps in pslist :
+		print ps
+		finalgrolist.append( grolist[ ps ] )
 
 	#print "my list is:"
 	#for item in splittedgrolist: print item
 	#print "looking for index",index
-	gro=splittedgrolist[index]
-	groobj=GromacsStructure()
-	groobj.list2gro(gro)
-	groobj.name=str(index)+".gro"	
+	gro = finalgrolist[index]
+	groobj = GromacsStructure()
+	groobj.list2gro( gro )
+	groobj.name = str( index ) + ".gro"	
 
 	return groobj
 

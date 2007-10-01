@@ -142,9 +142,12 @@ class GromacsAtoms( list ):
 
         def printatomlist(self):
 		# HERE
-                for atom in self:
-                        atom.printgroatom()
-                return
+      		atoms = ""
+	        for atom in self:
+                        atoms += atom.printgroatom() + "\n"
+
+			
+                return atoms.strip()
 
 	def sequence(self):
 		"""Returns the sequence (all the reside names) of the atom list."""
