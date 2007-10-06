@@ -4,14 +4,16 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
+from openeye.oeproton import *
 import os
 
 """Ligtools:
 - get_ligand: Takes a pdb file, extracts specified ligand and tries to protonate and assign bond types. Optionally writes out a output file (of type specified by the filename, i.e. mol2 or pdb) of it; also returns it as an OE mol.
 - add_ligand_to_gro: Add a ligand at the end of an existing gro file.
-- lig_mol2_to_gromacs: Convert a ligand mol2 file to gromacs top and gro files using antechamber and amb2gmx.pl. 
+- ligmol2_to_gromacs: Convert a ligand mol2 file to gromacs top and gro files using antechamber and amb2gmx.pl. 
 - generate_conf_from_file: Generates (and optionally writes to file) a ligand conformation (or more than one) for a molecule file of arbitrary (OE readable) type; returns it.
 - fit_mol_to_refmol: Fit a OE molecule (multi-conformer) to a reference molecule (single conformer, i.e. a ligand structure from a pdb file); write out an output file of the best N matches, where N is specified.
+- EnumerateProtonation to enumerate possible protonation states.
 
 Requirements: 
 - Amber and Antechamber installations in your path
@@ -138,7 +140,6 @@ quit"""
        if tmp.find('WARNING')>-1: print line
        if tmp.find('ERROR')>-1: print line
   
-   raw_input()
    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
    commands.getoutput('%s --prmtop tmp.prmtop --crd tmp.crd --outname tmp' % amb2gmx)
 
@@ -225,6 +226,8 @@ def top_to_itp(topfile, outputitp, moleculetype = None):
        linenum = read_through_section(text, linenum)
      elif line.find('molecules')>-1 and line.find(';')!=0:
        linenum = read_through_section(text, linenum)
+       #This will be the end of file, so make sure we don't let a last line straggle in here
+       break;
      elif moleculetype and line.find('moleculetype')>-1:
        outtext.append(line) 
        #Read through comments and append
@@ -237,9 +240,14 @@ def top_to_itp(topfile, outputitp, moleculetype = None):
        #Replace molecule name once we read through comments
        line = line.replace('solute', moleculetype)
        outtext.append(line)
+       linenum+=1
      else:
        outtext.append(line)
        linenum +=1    
+
+     file = open(outputitp,'w')
+     file.writelines(outtext)
+     file.close()
 
 def set_subst_name(mol2file, name):
    """Edit specified mol2 file to change the subst_name to name; the OE tools fail to modify this."""
@@ -290,8 +298,16 @@ def set_subst_name(mol2file, name):
 
 
 def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1, threshold=None, TorsionLib = None):
-   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation. Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. Also optionally specify maximum number of conformations for Omega with maxconfs argument. Default: 1. Optionally also specify RMS threshold (allowing i.e. more conformers to be generated). Optionally also specify TorsionLib, the path to an Omega torsion library, to perform an *additional* drive of any torsions specified there (that is, this will be applied after applyign Omega's standard torsion library)."""
-
+   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation(s). Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. 
+Required arguments:
+- Infile, with input file
+Optional arguments:
+- GenerateOutfile: Boolean specifying whether to write output file
+- outfile: Name of outfile (format specified by suffix)
+- maxconfs: Number of conformations to save. Default: 1.
+- threshold: RMSD threshold for retaining conformers; lower thresholds retain more conformers. Default of None uses Omega's default threshold. Otherwise this should be a float.
+- TorsionLib: Optionally specify a path to an Omega torsion library, which will be applied to perform an *additional* drive of torsions specified in that library after applying the default library. Default: None. 
+"""
    #Open input file
    input_molecule_stream=oemolistream()
    input_molecule_stream.open(infile)
@@ -308,11 +324,6 @@ def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, max
    #Don't include input in output
    omega.SetIncludeInput(False)
 
-   #TEMP HACK ADJUST TORSION LIBRARY
-   #omega.SetTorsionLibrary('/dmobley/HCVP/ligsetup/torsionlib')
-   #omega.SetTorsionDrive(True)
-   #omega.SetEnergyWindow(100)
-
    #Adjust RMS threshold
    if threshold:
      omega.SetRMSThreshold(threshold) 
@@ -320,10 +331,11 @@ def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, max
    #Create molecule
    molecule = OEMol()
    
+
+   OEReadMolecule(input_molecule_stream, molecule)
    name = OECreateIUPACName(molecule) #Attempt to figure out IUPAC name for this; parts that cannot be recognized will be named 'BLAH'
    molecule.SetTitle(name) #Set title to IUPAC name
 
-   OEReadMolecule(input_molecule_stream, molecule)
    # Run Omega on the molecule to generate a set of reasonable conformations.
    omega(molecule)
 
@@ -359,6 +371,7 @@ def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
    #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it.
    scoreiter = OEBestOverlayScoreIter()
    OESortOverlayScores(scoreiter, best.Overlay(fitmol_conformers), OEHighestTanimoto())
+   tanimotos = []
    for score in scoreiter:
       #Get the particular conformation of this match; transform it to overlay onto the reference structure
       outmol = OEGraphMol(fitmol_conformers.GetConf(OEHasConfIdx(score.fitconfidx)))
@@ -370,9 +383,55 @@ def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
       print "FitConfIdx: %-4d" %score.fitconfidx,
       print "RefConfIdx: %-4d" % score.refconfidx,
       print "Tanimoto: %.2f" % score.tanimoto
+      tanimotos.append(score.tanimoto)
       resCount +=1
 
       if resCount == maxconfs: break 
+
+   return tanimotos   
+
+def fit_file_to_refmol(refmol, fitmol_file, outfile, maxconfs = None):
+   """Fit molecules/conformers from a file (second argument) to a OE molecule (first argument). Like fit_mol_to_refmol, but will handle cases where the file contains, for example, multiple protonation states of the same molecule as well as multiple conformers. Writes the resulting matches to specified outfile. Optionally specify the maximum number of conformers, 'maxconfs', to only get the best maxconfs matches written to that output file. Scores will be printed to stdout. Loosely based on OE Shape tookit documentation. Attempts to recombine conformers from input file into multi-conformer molecules, then generate up to maxconfs conformers for each molecule."""
+
+   infs = oemolistream()
+   infs.open(fitmol_file)
+   #Attempt to use OE tools to re-join multiple conformations into the same molecule when recombining, but keep molecules with different numbers of atoms/connectivities separate.
+   infs.SetConfTest(OEAbsoluteConfTest())
+
+   #Set up output
+   outfs = oemolostream(outfile)
+   #Set up storage for overlay
+   best = OEBestOverlay()
+   #Set reference molecule
+   best.SetRefMol(refmol)
+
+
+   print "Ref. Title:", refmol.GetTitle()
+   #Now attempt to loop over input, reading a *molecule* at a time (molecules will now be multi-conformer, hopefully) and scoring separately for each molecule
+   for fitmol_conformers in infs.GetOEMols():
+     resCount = 0 #Track count of results for each molecule so we only keep this many conformers for each molecule
+
+     print "Fit Title:", fitmol_conformers.GetTitle()
+     print "Num confs:", fitmol_conformers.NumConfs()
+
+     #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it.
+     scoreiter = OEBestOverlayScoreIter()
+     OESortOverlayScores(scoreiter, best.Overlay(fitmol_conformers), OEHighestTanimoto())
+     for score in scoreiter:
+        #Get the particular conformation of this match; transform it to overlay onto the reference structure
+        outmol = OEGraphMol(fitmol_conformers.GetConf(OEHasConfIdx(score.fitconfidx)))
+        score.Transform(outmol)
+
+        #Write output
+        OEWriteMolecule(outfs, outmol)
+
+        print "FitConfIdx: %-4d" %score.fitconfidx,
+        print "RefConfIdx: %-4d" % score.refconfidx,
+        print "Tanimoto: %.2f" % score.tanimoto
+        resCount +=1
+
+        if resCount == maxconfs: break 
+
 
 #Function definition for splitting mol2 files by pose
 def split_mol2_poses(infile,outpath,outname):
@@ -402,3 +461,26 @@ def split_mol2_poses(infile,outpath,outname):
   #Return resulting number of files
   return ct+1
 
+def EnumerateProtonation( mol, outfile, maxstates = 500 ):
+   """Take a OE molecule; loop over conformations and enumerate likely protonation states; write output to resulting outfile. Default maxstates (maximum number of protonation states per conformer) of 500."""
+   
+   usearomaticity = True
+   onlycountstates = False
+   verbose = False
+   #Set up output file
+   ofile = oemolostream()
+   ofile.open(outfile)
+   #Initialize protonation typer
+   typer = OETyperMolFunction( ofile, usearomaticity, onlycountstates, maxstates)
+
+   #Suppress hydrogens so we get proper enumeration
+   #TESTING: For c41, if we comment these out, it only enumerates protonations on the tetrazole and this ends up being good; otherwise it reassigns the bonds on the thiazole and never has a double bonded nitrogen. 
+   #But does this cause problems for the others?
+   #OESuppressHydrogens(mol)
+   #OEAssignImplicitHydrogens(mol)
+   #OEAssignFormalCharges(mol)
+   for conf in mol.GetConfs():
+     OEEnumerateFormalCharges(conf, typer, verbose)
+     typer.Reset()
+   
+   ofile.close()
