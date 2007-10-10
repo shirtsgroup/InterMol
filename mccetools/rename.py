@@ -5,7 +5,10 @@ Routines to rename atoms and residues from a 'labeled' step2_out.pdb file  ("0",
 
 REVISION LOG
 - 8-21-2007: VAV; spun these functions into their own python file 
-- 10-10-2007: DLM: re-incorporating the proper handling of cysteine residues renamed CYD by MCCE.
+- 10-10-2007: DLM: re-incorporating the proper handling of cysteine residues renamed CYD by MCCE which need to be renamed CYS2.
+
+TO DO:
+- See description of disulfide_search function -- need to fix naming for CYD residues that are not disulfide bonded.
 """
 def rename_residues(pdbarr, renameTermini=True):
     """Convert residue names (and some heavy atom names) to AMBER (ffamber) format.
@@ -231,6 +234,9 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
     OPTIONAL ARGUMENTS
         min_dist - minium distance cutoff for perceiving disulfide bond (default 1.8 A)
         max_dist - maximum distance cutoff for perceiving disulfide bond (default 2.2 A)
+
+    TO DO:
+        Sometimes MCCE erroneously identifies a disulfide bond and renames the residues as CYD; these should be changed back in such cases.
     """
         
     residues_to_rename=set([])
