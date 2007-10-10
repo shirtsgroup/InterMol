@@ -235,7 +235,7 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
         
     residues_to_rename=set([])
     for i in range(len(npdb)):
-        if (npdb[i][0][17:20] != 'CYS' and npdb[i][0][17:20] != CYD):
+        if (npdb[i][0][17:20] != 'CYS' and npdb[i][0][17:20] != 'CYD'):
             continue
         # Found a cysteine, now track down the sulfur
         iX,iY,iZ=get_coords('SG',npdb[i])
