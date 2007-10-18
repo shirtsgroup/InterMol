@@ -21,7 +21,7 @@
 # GLOBAL imports
 
 import sys, os, os.path
-import commands, shutil, tempfile, math
+import commands, shutil, tempfile, math, string
 
 from mmtools.gromacstools.GromacsData import *
 
@@ -30,7 +30,7 @@ def readAtomsFromPDB(pdbfilename):
     """Read atom records from the PDB and return them in a list.
 
     present_sequence = getPresentSequence(pdbfilename, chain=' ')
-    
+    contents of protein.seqfile
     REQUIRED ARGUMENTS
       pdbfilename - the filename of the PDB file to import from
 
@@ -134,11 +134,14 @@ def isAtomNameHydrogen( atomName ):
     return False
 
 
-def getChargedNames(atoms):
+def getChargedNames(atoms, type='pdb'):
     """Find out which residues are charged based on their AMBER-style residue names.
     
     REQUIRED ARGUMENTS
-    atoms - a list of atom dictionaries - see readAtomsFromPdb
+    atoms - a list of atom dictionaries (if filetype='pdb') - see readAtomsFromPdb
+       OR
+          - a GromacsAtoms object  (if filetype='gro') - see mmtools.gromacstools.GromacsData
+       
     
     RETURN VALUES
     chargedRes, a dictionary { resSeq: ('+' or '-' or '0', "resName") } depending on whether the titratible side chain residue charged or netural
@@ -147,7 +150,9 @@ def getChargedNames(atoms):
     The criteria here come from David Mobley renaming fixes in mmtools/mccetools."""
 
     chargedRes = {}    # { resSeq: '+' or '-'}
-    for atom in atoms:
+    
+    if type == 'pdb':
+      for atom in atoms:
         
         # tritratible residues             
         if atom["resName"].strip() == 'HIP':
@@ -194,6 +199,60 @@ def getChargedNames(atoms):
             chargedRes[ atom["resSeq"] ] = ('+', atom["resName"])
         elif atom["resName"].strip() == 'CCYM':
             chargedRes[ atom["resSeq"] ] = ('-', atom["resName"]) 
+            
+            
+    elif type == 'gro':
+      for atom in atoms:
+        
+        # tritratible residues             
+        if atom.resname.strip() == 'HIP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        elif atom.resname.strip() == 'HIS':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'HID':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'HIE':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'LYN':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'LYP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        elif atom.resname.strip() == 'CYN':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'CYM':
+            chargedRes[ atom.resnum ] = ('-', atom.resname)
+        elif atom.resname.strip() == 'ASH':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        elif atom.resname.strip() == 'GLH':
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+             
+
+        # remember all 4-letter residue names, which are the termini
+        if len(atom.resname.strip()) == 4:
+            chargedRes[ atom.resnum ] = ('0', atom.resname)
+        
+        # Additonally, remember the charged names 
+        #
+        # N-termini names     
+        if atom.resname.strip() == 'NHIP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        # gmx ffamber does not have CLYN, only CLYP 
+        elif atom.resname.strip() == 'NLYP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        elif atom.resname.strip() == 'NCYM':
+            chargedRes[ atom.resnum ] = ('-', atom.resname)
+        # C-termini names     
+        elif atom.resname.strip() == 'CHIP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        # gmx ffamber does not have CLYN, only CLYP 
+        elif atom.resname.strip() == 'CLYP':
+            chargedRes[ atom.resnum ] = ('+', atom.resname)
+        elif atom.resname.strip() == 'CCYM':
+            chargedRes[ atom.resnum ] = ('-', atom.resname) 
+            
+            
+    else:
+        print 'Error in getChargedNames():  must have filetype=\'pdb\' or \'gro\''
 
     return chargedRes        
 
@@ -241,8 +300,100 @@ def GromacsStructureFromGrofile(grofile):
     gstruct = GromacsStructure(name=grofile, header="title" )
     gstruct.load(grofile)
     return gstruct
- 
+
+def oneLetterSeqFromGrofile(grofile):
+    """Given a *.gro file, read in the residue sequence, and return a one-letter sequence code
     
+    ***NOTE***:  This will *NOT* extract the correct one-letter code for threading D-amino acids with Modeller!!
+    This is because the residue names and topologies are the same for D- and L-aminoi acids. 
+    
+    The naming conversion is defined in the dictionary  GromacsData.tlc2olc
+    """
+    
+    # get the sequence from the grofile
+    g = GromacsStructureFromGrofile(grofile)
+    g.test(grofile)  # testing   
+    seq = g.atoms.sequence()
+    print 'BEFORE', seq[1:100],'...'
+    # the sequence may contain termini caps, ions and SOL residues, so filter out only the protein residues      
+    i =0
+    while i < len(seq):
+        if tlc2olc.keys().count( seq[i].strip() ) > 0:
+            i=i+1
+        else:
+            seq.pop(i)
+    print 'AFTER', seq
+    # convert the three-letter seq to one-letter:
+    oneletterseq = []
+    for s in seq:
+        oneletterseq.append( tlc2olc[ s.strip() ] )
+    return string.join(oneletterseq,'')
+    
+    
+def mapSequenceOntoGromacsStructure(newseq, gstruct):
+    """Map new GromacsStructure.atoms.sequence resnames onto a similar grofile, overriding any of the previous protonation states.
+    ***NOTE***:  This will leave/remove spurious hydrogens that don't match  the prescribed protonation state!
+    A 'pdb2gmx -ignh' should take care of this.
+    ALSO:  It is assumed that the residue numbering the *.gro file starts at 1.
+    
+    RETURN VALUE
+    gstruct                   The update GromacsStructure object"""
+    
+    oldseq = gstruct.atoms.sequence()
+    
+    oldindices = []
+    newresnames = []
+
+   
+    oldresnum_start = gstruct.atoms[0].resnum
+    newresnum_start = 1
+    
+    print 'oldresnum_start',oldresnum_start
+    
+    # find residue numbering of *just* the protein residues
+    for i in range(0,len(oldseq)):
+        if tlc2olc.keys().count( oldseq[i].strip() ) > 0:
+            oldindices.append( i+oldresnum_start )
+    for i in range(0,len(newseq)):
+        if tlc2olc.keys().count( newseq[i].strip() ) > 0:
+            newresnames.append( newseq[i] )
+            
+    # make sure we get the same number of residues
+    if len(oldindices) != len(newresnames):
+        print 'In mapSequenceOntoGromacsStructure(): len(oldindices) != len(newresnames)'
+        raise Exception
+        
+    # go through the indices and change all the residue names of all
+    for atom in gstruct.atoms:
+        if oldindices.count(atom.resnum) > 0:
+            atom.resname = newresnames[ oldindices.index(atom.resnum) ]
+
+    return gstruct
+
+
+def countSolventResiduesFromGrofile(grofile):
+    """Given a *.gro file, returns the number of Cl ions, Na ions, and the number solvent residues"""
+      
+    g = GromacsStructureFromGrofile(grofile)
+    return countSolventResiduesFromGromacsStructure(g)
+      
+def countSolventResiduesFromGromacsStructure(gstruct):
+    """Given a *.gro file, returns the number of Cl ions, Na ions, and the number solvent residues"""
+      
+    seq = gstruct.atoms.sequence()
+    nClres = 0
+    nNares = 0
+    nsolres = 0
+    for res in seq:
+	if res.count('Cl') > 0:
+	    nClres += 1
+        if res.count('Na') > 0:
+	    nNares += 1	 	
+	if res.count('SOL') > 0:
+	    nsolres += 1
+    return [ nClres, nNares, nsolres ]
+      
+
 def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False):
     """Take in a *.gro Grofile file and write it as a PDB file."""
     
@@ -342,7 +493,7 @@ cap* ATOM     11  OY  LEU     1      -8.069   5.220   6.173  1.00387.74       1S
             atoms[i]['name'] = ' C  '
             nter_atoms.insert(0, atoms.pop(i))
         elif atoms[i]['name'].strip() == 'CAY':
-            atoms[i]['name'] = ' CA '
+            atoms[i]['name'] = 'CH3 '
             nter_atoms.insert(0, atoms.pop(i) )
         elif atoms[i]['name'].strip() == 'OY':
             atoms[i]['name'] = ' O  '
@@ -367,6 +518,49 @@ cap* ATOM     11  OY  LEU     1      -8.069   5.220   6.173  1.00387.74       1S
     
     # write he atoms to PDB -- this will take care of renumbering too
     writeAtomsToPDB(outPdbFile, atoms, renumber = True)
+
+
+def isGrofileProtonationSame( grofile1, grofile2 ):
+    """Checks all the charged residues in a grofile to see if the protonation state is the same.
+    NOTE: The protontation state check does NOT include the charge state of the termini.
+    Example: {1: ('0',NLEU)} means that the leucine sidechain of residue 1 is not charged ('0'), but says nothing about the termini"""
+    
+    g1 = GromacsStructureFromGrofile(grofile1)
+    g2 = GromacsStructureFromGrofile(grofile2)
+    
+    state1 = getChargedNames(g1.atoms, type='gro')
+    state2 = getChargedNames(g2.atoms, type='gro')
+            
+    print grofile1,':',len(g1.atoms), 'atoms'
+    print state1
+    print 
+    print grofile2,':',len(g2.atoms), 'atoms'
+    print state2
+    
+    return (state1 == state2)
+    
+    
+def isPDBProtonationSame( pdbfile1, pdbfile2 ):
+    """Checks all the charged residues in a pdbfile to see if the protonation state is the same.
+    NOTE: The protontation state check does NOT include the charge state of the termini.
+    Example: {1: ('0',NLEU)} means that the leucine sidechain of residue 1 is not charged ('0'), but says nothing about the termini"""
+    
+    atoms1 = readAtomsFromPDB(pdbfile1)
+    atoms2 = readAtomsFromPDB(pdbfile2)
+    
+    state1 = getChargedNames(atoms1, type='pdb')
+    state2 = getChargedNames(atoms2, type='pdb')
+            
+    print pdbfile1,':',len(atoms1), 'atoms'
+    print state1
+    print 
+    print pdbfile2,':',len(atoms2), 'atoms'
+    print state2
+    
+    return (state1 == state2)
+
+    
+    
     
     
     
