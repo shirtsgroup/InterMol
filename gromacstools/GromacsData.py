@@ -28,24 +28,24 @@ DATE="27 February 2007"
 
 # three letter amino acid code to one letter amino acid code
 tlc2olc = {
-"ALA" : "A" ,
+"ALA" : "A" ,      # Non-terminal amino acids, and their ionized names too
 "CYS" : "C" ,
 "CYN" : "C" ,
 "CYX" : "C" ,
 "ASP" : "D" ,
 "GLU" : "E" ,
 "PHE" : "F" ,
-"CPHE" : "F" ,
 "GLY" : "G" ,
 "HIS" : "H" ,
 "HIE" : "H" ,
+"HID" : "H" ,
 "HIP" : "H" ,
 "ILE" : "I" ,
 "NLE" : "J" ,
 "LYS" : "K" ,
+"LYN" : "K" ,
 "LYP" : "K" ,
 "LEU" : "L" ,
-"NLEU" : "L" ,
 "MET" : "M" ,
 "ASN" : "N" ,
 "PRO" : "P" ,
@@ -55,7 +55,63 @@ tlc2olc = {
 "THR" : "T" ,
 "VAL" : "V" ,
 "TRP" : "W" ,
-"TYR" : "Y" 
+"TYR" : "Y" ,
+"CALA" : "A" ,      # C-terminal amino acids, and their ionized names too
+"CCYS" : "C" ,
+"CCYN" : "C" ,
+"CCYX" : "C" ,
+"CASP" : "D" ,
+"CGLU" : "E" ,
+"CPHE" : "F" ,
+"CGLY" : "G" ,
+"CHIS" : "H" ,
+"CHIE" : "H" ,
+"CHID" : "H" ,
+"CHIP" : "H" ,
+"CILE" : "I" ,
+"CNLE" : "J" ,
+"CLYS" : "K" ,
+"CLYN" : "K" ,
+"CLYP" : "K" ,
+"CLEU" : "L" ,
+"CMET" : "M" ,
+"CASN" : "N" ,
+"CPRO" : "P" ,
+"CGLN" : "Q" ,
+"CARG" : "R" ,
+"CSER" : "S" ,
+"CTHR" : "T" ,
+"CVAL" : "V" ,
+"CTRP" : "W" ,
+"CTYR" : "Y" ,
+"NALA" : "A" ,      # N-terminal amino acids, and their ionized names too
+"NCYS" : "C" ,
+"NCYN" : "C" ,
+"NCYX" : "C" ,
+"NASP" : "D" ,
+"NGLU" : "E" ,
+"NPHE" : "F" ,
+"NGLY" : "G" ,
+"NHIS" : "H" ,
+"NHIE" : "H" ,
+"NHID" : "H" ,
+"NHIP" : "H" ,
+"NILE" : "I" ,
+"NNLE" : "J" ,
+"NLYS" : "K" ,
+"NLYN" : "K" ,
+"NLYP" : "K" ,
+"NLEU" : "L" ,
+"NMET" : "M" ,
+"NASN" : "N" ,
+"NPRO" : "P" ,
+"NGLN" : "Q" ,
+"NARG" : "R" ,
+"NSER" : "S" ,
+"NTHR" : "T" ,
+"NVAL" : "V" ,
+"NTRP" : "W" ,
+"NTYR" : "Y" 
 } 
 
 ### classes ###
@@ -271,6 +327,16 @@ class GromacsStructure:
 		else: raise GroFileNotFound
 		self.name      = filename
 		return 
+
+	def removeatom(self,i):
+		"""Remove the ith atom for the GromacsStructure.atoms list, recalculating the number of atoms."""
+		if i < len(self.atoms):
+			self.atoms.pop(i)
+		        self.natoms = len(self.atoms)
+		else:
+			raise BadAtomNumber
+		return
+
 
 	def test(self,filename):
 	        gro=GromacsStructure()
