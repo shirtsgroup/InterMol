@@ -313,6 +313,15 @@ def oneLetterSeqFromGrofile(grofile):
     # get the sequence from the grofile
     g = GromacsStructureFromGrofile(grofile)
     g.test(grofile)  # testing   
+    return oneLetterSeqFromGromacsStructure(g)
+
+def oneLetterSeqFromGromacsStructure(g):
+    """Given a GromacsStructure, read in the residue sequence, and return a one-letter sequence code
+        ***NOTE***:  This will *NOT* extract the correct one-letter code for threading D-amino acids with Modeller!!
+    This is because the residue names and topologies are the same for D- and L-aminoi acids. 
+    
+    The naming conversion is defined in the dictionary  GromacsData.tlc2olc    """
+
     seq = g.atoms.sequence()
     print 'BEFORE', seq[1:100],'...'
     # the sequence may contain termini caps, ions and SOL residues, so filter out only the protein residues      
