@@ -5,6 +5,7 @@ from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
 from openeye.oeproton import *
+from openeye.oeiupac import *
 import os
 
 """Ligtools:
@@ -14,6 +15,7 @@ import os
 - generate_conf_from_file: Generates (and optionally writes to file) a ligand conformation (or more than one) for a molecule file of arbitrary (OE readable) type; returns it.
 - fit_mol_to_refmol: Fit a OE molecule (multi-conformer) to a reference molecule (single conformer, i.e. a ligand structure from a pdb file); write out an output file of the best N matches, where N is specified.
 - EnumerateProtonation to enumerate possible protonation states.
+- name_to_mol2: Generates mol2 file from IUPAC name using lexichem, Omega
 
 Requirements: 
 - Amber and Antechamber installations in your path
@@ -484,3 +486,34 @@ def EnumerateProtonation( mol, outfile, maxstates = 500 ):
      typer.Reset()
    
    ofile.close()
+
+
+
+def name_to_mol2(IUPAC_name, output_mol2_filename):
+   """Generate a mol2 file of a small molecule from its IUPAC name.
+
+   ARGUMENTS
+     IUPAC_name (string) - IUPAC name of molecule to generate
+     output_mol2_filename (string) - filename of mol2 file to be written
+
+   NOTES
+     OpenEye LexiChem's OEParseIUPACName is used to generate the molecle, and Omega is used to generate a single conformation.
+
+   EXAMPLES
+     # Generate a mol2 file for phenol.
+     name_to_mol2('phenol', 'phenol.mol2')
+     
+   """
+
+   # Create an OEMol molecule from IUPAC name.
+   molecule = OEMol() # create a molecule
+   status = OEParseIUPACName(molecule, IUPAC_name) # populate the molecule from the IUPAC name
+   OEAssignAromaticFlags(molecule) # check aromaticity.
+   OEAddExplicitHydrogens(molecule) # add hydrogens
+   molecule.SetTitle(IUPAC_name) # Set molecule title to IUPAC name.
+
+   # Generate conformation with Omega and write to mol2 file.
+   generate_conf(molecule, output_mol2_filename)
+
+   return
+
