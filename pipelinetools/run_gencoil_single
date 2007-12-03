@@ -1,0 +1,1 @@
+python ./gencoil.py -s 1DIV_ntl9-39.seq -o test -n 10 -t 300.
