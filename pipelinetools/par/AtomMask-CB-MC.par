@@ -1,0 +1,30 @@
+DIST 1
+
+CA CA 1
+CA N 1
+CA O 1
+CA C 1
+CA CB 1
+CA MC 1
+
+N N 1
+N O 1
+N C 1
+N CB 1
+N MC 1
+
+O O 1
+O C 1
+O CB 1
+O MC 1
+O HN 1
+
+C C 1
+C CB 1
+C MC 1
+
+CB CB 1
+
+MC MC 1
+
+MC CB 1
