@@ -9,18 +9,24 @@ class Setup(object):
     """A class to keep track of parameters important to the system setup."""
 
     # editconf parms
-    self.boxType = 'octahedron'            #  -bt   enum   tric  Box type for -box and -d: tric, cubic, dodecahedron or octahedron
+    self.boxType = 'octahedron'            #  -bt   enum   tric  Box type for -box and -d: 'tric', 'cubic', 'dodecahedron' or 'octahedron'
     self.boxSoluteDistance = '0.9'    #  -d   real      0  Distance between the solute and the box
     self.useAbsBoxSize = False      # whether use absolute or relative box size
     self.absBoxSize = '3.0'
     
-    # salt conditions
+    # salt conditions (defaults)
     self.salt = 'NaCl'                #  Supported:  'NaCl' or 'SodiumChloride'
     self.saltconc = 0.050             #  Molar salt concentration
     self.positiveIonName = 'Na'
     self.negativeIonName = 'Cl'
+    self.positiveIonCharge = 1
+    self.negativeIonCharge = -1 
     self.positiveStoichiometry = 1
     self.negativeStoichiometry = 1
+
+    # cosolvent conditions
+    self.cosolvent = None
+    self.cosolventconc = 0.0
    
     # setup from file?  THIS is still a DUMMY function....
     if infile != None:
@@ -43,12 +49,30 @@ class Setup(object):
         print 'salt type', salt, 'not supported!  Try \'NaCl\'.  Exiting.'
 	sys.exit(1)
     return None
-  
+ 
+  def setCosolventConditions(self, cosolventname, concentration):
+    """Set ion names and stoichiometry for the chosen salt."""
+    if cosolventname == 'gnd':
+      self.cosolvent = 'gnd'                #  Supported:  'NaCl' or 'SodiumChloride'
+      self.cosolventconc = concentration            #  Molar salt concentration
+
+    else:
+        print 'salt type', salt, 'not supported!  Try \'NaCl\'.  Exiting.'
+        sys.exit(1)
+    return None
+ 
   def set_boxSoluteDistance(self, boxSoluteDistance):
     """Set the distance between the solute (protein) and the periodic box.
     INPUT
     boxSoluteDistance - distance in nm"""
     self.boxSoluteDistance = str(boxSoluteDistance)
+    return None
+ 
+  def set_boxType(self, boxType):
+    """Set the distance between the solute (protein) and the periodic box.
+    INPUT
+    boxType - can be either ''tric', 'cubic', 'dodecahedron' or 'octahedron'."""
+    self.boxType = str(boxType)
     return None
  
   def setUseAbsBoxSize(self, useAbsBoxSize):
@@ -70,4 +94,24 @@ class Setup(object):
   def write(self, filename):
     """Write parameters to a GromacsSystemSetup text file."""
     return None
-  
+
+  def __repr__(self): 
+    """A class to keep track of parameters important to the system setup."""
+
+    # editconf parms
+    outstr = ''
+    outstr = outstr + '%-30s %s\n'%( 'self.boxType',repr(self.boxType) )
+    outstr = outstr + '%-30s %s\n'%( 'self.boxSoluteDistance', repr(self.boxSoluteDistance ) )
+    outstr = outstr + '%-30s %s\n'%( 'self.useAbsBoxSize', repr(self.useAbsBoxSize) )
+    outstr = outstr + '%-30s %s\n'%( 'self.absBoxSize', repr(self.absBoxSize) )
+    
+    # salt conditions
+    outstr = outstr + '%-30s %s\n'%(  'self.salt', repr(self.salt  ) )
+    outstr = outstr + '%-30s %s\n'%(  'self.saltconc', repr(self.saltconc  ) )
+    outstr = outstr + '%-30s %s\n'%(  'self.positiveIonName', repr(self.positiveIonName  ) )
+    outstr = outstr + '%-30s %s\n'%(  'self.negativeIonName', repr(self.negativeIonName  ) )
+    outstr = outstr + '%-30s %s\n'%(  'self.positiveStoichiometry', repr(self.positiveStoichiometry  ) )
+    outstr = outstr + '%-30s %s\n'%(  'self.negativeStoichiometry', repr(self.negativeStoichiometry  ) )
+    
+    return outstr
+
