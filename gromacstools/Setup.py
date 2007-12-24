@@ -1,5 +1,6 @@
 # Change Log:
 # 06/26/07 GRB - added parameters/functions for using absolute box size
+# 12/21/07 JDC - added salt information for CaCl2 for kinase project
 
 import sys,os,tempfile, string
 
@@ -45,8 +46,18 @@ class Setup(object):
       self.positiveIonStoichiometry = 1
       self.negativIoneStoichiometry = 1
 
+    elif saltname == 'CaCl2' or saltname=='calcium chloride':
+      self.salt = 'CaCl2'                #  Supported:  'CaCl2' or 'CalciumChloride'
+      self.saltconc = saltconcentration            #  Molar salt concentration
+      self.positiveIonName = 'Ca'
+      self.negativeIonName = 'Cl'
+      self.positiveIonCharge = 2
+      self.negativeIonCharge = -1
+      self.positiveIonStoichiometry = 2
+      self.negativIoneStoichiometry = 1
+
     else:
-        print 'salt type', salt, 'not supported!  Try \'NaCl\'.  Exiting.'
+        print 'salt type', salt, 'not supported!  Try \'NaCl\' or \'CaCl2\'.  Exiting.'
 	sys.exit(1)
     return None
  
