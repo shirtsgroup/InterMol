@@ -281,6 +281,11 @@ class System:
         self.files.set_mdpEquilibration('quicktest_equil1.mdp')    # equil2 comes later....    
         self.files.set_mdpSimulation('quicktest_grompp.mdp')
 
+    if self.protocol=='shirts-free-energy':
+        self.files.set_mdpMinimization('shirts-free-energy-min1.mdp')
+        self.files.set_mdpEquilibration('shirts-free-energy-equil1.mdp')    # equil2 comes later....    
+        self.files.set_mdpSimulation('shirts-free-energy-grompp.mdp')
+
     if self.protocol=='implicitPS3_AGBNP':
         self.files.set_mdpMinimization('implicitPS3_AGBNP_min1.mdp')
         self.files.set_mdpEquilibration('implicitPS3_AGBNP_equil1.mdp')
@@ -641,7 +646,7 @@ class System:
       self.files.increment_top()    # must increment filename for any new gmx file 
       self.useTIP3P( self.files.topfile )
 	      
-      if (self.protocol == 'racecar2') | (self.protocol == 'racecar3') | (self.protocol == 'quicktest'):
+      if (self.protocol == 'racecar2') | (self.protocol == 'racecar3') | (self.protocol == 'quicktest') | (self.protocol == 'shirts-free-energy'):
   
 	  # run minimimzation once more with the new ions
 	  ### make a tpr file with grompp
@@ -673,6 +678,8 @@ class System:
 	      self.files.set_mdpEquilibration('racecar3_equil2.mdp')
 	  elif (self.protocol == 'quicktest'): 
 	      self.files.set_mdpEquilibration('quicktest_equil2.mdp')
+	  elif (self.protocol == 'shirts-free-energy'):
+	      self.files.set_mdpEquilibration('shirts-free-energy-equil2.mdp')
 	  else:
 	      raise "Protocol Error!"
   
@@ -922,7 +929,7 @@ class System:
     self.files.increment_top()    # must increment filename for any new gmx file 
     self.useTIP3P( self.files.topfile )
 	    
-    if (self.protocol == 'racecar2') | (self.protocol == 'racecar3') | (self.protocol == 'quicktest'):
+    if (self.protocol == 'racecar2') | (self.protocol == 'racecar3') | (self.protocol == 'quicktest') | (self.protocol == 'shirts-free-energy'):
 
 	# run minimimzation once more with the new ions
 	### make a tpr file with grompp
@@ -954,6 +961,8 @@ class System:
             self.files.set_mdpEquilibration('racecar3_equil2.mdp')
         elif (self.protocol == 'quicktest'): 
             self.files.set_mdpEquilibration('quicktest_equil2.mdp')
+        elif (self.protocol == 'shirts-free-energy'): 
+            self.files.set_mdpEquilibration('shirts-free-energy-equil2.mdp')
         else:
             raise "Protocol Error!"
 
@@ -1224,7 +1233,7 @@ class System:
     return [np, nn, (nwaters-np-nn)]
 
 
-  def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol', 'bath'], implicitOptions=None):
+  def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol', 'bath','system'], implicitOptions=None):
     """Make an *.ndx file with atom groups corresponding to a list of commmon-sense names
     given in the groups=[] list.  Supported group names so far:
     
@@ -1232,12 +1241,14 @@ class System:
 	sol                All solvent atoms.  (protein + sol + ions) shouuld equal (system) !
         ions               All ions
 	bath               (sol + ions)
+	system             All atoms
 	
     Note: This subroutine assumes it's being called from the current working directory
     """
  
     [protein_residues, ion_residues, solvent_residues] = self.find_residue_groups(grofile)
     bath_residues = ion_residues + solvent_residues
+    all_residues = bath_residues + protein_residues
 
     if self.debug:
       print 'protein_residues', protein_residues
@@ -1288,7 +1299,13 @@ class System:
 	    fout.write('%d, '%res)  
 	fout.write('%d\n\n'%bath_residues[-1])
 
-        
+    if groups.count('system') > 0:     
+      if len(all_residues) > 0:
+        fout.write( '[ system ]\nresidues ' )
+	for res in all_residues[0:-1]:
+	    fout.write('%d, '%res)  
+	fout.write('%d\n\n'%all_residues[-1])
+     
     fout.close()
    
     indexGroups = getSelections( selectionsFile, grofile )
@@ -1307,7 +1324,11 @@ class System:
 
   def find_residue_groups(self, grofile):
     """From a grofile, read through the residue names and return three lists of numbers:
-      [protein_residues, ion_residues, solvent_residues]."""
+      [protein_residues, ion_residues, solvent_residues].
+      Protein residues are anything that are not ion or solvent.
+      Ions and solvents are defined in sets in this function.
+      TODO: move definition of ion/solvent to class ctor
+    """
 
     # First, scan through the grofile for the residue numbers that correspond to the protein and solvent
     fin = open(grofile, 'r')
@@ -1318,6 +1339,17 @@ class System:
     protein_residues = []
     solvent_residues = []
     ion_residues = []
+
+    import sets
+
+    ion_types = sets.Set()
+    for i in ['Na ','Cl ','Na+','Cl-','Mg ','Ca ']:
+        ion_types.add(i)
+
+    solvent_types = sets.Set()
+    for i in ['SOL','HOH']:
+        solvent_types.add(i)
+
     res = -1
     lastRes = -1
     for line in lines:    # these lines should all have atoms on them
@@ -1331,10 +1363,12 @@ class System:
         res += 1
         lastRes = int(line[0:5])
 
-      if (line[5:8] == 'SOL') or (line[5:8] == 'HOH'):
+      restype = line[5:8]
+
+      if (restype in solvent_types):
           if solvent_residues.count(res) == 0:
             solvent_residues.append(res)
-      elif (line[5:8] == 'Na ') or (line[5:8] == 'Cl '):
+      elif (restype in ion_types):
           if ion_residues.count(res) == 0:
             ion_residues.append(res)
       else:

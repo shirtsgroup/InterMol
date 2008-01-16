@@ -54,10 +54,21 @@ class Setup(object):
       self.positiveIonCharge = 2
       self.negativeIonCharge = -1
       self.positiveIonStoichiometry = 2
-      self.negativIoneStoichiometry = 1
+      self.negativeIonStoichiometry = 1
+
+    elif saltname == 'MgCl2' or saltname=='magnesium chloride':
+      self.salt = 'MgCl2'                #  Supported:  'MgCl2' or 'MagnesiumChloride'
+      self.saltconc = saltconcentration            #  Molar salt concentration
+      self.positiveIonName = 'Mg'
+      self.negativeIonName = 'Cl'
+      self.positiveIonCharge = 2
+      self.negativeIonCharge = -1
+      self.positiveIonStoichiometry = 2
+      self.negativeIonStoichiometry = 1
+
 
     else:
-        print 'salt type', salt, 'not supported!  Try \'NaCl\' or \'CaCl2\'.  Exiting.'
+        print 'salt type', saltname, 'not supported!  Try \'NaCl\' or \'CaCl2\' or \'MgCl2\'.  Exiting.'
 	sys.exit(1)
     return None
  
