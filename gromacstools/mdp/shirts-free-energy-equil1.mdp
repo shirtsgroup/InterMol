@@ -1,0 +1,113 @@
+; VARIOUS PREPROCESSING OPTIONS = 
+title                    = MRS
+cpp                      = /usr/bin/cpp
+include                  = 
+define                   = 
+
+; RUN CONTROL PARAMETERS = 
+integrator               = vv
+; start time and timestep in ps = 
+tinit                    = 0
+dt                       = 0.002
+nsteps                   = 500
+; mode for center of mass motion removal = 
+comm-mode                = None
+; number of steps for center of mass motion removal = 
+nstcomm                  = 0
+; group(s) for center of mass motion removal = 
+comm-grps                = 
+
+freezegrps		 = protein ;from racecar2-equil1
+freezedim		 = Y Y Y
+
+
+; OUTPUT CONTROL OPTIONS = 
+; Output frequency for coords (x), velocities (v) and forces (f) = 
+nstxout                  = 0
+nstvout                  = 0
+nstfout                  = 0
+; Output frequency for energies to log file and energy file = 
+nstlog                   = 10
+nstenergy                = 100
+; Output frequency and precision for xtc file = 
+nstxtcout                = 5000
+xtc-precision            = 10000
+; This selects the subset of atoms for the xtc file. You can = 
+; select multiple groups. By default all atoms will be written. = 
+xtc-grps                 = 
+; Selection of energy groups = 
+energygrps               = 
+
+; NEIGHBORSEARCHING PARAMETERS = 
+; nblist update frequency = 
+nstlist                  = 10
+; ns algorithm (simple or grid) = 
+ns_type                  = grid
+; Periodic boundary conditions: xyz or no = 
+pbc                      = xyz
+; nblist cut-off         = 
+rlist                    = 0.9
+domain-decomposition     = no
+
+; OPTIONS FOR ELECTROSTATICS AND VDW = 
+; Method for doing electrostatics = 
+coulombtype              = PME
+rcoulomb-switch          = 0
+rcoulomb                 = 0.75
+; Dielectric constant (DC) for cut-off or DC of reaction field = 
+epsilon-r                = 1
+; Method for doing Van der Waals = 
+vdw-type                 = Switch
+; cut-off lengths        = 
+rvdw-switch              = 0.70
+rvdw                     = 0.75
+; Apply long range dispersion corrections for Energy and Pressure = 
+DispCorr                 = AllEnerPres
+; Spacing for the PME/PPPM FFT grid = 
+fourierspacing           = 0.10
+; FFT grid size, when a value is 0 fourierspacing will be used = 
+fourier_nx               = 0
+fourier_ny               = 0
+fourier_nz               = 0
+; EWALD/PME/PPPM parameters = 
+pme_order                = 6
+ewald_rtol               = 1e-06
+ewald_geometry           = 3d
+epsilon_surface          = 0
+optimize_fft             = no
+
+; OPTIONS FOR WEAK COUPLING ALGORITHMS = 
+; Temperature coupling   = 
+Tcoupl                   = AndersenII
+
+; Groups to couple separately = 
+tc-grps                  = system
+; Time constant (ps) and reference temperature (K) = 
+tau_t                    = 2.0
+ref_t                    = 298
+; Pressure coupling      = 
+Pcoupl                   = no
+;Pcoupltype               = isotropic
+; Time constant (ps), compressibility (1/bar) and reference P (bar) = 
+;tau_p                    = 1.67
+;compressibility          = 4.5e-5
+;ref_p                    = 1.01325
+
+; GENERATE VELOCITIES FOR STARTUP RUN = 
+gen_vel                  = yes
+gen_temp                 = 298
+gen_seed                 = 2007 
+
+; OPTIONS FOR BONDS     = 
+constraints              = hbonds
+; Type of constraint algorithm = 
+constraint-algorithm     = shake
+; Do not constrain the start configuration = 
+unconstrained-start      = no
+; Use successive overrelaxation to reduce the number of shake iterations = 
+Shake-SOR                = no
+; Relative tolerance of shake = 
+shake-tol                = 1e-12
+
+; Free energy control stuff = 
+free-energy              = no
