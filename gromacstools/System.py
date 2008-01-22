@@ -25,7 +25,9 @@
 # Written by Vincent Voelz, Stanford University (c) 2007
 # ----------------------------------------------------------------------
 # MODIFICATION HISTORY
-#
+
+
+# 12/29/07 VAV - Fixed some glitches in make_ndx() and find_residue_groups() so System.make_ndx can be used without prepare()
 # 10/01/07 VAV - Added racecar3 protocol
 #                fixed the -H14 flag in pdb2gmx
 #                in make_ndx() created (if protocol=='racecar3') atomgroup "bath" which is the solvent and the ions, to be controlled
@@ -345,9 +347,6 @@ class System:
             if self.setup.cosolvent == 'gnd':
                 # solvate the box with water and guanidinium 
 	        self.Cosolvate()
-                editconf = '%s/genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.topfile)
-	        self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-	        self.files.increment_gro()    # must increment filename for any new gmx file 
             else:
                 # solvate the box with plain water 
                 editconf = '%s/genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.topfile)
@@ -474,75 +473,35 @@ class System:
     self.postSolvationPreparationSteps()  
 
 
-  def Cosolvate(self):
+  def Cosolvate(self, cosolvent='gnd'):
       """Use the genbox feature to co-solvate one solvent molecule at a time....."""
 
-      from mmtools.pdbtools import *      # need for countSolventResiduesFromGrofile()
-
-      # Solvate the box with water to see how many will fit in the box 
-      editconf = '%s/genbox -cp %s -cs ffamber_tip3p.gro -o %s -p %s'%(os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.topfile)
-      self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-      [ nClres, nNares, nsolres ] = countSolventResiduesFromGrofile(self.files.next_gro())
-      # don't update the file increments, we just need the current file to count the water 
-      #self.files.increment_gro()    # must increment filename for any new gmx file 
-      print '**** nClres, nNares, nsolres ****', nClres, nNares, nsolres
-
-      water_moles_per_L = 55.55
-      cosolv_fraction = self.setup.cosolventconc/(self.setup.cosolventconc + water_moles_per_L) 
-      ncosolv = int(cosolv_fraction*float(nsolres))
-
-      # let's try to conserve the total mass, in the case the cosolvent is much larger than the solvent (water)   
-      water_mw = 18.0
-      total_mass = float(nsolres*water_mw)
-      water_grofile = os.path.join(os.environ['GMXLIB'],'ffamber_tip3p_single.gro')
-      if self.setup.cosolvent == 'gnd':
-          cosolv_mw = 60.07
-          cosolv_grofile = os.path.join(os.environ['GMXLIB'],'GND.gro')
+      # find the cosolvent grofile that's closest to the desired concentration
+      if cosolvent != 'gnd':
+          print 'mmtools.gromacstools.System ERROR: cosolvent %s is not supported!'%cosolvent
+          raise IOError
       else:
-          print 'Non gnd cosolvents not currently supported.'
-          sys.exit(1)
-      unscaled_mass  = ncosolv*cosolv_mw + (nsolres - ncosolv)*water_mw
-      scaling_factor = total_mass/unscaled_mass
+          cosolvent_dir = os.path.join(os.environ['GMXLIB'],'cosolvent_boxes/gnd')
+          cs_grofiles = os.listdir(cosolvent_dir)
+          howclose = 9999999.9
+          for cs_grofile in cs_grofiles:
+            if cs_grofile.count('.gro') > 0:
+              # parse the molarity from the filename
+              molarity =  float( cs_grofile.replace('GndHCl_','').replace('M.gro','') )
+              if abs(molarity - self.setup.cosolventconc) < howclose:
+                  howclose = abs(molarity - self.setup.cosolventconc)
+                  cosolvent_grofile = cs_grofile 
+      print 'self.setup.cosolventconc =',self.setup.cosolventconc,' ==> using cosolvent_grofile =',os.path.join(cosolvent_dir,cosolvent_grofile)
+      editconf = '%s/genbox -cp %s -cs %s -o %s -p %s'%(os.environ['GMXPATH'], self.files.grofile, os.path.join(cosolvent_dir,cosolvent_grofile), self.files.next_gro(), self.files.topfile)
+      self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+      self.files.increment_gro()    # must increment filename for any new gmx file 
+ 
+      # to correct the flubs from genbox,     # make a topology file that uses ffamber_tip3p
+      pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -p %s -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.grofile, self.files.next_top() )
+      self.rungmx(pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+      self.files.increment_top()
+      self.useTIP3P( self.files.topfile )    
 
-      ncosolv = int(scaling_factor*float(ncosolv))
-      nwater = int(scaling_factor*float(nsolres))
-
-      print 'Adding: ncosolv =', ncosolv, '    nwater =', nwater
-      print '*******************************'
-
-      waters_added = 0
-      cosolv_added = 0
-      while (ncosolv + nwater) > 0:     
-        r = random.random()
-        print 'random number r =', r
-        print 'cosolv_fraction', cosolv_fraction
-        #if ((r < cosolv_fraction) | nwater == 0) & (ncosolv > 0):
-        if (r < cosolv_fraction):
-          cosolv_added += 1
-          # add cosolv molecule 
-          print '### Adding cosolvent %d of %d total needed ###'%(cosolv_added,(ncosolv + nwater))
-          editconf = '%s/genbox -cp %s -nmol %d -try 100 -seed %d -ci %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.grofile, 1, (ncosolv+nwater), cosolv_grofile, self.files.grofile, self.files.topfile)
-          self.rungmx( editconf )
-          ncosolv -= 1
-        else: 
-          # add water -- THIS SUCKS.  The 3.1.4 genbox only works when inserting ONE molecule, so let's get loop over inserting one solvengt molecule at a time...    
-          waters_added += 1
-          print '### Adding water %d of %d total needed ###'%(waters_added,(ncosolv + nwater))
-          editconf = '%s/genbox -cp %s -nmol %d -try 100 -seed %d -ci %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.grofile, 1, (ncosolv+nwater), water_grofile, self.files.grofile, self.files.topfile)
-          self.rungmx( editconf )
-          nwater -= 1
-
-        # round up those damn '#*' backup files and delete them!
-        if (ncosolv+nwater) % 100 == 0:
-            fields = self.files.grofile.split('/')
-            print 'fields', fields
-            fields.pop()
-            wkdirglob = string.join(fields,'/') + '/#*'
-            print 'wkdirglob'
-            damnedBackupFiles = glob.glob(  wkdirglob )
-            print 'damnedBackupFiles',damnedBackupFiles
-            for dbf in damnedBackupFiles:
-                os.unlink(dbf)
 
 
     
@@ -1125,6 +1084,8 @@ class System:
       if line[0:8] == '#include':
         if line.count('#include "%s.itp"'%self.useff) > 0:
             fout.write('#include "%s.itp"\n#include "ffamber_tip3p.itp"\n'%self.useff)
+            if self.setup.cosolvent == 'gnd':
+                fout.write('#include "GND.itp"\n')
         elif line.count('#include "flexspc.itp"') > 0:
            continue
         elif line.count('#include "spc.itp"') > 0:
@@ -1233,7 +1194,8 @@ class System:
     return [np, nn, (nwaters-np-nn)]
 
 
-  def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol', 'bath','system'], implicitOptions=None):
+  def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol', 'bath','system'], implicitOptions=None, debug=False):
+
     """Make an *.ndx file with atom groups corresponding to a list of commmon-sense names
     given in the groups=[] list.  Supported group names so far:
     
@@ -1250,7 +1212,7 @@ class System:
     bath_residues = ion_residues + solvent_residues
     all_residues = bath_residues + protein_residues
 
-    if self.debug:
+    if debug:
       print 'protein_residues', protein_residues
       print 'ion_residues', ion_residues
       print 'solvent_residues', solvent_residues
