@@ -243,6 +243,46 @@ def normalizeMolecule(molecule):
 
    return molecule
 #=============================================================================================
+def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False):   
+   """Enumerate conformations of the molecule with OpenEye's Omega.
+
+   ARGUMENTS
+   molecule (OEMol) - molecule to enumerate conformations for
+
+   OPTIONAL ARGUMENTS
+     include_original (boolean) - if True, original conformation is included (default: False)
+     maxconfs (integer) - if set to an integer, limits the maximum number of conformations to generated -- maximum of 120 (default: None)
+     threshold (real) - threshold in RMSD (in Angstroms) for retaining conformers -- lower thresholds retain more conformers (default: None)
+     torsionlib (string) - if a path to an Omega torsion library is given, this will be used instead (default: None)
+     
+   RETURN VALUES
+     expanded_molecule - molecule with expanded conformations
+     
+   """
+   # Initialize omega
+   omega = OEOmega()
+
+   # Set maximum number of conformers.
+   if maxconfs: omega.SetMaxConfs(maxconfs)
+     
+   # Set whether given conformer is to be included.
+   omega.SetIncludeInput(include_original)
+   
+   # Set RMSD threshold for retaining conformations.
+   if threshold: omega.SetRMSThreshold(threshold) 
+ 
+   # If desired, do a torsion drive.
+   if torsionlib: omega.SetTorsionLibrary(torsionlib)
+
+   # Create copy of molecule.
+   expanded_molecule = OEMol(molecule)   
+
+   # Enumerate conformations.
+   omega(expanded_molecule)
+
+   # return conformationally-expanded molecule
+   return expanded_molecule
+#=============================================================================================
 def assignPartialCharges(molecule, charge_model = 'am1bcc'):
    """Assign partial charges to a molecule using OEChem oeproton.
 
@@ -392,7 +432,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
    working_directory = tempfile.mkdtemp()
    old_directory = os.getcwd()
    os.chdir(working_directory)
-   if verbose: print "Working directory is %(working_directory)s"
+   if verbose: print "Working directory is %(working_directory)s" % vars()
 
    # Write molecule to mol2 file.
    tripos_mol2_filename = os.path.join(working_directory, 'tripos.mol2')
@@ -411,8 +451,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
       command += ' -c %(charge_model)s -nc %(formal_charge)d' % vars()   
    if verbose: print command
    output = commands.getoutput(command)
-   if verbose: print output
-   # TODO: SHOW WARNINGS, CHECK FOR ERRORS
+   if verbose or (output.find('Warning')>=0): print output   
    
    # Generate frcmod file for additional GAFF parameters.
    frcmod_filename = os.path.join(working_directory, 'gaff.frcmod')
@@ -678,8 +717,6 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       # Determine list of rotatable bonds to perturb.
       rotatable_bonds = list()
       for bond in molecule.GetBonds():
-         # DEBUG
-         print "%d %d" % (bond.GetBgnIdx(), bond.GetEndIdx())
          # This test is used because bond.IsRotor() doesn't seem to work correctly (e.g. phenol).
          if (not bond.IsAromatic()) and (bond.GetOrder() == 1) and (bond.GetBgn().GetDegree() > 1) and (bond.GetEnd().GetDegree() > 1):
             i = atom_indices[bond.GetBgn().GetName()]
@@ -801,7 +838,6 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
    file.close()
 
    return
-
 #=============================================================================================
 def top_to_itp(topfile, outputitp, moleculetype = None):
    """Transform a gromacs .top topology file into an .itp file suitable for inclusion.
@@ -945,53 +981,15 @@ def modifySubstructureName(mol2file, name):
    return
 
 #=============================================================================================
-def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False):   
-   """Enumerate conformations of the molecule with OpenEye's Omega.
-
-   ARGUMENTS
-   molecule (OEMol) - molecule to enumerate conformations for
-
-   OPTIONAL ARGUMENTS
-     include_original (boolean) - if True, original conformation is included (default: False)
-     maxconfs (integer) - if set to an integer, limits the maximum number of conformations to generated -- maximum of 120 (default: None)
-     threshold (real) - threshold in RMSD (in Angstroms) for retaining conformers -- lower thresholds retain more conformers (default: None)
-     torsionlib (string) - if a path to an Omega torsion library is given, this will be used instead (default: None)
-     
-   RETURN VALUES
-     expanded_molecule - molecule with expanded conformations
-     
-   """
-   # Initialize omega
-   omega = OEOmega()
-
-   # Set maximum number of conformers.
-   if maxconfs: omega.SetMaxConfs(maxconfs)
-     
-   # Set whether given conformer is to be included.
-   omega.SetIncludeInput(include_original)
-   
-   # Set RMSD threshold for retaining conformations.
-   if threshold: omega.SetRMSThreshold(threshold) 
- 
-   # If desired, do a torsion drive.
-   if torsionlib: omega.SetTorsionLibrary(torsionlib)
-
-   # Create copy of molecule.
-   expanded_molecule = OEMol(molecule)   
-
-   # Enumerate conformations.
-   omega(expanded_molecule)
-
-   # return conformationally-expanded molecule
-   return expanded_molecule
-#=============================================================================================
 # TEST DRIVER
 if __name__ == '__main__':
-   
-   from mmtools.moltools.ligtools import *
+
+   # Test all capabilities of ligandtools.   
+   from mmtools.moltools.ligandtools import *
 
    # Create a phenol molecule.
    molecule = createMoleculeFromIUPAC('phenol')
+   # molecule = readMolecule('../jnk3/data-from-openeye/jnk.aff/jnk.aff-1.sdf', normalize = True)
 
    # Write mol2 file for the molecule.
    writeMolecule(molecule, 'phenol.mol2')
@@ -1002,21 +1000,18 @@ if __name__ == '__main__':
    # Write charged molecule.
    writeMolecule(charged_molecule, 'phenol-am1bcc-openeye.mol2')
 
-   # COMMENTED OUT BECAUSE ATOM TYPES GET JACKED UP
-   # Charge the molecule with Antechamber.   
-   # charged_molecule = assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc')
-   # Write charged molecule.
-   # writeMolecule(charged_molecule, 'phenol-am1bcc-antechamber.mol2')
-   
    # Write GAFF parameters for AMBER
-   parameterizeForAmber(charged_molecule, topology_filename = 'amber.prmtop', coordinate_filename = 'amber.crd', resname = 'PHE')
+   parameterizeForAmber(charged_molecule, topology_filename = 'phenol.prmtop', coordinate_filename = 'phenol.crd', resname = 'PHE')
 
    # Write GAFF parameters for gromacs.
-   parameterizeForGromacs(charged_molecule, topology_filename = 'gromacs.top', coordinate_filename = 'gromacs.gro', resname = 'PHE')
+   parameterizeForGromacs(charged_molecule, topology_filename = 'phenol.top', coordinate_filename = 'phenol.gro', resname = 'PHE')
 
    # Write GAFF parameters for gromacs, using antechamber to generate AM1-BCC charges.
-   parameterizeForGromacs(molecule, topology_filename = 'gromacs-antechamber.top', coordinate_filename = 'gromacs-antechamber.gro', charge_model = 'bcc', resname = 'PHE')
+   parameterizeForGromacs(molecule, topology_filename = 'phenol-antechamber.top', coordinate_filename = 'phenol-antechamber.gro', charge_model = 'bcc', resname = 'PHE')
 
    # Modify gromacs topology file for alchemical free energy calculation.
-   perturbGromacsTopology('gromacs.top', molecule)
+   perturbGromacsTopology('phenol.top', molecule)
 
+   # Convert .top file to .itp file.
+   top_to_itp('phenol.top', 'phenol.itp', moleculetype = 'phenol')
+   
