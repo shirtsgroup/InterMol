@@ -26,6 +26,8 @@ Revised by J. D. Chodera, 1/20/2008.
 """
 
 #=============================================================================================
+# METHODS FOR READING, EXTRACTING, OR CREATING MOLECULES
+#=============================================================================================
 def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None, outfile = None):
    """Extract a ligand specified in the HETATM records of a PDB file.
 
@@ -116,36 +118,47 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
 
    # Return the molecule.
    return molecule
-
-# For backward-compatibility.
-def get_ligand(pdbfile, resnum = None, resname = None, outfile = None, chain = None):
-   return extractMoleculeFromPDB(pdbfile, resnum, resname, chain, outfile)
 #=============================================================================================
-def normalizeMolecule(molecule):
-   """Normalize the molecule by checking aromaticity, adding explicit hydrogens, and renaming by IUPAC name.
+def createMoleculeFromIUPAC(name):
+   """Generate a small molecule from its IUPAC name.
 
    ARGUMENTS
-     molecule (OEMol) - the molecule to be normalized.
+     IUPAC_name (string) - IUPAC name of molecule to generate
+
+   RETURNS
+     molecule (OEMol) - the molecule
+
+   NOTES
+     OpenEye LexiChem's OEParseIUPACName is used to generate the molecle.
+     The molecule is normalized by adding hydrogens.
+     Omega is used to generate a single conformation.
+
+   EXAMPLES
+     # Generate a mol2 file for phenol.
+     molecule = createMoleculeFromIUPAC('phenol')
+     
    """
-   
-   # Assign aromaticity using Tripos model.
-   # OEAssignAromaticFlags(molecule, OEAroModelTripos)
-   OEAssignAromaticFlags(molecule, OEAroModelOpenEye)   
 
-   # Assign Tripos atom types.
-   # OETriposAtomTypes(molecule)
+   # Create an OEMol molecule from IUPAC name.
+   molecule = OEMol() # create a molecule
+   status = OEParseIUPACName(molecule, name) # populate the molecule from the IUPAC name
 
-   # Assign Tripos atom names.
-   # OETriposAtomTypeNames(molecule)
+   # Normalize the molecule.
+   normalizeMolecule(molecule)
 
-   # Add hydrogens.
-   OEAddExplicitHydrogens(molecule)
+   # Generate a conformation with Omega
+   omega = OEOmega()
+   omega.SetIncludeInput(False) # don't include input
+   omega.SetMaxConfs(1) # set maximum number of conformations to 1
+   omega(molecule) # generate conformation      
 
-   # Set title to IUPAC name.
-   name = OECreateIUPACName(molecule)
-   molecule.SetTitle(name)
-
+   # Return the molecule.
    return molecule
+
+# Backwards-compatibility.
+def name_to_mol2(IUPAC_name, output_mol2_filename):
+   """Deprecated.  Use createMoleculeFromIUPAC()."""
+   createMoleculeFromIUPAC(name = IUPAC_name, maxconfs = 1, output_filename = output_mol2_filename)
 #=============================================================================================
 def readMolecule(filename, normalize = False):
    """Read in a molecule from a file (such as .mol2).
@@ -176,39 +189,59 @@ def readMolecule(filename, normalize = False):
    # Normalize if desired.
    if normalize: normalizeMolecule(molecule)
 
-   return molecule   
+   return molecule
 #=============================================================================================
-def writeMolecule(molecule, filename):
-   """Write a molecule to a file (such as .mol2).
+# METHODS FOR INTERROGATING MOLECULES
+#=============================================================================================
+def formalCharge(molecule):
+   """Report the net formal charge of a molecule.
 
    ARGUMENTS
-     molecule (OEMol) - the molecule to be written
-     filename (string) - the file to write the molecule to (type autodetected from filename)
+     molecule (OEMol) - the molecule whose formal charge is to be determined
 
-   RETURNS
-     None
-
-   NOTES
-     If a .mol2 file is written, the substructure name is replaced with 'MOL'.
+   RETURN VALUES
+     formal_charge (integer) - the net formal charge of the molecule
    """
 
-   # Open output stream.
-   ostream = oemolostream()
-   ostream.open(filename)
+   # Create a copy of the molecule.
+   molecule_copy = OEMol(molecule)
 
-   # Write molecule
-   OEWriteMolecule(ostream, molecule)
+   # Assign formal charges.
+   OEFormalPartialCharges(molecule_copy)
 
-   # Close the stream.
-   ostream.close()
+   # Compute net formal charge.
+   formal_charge = int(round(OENetCharge(molecule_copy)))
 
-   # Replace substructure name if mol2 file.
-   suffix = os.path.splitext(filename)[-1]
-   if (suffix == '.mol2'):
-      substructure_name = 'MOL'
-      modifySubstructureName(filename, substructure_name)
+   # return formal charge
+   return formal_charge
+#=============================================================================================
+# METHODS FOR MODIFYING MOLECULES
+#=============================================================================================
+def normalizeMolecule(molecule):
+   """Normalize the molecule by checking aromaticity, adding explicit hydrogens, and renaming by IUPAC name.
 
-   return
+   ARGUMENTS
+     molecule (OEMol) - the molecule to be normalized.
+   """
+   
+   # Assign aromaticity using Tripos model.
+   # OEAssignAromaticFlags(molecule, OEAroModelTripos)
+   OEAssignAromaticFlags(molecule, OEAroModelOpenEye)   
+
+   # Assign Tripos atom types.
+   # OETriposAtomTypes(molecule)
+
+   # Assign Tripos atom names.
+   # OETriposAtomTypeNames(molecule)
+
+   # Add hydrogens.
+   OEAddExplicitHydrogens(molecule)
+
+   # Set title to IUPAC name.
+   name = OECreateIUPACName(molecule)
+   molecule.SetTitle(name)
+
+   return molecule
 #=============================================================================================
 def assignPartialCharges(molecule, charge_model = 'am1bcc'):
    """Assign partial charges to a molecule using OEChem oeproton.
@@ -253,6 +286,9 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
 
    REQUIREMENTS
      antechamber (on PATH)
+
+   WARNING
+     This module is currently broken, as atom names get all jacked up during readMolecule() for these mol2 files.
    """
 
    # Create temporary working directory and move there.
@@ -281,6 +317,7 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
    # Read new mol2 file.
    print "Reading charged molecule from %(charged_molecule_filename)s" % vars()   
    charged_molecule = readMolecule(charged_molecule_filename)
+   # TODO: Atom names get all jacked up here -- is there a way to fix this?
 
    # Clean up temporary working directory.
    if cleanup:
@@ -293,106 +330,40 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
 
    # Return the charged molecule
    return charged_molecule
-
-# For backwards-compatibility.
-def am1bcc_charge_mol2(ligmol2, outmol2, cleanup = True, judgetypes = None, nc = 0):
-   """Deprecated. Use assignPartialCharges()."""
-   assignPartialCharges(ligmol2, outmol2, 'am1bcc', cleanup = cleanup, judgetypes = judgetypes, nc = nc)
-   return
-
 #=============================================================================================
-def ligmol2_to_gromacs(ligmol2, outname, cleanup = True, showWarnings = True, verbose = False):
-   """Convert mol2 file with partial charges and AMBER atomtypes to gromacs topology/coordinate files.
+# METHODS FOR WRITING OR EXPORTING MOLECULES
+#=============================================================================================
+def writeMolecule(molecule, filename):
+   """Write a molecule to a file (such as .mol2).
 
    ARGUMENTS
-     ligmol2 (string) - mol2 filename of ligand with partial charges and AMBER atomtypes
-     outname (string) - prefix of filenames for gromacs topology/coordinate files to be produced
+     molecule (OEMol) - the molecule to be written
+     filename (string) - the file to write the molecule to (type autodetected from filename)
 
-   OPTIONAL ARGUMENTS
-     cleanup (boolean) - clean up temporary directories (default: True)
-     showWarnings (boolean) - show any warnings during conversion process (default: True)
-     verbose (boolean) - show complete output of tools (default: False)
+   RETURNS
+     None
 
-   REQUIREMENTS
-     antechamber (must be in PATH)
-     amb2gmx.pl conversion script (must be in MMTOOLSPATH)
-     AMBER installation (in PATH)
-
+   NOTES
+     If a .mol2 file is written, the substructure name is replaced with 'MOL'.
    """
 
-   # Create temporary working directory and copy ligand mol2 file there.
-   workdir = tempfile.mkdtemp()
-   if verbose: print workdir
-   commands.getoutput('cp %s %s' % (ligmol2, os.path.join(workdir, 'tmp.mol2')))
-   dir = os.getcwd()
-   os.chdir(workdir)
-   
-   # Generate frcmod file for additional GAFF parameters.
-   print commands.getoutput('parmchk -i tmp.mol2 -f mol2 -o tmp.frcmod')
+   # Open output stream.
+   ostream = oemolostream()
+   ostream.open(filename)
 
-   # Create AMBER topology/coordinate files using LEaP.
-   leapscript = """\
-source leaprc.gaff 
-mods = loadAmberParams tmp.frcmod
-ligand=loadMol2 tmp.mol2
-desc ligand
-check ligand
-saveAmberParm ligand tmp.prmtop tmp.crd
-quit"""
-   file=open('leap.in', 'w')
-   file.write(leapscript)
-   file.close()
+   # Write molecule
+   OEWriteMolecule(ostream, molecule)
 
-   tleapout = commands.getoutput('tleap -f leap.in')
-   if verbose: print tleapout
-   tleapout = tleapout.split('\n')
-   # Shop any warnings.
-   if showWarnings:
-     print "Any warnings follow:"
-     for line in tleapout:
-       tmp = line.upper()
-       if tmp.find('WARNING')>-1: print line
-       if tmp.find('ERROR')>-1: print line
+   # Close the stream.
+   ostream.close()
 
-   # Use amb2gmx.pl to convert from AMBER to gromacs topology/coordinates.
-   amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
-   amb2gmx_output = commands.getoutput('%s --prmtop tmp.prmtop --crd tmp.crd --outname tmp' % amb2gmx)
-   if verbose: print amb2gmx_output
-
-   # Copy gromacs topology/coordinates to desired output files.
-   commands.getoutput('cp tmp.gro %s' % os.path.join(dir, outname+'.gro')) 
-   commands.getoutput('cp tmp.top %s' % os.path.join(dir, outname+'.top')) 
-   os.chdir(dir)
-
-   # Clean up temporary files.
-   if cleanup:
-     commands.getoutput('rm -r %s' % workdir)
-   else:
-     print "Work done in %s..." % workdir
+   # Replace substructure name if mol2 file.
+   suffix = os.path.splitext(filename)[-1]
+   if (suffix == '.mol2'):
+      substructure_name = 'MOL'
+      modifySubstructureName(filename, substructure_name)
 
    return
-#=============================================================================================
-def formalCharge(molecule):
-   """Report the net formal charge of a molecule.
-
-   ARGUMENTS
-     molecule (OEMol) - the molecule whose formal charge is to be determined
-
-   RETURN VALUES
-     formal_charge (integer) - the net formal charge of the molecule
-   """
-
-   # Create a copy of the molecule.
-   molecule_copy = OEMol(molecule)
-
-   # Assign formal charges.
-   OEFormalPartialCharges(molecule_copy)
-
-   # Compute net formal charge.
-   formal_charge = int(round(OENetCharge(molecule_copy)))
-
-   # return formal charge
-   return formal_charge
 #=============================================================================================
 def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None):
    """Parameterize small molecule with GAFF and write AMBER coordinate/topology files.
@@ -541,6 +512,226 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
       print "Work done in %s..." % working_directory
 
    return
+#=============================================================================================
+# METHODS FOR MANIPULATING GROMACS TOPOLOGY AND COORDINATE FILES
+#=============================================================================================
+def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True, perturb_vdw = True, perturb_charges = True):
+   """Modify a gromacs topology file to add perturbed-state parameters.
+
+   ARGUMENTS
+     topology_file (string) - the name of the topology file to modify
+     molecule (OEMol) - molecule corresponding to contents of topology file
+
+   OPTIONAL ARGUMENTS
+     perturb_torsions (boolean) - if True, torsions whose central bond is not in an aromatic ring will be turned off in B state (default: True)
+     perturb_vdw (boolean) - if True, van der Waals interactions will be turned off in B state (default: True)
+     perturb_charges (boolean) - if True, charges will be turned off in B state (default: True)
+
+   NOTES
+     This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
+   """
+
+   def stripcomments(line):
+      """Return line with whitespace and comments stripped.
+      """
+      # strip comments
+      index = line.find(';')
+      if index > -1:
+         line = line[0:index]
+      # strip whitespace
+      line = line.strip()
+      # return stripped line
+      return line         
+
+   def extract_section(lines, section):
+      """Identify lines associate with a section.
+
+      ARGUMENTS
+        lines (list of strings) - the lines in the file
+        section (string) - the section name to locate
+
+      RETURNS
+        indices (list of integers) - line indices within lines belonging to section
+      """
+
+      indices = list()
+
+      nlines = len(lines)
+      for start_index in range(nlines):
+         # get line
+         line = stripcomments(lines[start_index])
+         # split into elements
+         elements = line.split()
+         # see if keyword is matched
+         if (len(elements) == 3):
+            if (elements[0]=='[') and (elements[1]==section) and (elements[2]==']'):
+               # increment counter to start of section data and abort search
+               start_index += 1
+               break
+
+      # throw an exception if section not found
+      if (start_index == nlines):
+         raise "Section %(section)s not found." % vars()
+
+      # Locate end of section.
+      for end_index in range(start_index, nlines):
+         # get line
+         line = stripcomments(lines[end_index])
+         # split into elements
+         elements = line.split()
+         # see if keyword is matched
+         if (len(elements) == 3):
+            if (elements[0]=='['):
+               break
+      
+      # compute indices of lines in section
+      indices = range(start_index, end_index)
+
+      # return these indices
+      return indices
+
+   # Read the contents of the topology file.
+   infile = open(topology_filename, 'r')
+   lines = infile.readlines()
+   infile.close()
+
+   # Parse atomtypes.
+   atomtypes = list() # storage for atom types
+   indices = extract_section(lines, 'atomtypes')
+   for index in indices:
+      # extract the line
+      line = stripcomments(lines[index])
+      # parse the line
+      elements = line.split()
+      nelements = len(elements)
+      # skip line if number of elements is less than expected
+      if (nelements < 7): continue
+      # parse elements
+      atomtype = dict()
+      atomtype['name'] = elements[0]
+      atomtype['bond_type'] = elements[1]
+      atomtype['mass'] = float(elements[2])
+      atomtype['charge'] = float(elements[3])
+      atomtype['ptype'] = elements[4]
+      atomtype['sigma'] = float(elements[5])
+      atomtype['epsilon'] = float(elements[6])
+      # append
+      atomtypes.append(atomtype)
+
+   # augment the 'atomtypes' list with perturbed atom types,    
+   if perturb_vdw:
+      indices = extract_section(lines, 'atomtypes')         
+      for atomtype in atomtypes:
+         # make perturbed record
+         perturbed_atomtype = atomtype
+         perturbed_atomtype['name'] += '_pert'
+         perturbed_atomtype['epsilon'] = 0.0
+         # form the line
+         line = "%(name)-10s%(bond_type)6s      0.0000  0.0000  A %(sigma)13.5e%(epsilon)13.5e ; perturbed\n" % perturbed_atomtype
+         # insert the new line
+         lines.insert(indices[-1], line)
+         indices.append(indices[-1]+1)
+
+   # Process [ atoms ] section
+   atoms = list()
+   atom_indices = dict()
+   indices = extract_section(lines, 'atoms')
+   for index in indices:
+      # extract the line
+      line = stripcomments(lines[index])
+      # parse the line
+      elements = line.split()
+      nelements = len(elements)
+      # skip if not all elements found
+      if (nelements < 8): continue
+      # parse line
+      atom = dict()
+      atom['nr'] = int(elements[0])
+      atom['type'] = elements[1]
+      atom['resnr'] = int(elements[2])
+      atom['residue'] = elements[3]
+      atom['atom'] = elements[4]
+      atom['cgnr'] = int(elements[5])
+      atom['charge'] = float(elements[6])
+      atom['mass'] = float(elements[7])
+      
+      # set perturbation type
+      atom['typeB'] = atom['type']
+      if perturb_vdw: atom['typeB'] += '_pert' # perturbed vdw type
+      atom['chargeB'] = atom['charge']
+      if perturb_charges: atom['chargeB'] = 0.0 # perturbed charges
+      
+      # construct a new line
+      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10f %(typeB)6s %(chargeB)10.5f ; perturbed\n" % atom
+      
+      # replace the line
+      lines[index] = line
+
+      # store atoms
+      atoms.append(atom)
+
+      # store lookup of atom atom names -> atom numbers
+      atom_indices[atom['atom']] = atom['nr']
+      
+   # Set rotatable bond torsions in B state to zero, if desired.
+   if perturb_torsions:
+      # Determine list of rotatable bonds to perturb.
+      rotatable_bonds = list()
+      for bond in molecule.GetBonds():
+         # DEBUG
+         print "%d %d" % (bond.GetBgnIdx(), bond.GetEndIdx())
+         # This test is used because bond.IsRotor() doesn't seem to work correctly (e.g. phenol).
+         if (not bond.IsAromatic()) and (bond.GetOrder() == 1) and (bond.GetBgn().GetDegree() > 1) and (bond.GetEnd().GetDegree() > 1):
+            i = atom_indices[bond.GetBgn().GetName()]
+            j = atom_indices[bond.GetEnd().GetName()]
+            if (i < j):
+               rotatable_bonds.append( (i,j) )
+            else:
+               rotatable_bonds.append( (j,i) )
+               
+      print "%d rotatable bond(s) found." % len(rotatable_bonds)
+      
+      # Search for [ dihedrals ] section.
+      indices = extract_section(lines, 'dihedrals') # extract non-blank, non-comment lines
+      for index in indices:
+         # extract the line
+         line = stripcomments(lines[index])         
+         # parse the line
+         elements = line.split()
+         nelements = len(elements)
+         # skip unrecognized lines
+         if (nelements < 11): continue         
+         # extract dihedral atom indices
+         i = int(elements[0])
+         j = int(elements[1])
+         k = int(elements[2])
+         l = int(elements[3])
+         # if not in our list of rotatable bonds, skip it
+         if not (j,k) in rotatable_bonds: continue         
+         # function number
+         function = int(elements[4])
+         if function != 3: raise "Only [dihedrals] function = 3 is supported."
+         # C0 - C5 parameters
+         C = list()
+         for element in elements[5:11]:
+            C.append(float(element))
+
+         # append perturbed parameters to end of line.
+         line = "    %-4s %-4s %-4s %-4s %3d%12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (i, j, k, l, function, C[0], C[1], C[2], C[3], C[4], C[5])
+         line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f ; perturbed" % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0) + "\n"
+
+         # replace the line
+         lines[index] = line
+
+
+   # Replace topology file.
+   outfile = open(topology_filename, 'w')
+   for line in lines:
+      outfile.write(line)
+   outfile.close()
+
+   return
+
 #=============================================================================================
 def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
    """Append ligand coordinates to the end of an existing gromacs .gro file.
@@ -754,247 +945,45 @@ def modifySubstructureName(mol2file, name):
    return
 
 #=============================================================================================
-def generate_conf_from_file(infile, GenerateOutfile = False, outfile = None, maxconfs = 1, threshold=None, TorsionLib = None):
-   """Use OE Omega to generate a conformation for the specified input file; return an OE mol containing the conformation(s). Optionally (if GenerateOutfile = True) write output to specified outfile as well. Input and output formats come from file names. 
-Required arguments:
-- Infile, with input file
-Optional arguments:
-- GenerateOutfile: Boolean specifying whether to write output file
-- outfile: Name of outfile (format specified by suffix)
-- maxconfs: Number of conformations to save. Default: 1.
-- threshold: RMSD threshold for retaining conformers; lower thresholds retain more conformers. Default of None uses Omega's default threshold. Otherwise this should be a float.
-- TorsionLib: Optionally specify a path to an Omega torsion library, which will be applied to perform an *additional* drive of torsions specified in that library after applying the default library. Default: None. 
-"""
-   #Open input file
-   input_molecule_stream=oemolistream()
-   input_molecule_stream.open(infile)
-
-   #Initialize omega
-   omega=OEOmega()
-
-   #Adjst to desired number of conformerst
-   if maxconfs:
-     #Note that with my Omega version, although this "works", it doesn't actually control the maximum number of conformers if larger than 120; things top out at 120. Weird.
-     omega.SetMaxConfs(maxconfs)
-   else:
-     omega.SetMaxConfs(1)
-   #Don't include input in output
-   omega.SetIncludeInput(False)
-
-   #Adjust RMS threshold
-   if threshold:
-     omega.SetRMSThreshold(threshold) 
- 
-   #Create molecule
-   molecule = OEMol()   
-
-   OEReadMolecule(input_molecule_stream, molecule)
-   name = OECreateIUPACName(molecule) #Attempt to figure out IUPAC name for this; parts that cannot be recognized will be named 'BLAH'
-   molecule.SetTitle(name) #Set title to IUPAC name
-
-   # Run Omega on the molecule to generate a set of reasonable conformations.
-   omega(molecule)
-
-   #If desired, do an additional torsion drive
-   if TorsionLib:
-     omega.SetTorsionLibrary(TorsionLib)
-     omega(molecule)
-
-   # Write the molecule to its own mol2 file.
-   if GenerateOutfile:
-    output_molecule_stream = oemolostream()
-    output_molecule_stream.open(outfile)
-    OEWriteMolecule(output_molecule_stream, molecule)
-    output_molecule_stream.close()
-   
-   return molecule
-#=============================================================================================
-def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
-   """Fit a multi conformer OE molecule (second argument) to a reference OE molecule using the OE Shape toolkit; write the resulting matches to specified outfile. Optionally specify the maximum number of conformers, 'maxconfs', to only get the best maxconfs matches written to that output file. Scores will be printed to stdout. Loosely based on OE Shape tookit documentation."""
-
-   outfs = oemolostream(outfile)
-   #Set up storage for overlay
-   best = OEBestOverlay()
-   #Set reference molecule
-   best.SetRefMol(refmol)
-
-   print "Ref. Title:", refmol.GetTitle()
-   print "Fit Title:", fitmol_conformers.GetTitle()
-   print "Num confs:", fitmol_conformers.NumConfs()
-
-   resCount = 0
-
-   #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it.
-   scoreiter = OEBestOverlayScoreIter()
-   OESortOverlayScores(scoreiter, best.Overlay(fitmol_conformers), OEHighestTanimoto())
-   tanimotos = []
-   for score in scoreiter:
-      #Get the particular conformation of this match; transform it to overlay onto the reference structure
-      outmol = OEGraphMol(fitmol_conformers.GetConf(OEHasConfIdx(score.fitconfidx)))
-      score.Transform(outmol)
-
-      #Write output
-      OEWriteMolecule(outfs, outmol)
-
-      print "FitConfIdx: %-4d" %score.fitconfidx,
-      print "RefConfIdx: %-4d" % score.refconfidx,
-      print "Tanimoto: %.2f" % score.tanimoto
-      tanimotos.append(score.tanimoto)
-      resCount +=1
-
-      if resCount == maxconfs: break 
-
-   return tanimotos   
-#=============================================================================================
-def fit_file_to_refmol(refmol, fitmol_file, outfile, maxconfs = None):
-   """Fit molecules/conformers from a file (second argument) to a OE molecule (first argument). Like fit_mol_to_refmol, but will handle cases where the file contains, for example, multiple protonation states of the same molecule as well as multiple conformers. Writes the resulting matches to specified outfile. Optionally specify the maximum number of conformers, 'maxconfs', to only get the best maxconfs matches written to that output file. Scores will be printed to stdout. Loosely based on OE Shape tookit documentation. Attempts to recombine conformers from input file into multi-conformer molecules, then generate up to maxconfs conformers for each molecule."""
-
-   infs = oemolistream()
-   infs.open(fitmol_file)
-   #Attempt to use OE tools to re-join multiple conformations into the same molecule when recombining, but keep molecules with different numbers of atoms/connectivities separate.
-   infs.SetConfTest(OEAbsoluteConfTest())
-
-   #Set up output
-   outfs = oemolostream(outfile)
-   #Set up storage for overlay
-   best = OEBestOverlay()
-   #Set reference molecule
-   best.SetRefMol(refmol)
-
-
-   print "Ref. Title:", refmol.GetTitle()
-   #Now attempt to loop over input, reading a *molecule* at a time (molecules will now be multi-conformer, hopefully) and scoring separately for each molecule
-   for fitmol_conformers in infs.GetOEMols():
-     resCount = 0 #Track count of results for each molecule so we only keep this many conformers for each molecule
-
-     print "Fit Title:", fitmol_conformers.GetTitle()
-     print "Num confs:", fitmol_conformers.NumConfs()
-
-     #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it.
-     scoreiter = OEBestOverlayScoreIter()
-     OESortOverlayScores(scoreiter, best.Overlay(fitmol_conformers), OEHighestTanimoto())
-     for score in scoreiter:
-        #Get the particular conformation of this match; transform it to overlay onto the reference structure
-        outmol = OEGraphMol(fitmol_conformers.GetConf(OEHasConfIdx(score.fitconfidx)))
-        score.Transform(outmol)
-
-        #Write output
-        OEWriteMolecule(outfs, outmol)
-
-        print "FitConfIdx: %-4d" %score.fitconfidx,
-        print "RefConfIdx: %-4d" % score.refconfidx,
-        print "Tanimoto: %.2f" % score.tanimoto
-        resCount +=1
-
-        if resCount == maxconfs: break 
-
-   return
-#=============================================================================================
-def split_mol2_poses(infile, outpath, outname):
-  """Split a mol2 file into a separate file for each conformation.
-
-  ARGUMENTS
-    infile (string) - name of input file
-    outpath (string) - path to output directory, which must already exist
-    outname (string) - prefixed of output file names: will create output files [outname]0.mol2, [outname]1.mol2, ...
-
-  OPTIONAL ARGUMENTS
-
-  RETURNS
-
-  """
-
-  # Open input file
-  file=open(infile,'r')
-
-  outmol=[]
-  ct=0
-  for line in file.readlines():
-    if line.find('MOLECULE')>-1:
-       #Write output file every time we get to a new name MOLECULE field, but only if there is stuff here (i.e. we aren't at the first occurrence
-       if len(outmol)>3:
-         ofile=open(os.path.join(outpath,outname+str(ct)+'.mol2'),'w')
-         ofile.writelines(outmol)
-         ofile.close()
-         outmol=[]
-         ct+=1
-    outmol.append(line)
-  #Do last one too
-  file.close()
-  ofile=open(os.path.join(outpath,outname+str(ct)+'.mol2'),'w')
-  ofile.writelines(outmol)
-  ofile.close()
-
-  #Return resulting number of files
-  return ct+1
-
-def EnumerateProtonation( mol, outfile, maxstates = 500 ):
-   """Take a OE molecule; loop over conformations and enumerate likely protonation states; write output to resulting outfile. Default maxstates (maximum number of protonation states per conformer) of 500."""
-   
-   usearomaticity = True
-   onlycountstates = False
-   verbose = False
-   #Set up output file
-   ofile = oemolostream()
-   ofile.open(outfile)
-   #Initialize protonation typer
-   typer = OETyperMolFunction( ofile, usearomaticity, onlycountstates, maxstates)
-
-   #Suppress hydrogens so we get proper enumeration
-   #TESTING: For c41, if we comment these out, it only enumerates protonations on the tetrazole and this ends up being good; otherwise it reassigns the bonds on the thiazole and never has a double bonded nitrogen. 
-   #But does this cause problems for the others?
-   #OESuppressHydrogens(mol)
-   #OEAssignImplicitHydrogens(mol)
-   #OEAssignFormalCharges(mol)
-   for conf in mol.GetConfs():
-     OEEnumerateFormalCharges(conf, typer, verbose)
-     typer.Reset()
-   
-   ofile.close()
-
-   return
-
-#=============================================================================================
-def createMoleculeFromIUPAC(name):
-   """Generate a small molecule from its IUPAC name.
+def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False):   
+   """Enumerate conformations of the molecule with OpenEye's Omega.
 
    ARGUMENTS
-     IUPAC_name (string) - IUPAC name of molecule to generate
+   molecule (OEMol) - molecule to enumerate conformations for
 
-   RETURNS
-     molecule (OEMol) - the molecule
-
-   NOTES
-     OpenEye LexiChem's OEParseIUPACName is used to generate the molecle.
-     The molecule is normalized by adding hydrogens.
-     Omega is used to generate a single conformation.
-
-   EXAMPLES
-     # Generate a mol2 file for phenol.
-     molecule = createMoleculeFromIUPAC('phenol')
+   OPTIONAL ARGUMENTS
+     include_original (boolean) - if True, original conformation is included (default: False)
+     maxconfs (integer) - if set to an integer, limits the maximum number of conformations to generated -- maximum of 120 (default: None)
+     threshold (real) - threshold in RMSD (in Angstroms) for retaining conformers -- lower thresholds retain more conformers (default: None)
+     torsionlib (string) - if a path to an Omega torsion library is given, this will be used instead (default: None)
+     
+   RETURN VALUES
+     expanded_molecule - molecule with expanded conformations
      
    """
-
-   # Create an OEMol molecule from IUPAC name.
-   molecule = OEMol() # create a molecule
-   status = OEParseIUPACName(molecule, name) # populate the molecule from the IUPAC name
-
-   # Normalize the molecule.
-   normalizeMolecule(molecule)
-
-   # Generate a conformation with Omega
+   # Initialize omega
    omega = OEOmega()
-   omega.SetIncludeInput(False) # don't include input
-   omega.SetMaxConfs(1) # set maximum number of conformations to 1
-   omega(molecule) # generate conformation      
 
-   # Return the molecule.
-   return molecule
+   # Set maximum number of conformers.
+   if maxconfs: omega.SetMaxConfs(maxconfs)
+     
+   # Set whether given conformer is to be included.
+   omega.SetIncludeInput(include_original)
+   
+   # Set RMSD threshold for retaining conformations.
+   if threshold: omega.SetRMSThreshold(threshold) 
+ 
+   # If desired, do a torsion drive.
+   if torsionlib: omega.SetTorsionLibrary(torsionlib)
 
-# Backwards-compatibility.
-def name_to_mol2(IUPAC_name, output_mol2_filename):
-   """Deprecated.  Use createMoleculeFromIUPAC()."""
-   createMoleculeFromIUPAC(name = IUPAC_name, maxconfs = 1, output_filename = output_mol2_filename)
+   # Create copy of molecule.
+   expanded_molecule = OEMol(molecule)   
+
+   # Enumerate conformations.
+   omega(expanded_molecule)
+
+   # return conformationally-expanded molecule
+   return expanded_molecule
 #=============================================================================================
 # TEST DRIVER
 if __name__ == '__main__':
@@ -1027,4 +1016,7 @@ if __name__ == '__main__':
 
    # Write GAFF parameters for gromacs, using antechamber to generate AM1-BCC charges.
    parameterizeForGromacs(molecule, topology_filename = 'gromacs-antechamber.top', coordinate_filename = 'gromacs-antechamber.gro', charge_model = 'bcc', resname = 'PHE')
-   
+
+   # Modify gromacs topology file for alchemical free energy calculation.
+   perturbGromacsTopology('gromacs.top', molecule)
+
