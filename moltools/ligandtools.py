@@ -6,23 +6,27 @@ from openeye.oeiupac import *
 from openeye.oeshape import *
 from openeye.oeproton import *
 from openeye.oeiupac import *
+from openeye.oeszybki import *
 import os
 
-"""Ligtools:
-- get_ligand: Takes a pdb file, extracts specified ligand and tries to protonate and assign bond types. Optionally writes out a output file (of type specified by the filename, i.e. mol2 or pdb) of it; also returns it as an OE mol.
-- add_ligand_to_gro: Add a ligand at the end of an existing gro file.
-- ligmol2_to_gromacs: Convert a ligand mol2 file to gromacs top and gro files using antechamber and amb2gmx.pl. 
-- generate_conf_from_file: Generates (and optionally writes to file) a ligand conformation (or more than one) for a molecule file of arbitrary (OE readable) type; returns it.
-- fit_mol_to_refmol: Fit a OE molecule (multi-conformer) to a reference molecule (single conformer, i.e. a ligand structure from a pdb file); write out an output file of the best N matches, where N is specified.
-- EnumerateProtonation to enumerate possible protonation states.
-- name_to_mol2: Generates mol2 file from IUPAC name using lexichem, Omega
+"""Tools for working with small-molecule ligands in setting up free energy calculations with AMBER and gromacs.
 
-Requirements: 
-- Amber and Antechamber installations in your path
-- MMTOOLSPATH environment variable set to the location of mmtools (for amb2gmx.pl).
+REQUIREMENTS
 
-By D. Mobley, 6/28/2007.
-Revised by J. D. Chodera, 1/20/2008.
+  AMBER and Antechamber installations (in PATH).  Be sure to download the latest version of Antechamber separately.
+  MMTOOLSPATH environment variable set to the location of mmtools (for amb2gmx.pl).
+
+TODO
+  Implement scheme described by Christopher Bayly for minimizing artifacts in AM1BCC parameterization by enumerating
+  conformations with Omega and minimizing with MMFF with all charges set to their absolute values to minimize intramolecular
+  contacts between fragments.
+  Move methods that operate on gromacs topology and coordinate files to 'gromacstools'.
+
+AUTHORS
+
+  Originally by David L. Mobley, UCSF, 6/28/2007.
+  Rewritten by John D. Chodera, Stanford, 1/20/2008.
+
 """
 
 #=============================================================================================
@@ -119,11 +123,14 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
    # Return the molecule.
    return molecule
 #=============================================================================================
-def createMoleculeFromIUPAC(name):
+def createMoleculeFromIUPAC(name, verbose = False):
    """Generate a small molecule from its IUPAC name.
 
    ARGUMENTS
      IUPAC_name (string) - IUPAC name of molecule to generate
+
+   OPTIONAL ARGUMENTS
+     verbose (boolean) - if True, subprocess output is shown
 
    RETURNS
      molecule (OEMol) - the molecule
@@ -148,29 +155,31 @@ def createMoleculeFromIUPAC(name):
 
    # Generate a conformation with Omega
    omega = OEOmega()
+   omega.SetVerbose(verbose) # set verbosity as specified by user
    omega.SetIncludeInput(False) # don't include input
    omega.SetMaxConfs(1) # set maximum number of conformations to 1
    omega(molecule) # generate conformation      
 
    # Return the molecule.
    return molecule
-
-# Backwards-compatibility.
-def name_to_mol2(IUPAC_name, output_mol2_filename):
-   """Deprecated.  Use createMoleculeFromIUPAC()."""
-   createMoleculeFromIUPAC(name = IUPAC_name, maxconfs = 1, output_filename = output_mol2_filename)
 #=============================================================================================
 def readMolecule(filename, normalize = False):
    """Read in a molecule from a file (such as .mol2).
 
    ARGUMENTS
-     filename (string) - the name of the file (such as .mol2)
+     filename (string) - the name of the file containing a molecule, in a format that OpenEye autodetects (such as .mol2)
 
    OPTIONAL ARGUMENTS
      normalize (boolean) - if True, molecule is normalized (renamed, aromaticity, protonated) after reading (default: False)
 
    RETURNS
      molecule (OEMol) - OEMol representation of molecule
+
+   EXAMPLES
+     # read a mol2 file
+     molecule = readMolecule('phenol.mol2')
+     # works with any type of file that OpenEye autodetects
+     molecule = readMolecule('phenol.sdf')
    """
 
    # Open input stream.
@@ -201,6 +210,9 @@ def formalCharge(molecule):
 
    RETURN VALUES
      formal_charge (integer) - the net formal charge of the molecule
+
+   EXAMPLE
+     net_charge = formalCharge(molecule)
    """
 
    # Create a copy of the molecule.
@@ -222,6 +234,11 @@ def normalizeMolecule(molecule):
 
    ARGUMENTS
      molecule (OEMol) - the molecule to be normalized.
+
+   EXAMPLES
+     # read a partial molecule and normalize it
+     molecule = readMolecule('molecule.sdf')
+     normalizeMolecule(molecule)
    """
    
    # Assign aromaticity using Tripos model.
@@ -243,7 +260,7 @@ def normalizeMolecule(molecule):
 
    return molecule
 #=============================================================================================
-def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False):   
+def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False, torsionlib = None, verbose = False):   
    """Enumerate conformations of the molecule with OpenEye's Omega.
 
    ARGUMENTS
@@ -254,25 +271,36 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
      maxconfs (integer) - if set to an integer, limits the maximum number of conformations to generated -- maximum of 120 (default: None)
      threshold (real) - threshold in RMSD (in Angstroms) for retaining conformers -- lower thresholds retain more conformers (default: None)
      torsionlib (string) - if a path to an Omega torsion library is given, this will be used instead (default: None)
+     verbose (boolean) - if True, omega will print extra information
      
    RETURN VALUES
      expanded_molecule - molecule with expanded conformations
+
+   EXAMPLES
+     # create a new molecule with Omega-expanded conformations
+     expanded_molecule = expandConformations(molecule)
      
    """
    # Initialize omega
    omega = OEOmega()
 
+   # Set verbosity.
+   omega.SetVerbose(verbose)
+
    # Set maximum number of conformers.
-   if maxconfs: omega.SetMaxConfs(maxconfs)
+   if maxconfs:
+      omega.SetMaxConfs(maxconfs)
      
    # Set whether given conformer is to be included.
    omega.SetIncludeInput(include_original)
    
    # Set RMSD threshold for retaining conformations.
-   if threshold: omega.SetRMSThreshold(threshold) 
+   if threshold:
+      omega.SetRMSThreshold(threshold) 
  
    # If desired, do a torsion drive.
-   if torsionlib: omega.SetTorsionLibrary(torsionlib)
+   if torsionlib:
+      omega.SetTorsionLibrary(torsionlib)
 
    # Create copy of molecule.
    expanded_molecule = OEMol(molecule)   
@@ -280,20 +308,31 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
    # Enumerate conformations.
    omega(expanded_molecule)
 
+   # verbose output
+   if verbose: print "%d conformation(s) produced." % expanded_molecule.NumConfs()
+
    # return conformationally-expanded molecule
    return expanded_molecule
 #=============================================================================================
-def assignPartialCharges(molecule, charge_model = 'am1bcc'):
+def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = False, minimize_contacts = False):
    """Assign partial charges to a molecule using OEChem oeproton.
 
    ARGUMENTS
      molecule (OEMol) - molecule for which charges are to be assigned
 
    OPTIONAL ARGUMENTS
-     charge_model (string) - partial charge model (default: 'am1bcc') ['am1bcc']
+     charge_model (string) - partial charge model, one of ['am1bcc'] (default: 'am1bcc')
+     multiconformer (boolean) - if True, multiple conformations are enumerated and the resulting charges averaged (default: False)
+NI   minimize_contacts (boolean) - if True, intramolecular contacts are eliminated by minimizing conformation with MMFF with all charges set to absolute values (default: False)
 
    RETURNS
      charged_molecule (OEMol) - the charged molecule with GAFF atom types
+
+   EXAMPLES
+     # create a molecule
+     molecule = createMoleculeFromIUPAC('phenol')
+     # assign am1bcc charges
+     assignPartialCharges(molecule, charge_model = 'am1bcc')
    """
 
    # Check input pameters.
@@ -301,10 +340,52 @@ def assignPartialCharges(molecule, charge_model = 'am1bcc'):
    if not (charge_model in supported_charge_models):
       raise "Charge model %(charge_model)s not in supported set of %(supported_charge_models)s" % vars()
 
-   charged_molecule = OEMol(molecule)   
-   if charge_model == 'am1bcc':
-      # assign partial charges using oeproton facility      
-      OEAssignPartialCharges(charged_molecule, OECharges_AM1BCC)
+   # Expand conformations if desired.   
+   if multiconformer:
+      expanded_molecule = expandConformations(molecule)
+   else:
+      expanded_molecule = OEMol(molecule)
+   nconformers = expanded_molecule.NumConfs()
+   
+   # Set up storage for partial charges.
+   partial_charges = dict()
+   for atom in molecule.GetAtoms():
+      name = atom.GetName()
+      partial_charges[name] = 0.0
+
+   # Assign partial charges for each conformation.
+   for conformation in expanded_molecule.GetConfs():
+      # Assign partial charges to a copy of the molecule.
+      charged_molecule = OEMol(conformation)   
+      if charge_model == 'am1bcc':
+         OEAssignPartialCharges(charged_molecule, OECharges_AM1BCC)         
+      
+      # Minimize with positive charges to splay out fragments, if desired.
+      if minimize_contacts:
+         # Set partial charges to absolute value.
+         for atom in charged_molecule.GetAtoms():
+            atom.SetPartialCharge(abs(atom.GetPartialCharge()))
+         # Minimize in Cartesian space to splay out substructures.
+         szybki = OESzybki() # create an instance of OESzybki
+         szybki.SetRunType(OERunType_CartesiansOpt) # set minimization         
+         szybki.SetUseCurrentCharges(True) # use charges for minimization
+         results = szybki(charged_molecule)
+         # DEBUG
+         writeMolecule(charged_molecule, 'minimized.mol2')
+         for result in results: result.Print(oeout)
+         # Recompute charges;
+         OEAssignPartialCharges(charged_molecule, OECharges_AM1BCC)         
+         
+      # Accumulate partial charges.
+      for atom in charged_molecule.GetAtoms():
+         name = atom.GetName()
+         partial_charges[name] += atom.GetPartialCharge()
+
+   # Compute and store average partial charges in a copy of the original molecule.
+   charged_molecule = OEMol(molecule)
+   for atom in charged_molecule.GetAtoms():
+      name = atom.GetName()
+      atom.SetPartialCharge(partial_charges[name] / nconformers)
 
    # Return the charged molecule
    return charged_molecule
@@ -373,26 +454,36 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
 #=============================================================================================
 # METHODS FOR WRITING OR EXPORTING MOLECULES
 #=============================================================================================
-def writeMolecule(molecule, filename):
-   """Write a molecule to a file (such as .mol2).
+def writeMolecule(molecule, filename, substructure_name = 'MOL'):
+   """Write a molecule to a file in any format OpenEye autodetects from filename (such as .mol2).
 
    ARGUMENTS
      molecule (OEMol) - the molecule to be written
      filename (string) - the file to write the molecule to (type autodetected from filename)
 
+   OPTIONAL ARGUMENTS
+     substructure_name (String) - if a mol2 file is written, this is used for the substructure name (default: 'MOL')
+
    RETURNS
      None
 
    NOTES
-     If a .mol2 file is written, the substructure name is replaced with 'MOL'.
+     Multiple conformers are written.
+
+   EXAMPLES
+     # create a molecule
+     molecule = createMoleculeFromIUPAC('phenol')
+     # write it as a mol2 file
+     writeMolecule(molecule, 'phenol.mol2')
    """
 
    # Open output stream.
    ostream = oemolostream()
    ostream.open(filename)
 
-   # Write molecule
-   OEWriteMolecule(ostream, molecule)
+   # Write molecule (writing separate conformers)
+   for conformer in molecule.GetConfs():
+      OEWriteMolecule(ostream, conformer)
 
    # Close the stream.
    ostream.close()
@@ -400,7 +491,6 @@ def writeMolecule(molecule, filename):
    # Replace substructure name if mol2 file.
    suffix = os.path.splitext(filename)[-1]
    if (suffix == '.mol2'):
-      substructure_name = 'MOL'
       modifySubstructureName(filename, substructure_name)
 
    return
@@ -425,6 +515,12 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
      antechamber (must be in PATH)
      amb2gmx.pl conversion script (must be in MMTOOLSPATH)
      AMBER installation (in PATH)
+
+   EXAMPLES
+     # create a molecule
+     molecule = createMoleculeFromIUPAC('phenol')
+     # parameterize it for AMBER, using antechamber to assign AM1-BCC charges
+     parameterizeForAmber(molecule, topology_filename = 'phenol.prmtop', coordinate_filename = 'phenol.crd', charge_model = 'bcc')
    
    """
 
@@ -517,6 +613,12 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
      amb2gmx.pl conversion script (must be in MMTOOLSPATH)
      AMBER installation (in PATH)
 
+   EXAMPLES
+     # create a molecule
+     molecule = createMoleculeFromIUPAC('phenol')
+     # parameterize it for gromacs, using antechamber to assign AM1-BCC charges
+     parameterizeForGromacs(molecule, topology_filename = 'phenol.top', coordinate_filename = 'phenol.gro', charge_model = 'bcc')
+
    """
 
    # Create temporary directory.
@@ -559,7 +661,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
 
    ARGUMENTS
      topology_file (string) - the name of the topology file to modify
-     molecule (OEMol) - molecule corresponding to contents of topology file
+     molecule (OEMol) - molecule corresponding to contents of topology file -- must be the same one used to generate the topology file with parameterizeForGromacs()
 
    OPTIONAL ARGUMENTS
      perturb_torsions (boolean) - if True, torsions whose central bond is not in an aromatic ring will be turned off in B state (default: True)
@@ -568,6 +670,18 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
 
    NOTES
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
+    
+   TODO
+     Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
+
+   EXAMPLES
+     # create a molecule
+     molecule = createMoleculeFromIUPAC('phenol')
+     # parameterize it for gromacs, using antechamber to assign AM1-BCC charges
+     parameterizeForGromacs(molecule, topology_filename = 'phenol.top', coordinate_filename = 'phenol.gro', charge_model = 'bcc')
+     # modify topology to prepare it for free energy calculations
+     perturbGromacsTopology('phenol.top', molecule)
+
    """
 
    def stripcomments(line):
@@ -768,7 +882,6 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    outfile.close()
 
    return
-
 #=============================================================================================
 def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
    """Append ligand coordinates to the end of an existing gromacs .gro file.
@@ -987,18 +1100,34 @@ if __name__ == '__main__':
    # Test all capabilities of ligandtools.   
    from mmtools.moltools.ligandtools import *
 
-   # Create a phenol molecule.
-   molecule = createMoleculeFromIUPAC('phenol')
+   # Create a molecule.
+   # molecule = createMoleculeFromIUPAC('phenol')
+   # molecule = createMoleculeFromIUPAC('(S)-2-aminopropanoic acid') # alanine
+   # molecule = createMoleculeFromIUPAC('L-2-amino-4-[(hydroxy)(methyl)phosphinoyl]butyryl-L-alanyl-L-alanine')
+   molecule = createMoleculeFromIUPAC('n-pentane')   
+   # molecule = createMoleculeFromIUPAC('n-decane')
+   
+   # Load molecule from disk.
    # molecule = readMolecule('../jnk3/data-from-openeye/jnk.aff/jnk.aff-1.sdf', normalize = True)
 
    # Write mol2 file for the molecule.
    writeMolecule(molecule, 'phenol.mol2')
 
+   # Expand conformations
+   expanded_molecule = expandConformations(molecule, verbose = True)
+   writeMolecule(expanded_molecule, 'phenol-expanded.mol2')
+
    # Charge the molecule with OpenEye tools.
    charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc')
-
-   # Write charged molecule.
    writeMolecule(charged_molecule, 'phenol-am1bcc-openeye.mol2')
+
+   # Charge the molecule with OpenEye tools using average charges over multiple conformations.
+   multiconformer_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = True)
+   writeMolecule(multiconformer_charged_molecule, 'phenol-am1bcc-openeye-multiconformer.mol2')
+
+   # Charge the molecule with OpenEye tools using trick from C. Bayly to minimize intramolecular contacts
+   minimizedcontacts_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', minimize_contacts = True, multiconformer = True)
+   writeMolecule(minimizedcontacts_charged_molecule, 'phenol-am1bcc-openeye-minimizedcontacts.mol2')   
 
    # Write GAFF parameters for AMBER
    parameterizeForAmber(charged_molecule, topology_filename = 'phenol.prmtop', coordinate_filename = 'phenol.crd', resname = 'PHE')
@@ -1014,4 +1143,10 @@ if __name__ == '__main__':
 
    # Convert .top file to .itp file.
    top_to_itp('phenol.top', 'phenol.itp', moleculetype = 'phenol')
+
+   # Insert the ligand into the system.
+   # gromacstools.injectLigand(system_topology = 'system.top', system_coordinates = 'system.gro', ligand_topology = 'phenol.top', ligand_coordinates = 'phenol.gro')
+
+   # Merge the protein and ligand molecules into one molecule to allow restraints to be applied between protein and ligand.
+   # gromacstools.mergeMolecules
    

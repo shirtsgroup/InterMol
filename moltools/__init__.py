@@ -1,2 +1,2 @@
-__all__ = ["ligtools", "make_2d_image"]
+__all__ = ["ligtools", "make_2d_image", "ligandtools"]
 
