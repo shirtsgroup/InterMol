@@ -367,19 +367,34 @@ class GromacsStructure:
 		self.atoms=self.atoms[0:atom1]+self.atoms[atom2+1:]
 		self.natoms=len(self.atoms)
 		return
-	def write(self,filename):
+	def write(self,filename, renumber=True):
 		"""Writes the gro object to a file 'filename.gro'. Raise an EmptyGroObject
 		exception if there are no atoms (self.natoms == 0)? or should it be okay to
 		write an empty gro file?"""
 		if self.natoms==0:
 			raise EmptyGroObject
 		else:
+			# Renumber if desired.
+			if (renumber):
+			  first_residue = self.atoms[0].resnum
+			  serial = 1
+			  resnum = 0
+			  last_resnum = None
+			  for atom in self.atoms:
+			    atom.atomnum = serial
+			    serial += 1
+		      
+			    if(atom.resnum != last_resnum):
+			      resnum += 1
+			      last_resnum = atom.resnum
+			    atom.resnum = resnum      
+
 			filename=self.formatfilename(filename)
 			f=open(filename,'w')
 			f.write(self.header+"\n")
 			f.write(str(self.natoms)+"\n")
-			for atom in self.atoms:
-				f.write(atom.printgroatom()+"\n")
+			for i in range(0,len(self.atoms)):
+				f.write(self.atoms[i].printgroatom()+"\n")
 			f.write(self.boxstring+"\n")
 			f.close()
 		return
