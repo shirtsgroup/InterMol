@@ -241,15 +241,11 @@ def normalizeMolecule(molecule):
      normalizeMolecule(molecule)
    """
    
-   # Assign aromaticity using Tripos model.
-   # OEAssignAromaticFlags(molecule, OEAroModelTripos)
+   # Find ring atoms and bonds
+   # OEFindRingAtomsAndBonds(molecule) 
+   
+   # Assign aromaticity.
    OEAssignAromaticFlags(molecule, OEAroModelOpenEye)   
-
-   # Assign Tripos atom types.
-   # OETriposAtomTypes(molecule)
-
-   # Assign Tripos atom names.
-   # OETriposAtomTypeNames(molecule)
 
    # Add hydrogens.
    OEAddExplicitHydrogens(molecule)
@@ -314,7 +310,7 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
    # return conformationally-expanded molecule
    return expanded_molecule
 #=============================================================================================
-def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = False, minimize_contacts = False):
+def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = False, minimize_contacts = False, verbose = False):
    """Assign partial charges to a molecule using OEChem oeproton.
 
    ARGUMENTS
@@ -323,10 +319,14 @@ def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = Fal
    OPTIONAL ARGUMENTS
      charge_model (string) - partial charge model, one of ['am1bcc'] (default: 'am1bcc')
      multiconformer (boolean) - if True, multiple conformations are enumerated and the resulting charges averaged (default: False)
-NI   minimize_contacts (boolean) - if True, intramolecular contacts are eliminated by minimizing conformation with MMFF with all charges set to absolute values (default: False)
+     minimize_contacts (boolean) - if True, intramolecular contacts are eliminated by minimizing conformation with MMFF with all charges set to absolute values (default: False)
+     verbose (boolean) - if True, information about the current calculation is printed
 
    RETURNS
      charged_molecule (OEMol) - the charged molecule with GAFF atom types
+
+   NOTES
+     multiconformer and minimize_contacts can be combined, but this can be slow
 
    EXAMPLES
      # create a molecule
@@ -346,6 +346,7 @@ NI   minimize_contacts (boolean) - if True, intramolecular contacts are eliminat
    else:
       expanded_molecule = OEMol(molecule)
    nconformers = expanded_molecule.NumConfs()
+   if verbose: print 'assignPartialCharges: %(nconformers)d conformations will be used in charge determination.' % vars()
    
    # Set up storage for partial charges.
    partial_charges = dict()
@@ -354,14 +355,20 @@ NI   minimize_contacts (boolean) - if True, intramolecular contacts are eliminat
       partial_charges[name] = 0.0
 
    # Assign partial charges for each conformation.
+   conformer_index = 0
    for conformation in expanded_molecule.GetConfs():
+      conformer_index += 1
+      if verbose and multiconformer: print "assignPartialCharges: conformer %d / %d" % (conformer_index, expanded_molecule.NumConfs())
+
       # Assign partial charges to a copy of the molecule.
+      if verbose: print "assignPartialCharges: determining partial charges..."
       charged_molecule = OEMol(conformation)   
       if charge_model == 'am1bcc':
          OEAssignPartialCharges(charged_molecule, OECharges_AM1BCC)         
       
       # Minimize with positive charges to splay out fragments, if desired.
       if minimize_contacts:
+         if verbose: print "assignPartialCharges: Minimizing conformation with MMFF and absolute value charges..." % vars()         
          # Set partial charges to absolute value.
          for atom in charged_molecule.GetAtoms():
             atom.SetPartialCharge(abs(atom.GetPartialCharge()))
@@ -374,6 +381,7 @@ NI   minimize_contacts (boolean) - if True, intramolecular contacts are eliminat
          writeMolecule(charged_molecule, 'minimized.mol2')
          for result in results: result.Print(oeout)
          # Recompute charges;
+         if verbose: print "assignPartialCharges: redetermining partial charges..."         
          OEAssignPartialCharges(charged_molecule, OECharges_AM1BCC)         
          
       # Accumulate partial charges.
@@ -451,6 +459,69 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
 
    # Return the charged molecule
    return charged_molecule
+#=============================================================================================
+def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity = True, maxstates = 200, verbose = True):
+    """Enumerate protonation or tautomer states for a list of molecules.
+
+    ARGUMENTS
+      molecules (list of OEMol) - molecules for which states are to be enumerated
+
+    OPTIONAL ARGUMENTS
+      enumerate - type of states to expand -- 'protonation' or 'tautomer' (default: 'protonation')
+      verbose - if True, will print out debug output
+
+    RETURNS
+      states (list of OEMol) - molecules in different protonation or tautomeric states
+
+    TODO
+      Modify to use a single molecule or a list of molecules as input.
+      Apply some regularization to molecule before enumerating states?
+      Pick the most likely state?
+      Add more optional arguments to control behavior.
+    """
+
+    # Check input arguments.
+    if not ((enumerate == "protonation") or (enumerate == "tautomer")):
+        raise "'enumerate' argument must be either 'protonation' or 'tautomer' -- instead got '%s'" % enumerate
+
+    # Create an internal output stream to expand states into.
+    ostream = oemolostream()
+    ostream.openstring()
+
+    # Default parameters.
+    only_count_states = False # enumerate states, don't just count them
+
+    # Enumerate states for each molecule in the input list.
+    states_enumerated = 0
+    for molecule in molecules:
+        if (verbose): print "Enumerating states for molecule %s." % molecule.GetTitle()
+        
+        # Dump enumerated states to output stream (ostream).
+        if (enumerate == "protonation"): 
+            # Create a functor associated with the output stream.
+            functor = OETyperMolFunction(ostream, consider_aromaticity, only_count_states = False, maxstates = maxstates)
+            # Enumerate protonation states.
+            if (verbose): print "Enumerating protonation states..."
+            states_enumerated += OEEnumerateFormalCharges(molecule, functor, verbose)        
+        elif (enumerate == "tautomer"):
+            # Create a functor associated with the output stream.
+            functor = OETautomerMolFunction(ostream, consider_aromaticity, only_count_states = False, maxstates = maxstates)
+            # Enumerate tautomeric states.
+            if (verbose): print "Enumerating tautomer states..."
+            states_enumerated += OEEnumerateTautomers(molecule, functor, verbose)    
+    print "Enumerated a total of %d states." % states_enumerated
+            
+    # Collect molecules from output stream into a list.
+    states = list()
+    if (states_enumerated > 0):    
+        state = OEMol()
+        istream = oemolistream()
+        istream.openstring(ostream.GetString())    
+        while OEReadMolecule(istream, state):
+            states.append(state)
+
+    # Return the list of expanded states as a Python list of OEMol() molecules.
+    return states
 #=============================================================================================
 # METHODS FOR WRITING OR EXPORTING MOLECULES
 #=============================================================================================
@@ -815,7 +886,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       if perturb_charges: atom['chargeB'] = 0.0 # perturbed charges
       
       # construct a new line
-      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10f %(typeB)6s %(chargeB)10.5f ; perturbed\n" % atom
+      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.3f %(typeB)10s %(chargeB)10.5f %(mass)10.3f ; perturbed\n" % atom
       
       # replace the line
       lines[index] = line
@@ -825,7 +896,54 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
 
       # store lookup of atom atom names -> atom numbers
       atom_indices[atom['atom']] = atom['nr']
-      
+
+   # Process [ bonds ] section
+   indices = extract_section(lines, 'bonds')
+   for index in indices:
+      # extract the line
+      line = stripcomments(lines[index])
+      # parse the line
+      elements = line.split()
+      nelements = len(elements)
+      # skip if not all elements found
+      if (nelements < 5): continue
+      # parse line
+      bond = dict()
+      bond['i'] = int(elements[0])      
+      bond['j'] = int(elements[1])
+      bond['function'] = int(elements[2])
+      bond['Req'] = float(elements[3])
+      bond['Keq'] = float(elements[4])
+      # construct a new line
+      line = "%(i)5d %(j)5d %(function)5d%(Req)12.4e%(Keq)12.4e" % bond
+      line += " %(Req)12.4e%(Keq)12.4e\n" % bond
+      # replace the line
+      lines[index] = line
+
+   # Process [ angles ] section
+   indices = extract_section(lines, 'angles')
+   for index in indices:
+      # extract the line
+      line = stripcomments(lines[index])
+      # parse the line
+      elements = line.split()
+      nelements = len(elements)
+      # skip if not all elements found
+      if (nelements < 6): continue
+      # parse line
+      angle = dict()
+      angle['i'] = int(elements[0])      
+      angle['j'] = int(elements[1])
+      angle['k'] = int(elements[2])
+      angle['function'] = int(elements[3])
+      angle['theta'] = float(elements[4])
+      angle['cth'] = float(elements[5])
+      # construct a new line
+      line = "%(i)5d %(j)5d %(k)5d %(function)5d%(theta)12.4e%(cth)12.4e" % angle
+      line += " %(theta)12.4e%(cth)12.4e\n" % angle
+      # replace the line
+      lines[index] = line
+
    # Set rotatable bond torsions in B state to zero, if desired.
    if perturb_torsions:
       # Determine list of rotatable bonds to perturb.
@@ -857,8 +975,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          j = int(elements[1])
          k = int(elements[2])
          l = int(elements[3])
-         # if not in our list of rotatable bonds, skip it
-         if not (j,k) in rotatable_bonds: continue         
+
          # function number
          function = int(elements[4])
          if function != 3: raise "Only [dihedrals] function = 3 is supported."
@@ -867,14 +984,18 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          for element in elements[5:11]:
             C.append(float(element))
 
-         # append perturbed parameters to end of line.
-         line = "    %-4s %-4s %-4s %-4s %3d%12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (i, j, k, l, function, C[0], C[1], C[2], C[3], C[4], C[5])
-         line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f ; perturbed" % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0) + "\n"
+         # reconstruct perturbed line
+         line = "    %-4s %-4s %-4s %-4s %3d%12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (i, j, k, l, function, C[0], C[1], C[2], C[3], C[4], C[5])         
+         if (j,k) in rotatable_bonds:
+            # perturb rotatable bonds
+            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f ; perturbed" % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0) + "\n"
+         else:
+            # don't perturb 
+            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (C[0], C[1], C[2], C[3], C[4], C[5]) + "\n"
 
          # replace the line
          lines[index] = line
-
-
+         
    # Replace topology file.
    outfile = open(topology_filename, 'w')
    for line in lines:
@@ -1092,7 +1213,365 @@ def modifySubstructureName(mol2file, name):
    file.close()
 
    return
+#=============================================================================================
+def add_ligand_to_protein(prottop,protgro,ligtop,liggro,complextop,complexgro):
+   """Merge gromacs topology and coordinate files for a ligand into those of a protein to form a complex where protein and ligand are merged into a single molecule.
 
+   ARGUMENTS
+     prottop (string) - filename of protein topology file, potentially solvated (gromacs .top file)
+     protgro (string) - filename of protein coordinate file (gromacs .gro file)
+     ligtop (string) - filename of ligand topology file
+     liggro (string) - filename of ligand coordinate file
+     complextop (string) - filename of topology file for complex to be written
+     complexgro (string) - filename of coordinate file for complex to be written
+     
+   NOTES
+     Ordinarily, we want to use restraints between the ligand and the protein, and GROMACS currently requires that all atoms which will be involved in restraints be in the same [ moleculetype ] section. THIS requirement means that they must be sequential in the .gro file. Therefore, this script will not only add the ligand in the same molecules section of the topology file, but it will also edit the protein .gro file to renumber all of the solvent to add the ligand before it, immediately following the protein.
+
+   """
+   
+   # Merge topology files.
+   add_ligand_to_topology(prottop,ligtop,complextop)
+   # Merge coordinate files.  
+   add_ligand_to_gro(protgro,liggro,complexgro)
+
+   return
+#=============================================================================================
+def add_ligand_to_gro(protgro, liggro, complexgro):
+   """Append a gromacs coordinate file for a ligand to the coordinate file for a protein, producing a new coordinate file for the complex.
+
+   ARGUMENTS
+     protgro (string) - the filename of the (potentially solvated) protein coordinate file (gromacs .gro format)
+     liggro (string) - the filename of the ligand coordinate file (gromacs .gro format)
+     complexgro (string) - the filename of the complex coordinate file to write (gromacs .gro format)
+
+   NOTES
+     The ligand is inserted directly after the protein coordinates, before any solvent.  This is necessary for the merging of the protein and ligand into a single molecule.
+
+   """
+   
+   # Read input
+   file = open(protgro,'r')
+   prottext = file.readlines()
+   file.close()
+   file = open(liggro,'r')
+   ligtext = file.readlines()
+   file.close()
+
+   # For getting atomnumber
+   numline = re.compile(r'\s*(?P<num>\d+)\s*')
+
+   # Number of atoms
+   m=numline.match(prottext[1])
+   numprotatoms=int(m.group('num'))
+   m=numline.match(ligtext[1])
+   numligatoms=int(m.group('num'))
+
+   # Recognize solvent lines versus regular lines
+   solline = re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>SOL\s+(OW|HW1|HW2))(?P<mspc>\s*)(?P<anum>\d+)(?P<end>\s+.*)')
+   # Recognize regular lines
+   # The protein one may break if there are ever more than 9999 atoms in the protein, but I don't 
+   # mind for now. Maybe throw a exception if that happens though.
+   protline=re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>\w+(?<!SOL)\s+\w+[*]*\d*[*]*)(?P<mspc>\s+)(?P<anum>\d+)(?P<end>\s+.*)')
+   #recognize ion lines
+   ionline=re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>\w+[+-]*\s+([C][L]|[N][aA]))(?P<anum>\d+)(?P<end>\s+.*)')
+
+   # Start creating new file
+   outtext=[]
+   outtext.append(prottext[0])
+   # New number of entries
+   newnumatom=numprotatoms+numligatoms
+   #print "Num prot atoms is "+str(numprotatoms)+", num lig atoms is "+str(numligatoms)
+   outtext.append(str(newnumatom)+'\n')
+
+   prottext=prottext[2:]
+   ligtext=ligtext[2:]
+   
+   # Now copy protein file through the end of the protein itself to the output file.
+   lastprotatom=0; newatom=0
+   lastprotres=0; newresn=0
+   lastligatom=0
+   lastligres=0
+   # To know where to insert the ligand
+   firstSol=True
+   #DLM 3-7-06: adding foundSol to handle case where no solvent is found and ligand should just be at end
+   foundSol=False
+   #Loop through file
+   for line in prottext:
+      #Check if it's a protein line
+      m=protline.match(line)
+      #If it is, just copy it; also store the atom number
+      if m:
+        outtext.append(line)
+        lastprotatom=int(m.group('anum'))
+        lastprotres=int(m.group('resn'))
+        lastprotmatches=m
+      #If it is a solvent or ion atom, then renumber it.
+      if not m:
+        soltxt=solline.match(line)
+        if soltxt:
+           foundSol=True #DLM added 3-6-06 to handle case where no solvent is found.
+           #If it is the first solvent molecule, put the ligand in first, renumbering the ligand
+           if firstSol:
+              for ligline in ligtext:
+                #Digest the ligand lines
+                ligcrd=protline.match(ligline)
+                #If it's a coordinate line, renumber and add.
+                if ligcrd:
+                  lastligres=int(ligcrd.group('resn'))+lastprotres
+                  lastligatom=int(ligcrd.group('anum'))+lastprotatom
+                  newtext=soltxt.group('lspc')+str(lastligres)+ligcrd.group('name_type')+soltxt.group('mspc')+str(lastligatom)+ligcrd.group('end')+'\n'
+                  outtext.append(newtext)
+              #Don't add the ligand again
+              firstSol=False
+
+           #Then, regarldess of whether it is the first  solvent molecule or not, renumber it and add it.
+           newresn=str(lastligres-lastprotres+int(soltxt.group('resn')))
+           newatom=str(lastligatom-lastprotatom+int(soltxt.group('anum')))
+           newtext=soltxt.group('lspc')+newresn+soltxt.group('name_type')+soltxt.group('mspc')+newatom+soltxt.group('end')+'\n'
+           outtext.append(newtext)
+                 
+        #Also add ions.
+        iontext=ionline.match(line)
+        if iontext:
+          ionresn=str(lastligres-lastprotres+int(iontext.group('resn')))
+          ionatom=str(lastligatom-lastprotatom+int(iontext.group('anum')))
+          newtext=iontext.group('lspc')+ionresn+iontext.group('name_type')+ionatom+iontext.group('end')+'\n'
+          outtext.append(newtext)
+          
+   #DLM adding 3-6-06 to handle case where no solvent is found
+   if not foundSol:
+      for ligline in ligtext:
+        #Digest the ligand lines
+        ligcrd=protline.match(ligline)
+        #If it's a coordinate line, renumber and add.
+        if ligcrd:
+           lastligres=int(ligcrd.group('resn'))+lastprotres
+           lastligatom=int(ligcrd.group('anum'))+lastprotatom
+           newtext=lastprotmatches.group('lspc')+str(lastligres)+ligcrd.group('name_type')+lastprotmatches.group('mspc')+str(lastligatom)+ligcrd.group('end')+'\n'
+           outtext.append(newtext)
+
+   #Then done looping over topology. Append the final box line.
+   outtext.append(prottext[-1])   
+   file=open(complexgro,'w')
+   file.writelines(outtext)
+   file.close()
+
+   return
+#=============================================================================================
+def add_ligand_to_topology(prottop,ligtop,complextop):
+   """Append a ligand gromacs topology file to a protein topology file, merging into a single molecule, producing a complex topology file.
+
+   ARGUMENTS
+     prottop (string) - filename of protein topology file to read
+     ligtop (string) - filename of ligand topology file to read
+     complextop (string) - filename of topology file to create of merged complex     
+
+   """
+
+   ####
+   #READ INPUT
+   #####
+   #Read protein and ligand topology files into arrays.
+   infile=open(prottop,'r')
+   prottext=infile.readlines()
+   infile.close()
+   infile=open(ligtop,'r')
+   ligtext=infile.readlines()
+   infile.close()
+
+   ####
+   #SET UP TO PARSE
+   ####
+   #Section names:
+   secname=re.compile(r'\[\s*(?P<name>\w*)\s*\]')
+   #To strip lines beginning with comments:
+   comment=re.compile('\s*;.*')
+   #To parse protein atoms section
+   atomline=re.compile(r'(?P<lspc>\s*)(?P<nr>\d+)(?P<nr_spc>\s+)(?P<type>\w+\d*[_]*\d*\s+)'
+   r'(?P<resnr>\d+)(?P<middle>\s+\w+\s+\w+\d*[*]*\d*\s+)(?P<cgnr>\d+)(?P<end>\s+.*)')
+  
+   #To parse bond lines:
+   bondline=re.compile(r'(?P<lspc>\s*)(?P<ai>\d+)\s+(?P<aj>\d+)(?P<end>\s+\d+.*)')
+   #To parse angle lines:
+   angleline=re.compile(r'(?P<lspc>\s*)(?P<ai>\d+)\s+(?P<aj>\d+)\s+(?P<ak>\d+)(?P<end>\s+\d+.*)')
+   #To parse dihedral lines:
+   dihline=re.compile(r'(?P<lspc>\s*)(?P<ai>\d+)\s+(?P<aj>\d+)\s+(?P<ak>\d+)\s+(?P<al>\d+)'
+   r'(?P<end>\s+\d+.*)')
+   #To parse pairs lines
+   pairline=re.compile(r'\s*(?P<ai>\d+)\s+(?P<aj>\d+)(?P<end>\s+.*)')
+
+   #Store information from ligand
+   ligsection={}
+   #Sections to copy from ligand topology file verbatim (i.e., not merge with those in protein topology)
+   #Below these are assumed to precede the [ moleculetypes ] section when added to the protein
+   #topology so if additional sections are add for which this is not true, that will need to be 
+   #generalized.
+   copylist=['atomtypes','nonbond_params']  
+   #Sections to merge with those in protein topology
+   #Adding additional sections here will extract information from ligand topology, but additional information is required below on how to merge these with protein topology.
+   mergelist=['atoms','bonds','angles','dihedrals','pairs']
+   savelist=mergelist+copylist
+   #Those not listed in either of these locations will be discarded (i.e. moleculetype) 
+
+   ####
+   #READ LIGAND FILE
+   ####
+   endindex=len(ligtext)
+   loc=0
+   while loc<endindex:
+      #Read next chunk
+      (sec,headers)=read_next_topo_section(ligtext[loc:])
+      #Find match for name
+      m=secname.match(sec[0])
+      name=m.group('name')
+      #Find location of end of section
+      endloc=loc+len(sec)+len(headers)
+
+      #Now decide what to do.
+      #Ignore all headers for the ligand.
+
+      #Now extract information from the sections we need.
+      #Is this a section we want to save?
+      if name in savelist:
+        #Make it an empty array for starters
+        ligsection[name]=[]
+        #Save lines in the section except those beginning with comments
+        for line in sec:
+          m=comment.match(line)
+          if not m:
+            ligsection[name].append(line)
+        
+      #Done saving ligand information
+      loc=endloc
+
+   ####
+   #READ PROTEIN FILE AND APPEND LIGAND STUFF
+   ####
+   
+   #protein properties
+   resnum=0
+   atomnum=0
+   cgnrnum=0
+   #Make sure only copy ligand dihedrals once (there are sometimes two dihedrals sections for the protein)
+   copiedDih=False
+   #store new output
+   newtop=[]
+   #read
+   endindex=len(prottext)
+   loc=0
+   while loc < endindex:
+      #Read next chunk
+      (sec,headers)=read_next_topo_section(prottext[loc:])
+      #Find match for name
+      m=secname.match(sec[0])
+      name=m.group('name')
+      #Find location of end of section
+      endloc=loc+len(sec)+len(headers)
+
+      #First do headers
+      for line in headers:
+         newtop.append(line)
+
+      #Now decide what to do with section
+      #Any atomtypes and nonbonded params come before the moleculetypes section.
+      if name=='moleculetype':
+         #For each ligand section to copy
+         for ligname in copylist:
+           #If I've found this section (i.e. there will be no nonbonded params for charge topology)    
+           if ligsection.has_key(ligname):
+              #For each line here, append the line
+              for line in ligsection[ligname]:
+                newtop.append(line)
+         #Now add moleculetypes section.
+         for line in sec:
+            newtop.append(line)
+      #Otherwise, go ahead and append the protein section
+      else:
+         for line in sec:
+           newtop.append(line)
+         #Also, if this is one of the sections for which we also have ligand information, we need to 
+         #combine that information. This usually takes some renumbering.
+         if name in mergelist:
+             #Pop blank end-of-section line off list
+             newtop.pop()
+             if name=='atoms':
+               #First get how many atoms there are in protein
+               lastprotline=sec[len(sec)-2]
+               m=atomline.match(lastprotline)
+               #For debugging: Print line
+               resnum=int(m.group('resnr'))
+               atomnum=int(m.group('nr'))
+               cgnrnum=int(m.group('cgnr'))
+
+               #Change atom number, residue number, and cgnr in ligand section to correct values
+               for line in ligsection[name]:
+                 m=atomline.match(line)
+                 if m:
+                   newresnr=str(int(m.group('resnr'))+resnum)
+                   newatnr=str(int(m.group('nr'))+atomnum)
+                   newcgnr=str(int(m.group('cgnr'))+cgnrnum)
+                   newline=m.group('lspc')+newatnr+m.group('nr_spc')+m.group('type')+newresnr+m.group('middle')+newcgnr+m.group('end')+'\n'
+                   #Append this line
+                   newtop.append(newline)
+          
+             elif name=='bonds':
+               for line in ligsection[name]:
+                 m=bondline.match(line)
+                 if m:
+                   newatomi=str(int(m.group('ai'))+atomnum)
+                   newatomj=str(int(m.group('aj'))+atomnum)
+                   newline=m.group('lspc')+newatomi+'   '+newatomj+m.group('end')+'\n'
+                   newtop.append(newline)         
+
+             elif name=='angles':
+                for line in ligsection[name]:
+                  m=angleline.match(line)
+                  if m:
+                    newatomi=str(int(m.group('ai'))+atomnum)
+                    newatomj=str(int(m.group('aj'))+atomnum)
+                    newatomk=str(int(m.group('ak'))+atomnum)
+                    newline=m.group('lspc')+newatomi+'   '+newatomj+'   '+newatomk+m.group('end')+'\n'
+                    newtop.append(newline)
+
+             elif name=='dihedrals':
+                if not copiedDih:
+                  #Some molecules (i.e. methane) have no dihedrals, in which case these do not need to be added and trying to add them will result in a key error, so check:
+                  if ligsection.has_key(name):
+                    for line in ligsection[name]:
+                      m=dihline.match(line)
+                      if m:
+                        newatomi=str(int(m.group('ai'))+atomnum)
+                        newatomj=str(int(m.group('aj'))+atomnum)
+                        newatomk=str(int(m.group('ak'))+atomnum)
+                        newatoml=str(int(m.group('al'))+atomnum)
+                        newline=m.group('lspc')+newatomi+'   '+newatomj+'   '+newatomk+'   '+newatoml+m.group('end')+'\n'
+                        newtop.append(newline)
+                  #Prevent writing ligand dihedrals twice
+                  copiedDih=True;
+
+             elif name=='pairs':
+                for line in ligsection[name]:
+                  m=pairline.match(line)
+                  if m:
+                    newatomi=str(int(m.group('ai'))+atomnum)
+                    newatomj=str(int(m.group('aj'))+atomnum)
+                    newline=newatomi+'  '+newatomj+m.group('end')+'\n'
+                    newtop.append(newline)
+
+
+             #Done with if statements for sections
+             #Write blank end-of-section line since I popped the others off.
+             newtop.append('\n')
+      #OK. Now we're done copying, etc. Update location
+      loc=endloc
+     
+   #Exit loop over protein topology
+   #Write new topology
+   file=open(complextop,'w')
+   file.writelines(newtop)
+   #DONE.
+   return
 #=============================================================================================
 # TEST DRIVER
 if __name__ == '__main__':
@@ -1101,14 +1580,11 @@ if __name__ == '__main__':
    from mmtools.moltools.ligandtools import *
 
    # Create a molecule.
-   # molecule = createMoleculeFromIUPAC('phenol')
-   # molecule = createMoleculeFromIUPAC('(S)-2-aminopropanoic acid') # alanine
-   # molecule = createMoleculeFromIUPAC('L-2-amino-4-[(hydroxy)(methyl)phosphinoyl]butyryl-L-alanyl-L-alanine')
-   molecule = createMoleculeFromIUPAC('n-pentane')   
+   molecule = createMoleculeFromIUPAC('phenol')
+   # molecule = createMoleculeFromIUPAC('biphenyl')
+   # molecule = createMoleculeFromIUPAC('4-(2-Methoxyphenoxy) benzenesulfonyl chloride')
+   # molecule = createMoleculeFromIUPAC('n-pentane')   
    # molecule = createMoleculeFromIUPAC('n-decane')
-   
-   # Load molecule from disk.
-   # molecule = readMolecule('../jnk3/data-from-openeye/jnk.aff/jnk.aff-1.sdf', normalize = True)
 
    # Write mol2 file for the molecule.
    writeMolecule(molecule, 'phenol.mol2')
@@ -1118,15 +1594,15 @@ if __name__ == '__main__':
    writeMolecule(expanded_molecule, 'phenol-expanded.mol2')
 
    # Charge the molecule with OpenEye tools.
-   charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc')
+   charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', verbose = True)
    writeMolecule(charged_molecule, 'phenol-am1bcc-openeye.mol2')
 
    # Charge the molecule with OpenEye tools using average charges over multiple conformations.
-   multiconformer_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = True)
+   multiconformer_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = True, verbose = True)
    writeMolecule(multiconformer_charged_molecule, 'phenol-am1bcc-openeye-multiconformer.mol2')
 
    # Charge the molecule with OpenEye tools using trick from C. Bayly to minimize intramolecular contacts
-   minimizedcontacts_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', minimize_contacts = True, multiconformer = True)
+   minimizedcontacts_charged_molecule = assignPartialCharges(molecule, charge_model = 'am1bcc', minimize_contacts = True, verbose = True)
    writeMolecule(minimizedcontacts_charged_molecule, 'phenol-am1bcc-openeye-minimizedcontacts.mol2')   
 
    # Write GAFF parameters for AMBER
