@@ -1,6 +1,7 @@
 # MdpFile.py
 #
 # HISTORY
+# JDC: 1/29/08    Added capability to initialize from contents of an .mdp file.  Added random seed handling.
 # VAV: 9/09/07    Added self.delParameter(), allowing keywords and their valuestrs to be removed from the mdp file
 # VAV: 9/02/07    Added self.use_table() and TableMaker object 
 # VAV: 8/27/07    File created
@@ -13,26 +14,38 @@ from TableMaker import *
 
 
 class MdpFile(object):
+  """A class to store and manipulate Gromacs mdp files.
+
+  TODO
+    Can we make use of the Units class to allow user to specify parameters with units attached and automatically convert to/from gromacs units?
+  """
+
+  # Class data
+  MAXSEED = 2**30 # maximum random number seed
     
-  def __init__(self, templatefile, debug=False): 
-    """A class to store and modify Gromacs mdp files.
-    
-    INPUT    
-        templatefile        an *.mdp file to read in as a template
-    
-    OUTPUT
-        None
+  def __init__(self, mdpfile = None, debug = False): 
+    """Constructor to initialize mdp file container.
+  
+    OPTIONAL ARGUMENTS
+      mdpfile        filename (string) or contents (list of strings) of a gromacs .mdp file to be read
     """
 
+    # set debug flag
     self.debug = debug 
-    # process infile name
-    self.templatefile = templatefile
-    
-    # read infile contents and store as lines
+
+    # store filename of .mdp file initialized from, if any
+    self.templatefile = None
+    if type(mdpfile) == str:
+      self.templatefile = mdpfile
+          
+    # initialize internal storage
     self.lines = []
     self.params = {}    # {keyword:value} dictionary.  NOTE: All values are stored as strings: i.e. {'rlist':'4.0'}
     self.keywords = []  # keep a list of the keyword order, just so we can write oiut *.mdp files in the same order as the template 
-    [self.lines, self.params, self.keywords] = self.read(templatefile)
+
+    # read .mdp file or process contents, if give
+    if mdpfile:
+      [self.lines, self.params, self.keywords] = self.read(mdpfile)
 
     # settings for user-defined tables    
     self.use_xvg = False
@@ -40,6 +53,7 @@ class MdpFile(object):
     self.tabletype = None
     self.tabletxt = None
 
+    return
 
   def use_table(self, tabletype, spacing=0.002):   
     """Turn on the xvg table option, and generate a user-defined table 
@@ -78,31 +92,73 @@ class MdpFile(object):
 
     # NOTE: the acual 'table.xvg' file will be written by System.prepare()
     
-  def read(self, filename):
-    """Reads the lines of the template *.mdp"""
-    fin = open(filename, 'r')
-    lines = fin.readlines()
-    fin.close()
+  def read(self, mdpfile):
+    """Read the contents of a gromacs .mdp file.
+
+    ARGUMENTS
+      mdpfile (string or list of strings) - if a string is provided, the contents of the file are read;
+                                            if a list is provided, this is interpreted as the contents of an mdp file
+    """
+
+    # handle multiple argument types
+    if (type(mdpfile) == list):
+      lines = mdpfile
+    elif (type(mdpfile) == str):
+      # if a filename is provided, get its contents
+      fin = open(filename, 'r')
+      lines = fin.readlines()
+      fin.close()
+    else:
+      raise "Unrecognized argument: " + repr(mdpfile)
+      
     # build an initial dictionary of key:values from the lines
     [params, keywords] = self.buildParameterDict(lines)    
     return [lines, params, keywords]
-  
+
   def write(self, filename):
-    """Writes the lines of the template *.mdp"""
+    """Write contents of .mdp file to disk.
+
+    ARGUMENTS
+      filename (string) - the filename to write to
+    """
+
     fout = open(filename, 'w')
     for line in self.lines:
       fout.write(line)
     fout.close()
+
+    return
   
   def write_table(self, filename):
-    """Writes the lines of self.tabletxt to user-supplied filename in correct directory -- should be 'table.xvg'"""
+    """Writes the lines of self.tabletxt to user-supplied filename in correct directory -- should be 'table.xvg'
+
+    ARGUMENTS
+      filename (string) - the name of the file to be written
+
+    """
+
     fout = open(filename, 'w')
     fout.write(self.tabletxt)
     fout.close()
-  
+
+    return
 
   def buildParameterDict(self, lines):
-    """Goes through each line of the file,and parses keywords into a key:value dictionary"""
+    """Goes through each line of the file,and parses keywords into a key:value dictionary
+
+    ARGUMENTS
+      lines (list) - the contents of the .mdp file from which the dictionary is to be built
+
+    RETURNS
+      params (dict) - dictionary of key:value processed from contents of file
+      keywords (list) - list of keywords found in the file
+
+    TODO
+      The processing here is very rudimentary -- may need to be modified to accomodate multiple arguments per line.
+      We should store the corresponding original line from the file, or store the complete contents of the line (including comments?)
+      
+    """
+
     params = {}
     keywords = []
     for line in lines:
@@ -111,23 +167,43 @@ class MdpFile(object):
           if fields[0][0] != ';':
             params[fields[0]] = fields[2]
             keywords.append(fields[0])                        
-    return [params, keywords]
 
+    return [params, keywords]
               
   def showParams(self):
-    """Prints out a the self.params dictionary."""
+    """Display dictionary of recognized key:value pairs from mdp file.
+    """
     outstr = ''
     for key in self.keywords:
         outstr = outstr + self.keyword2line(key)
     print outstr
     
   def keyword2line(self, keyword):
-    """Takes in a parameter keyword and returns a formatted mdp file line.""" 
-    return '%-20s = %-20s\n'%(keyword, self.params[keyword])
+    """Takes in a parameter keyword and returns a formatted mdp file line.
 
+    ARGUMENTS
+      keyword (string) - the keyword specifying the formatted mdp line to retrieve
+
+    RETURNS
+      the formatted mdp line corresponding to the keyword, if found
+
+    TODO
+      What if keyword isn't found?
+      We should store the corresponding original line from the file, or store the complete contents of the line (including comments?)      
+
+    """ 
+    return '%-20s = %-20s\n'%(keyword, self.params[keyword])
     
   def setParameter(self, keyword, valuestr):
-    """Sets a particular mdp keyword to a value (string) in the parameter dictionary, updates mdp lines."""
+    """Sets a particular mdp keyword to a value (string) in the parameter dictionary, updates mdp lines.
+
+    ARGUMENTS
+      keyword (string) - the keyword to which the parameter is to be assigned
+      valuestr (string) - the corresponding parameter value to assign to the keyword
+
+    TODO
+      Searching in the parameter file can be facilitated if we store a dictionary of which line a keyword is specified on.
+    """
     
     # if keyword not already in our ordered list of keywords, append it    
     if self.keywords.count(keyword) == 0:
@@ -147,18 +223,44 @@ class MdpFile(object):
     # if can't find keyword in previous lines, add it to the lines
     if foundone == False:
         self.lines.append( self.keyword2line(keyword))
+
+    return
         
-        
+  def randomizeSeed(self):
+    """Randomize the random seed, adding one if none exists.
+
+    TODO
+      Uses range from 1 to 2**30 for now, but should figure out acceptable range for gromacs.
+    """
+
+    # choose a new random seed
+    import random
+    self.setParameter('gen_seed', random.randint(1, self.MAXSEED))
+
+    return
+  
   def setParametersFromDict(self, paramdict):
-    """Takes in a set of parameters as a dictionary of {keyword:value} entries (values are strings) and
-    sets parameters for each."""
+    """Takes in a set of parameters as a dictionary of {keyword:value} entries (values are strings) and sets parameters for each.
+
+    ARGUMENTS
+      paramdict (dict) - a dictionary of keyword:value pairs to be used to update parameters
+    """
     
     for [key,value] in paramdict.iteritems():
       if self.debug:  print 'DEBUG: key, value of paramdict{}', key, value
       self.setParameter(key, value)
+
+    return
       
   def delParameter(self, keyword):
-    """Removes a particular mdp keyword (and its value (string)) from the parameter dictionary, and deletes mdp line."""
+    """Removes a particular mdp keyword (and its value (string)) from the parameter dictionary, and deletes mdp line.
+
+    ARGUMENTS
+      keyword (string) - the keyword to be cleared
+
+    TODO
+      Propose new name of clearParameter or removeParameter
+    """
   
     # remove keyword from dictionary
     if self.params.has_key(keyword):
@@ -175,11 +277,14 @@ class MdpFile(object):
                 i=i+1
         else:
             i=i+1
+
+    return
     
 #####################
 
 class ImplicitOptions(object):
-  """A data structure object to pass to MdpFile() so params can be set"""
+  """A data structure object to pass to MdpFile() so params can be set.
+  """
 
   def __init__(self):
     """Initializes the ImplicitOptions() object.  This provides the parent class for a set of 
