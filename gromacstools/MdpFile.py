@@ -124,7 +124,7 @@ class MdpFile(object):
 
     fout = open(filename, 'w')
     for line in self.lines:
-      fout.write(line)
+      fout.write(line + '\n')
     fout.close()
 
     return
@@ -158,15 +158,28 @@ class MdpFile(object):
       We should store the corresponding original line from the file, or store the complete contents of the line (including comments?)
       
     """
-
+    
     params = {}
     keywords = []
     for line in lines:
-        fields = line.strip().split()
-        if len(fields) >= 3:
-          if fields[0][0] != ';':
-            params[fields[0]] = fields[2]
-            keywords.append(fields[0])                        
+      # strip comments
+      index = line.find(';')
+      if index > -1:
+        line = line[0:index]
+      # strip whitespace from both ends of line
+      line = line.strip()
+      # split off keyword
+      fields = line.split()
+      # if key = values ... is found, store
+      if (len(fields) >= 3) and (fields[1] == '='):
+        # extract keywords
+        keyword = fields[0]
+        # extract value(s)
+        index = line.find('=')
+        values = line[index+1:len(line)].strip()
+        # store
+        params[keyword] = values
+        keywords.append(keyword)
 
     return [params, keywords]
               
@@ -177,7 +190,19 @@ class MdpFile(object):
     for key in self.keywords:
         outstr = outstr + self.keyword2line(key)
     print outstr
-    
+
+    return
+  
+  def showLines(self):
+    """Display lines.
+    """
+    contents = ''
+    for line in self.lines:
+      contents += line + '\n'
+    print contents
+
+    return
+
   def keyword2line(self, keyword):
     """Takes in a parameter keyword and returns a formatted mdp file line.
 
@@ -235,7 +260,7 @@ class MdpFile(object):
 
     # choose a new random seed
     import random
-    self.setParameter('gen_seed', random.randint(1, self.MAXSEED))
+    self.setParameter('gen_seed', str(random.randint(1, self.MAXSEED)))
 
     return
   
