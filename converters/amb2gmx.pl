@@ -21,8 +21,16 @@
 # v.003 2007-04-03 DLM
 # - Modifying bond parsing routine for rdparm output; it used incorrect column widths and would fail when
 #   bond constants got larger than kB=999.99. 
+# v.004 2007-09-03 JDC
+# - Added elementary support for truncated octahedron boxes. An error is thrown if box is not
+#   rectilinear or truncated octahedron.
+# v.005 2008-01-31 JDC
+# - Hacked in support for magnesium ions.
+# - Added support for writing .g96 files.
+# - Fixed bug in truncated octahedron box support.  Things now compare favorably with AMBER energies.
 # ==============================================================================================
 # TODO and KNOWN BUGS:
+# - Figure out what the "[ pairs ]" section is really doing.
 # ==============================================================================================
 
 #===============================================================================================
@@ -44,7 +52,7 @@ use Getopt::Long;           # For command-line argument processing.
 
 # converting ligand rdparm/pdb files to gro/top files
 # dihedrals converted to RB functions...
-my $cal = 4.184;
+my $cal = 4.184; # J/cal
 
 #==============================================================================
 # SUBROUTINES
@@ -72,7 +80,7 @@ sub is_solute {
   # get arguments
   my $resname = shift @_;
   
-  if($resname eq "WAT" || $resname eq "Na+" || $resname eq "Cl-") {
+  if($resname eq "WAT" || $resname eq "Na+" || $resname eq "Cl-" || $resname eq "MG2") {
     return 0;
   }
   
@@ -159,6 +167,8 @@ open(PDB,$pdb_filename) || die "Error: can't open PDB file\n\n";
 open(TXT,$rdparm_output_filename) || die "Error: can't open RDPARM file\n\n";
 my $grofile = "$outname".".gro";
 open(GRO,">$grofile") || die "Error: can't write to .gro file\n\n";
+my $g96file = "$outname".".g96";
+open(G96,">$g96file") || die "Error: can't write to .g96 file\n\n";
 my $topfile = "$outname".".top";
 open(TOP,">$topfile") || die "Error: can't write to .top file\n\n";
 
@@ -170,6 +180,11 @@ my %box = ();
 $box{x} = substr($lastline,0,12) * 0.1;
 $box{y} = substr($lastline,12,12) * 0.1;
 $box{z} = substr($lastline,24,12) * 0.1;
+# store box angles, in degrees.
+my %box_angles = ();
+$box_angles{1} = substr($lastline,36,12);
+$box_angles{2} = substr($lastline,48,12);
+$box_angles{3} = substr($lastline,60,12);
 
 #############	parse the pdb file  ###############	
 print "Parsing PDB file $pdb_filename...\n";
@@ -181,11 +196,13 @@ my %pdbname = (); # hash containing name of atom in PDB file
 
 my $firstsodium = -1; # residue number of first sodium ion
 my $firstchloride = -1; # residue number of first chloride ion
+my $firstmagnesium = -1; # residue number of first magnesium
 my $firstwat = -1; # residue number of first water
 
 my $nproteinres = 0;
 my $nsodium = 0;
 my $nchloride = 0;
+my $nmagnesium = 0;
 my $nwat = 0;
 
 my $last_resnum = -1;
@@ -233,10 +250,11 @@ while(my $line = <PDB>) {
   $coordinates{"${pdbnumatoms}y"} = $y;
   $coordinates{"${pdbnumatoms}z"} = $z;
 
-  # Make a note of the first sodium, chloride, and solvent residues.
+  # Make a note of the first sodium, chloride, magnesium, and solvent residues.
   # TODO: Generalize this to track multiple types of arbitrary molecules?
   if($firstsodium == -1 && $this_resname eq "Na+") { $firstsodium = $this_resnum; }
   if($firstchloride == -1 && $this_resname eq "Cl-") { $firstchloride = $this_resnum; }
+  if($firstmagnesium == -1 && $this_resname eq "MG2") { $firstmagnesium = $this_resnum; }
   if($firstwat == -1 && $this_resname eq "WAT") { $firstwat = $this_resnum; }
 
   # accumulate counts if this is a new residue
@@ -247,6 +265,8 @@ while(my $line = <PDB>) {
         $nsodium++;
     } elsif($this_resname eq "Cl-") {
         $nchloride++;
+    } elsif($this_resname eq "MG2") {
+        $nmagnesium++;
     } else {
         $nproteinres++;
     }
@@ -260,12 +280,38 @@ close(PDB);
 my $ntotalres = $resnum{$pdbnumatoms};
 
 printf STDOUT "found:\n";
-printf STDOUT "%5d protein residues\n", $nproteinres;
+printf STDOUT "%5d protein or solute residues\n", $nproteinres;
 printf STDOUT "%5d sodium ions\n", $nsodium;
 printf STDOUT "%5d chloride ions\n", $nchloride;
+printf STDOUT "%5d magnesium ions\n", $nmagnesium;
 printf STDOUT "%5d waters\n", $nwat;
 printf STDOUT "\n";
 printf STDOUT "%5d TOTAL residues read\n", $ntotalres;
+
+#############	read coordinates from AMBER .crd file	###############	
+
+{
+    print "Reading coordinates from CRD file...";
+    open(CRD,$crd_filename) || die "Error: can't open CRD file\n\n";
+    # title line
+    my $line = <CRD>;
+    # atom number line
+    $line = <CRD>;
+    # read atom numbers
+    my @coordinate_stack = ();
+    while($#coordinate_stack+1 < 3*$pdbnumatoms) {
+	$line = <CRD>;
+	chomp $line;
+	my @elements = split " ", $line;
+	push @coordinate_stack, @elements;
+    }
+    close(CRD);
+    for(my $atomindex = 1; $atomindex <= $pdbnumatoms; $atomindex++) {
+	$coordinates{"${atomindex}x"} = 0.1 * shift @coordinate_stack;
+	$coordinates{"${atomindex}y"} = 0.1 * shift @coordinate_stack;
+	$coordinates{"${atomindex}z"} = 0.1 * shift @coordinate_stack;
+    }
+}
 
 #############	parse the prmtop file	###############	
 print "Reading prmtop file...\n";
@@ -389,7 +435,7 @@ while(my $line = <TXT>) {
     if(substr($line,0,8) =~ /\d+/) {
       # parse line
       my $this_bondindex = substr($line,0,8) + 0;
-      my $this_kB = substr($line,9,9) * 2 * 100 * $cal; # in kJ/mol?
+      my $this_kB = substr($line,9,9) * 2 * 100 * $cal; # in kJ/mol/nm^2?
       my $this_Req = substr($line,19,6) * 0.1; # in nm
       my $rest_of_line = substr($line,25);
       for($rest_of_line) {  s/^\s+//; s/\s+$//; s/\s+/ /g; }
@@ -480,7 +526,7 @@ while(my $line = <TXT>) {
     if(substr($line,9,6) =~ /\d+/) {
       # parse line
       my $atomtype = trim(substr($line,3,3));
-      my $radius   = substr($line,9,6) * (2**(5/6))/10;
+      my $radius   = substr($line,9,6) * (2.**(5./6.))/10.;
       my $epsilon  = substr($line,17,6) * $cal;
 
       # store
@@ -525,10 +571,67 @@ if($pdbnumatoms != $nato){
 
   }
   # print GRO "   10.00000   10.00000   10.00000\n";
-  printf GRO "%11.5f%11.5f%11.5f\n", $box{x}, $box{y}, $box{z};
+  # rectangular box
+  if($box_angles{1} == "90.0000000" && $box_angles{2} == "90.0000000" && $box_angles{3} == "90.0000000"){
+    print "Rectangular box.";
+    printf GRO "%11.5f%11.5f%11.5f\n", $box{x}, $box{y}, $box{z};
+  } elsif($box_angles{1} == "109.4712190" && $box_angles{2} == "109.4712190" && $box_angles{3} == "109.4712190") {
+    print "Octahedral box.";
+    # TODO: Check to make sure all box dimensions are equal.
+    my $d = $box{x} + 0.0;
+    printf GRO "%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d, 0.0, 0.0, (1.0/3.0)*$d, 0.0, -(1./3.)*$d, (1./3.)*sqrt(2)*$d;
+  } else {
+    print "BAD BOX OR BOX NOT DETECTED; USING DUMMY BOX SIZE IN GRO FILE";
+    printf GRO "%11.5f%11.5f%11.5f\n", 1.0, 1.0, 1.0;
+    #DLM made above change (and commented out below) 10/27/2007
+    #die "Box type not supported."
+  }
 
   close(GRO);
 }
+
+############    write .g96 file 
+
+printf G96 "TITLE\n";
+printf G96 "$outname.gro created by rdparm2gmx.pl $date\n $nato\n";
+printf G96 "END\n";
+printf G96 "POSITION\n";
+for(my $i=1;$i<=$nato;$i++) {
+  printf G96 "%5d %-5s %-5s%7d%15.9f%15.9f%15.9f\n",$resnum{$i},$resname{$i},$atomname{$i},$i,$coordinates{"${i}x"},$coordinates{"${i}y"},$coordinates{"${i}z"};
+}
+printf G96 "END\n";
+printf G96 "BOX\n";
+# rectangular box
+if($box_angles{1} == "90.0000000" && $box_angles{2} == "90.0000000" && $box_angles{3} == "90.0000000"){
+  print "Rectangular box.";
+  printf G96 "%15.9f%15.9f%15.9f\n", $box{x}, $box{y}, $box{z};
+} elsif($box_angles{1} == "109.4712190" && $box_angles{2} == "109.4712190" && $box_angles{3} == "109.4712190") {
+  print "Octahedral box.";
+  # TODO: Check to make sure all box dimensions are equal.
+  my $d = 2.0 * $box{x} + 0.0;
+#  printf G96 "%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d, 0.0, 0.0, (1.0/3.0)*$d, 0.0, -(1./3.)*$d, (1./3.)*sqrt(2)*$d;
+  printf G96 "%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d
+#  my @ucell = ();
+#  my @box = ($box{x}+0.0, $box{y}+0.0, $box{z}+0.0, $box_angles{1}+0.0, $box_angles{2}+0.0, $box_angles{3}+0.0);
+#  my $DEGRAD = 0.0174532925;
+#  $ucell[0] = $box[0]; 
+#  $ucell[1] = 0.0; 
+#  $ucell[2] = 0.0; 
+#  $ucell[3] = $box[1]*cos($DEGRAD*$box[5]); 
+#  $ucell[4] = $box[1]*sin($DEGRAD*$box[5]); 
+#  $ucell[5] = 0.0; 
+#  $ucell[6] = $box[2]*cos($DEGRAD*$box[4]); 
+#  $ucell[7] = ($box[1]*$box[2]*cos($DEGRAD*$box[3]) - $ucell[6]*$ucell[3]) / $ucell[4]; 
+#  $ucell[8] = sqrt($box[2]*$box[2] - $ucell[6]*$ucell[6] - $ucell[7]*$ucell[7]); 
+#  printf G96 "%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f\n", @ucell;
+} else {
+  print "BAD BOX OR BOX NOT DETECTED; USING DUMMY BOX SIZE IN GRO FILE";
+  printf G96 "%15.9f%15.9f%15.9f\n", 1.0, 1.0, 1.0;
+  #DLM made above change (and commented out below) 10/27/2007
+  #die "Box type not supported."
+}
+printf G96 "END\n";
+close G96;
 
 ############	balance charges if not net-neutral by substracting from atom in protein with largest absolute charge ########
 my $qtot = 0; # total charge
@@ -538,7 +641,7 @@ for(my $i=1;$i<=$nato;$i++) {
   # accumulate total charge
   $qtot+=$charge{$i};
 
-  if($resname{$i} ne "WAT" && $resname{$i} ne "Na+" && $resname{$i} ne "Cl-") {
+  if($resname{$i} ne "WAT" && $resname{$i} ne "Na+" && $resname{$i} ne "Cl-" && $resname{$i} ne "MG2") {
     # get absolute charge of this atom
     my $abch = abs($charge{$i});
 
@@ -634,20 +737,20 @@ foreach my $atom_type ( keys %lj_atomtypes_hash ) {
 #Adding "if nwat" here, DLM, 1-10-06
 if($nwat > 0) {
   print TOP "
-  [ bondtypes ]
-  ; i    j      func       b0          kb
-  OW    HW         1    0.09572   462750.4 ; TIP3P water
-  HW    HW         1    0.15136   462750.4 ; TIP3P water
-  ";
+[ bondtypes ]
+; i    j      func       b0          kb
+OW    HW         1    0.09572   462750.4 ; TIP3P water
+HW    HW         1    0.15136   462750.4 ; TIP3P water
+";
 
   # Write default angle types.
   print TOP "
-  [ angletypes ]
-  ;  i    j    k  func       th0       cth
-  HW  OW  HW           1   104.520    836.800 ; TIP3P water
-  HW  HW  OW           1   127.740      0.000 ; (found in crystallographic water with 3 bonds)
-  ";
-  }
+[ angletypes ]
+;  i    j    k  func       th0       cth
+HW  OW  HW           1   104.520    836.800 ; TIP3P water
+HW  HW  OW           1   127.740      0.000 ; (found in crystallographic water with 3 bonds)
+";
+}
 
   #==============================================================================
   # Write solute section of TOP file.
@@ -681,6 +784,7 @@ for(my $bondindex = 1; $bondindex <= $nbon; $bondindex++) {
 }
 
 # Write pair records.
+# JDC: What do these do???
 print TOP "\n[ pairs ]
 ;  ai    aj funct\n";
 for(my $pairindex = 1; $pairindex <= $npai; $pairindex++) {
@@ -712,6 +816,18 @@ for(my $angleindex = 1; $angleindex <= $nang; $angleindex++) {
 #   printf TOP "    %-4s%-4s%-4s%-4s%3d%12.4e%12.4e%12.4e\t;\n",$iat{$i,1},$iat{$i,2},$iat{$i,3},$iat{$i,4},1,$impphase{$i},$impkd{$i},$imppn{$i};
 # }
 
+
+# Write pair records.
+#print TOP "\n[ exclusions ]
+#;  ai    aj funct\n";
+#for(my $pairindex = 1; $pairindex <= $npai; $pairindex++) {
+#  my $i = $pair1{$pairindex};
+#  my $j = $pair2{$pairindex};
+#
+#  if( is_solute($resname{$i}) && is_solute($resname{$j}) ) {
+#    printf TOP "%6d %6d %6d\n", $i, $j, 1;     
+#  }
+#}
 
 ############ 	process proper dihedrals	################
 # looks for multiple dihed's for same quartet #
@@ -815,6 +931,17 @@ Na+             1
 1       IP           1          Na+         Na+       1      1   22.9898
 "; }
 
+if($nmagnesium > 0) {
+print TOP "
+[ moleculetype ]
+; molname       nrexcl
+MG2             1
+
+[ atoms ]
+; id    at type res nr  residu name     at name  cg nr  charge   mass
+1       MG              1         MG2      MG     1      +2   24.30000
+";}
+
 if($nchloride > 0) {
 print TOP "
 [ moleculetype ]
@@ -869,6 +996,7 @@ $nato system
 print TOP "; Compound        nmols\n";
 print TOP "solute            1\n";
 print TOP "Na+               $nsodium\n" if($nsodium > 0);
+print TOP "MG2               $nmagnesium\n" if($nmagnesium > 0);
 print TOP "Cl-               $nchloride\n" if($nchloride > 0);
 print TOP "WAT               $nwat\n" if ($nwat > 0);
 
