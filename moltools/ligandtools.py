@@ -8,6 +8,7 @@ from openeye.oeproton import *
 from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
+import re
 
 """Tools for working with small-molecule ligands in setting up free energy calculations with AMBER and gromacs.
 
@@ -727,7 +728,66 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
 #=============================================================================================
 # METHODS FOR MANIPULATING GROMACS TOPOLOGY AND COORDINATE FILES
 #=============================================================================================
-def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True, perturb_vdw = True, perturb_charges = True):
+def stripcomments(line):
+   """Return line with whitespace and comments stripped.
+   """
+   # strip comments
+   index = line.find(';')
+   if index > -1:
+      line = line[0:index]
+   # strip whitespace
+   line = line.strip()
+   # return stripped line
+   return line         
+
+def extract_section(lines, section):
+   """Identify lines associate with a section.
+
+   ARGUMENTS
+      lines (list of strings) - the lines in the file
+      section (string) - the section name to locate
+
+   RETURNS
+      indices (list of integers) - line indices within lines belonging to section
+   """
+
+   indices = list()
+
+   nlines = len(lines)
+   for start_index in range(nlines):
+      # get line
+      line = stripcomments(lines[start_index])
+      # split into elements
+      elements = line.split()
+      # see if keyword is matched
+      if (len(elements) == 3):
+         if (elements[0]=='[') and (elements[1]==section) and (elements[2]==']'):
+            # increment counter to start of section data and abort search
+            start_index += 1
+            break
+
+   # throw an exception if section not found
+   if (start_index == nlines):
+      raise "Section %(section)s not found." % vars()
+
+   # Locate end of section.
+   for end_index in range(start_index, nlines):
+      # get line
+      line = stripcomments(lines[end_index])
+      # split into elements
+      elements = line.split()
+      # see if keyword is matched
+      if (len(elements) == 3):
+         if (elements[0]=='['):
+            break
+
+   # compute indices of lines in section
+   indices = range(start_index, end_index)
+
+   # return these indices
+   return indices
+
+def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None):
    """Modify a gromacs topology file to add perturbed-state parameters.
 
    ARGUMENTS
@@ -738,12 +798,15 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
      perturb_torsions (boolean) - if True, torsions whose central bond is not in an aromatic ring will be turned off in B state (default: True)
      perturb_vdw (boolean) - if True, van der Waals interactions will be turned off in B state (default: True)
      perturb_charges (boolean) - if True, charges will be turned off in B state (default: True)
+     perturb_atom_indices (list of ints) - if not None, only atoms with gromacs .top file indices in included range will be perturbed (default: None)
 
    NOTES
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
+     Note that this code also only handles the first section of each kind found in a gromacs .top file.
     
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
+     Generalize this code to allow it to operate more generally on a specified moleculetype.
 
    EXAMPLES
      # create a molecule
@@ -755,71 +818,12 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
 
    """
 
-   def stripcomments(line):
-      """Return line with whitespace and comments stripped.
-      """
-      # strip comments
-      index = line.find(';')
-      if index > -1:
-         line = line[0:index]
-      # strip whitespace
-      line = line.strip()
-      # return stripped line
-      return line         
-
-   def extract_section(lines, section):
-      """Identify lines associate with a section.
-
-      ARGUMENTS
-        lines (list of strings) - the lines in the file
-        section (string) - the section name to locate
-
-      RETURNS
-        indices (list of integers) - line indices within lines belonging to section
-      """
-
-      indices = list()
-
-      nlines = len(lines)
-      for start_index in range(nlines):
-         # get line
-         line = stripcomments(lines[start_index])
-         # split into elements
-         elements = line.split()
-         # see if keyword is matched
-         if (len(elements) == 3):
-            if (elements[0]=='[') and (elements[1]==section) and (elements[2]==']'):
-               # increment counter to start of section data and abort search
-               start_index += 1
-               break
-
-      # throw an exception if section not found
-      if (start_index == nlines):
-         raise "Section %(section)s not found." % vars()
-
-      # Locate end of section.
-      for end_index in range(start_index, nlines):
-         # get line
-         line = stripcomments(lines[end_index])
-         # split into elements
-         elements = line.split()
-         # see if keyword is matched
-         if (len(elements) == 3):
-            if (elements[0]=='['):
-               break
-      
-      # compute indices of lines in section
-      indices = range(start_index, end_index)
-
-      # return these indices
-      return indices
-
    # Read the contents of the topology file.
    infile = open(topology_filename, 'r')
    lines = infile.readlines()
    infile.close()
 
-   # Parse atomtypes.
+   # Parse atomtypes to build a list of all atom types for later use.
    atomtypes = list() # storage for atom types
    indices = extract_section(lines, 'atomtypes')
    for index in indices:
@@ -878,7 +882,11 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       atom['cgnr'] = int(elements[5])
       atom['charge'] = float(elements[6])
       atom['mass'] = float(elements[7])
-      
+
+      # skip if an atom range is specified, and this is not among the atoms we're looking for
+      if perturb_atom_indices:
+         if atom['nr'] not in perturb_atom_indices: continue
+         
       # set perturbation type
       atom['typeB'] = atom['type']
       if perturb_vdw: atom['typeB'] += '_pert' # perturbed vdw type
@@ -886,7 +894,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       if perturb_charges: atom['chargeB'] = 0.0 # perturbed charges
       
       # construct a new line
-      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.3f %(typeB)10s %(chargeB)10.5f %(mass)10.3f ; perturbed\n" % atom
+      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f ; perturbed\n" % atom
       
       # replace the line
       lines[index] = line
@@ -914,6 +922,9 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       bond['function'] = int(elements[2])
       bond['Req'] = float(elements[3])
       bond['Keq'] = float(elements[4])
+      # skip if an atom range is specified, and this is not among the atoms we're looking for
+      if perturb_atom_indices:
+         if (bond['i'] not in perturb_atom_indices) and (bond['j'] not in perturb_atom_indices): continue      
       # construct a new line
       line = "%(i)5d %(j)5d %(function)5d%(Req)12.4e%(Keq)12.4e" % bond
       line += " %(Req)12.4e%(Keq)12.4e\n" % bond
@@ -938,6 +949,9 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       angle['function'] = int(elements[3])
       angle['theta'] = float(elements[4])
       angle['cth'] = float(elements[5])
+      # skip if an atom range is specified, and this is not among the atoms we're looking for
+      if perturb_atom_indices:
+         if (angle['i'] not in perturb_atom_indices) and (angle['j'] not in perturb_atom_indices) and (angle['k'] not in perturb_atom_indices): continue      
       # construct a new line
       line = "%(i)5d %(j)5d %(k)5d %(function)5d%(theta)12.4e%(cth)12.4e" % angle
       line += " %(theta)12.4e%(cth)12.4e\n" % angle
@@ -976,6 +990,10 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          k = int(elements[2])
          l = int(elements[3])
 
+         # skip if an atom range is specified, and this is not among the atoms we're looking for
+         if perturb_atom_indices:
+            if (i not in perturb_atom_indices) and (j not in perturb_atom_indices) and (k not in perturb_atom_indices) and (l not in perturb_atom_indices): continue      
+
          # function number
          function = int(elements[4])
          if function != 3: raise "Only [dihedrals] function = 3 is supported."
@@ -1003,6 +1021,50 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    outfile.close()
 
    return
+#=============================================================================================
+def totalCharge(topology_filename):
+   """Determine the total charge of the first molecule molecule in a .top file.
+   
+   ARGUMENTS
+     topology_filename (string) - the name of the topology file to parse
+
+   NOTE
+     Only the first [ atoms ] section is read, and only charges from A state are read.
+   """
+    
+   # Read the contents of the topology file.
+   infile = open(topology_filename, 'r')
+   lines = infile.readlines()
+   infile.close()
+
+   total_charge = 0.0
+
+   # Process [ atoms ] section
+   indices = extract_section(lines, 'atoms')
+   for index in indices:
+      # extract the line
+      line = stripcomments(lines[index])
+      # parse the line
+      elements = line.split()
+      nelements = len(elements)
+      # skip if not all elements found
+      if (nelements < 8): continue
+      # parse line
+      atom = dict()
+      atom['nr'] = int(elements[0])
+      atom['type'] = elements[1]
+      atom['resnr'] = int(elements[2])
+      atom['residue'] = elements[3]
+      atom['atom'] = elements[4]
+      atom['cgnr'] = int(elements[5])
+      atom['charge'] = float(elements[6])
+      atom['mass'] = float(elements[7])
+
+      total_charge += atom['charge']
+
+   # return the total charge
+   return total_charge
+     
 #=============================================================================================
 def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
    """Append ligand coordinates to the end of an existing gromacs .gro file.
@@ -1214,7 +1276,7 @@ def modifySubstructureName(mol2file, name):
 
    return
 #=============================================================================================
-def add_ligand_to_protein(prottop,protgro,ligtop,liggro,complextop,complexgro):
+def merge_protein_ligand_topologies(prottop,protgro,ligtop,liggro,complextop,complexgro):
    """Merge gromacs topology and coordinate files for a ligand into those of a protein to form a complex where protein and ligand are merged into a single molecule.
 
    ARGUMENTS
@@ -1358,6 +1420,52 @@ def add_ligand_to_gro(protgro, liggro, complexgro):
    file.close()
 
    return
+#=============================================================================================
+def read_next_topo_section(textarray):
+   """Reads the [ named ] section in the GROMACS topology file from the passed textarray and 
+   returns an array containing only that section (stopping before the subsequent section). 
+   len(section) will be the number of lines in that section. Also returns a second array 
+   containing that portion of textarray prior to the beginning of the next section."""
+   
+   #Pattern to match for start
+   secstart=re.compile(r'\s*\[.+\]')
+
+   #I think this is actually robust for comments: Comments shouldn't be recognized
+   #by the search string above (nor should any bracketed object not preceded by
+   #spaces or nothing and so commented out sections will be treated as 'headers' and left untouched.
+   
+   #Find matches
+   section=[]
+   foundstart=False
+   startline=0
+   ctr=0
+   for line in textarray:
+     #search for match
+     m=secstart.match(line)
+     #If there is a match
+     if m:
+       #If this is the first match
+       if not foundstart:
+          #We have found the start of the section we want 
+          foundstart=True
+          #Save this line
+          section.append(line)
+          startline=ctr
+          continue #Go back to the top of the loop (the next line)
+       #If this is not the first match
+       elif foundstart:
+          #Don't keep going into the next section
+          break
+     #Otherwise if this is not a match, so it doesn't start or end a section. 
+     #Only save if we already got to the section.
+     elif foundstart:
+       section.append(line)
+     ctr+=1
+   #End loop over array; we've now got the section.
+   
+   #Return the extra portion also
+   extra=textarray[0:startline]
+   return section,extra
 #=============================================================================================
 def add_ligand_to_topology(prottop,ligtop,complextop):
    """Append a ligand gromacs topology file to a protein topology file, merging into a single molecule, producing a complex topology file.
