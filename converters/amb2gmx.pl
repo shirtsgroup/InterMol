@@ -79,10 +79,16 @@ sub trim {
 sub is_solute {
   # get arguments
   my $resname = shift @_;
-  
-  if($resname eq "WAT" || $resname eq "Na+" || $resname eq "Cl-" || $resname eq "MG2") {
+
+# JDC: Commented out to make sure ions end up in solute section.  
+#  if($resname eq "WAT" || $resname eq "Na+" || $resname eq "Cl-" || $resname eq "MG2") {
+#    return 0;
+#  }
+
+  if($resname eq "WAT") {
     return 0;
   }
+
   
   return 1;
 }
@@ -171,6 +177,8 @@ my $g96file = "$outname".".g96";
 open(G96,">$g96file") || die "Error: can't write to .g96 file\n\n";
 my $topfile = "$outname".".top";
 open(TOP,">$topfile") || die "Error: can't write to .top file\n\n";
+my $ndxfile = "$outname".".ndx";
+open(NDX,">$ndxfile") || die "Error: can't write to .ndx file\n\n";
 
 # Extract box information from AMBER CRD file.
 # TODO: This relies on the coordinate file missing the velocity information -- fix this.
@@ -198,6 +206,7 @@ my $firstsodium = -1; # residue number of first sodium ion
 my $firstchloride = -1; # residue number of first chloride ion
 my $firstmagnesium = -1; # residue number of first magnesium
 my $firstwat = -1; # residue number of first water
+my $firstwatatom = -1; # atom number of first water
 
 my $nproteinres = 0;
 my $nsodium = 0;
@@ -256,17 +265,19 @@ while(my $line = <PDB>) {
   if($firstchloride == -1 && $this_resname eq "Cl-") { $firstchloride = $this_resnum; }
   if($firstmagnesium == -1 && $this_resname eq "MG2") { $firstmagnesium = $this_resnum; }
   if($firstwat == -1 && $this_resname eq "WAT") { $firstwat = $this_resnum; }
+  if($firstwatatom == -1 && $this_resname eq "WAT") { $firstwatatom = $pdbnumatoms; }
 
   # accumulate counts if this is a new residue
   if($this_resnum != $last_resnum) {
     if($this_resname eq "WAT") {
         $nwat++;
-    } elsif($this_resname eq "Na+") {
-        $nsodium++;
-    } elsif($this_resname eq "Cl-") {
-        $nchloride++;
-    } elsif($this_resname eq "MG2") {
-        $nmagnesium++;
+# JDC
+#    } elsif($this_resname eq "Na+") {
+#        $nsodium++;
+#    } elsif($this_resname eq "Cl-") {
+#        $nchloride++;
+#    } elsif($this_resname eq "MG2") {
+#        $nmagnesium++;
     } else {
         $nproteinres++;
     }
@@ -1002,7 +1013,39 @@ print TOP "WAT               $nwat\n" if ($nwat > 0);
 
 close(TOP);
 
+#==============================================================================
+# Write index files
+#==============================================================================
+
+printf NDX "[ System ]\n";
+my $line_count = 0;
+for(my $index = 0; $index < $nato; $index++) {
+  printf NDX "%d ", ($index+1);
+  $line_count++;
+  if($line_count == 15) {
+    printf NDX "\n";
+    $line_count = 0;
+  }
+}
+printf NDX "\n\n";
+
+printf NDX "[ solute ]\n";
+my $line_count = 0;
+for(my $index = 0; $index < $firstwatatom; $index++) {
+  printf NDX "%d ", ($index+1);
+  $line_count++;
+  if($line_count == 15) {
+    printf NDX "\n";
+    $line_count = 0;
+  }
+}
+printf NDX "\n\n";
+
+close NDX;
+
+#==============================================================================
 # Clean up by removing intermediate files.
+#==============================================================================
 {
   my $command = "rm -f $rdparm_input_filename $rdparm_output_filename $pdb_filename";
   print "Removing temporary files...\n$command\n" if($debug_flag);
