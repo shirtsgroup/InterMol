@@ -287,6 +287,11 @@ while(my $line = <PDB>) {
 }
 close(PDB);
 
+# Fix up first water atom in case there isn't any
+if ($firstwatatom == -1) {
+    $firstwatatom = $pdbnumatoms;
+}
+
 # Total number of residues.
 my $ntotalres = $resnum{$pdbnumatoms};
 
