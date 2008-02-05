@@ -74,6 +74,7 @@ from Setup import *
 from Status import *
 from GromacsData import * 
 from MdpFile import *
+from mmtools.pdbtools import *
 
 
 # ----------------------------------------------------------------------
@@ -514,9 +515,6 @@ class System:
       growater                 a *.gro file for a single molecule
       
       """
-
-      from mmtools.pdbtools import *
-
       self.checkForFatalErrors = checkForFatalErrors
       self.mockrun = mockrun
       self.debug = False

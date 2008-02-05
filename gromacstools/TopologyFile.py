@@ -69,13 +69,11 @@ class TopologyFile(object):
     
     # parse the [ molecules ] title to get nmols counts
     [nmols, templines] = self.parse_nmols(templines, debug=debug)
-    
-    
+        
     # NOW, the rest of the lines should be [ moleculetypes ]
     molecules = self.buildMolecules(templines, debug=debug)    # a list of TopologyFileMolecules() objects
     
     return [lines, includes, ifdefs, molecules, systemTitle, nmols]
-
 
   def write(self, filename):
     """Writes the lines of the topology *.top file"""

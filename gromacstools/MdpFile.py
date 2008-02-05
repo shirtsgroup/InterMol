@@ -45,7 +45,7 @@ class MdpFile(object):
 
     # read .mdp file or process contents, if give
     if mdpfile:
-      [self.lines, self.params, self.keywords] = self.read(mdpfile)
+      [self.lines, self.params, self.keywords, self.keyword_line_index] = self.read(mdpfile)
 
     # settings for user-defined tables    
     self.use_xvg = False
@@ -112,8 +112,9 @@ class MdpFile(object):
       raise "Unrecognized argument: " + repr(mdpfile)
       
     # build an initial dictionary of key:values from the lines
-    [params, keywords] = self.buildParameterDict(lines)    
-    return [lines, params, keywords]
+    [params, keywords, keyword_line_index] = self.buildParameterDict(lines)    
+
+    return [lines, params, keywords, keyword_line_index]
 
   def write(self, filename):
     """Write contents of .mdp file to disk.
@@ -152,6 +153,7 @@ class MdpFile(object):
     RETURNS
       params (dict) - dictionary of key:value processed from contents of file
       keywords (list) - list of keywords found in the file
+      keyword_line_index (dict) - keyword_line_index[keyword] is the line index on which 'keyword' appears
 
     TODO
       The processing here is very rudimentary -- may need to be modified to accomodate multiple arguments per line.
@@ -159,8 +161,10 @@ class MdpFile(object):
       
     """
     
-    params = {}
-    keywords = []
+    params = dict()
+    keywords = list()
+    keyword_line_index = dict()
+    line_index = 0
     for line in lines:
       # strip comments
       index = line.find(';')
@@ -180,8 +184,11 @@ class MdpFile(object):
         # store
         params[keyword] = values
         keywords.append(keyword)
+        keyword_line_index[keyword] = line_index        
+      # increment line index
+      line_index += 1
 
-    return [params, keywords]
+    return [params, keywords, keyword_line_index]
               
   def showParams(self):
     """Display dictionary of recognized key:value pairs from mdp file.
@@ -229,25 +236,25 @@ class MdpFile(object):
     TODO
       Searching in the parameter file can be facilitated if we store a dictionary of which line a keyword is specified on.
     """
-    
-    # if keyword not already in our ordered list of keywords, append it    
-    if self.keywords.count(keyword) == 0:
-      self.keywords.append(keyword)
-    
-    # set keyword in dictionary
+
+    # determine whether the keyword already exists
+    keyword_exists = self.keyword_line_index.has_key(keyword)
+
+    # set keyword in dictionary (creating or overriding)
     self.params[keyword] = valuestr
 
-    # replace instances of this 'keyword = value' in the mdp lines
-    foundone = False
-    for i in range(0,len(self.lines)):
-        fields = self.lines[i].strip().split()
-        if len(fields) > 0:
-            if fields[0] == keyword:
-                self.lines[i] = self.keyword2line(keyword)
-                foundone = True
-    # if can't find keyword in previous lines, add it to the lines
-    if foundone == False:
-        self.lines.append( self.keyword2line(keyword))
+    # create a new line from this keyword-value pair
+    line = self.keyword2line(keyword)
+    
+    if keyword_exists:
+      # if keyword exists, replace the line      
+      line_index = self.keyword_line_index[keyword]
+      self.lines[line_index] = line
+    else:
+      # if keyword does not exists, add a line
+      self.lines.append(line)      
+      self.keywords.append(keyword) # add the keyword to the list            
+      self.keyword_line_index[keyword] = len(self.lines) - 1 # store line number of the appended line
 
     return
         
