@@ -105,7 +105,7 @@ class MdpFile(object):
       lines = mdpfile
     elif (type(mdpfile) == str):
       # if a filename is provided, get its contents
-      fin = open(filename, 'r')
+      fin = open(mdpfile, 'r')
       lines = fin.readlines()
       fin.close()
     else:
