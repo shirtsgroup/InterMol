@@ -107,6 +107,8 @@ class MdpFile(object):
       # if a filename is provided, get its contents
       fin = open(mdpfile, 'r')
       lines = fin.readlines()
+      # remove extraneous newlines 
+      lines = map(lambda x:x.rstrip("\n"),lines)
       fin.close()
     else:
       raise "Unrecognized argument: " + repr(mdpfile)
