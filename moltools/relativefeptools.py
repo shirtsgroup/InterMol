@@ -137,6 +137,9 @@ def loadGAFFMolecule(ligand_basepath, ligand_name):
     # load file
     ligand = readMolecule(ligand_mol2_filename, normalize = True)
 
+    # override title
+    ligand.SetTitle(ligand_name)
+
     # read .off file
     off_lines = read_file(ligand_off_filename)
 
@@ -286,112 +289,6 @@ def adjustCharges(q_n, target_net_charge):
 
     # return new charges
     return qnew_n
-
-def determineMutatedCharges(molecule1, molecule2, match):
-    """Determine charges for mutated groups in specified molecules.
-
-    ARGUMENTS
-      molecule1 (OEMol) - the 'pattern' molecule
-      molecule2 (OEMol) - the 'target' molecule
-      match (?) - the MCSS list of match pairs of atoms
-
-    RETURNS
-      charges1 (dict of strings) - charges1[atomname] is the mutated charges associated with atom atomname from molecule1
-      charges2 (dict of strings) - 
-    """
-      
-    # ignore ligands that have different partial charges
-    if abs(totalPartialCharge(ligand1) - totalPartialCharge(ligand2)) > 0.1:
-        print "molecules %s (%f) and %s (%f) have different total charges.  Cannot set up mutation." % (molecule1.GetTitle(), totalPartialCharge(molocule1), molecule2.GetTitle(), totalPartialCharge(molecule2))
-        return None
-          
-    # determine number of atoms in common substructure
-    N = match.NumAtoms()
-      
-    # determine desired net charge for substructure
-    target_net_charge = totalPartialCharge(ligand1)
-
-    # get substructure charges from both ligands
-    q1_n = zeros([N], float64)
-    q2_n = zeros([N], float64)
-    n = 0
-    for matchpair in match.GetAtoms():
-        q1_n[n] = matchpair.pattern.GetPartialCharge()
-        q2_n[n] = matchpair.target.GetPartialCharge()
-        n += 1
-
-    # compute average charge to use as 'target' for fit
-    qavg_n = 0.5 * (q1_n + q2_n)
-        
-    # adjust charges to RMS fit 'target' charges
-    qavg_adjusted_n = adjustCharges(qavg_n, target_net_charge)
-
-    # DISPLAY CHARGES
-    print "%6s %6s %6s" % ('1', 'common', '2')
-    for n in range(N):
-        print "%6.3f %6.3f %6.3f" % (q1_n[n], qavg_adjusted_n[n], q2_n[n])
-    print ""
-    print "%6.3f %6.3f %6.3f" % (sum(q1_n), sum(qavg_adjusted_n), sum(q2_n))
-    print ""
-
-    # Make dictionary for translating from state A to state B
-    mutated_charges_1 = dict()
-    for atom in ligand1.GetAtoms():
-        # get atom name
-        atomname = atom.GetName()        
-        # store zero charge
-        mutated_charges_1[atomname] = 0.0
-
-    mutated_charges_2 = dict()
-    for atom in ligand2.GetAtoms():
-        # get atom name
-        atomname = atom.GetName()        
-        # store zero charge
-        mutated_charges_2[atomname] = 0.0
-
-    # Set charges for atoms in common substructure
-    n = 0
-    for matchpair in match.GetAtoms():
-        mutated_charges_1[matchpair.pattern.GetName()] = qavg_adjusted_n[n]
-        mutated_charges_2[matchpair.target.GetName()] = qavg_adjusted_n[n]
-        n += 1
-
-    return (mutated_charges_1, mutated_charges_2)
-
-def determineMutatedAtomtypes(molecule1, molecule2, match):
-    """Determine atomtypes for mutated groups in specified molecules.
-
-    ARGUMENTS
-      molecule1 (OEMol) - the 'pattern' molecule
-      molecule2 (OEMol) - the 'target' molecule
-      match (?) - the MCSS list of match pairs of atoms
-
-    RETURNS
-      mutated_atomtypes_1 (dict of strings) - atomtypes1[atomname] is the mutated atomtype associated with atom atomname from molecule1
-      mutated_atomtypes_2 (dict of strings) - 
-    """      
-
-    # Make dictionary for translating from state A to state B
-    mutated_atomtypes_1 = dict()
-    for atom in ligand1.GetAtoms():
-        # get atom name
-        atomname = atom.GetName()        
-        # store mutated atomtype
-        mutated_atomtypes_1[atomname] = atom.GetType() + "_dummy"
-
-    mutated_atomtypes_2 = dict()
-    for atom in ligand2.GetAtoms():
-        # get atom name
-        atomname = atom.GetName()        
-        # store mutated atomtype
-        mutated_atomtypes_2[atomname] = atom.GetType() + "_dummy"
-
-    # Set charges for atoms in common substructure
-    for matchpair in match.GetAtoms():
-        mutated_atomtypes_1[matchpair.pattern.GetName()] = matchpair.pattern.GetType()
-        mutated_atomtypes_2[matchpair.target.GetName()] = matchpair.target.GetType()
-
-    return (mutated_atomtypes_1, mutated_atomtypes_2)
 
 def determineCommonSubstructure(ligands, debug = False, min_atoms = 4):
     """Find a common substructure shared by all ligands.
