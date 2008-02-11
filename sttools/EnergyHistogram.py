@@ -55,18 +55,19 @@ class Histogram(object):
 	if self.nbins > 1:
             self.binwidth = self.bins[1]-self.bins[0]
 
-    def read_valuesFromFile(self, filename):
+    def read_valuesFromFile(self, filename, col=0, comment_chars=['#','@']):
 	"""Read in energies from a one-column (or the first column of a) flat text file."""
 
 	fin = open(filename,'r')
-	lines = fin.readlnes()
+	lines = fin.readlines()
         fin.close()
 	
 	values = []
 	for line in lines:
+	  if comment_chars.count( line[0] ) == 0:
 	    fields = line.strip().split()
 	    if len(fields) > 0:
-		values.append(float(fields))
+		values.append(float(fields[col]))
               	    
 	self.read_values(values)
 	
@@ -160,12 +161,13 @@ class Histogram(object):
 class EnergyHistogram(Histogram):
     """A histogram object, with special features for energy histograms."""
 
-    def __init__(self, nbins=100):
+    def __init__(self, nbins=100, useRosetta_kB=False):
         """Initialize the class, with extras for EnergyHistograms."""
 
         # The energy files have energies defined in terms of kJ/mol
-#        self.kB = 8.314472 * 0.001    # in kJ/( mol*K )
-        self.kB = 1  # for Rosetta
+        self.kB = 8.314472 * 0.001    # in kJ/( mol*K )
+        if useRosetta_kB:
+            self.kB = 1  # for Rosetta
         self.T = 300.	# in K
         self.beta = 1./(self.kB*self.T)
         self.g = 0.     # unitless weight g_T for simulated tempering  
