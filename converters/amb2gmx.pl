@@ -593,6 +593,7 @@ if($pdbnumatoms != $nato){
     printf GRO "%11.5f%11.5f%11.5f\n", $box{x}, $box{y}, $box{z};
   } elsif($box_angles{1} == "109.4712190" && $box_angles{2} == "109.4712190" && $box_angles{3} == "109.4712190") {
     print "Octahedral box.";
+    die "ERROR: Truncated octahedron support is currently broken.";
     # TODO: Check to make sure all box dimensions are equal.
     my $d = $box{x} + 0.0;
     printf GRO "%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d, 0.0, 0.0, (1.0/3.0)*$d, 0.0, -(1./3.)*$d, (1./3.)*sqrt(2)*$d;
@@ -624,9 +625,10 @@ if($box_angles{1} == "90.0000000" && $box_angles{2} == "90.0000000" && $box_angl
 } elsif($box_angles{1} == "109.4712190" && $box_angles{2} == "109.4712190" && $box_angles{3} == "109.4712190") {
   print "Octahedral box.";
   # TODO: Check to make sure all box dimensions are equal.
-  my $d = 2.0 * $box{x} + 0.0;
-#  printf G96 "%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d, 0.0, 0.0, (1.0/3.0)*$d, 0.0, -(1./3.)*$d, (1./3.)*sqrt(2)*$d;
-  printf G96 "%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d
+  # my $d = $box{x} + 0.0;
+  my $d = sqrt(3.)/2. * $box{x} + 0.0;
+  printf G96 "%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2.)*$d, (1./3.)*sqrt(6.)*$d, 0.0, 0.0, (1.0/3.0)*$d, 0.0, -(1./3.)*$d, +(1./3.)*sqrt(2)*$d;
+#  printf G96 "%15.9f%15.9f%15.9f\n", $d, (2./3.)*sqrt(2)*$d, (1./3.)*sqrt(6)*$d
 #  my @ucell = ();
 #  my @box = ($box{x}+0.0, $box{y}+0.0, $box{z}+0.0, $box_angles{1}+0.0, $box_angles{2}+0.0, $box_angles{3}+0.0);
 #  my $DEGRAD = 0.0174532925;
@@ -1035,7 +1037,7 @@ for(my $index = 0; $index < $nato; $index++) {
 printf NDX "\n\n";
 
 printf NDX "[ solute ]\n";
-my $line_count = 0;
+$line_count = 0;
 for(my $index = 0; $index < $firstwatatom; $index++) {
   printf NDX "%d ", ($index+1);
   $line_count++;
