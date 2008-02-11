@@ -259,6 +259,12 @@ class MdpFile(object):
       self.keyword_line_index[keyword] = len(self.lines) - 1 # store line number of the appended line
 
     return
+
+  def getParameter(self,keyword):
+      """Returns the value associated with a particular parameter; or None if the parameter is not set"""
+      if keyword not in self.params:
+          return None
+      return self.params[keyword]
         
   def randomizeSeed(self):
     """Randomize the random seed, adding one if none exists.
