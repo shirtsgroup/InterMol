@@ -1,7 +1,9 @@
 # EnergyHistogram.py
 #
-# Last updated:  Dec 6, 2007
-# 12/06/2007 - Added reading from flat one-column energy files
+# MODIFICATION HISTORY
+#
+# VV: Feb 15, 2008      - Added EnergyHistogram.removeOutliers()
+# VV: 12/06/2007        - Added reading from flat one-column energy files
 
 
 import sys, os, math, numpy
@@ -98,8 +100,8 @@ class Histogram(object):
             return numpy.mean(self.values)
 
     def var(self, usehist=False):
-        """Returns the mean of the values.  The usehist=True will compute
-        the mean from the histogram bins, which in theory is faster for large data sets."""      
+        """Returns the variance of the values.  The usehist=True will compute
+        the variance from the histogram bins, which in theory is faster for large data sets."""      
         if usehist:
             bincenters = self.bins + self.binwidth/2.
             return numpy.dot(bincenters*bincenters, self.ncounts) - (self.mean(usehist=usehist))**2
@@ -179,7 +181,6 @@ class EnergyHistogram(Histogram):
         self.ncounts = None      # holds the normalized histogram counts
         self.bins = None        # holds the lower edges of the bins
         self.binwidth = None    # holds the width of the bin
-
 
     def set_temp(self, T):
         """Set the temperature to T (K)."""
@@ -263,6 +264,41 @@ class EnergyHistogram(Histogram):
 
         # create the histograms
         self.read_values( self.values )
+
+    def removeOutliers(self, nsigma=5.0):
+	"""Remove outliers in the values. Here we assume that the 'real' values
+	are distributed as a Gaussian with std sigma.  Outliers are detected as any
+	points nsigma*sigma beyond the sample mean of the data with the outlier removed."""
+	
+	self.values.sort()
+	
+	# Munch on the left end until we get rid of > nsigma outliers	
+        valuelist = numpy.array( self.values ).tolist()	
+        leftvalue = valuelist.pop(0)
+	self.read_values( valuelist )
+        mu = self.mean()
+        std = math.sqrt(self.var())
+	while abs(leftvalue - mu) > nsigma*std:
+	    valuelist = numpy.array( self.values ).tolist()	
+            leftvalue = valuelist.pop(0)
+	    self.read_values( valuelist )
+            mu = self.mean()
+            std = math.sqrt(self.var())
+	
+	# Munch on the right end until we get rid of > nsigma outliers	
+	valuelist = numpy.array( self.values ).tolist()	
+	rightvalue = valuelist.pop()
+	self.read_values( valuelist )
+	mu = self.mean()
+	std = math.sqrt(self.var())
+	while abs(rightvalue - mu) > nsigma*std:
+	    valuelist = numpy.array( self.values ).tolist()	
+            rightvalue = valuelist.pop()
+	    self.read_values( valuelist )
+            mu = self.mean()
+            std = math.sqrt(self.var())
+		
+        return
 
     def acceptRatio(self, hist2):
         metropolis = numpy.zeros( self.bins.shape )
