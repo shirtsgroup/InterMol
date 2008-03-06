@@ -88,35 +88,6 @@ subroutine ResPosCentroidInd(Pos, AtomResNum, NRes, ResInd, ResPos, NAtom, Dim, 
 	enddo
 end subroutine
 
-subroutine CentroidRange(Pos, Atom1, Atom2, Ret, NAtom, Dim)
-	implicit none
-	integer, intent(in) :: NAtom, Dim, Atom1, Atom2
-	real*8, dimension(NAtom,Dim), intent(in) :: Pos
-	integer, dimension(Dim), intent(out) :: Ret
-	integer :: i
-	Ret = sum(Pos(Atom1+1:Atom2,:), 1) / real(max(Atom2 - Atom1, 1))
-end subroutine
-
-subroutine CentroidAll(Pos, Ret, NAtom, Dim)
-	implicit none
-	integer, intent(in) :: NAtom, Dim
-	real*8, dimension(NAtom,Dim), intent(in) :: Pos
-	integer, dimension(Dim), intent(out) :: Ret
-	integer :: i
-	Ret = sum(Pos, 1) / real(max(NAtom, 1))
-end subroutine
-
-subroutine Center(Pos, CentroidPos, NewPos, NAtom, Dim)
-	implicit none
-	integer, intent(in) :: NAtom, Dim
-	real*8, dimension(NAtom,Dim), intent(in) :: Pos
-	real*8, dimension(Dim), intent(in) :: CentroidPos
-	real*8, dimension(NAtom,Dim), intent(out) :: NewPos
-	integer :: i
-	do i = 1, Dim
-		NewPos(:,i) = Pos(:,i) - CentroidPos(i)
-	enddo
-end subroutine
 
 
 !======== OVERLAP SCORE ========
@@ -1590,19 +1561,3 @@ subroutine HBondContactMap(Pos, NInd, HInd, CInd, OInd, ResInd, ECutoff, CM, NAt
 end subroutine
 	 
 
-!======== MISC FUNCTIONS ========
-
-integer function GetRandomInd(Prob, RanNum, N)
-	integer, intent(in) :: N
-	real*8, dimension(N), intent(in) :: Prob
-	real*8, intent(in) :: RanNum
-	real*8 :: CumProb
-	CumProb = Prob(1)
-	GetRandomInd = 1
-	do while (GetRandomInd < N .and. RanNum >= CumProb)
-		GetRandomInd = GetRandomInd + 1
-		CumProb = CumProb + Prob(GetRandomInd)
-	enddo
-	!correct for python ordering
-	GetRandomInd = GetRandomInd - 1
-end function
