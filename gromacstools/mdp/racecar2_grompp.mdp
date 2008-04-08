@@ -1,12 +1,13 @@
+; This racecar2_grompp is for performing a 5ns pressure equiibration run
 title                   = SMP-msv-03 
 cpp                     = cpp
 integrator              = md
 
-nsteps                  = 100000    ; should be 100000
+nsteps                  = 2500000    ; should be 2500000
 nstlist                 = 10
 dt                      = 0.002
 constraints             = hbonds       ; Dan had hboinds here
-constraint-algorithm    = shake        ; Dan had shake here....
+constraint-algorithm    = shake        ; Xuhui uses lincs...  in any case, constraint-algorithm MUST BE DEFINED!
 shake_tol               = 0.0001       ; Dan didnt have this set before
 ns_type                 = grid
 
@@ -20,25 +21,31 @@ rvdw_switch		= 1.0
 rvdw			= 1.2
 
 tcoupl                  = nose-hoover 
-tc_grps                 = protein sol   
-tau_t                   = 0.0109 0.0109
-ref_t                   = 300 300 
-energygrps		= protein sol
+tc_grps                 = protein ions sol   
+tau_t                   = 0.0109 0.0109 0.0109
+ref_t                   = 300 300 300
+energygrps		= protein ions sol
 
 annealing = no
 
-comm_grps		= protein sol
+pcoupl                  = berendsen     ; John's recommendatiion for energy conservation
+pcoupl_type             = isotropic
+tau_p                   = 1
+compressibility         = 4.5e-5
+ref_p                   = 1
+
+comm_grps		= protein ions sol
 comm_mode		= linear
-nstcomm			= 10
+nstcomm			= 1
 
 gen_vel			= yes
 gen_temp		= 300
 gen_seed		= -1
 
-nstlog                  = 10000 
-nstenergy               = 10000 
-nstxout                 = 10000 
-nstvout                 = 10000 
-nstxtcout               = 10000 
-xtc_grps                = protein
+nstlog                  = 5000     ; every 10 ps for SREM
+nstenergy               = 5000     ; every 10 ps for SREM
+nstxout                 = 0 
+nstvout                 = 0 
+nstxtcout               = 5000     ; every 10 ps for SREM
+xtc_grps                = protein ions
 xtc-precision           = 1000
