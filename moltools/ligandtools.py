@@ -39,15 +39,15 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
    ARGUMENTS
      pdbfile (String) - the name of the PDB file from which the ligand is to be extracted
 
-   RETURNS
-     ligand (OEMol) - the ligand extracted from the PDB file
-     
    OPTIONAL ARGUMENTS
      resnum - limit HETATM extraction to this residue, if specified (default: None)
      resname - limit HETATM extraction to this residue name, if specified (default: None)
      chain - limit HETATM extraction to this chain, if specified (default: None)
      outfile - if specified, the molecule is written to this output file (default: None)
 
+   RETURNS
+     ligand (OEMol) - the ligand extracted from the PDB file
+     
    NOTES
      The molecule will be 'normalized' by protonating it and naming it according to its IUPAC name.
      Parts that are not recognized will be termed 'BLAH'.
@@ -465,7 +465,7 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
     """Enumerate protonation or tautomer states for a list of molecules.
 
     ARGUMENTS
-      molecules (list of OEMol) - molecules for which states are to be enumerated
+      molecules (OEMol or list of OEMol) - molecules for which states are to be enumerated
 
     OPTIONAL ARGUMENTS
       enumerate - type of states to expand -- 'protonation' or 'tautomer' (default: 'protonation')
@@ -480,6 +480,10 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
       Pick the most likely state?
       Add more optional arguments to control behavior.
     """
+
+    # If 'molecules' is not a list, promote it to a list.
+    if type(molecules) != type(list()):
+       molecules = [molecules]
 
     # Check input arguments.
     if not ((enumerate == "protonation") or (enumerate == "tautomer")):
@@ -500,13 +504,13 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
         # Dump enumerated states to output stream (ostream).
         if (enumerate == "protonation"): 
             # Create a functor associated with the output stream.
-            functor = OETyperMolFunction(ostream, consider_aromaticity, only_count_states = False, maxstates = maxstates)
+            functor = OETyperMolFunction(ostream, consider_aromaticity, False, maxstates)
             # Enumerate protonation states.
             if (verbose): print "Enumerating protonation states..."
             states_enumerated += OEEnumerateFormalCharges(molecule, functor, verbose)        
         elif (enumerate == "tautomer"):
             # Create a functor associated with the output stream.
-            functor = OETautomerMolFunction(ostream, consider_aromaticity, only_count_states = False, maxstates = maxstates)
+            functor = OETautomerMolFunction(ostream, consider_aromaticity, False, maxstates)
             # Enumerate tautomeric states.
             if (verbose): print "Enumerating tautomer states..."
             states_enumerated += OEEnumerateTautomers(molecule, functor, verbose)    
@@ -553,16 +557,26 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL'):
    ostream = oemolostream()
    ostream.open(filename)
 
-   # Write molecule (writing separate conformers)
-   for conformer in molecule.GetConfs():
-      OEWriteMolecule(ostream, conformer)
+   # Define internal function for writing multiple conformers to an output stream.
+   def write_all_conformers(ostream, molecule):
+      # write all conformers of each molecule
+      for conformer in molecule.GetConfs():
+         OEWriteMolecule(ostream, conformer)
+      return
+
+   # If 'molecule' is actually a list of molecules, write them all.
+   if type(molecule) == type(list()):
+      for individual_molecule in molecule:
+         write_all_conformers(ostream, individual_molecule)
+   else:
+      write_all_conformers(ostream, molecule)
 
    # Close the stream.
    ostream.close()
 
    # Replace substructure name if mol2 file.
    suffix = os.path.splitext(filename)[-1]
-   if (suffix == '.mol2'):
+   if (suffix == '.mol2' and substructure_name != None):
       modifySubstructureName(filename, substructure_name)
 
    return

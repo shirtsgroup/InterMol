@@ -354,7 +354,10 @@ def determineCommonSubstructure(ligands, debug = False, min_atoms = 4):
                 for atom in common_substructure.GetAtoms():
                     print "%5d %6s %12s" % (atom_index, atom.GetName(), atom.GetType())
                     atom_index += 1
-                print ""        
+                print ""
+
+            # we only need to consider one match
+            break
     
     # return the common substructure
     return common_substructure
