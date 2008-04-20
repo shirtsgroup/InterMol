@@ -28,6 +28,8 @@
 # - Hacked in support for magnesium ions.
 # - Added support for writing .g96 files.
 # - Fixed bug in truncated octahedron box support.  Things now compare favorably with AMBER energies.
+# v.006 2008-04-20 JDC
+# - Fixed bug where generated index file (.ndx) would list one extra solvent atom at the end.
 # ==============================================================================================
 # TODO and KNOWN BUGS:
 # - Figure out what the "[ pairs ]" section is really doing.
@@ -1038,8 +1040,8 @@ printf NDX "\n\n";
 
 printf NDX "[ solute ]\n";
 $line_count = 0;
-for(my $index = 0; $index < $firstwatatom; $index++) {
-  printf NDX "%d ", ($index+1);
+for(my $index = 1; $index < $firstwatatom; $index++) {
+  printf NDX "%d ", $index;
   $line_count++;
   if($line_count == 15) {
     printf NDX "\n";
