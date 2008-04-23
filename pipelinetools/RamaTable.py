@@ -239,7 +239,7 @@ class RamaTable:
         r = random.random()
         CumProb = 0.
         for i in range(self.RamaNPhi):
-          for j in range(self.RamaNPsi):serverV3M_c
+          for j in range(self.RamaNPsi):
             CumProb += RamaProb[i,j]
             if r < CumProb:
               Phi = -180. + self.RamaDPhi * (i + random.random()) 
