@@ -20,6 +20,7 @@
 # - Turn off MODELLER debug output.
 #=============================================================================================
 # CHANGELOG:
+# 2007-08-20 VAV Added ACE and NH2 cappipn
 # 2007-06-20 JDC Fixed a bug in processing of SEQADV, but still not sure it's robust.
 # 2007-06-19 JDC Added new method modelMissingAtoms to model missing atoms and residues.
 # 2007-05-20 GRB Created, debugged.
@@ -29,6 +30,8 @@
 # GLOBAL IMPORTS
 from modeller import *
 from modeller.automodel import *
+from modeller.scripts import complete_pdb 
+
 import os
 import os.path
 import shutil
@@ -482,7 +485,7 @@ for [pdb_file, seq_file] in files:
 
         return
 
-    def makeModel(self, pdbFilename, sequenceFilename, outFile, projName=' ', chain=' '):
+    def makeModel(self, pdbFilename, sequenceFilename, outFile, projName=' ', chain=' ', captermini=False):
         """Creates a PDB file for the sequence by fitting it to the PDB file using Modeller.
 
         myModel.make_model(pdbFile, sequenceFilename, outFile)
@@ -545,17 +548,37 @@ for [pdb_file, seq_file] in files:
         print >> modSeqFile, "sequence:target:::::::0.00: 0.00"
         print >> modSeqFile, seq + "*"
         modSeqFile.close()
+	
+	
+        if (captermini):
+	    class mymodel (automodel):
+		def special_patches(self, aln):
+		    # Acylate the N-terminal 
+		    self.patch(residue_type='ACE ', residues=(self.residues[0])) 				
+		    self.patch(residue_type='CT2 ', residues=(self.residues[-1])) 				
+	
 
         # Create a new environemnt.
         env = environ()
 
+        # Override automatic patching for NTER an CTER 
+        if (captermini):
+	        env.patch_default = False
+
         # do alignment
         aln = alignment(env)
         mdl = model(env, file=pdbFilename)
-        aln.append_model(mdl, align_codes='template', atom_files=pdbFilename)        aln.append(file='target.ali', align_codes='target')        aln.align2d()        aln.write(file='alignment.ali', alignment_format='PIR')        aln.write(file='alignment.pap', alignment_format='PAP')
+        aln.append_model(mdl, align_codes='template', atom_files=pdbFilename)
+        aln.append(file='target.ali', align_codes='target')
+        aln.align2d()
+        aln.write(file='alignment.ali', alignment_format='PIR')
+        aln.write(file='alignment.pap', alignment_format='PAP')
 
         # make a single model
-        a = automodel(env, alnfile='alignment.ali', knowns='template', sequence='target')
+        if (captermini):
+            a = mymodel(env, alnfile='alignment.ali', knowns='template', sequence='target')
+        else:
+            a = automodel(env, alnfile='alignment.ali', knowns='template', sequence='target')
         a.starting_model = 1
         a.ending_model = 1
         a.make()
@@ -571,5 +594,4 @@ for [pdb_file, seq_file] in files:
           for filename in os.listdir(projName):
             os.remove(os.path.join(projName, filename))
           os.rmdir(projName)
-      
       
