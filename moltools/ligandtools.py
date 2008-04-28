@@ -124,14 +124,15 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
    # Return the molecule.
    return molecule
 #=============================================================================================
-def createMoleculeFromIUPAC(name, verbose = False):
+def createMoleculeFromIUPAC(name, verbose = False, charge = None):
    """Generate a small molecule from its IUPAC name.
 
    ARGUMENTS
      IUPAC_name (string) - IUPAC name of molecule to generate
 
    OPTIONAL ARGUMENTS
-     verbose (boolean) - if True, subprocess output is shown
+     verbose (boolean) - if True, subprocess output is shown (default: False)
+     charge (int) - if specified, a form of this molecule with the desired charge state will be produced (default: None)
 
    RETURNS
      molecule (OEMol) - the molecule
@@ -161,6 +162,20 @@ def createMoleculeFromIUPAC(name, verbose = False):
    omega.SetMaxConfs(1) # set maximum number of conformations to 1
    omega(molecule) # generate conformation      
 
+   if (charge != None):
+      # Enumerate protonation states and select desired state.
+      protonation_states = enumerateStates(molecule, enumerate = "protonation", verbose = verbose)
+      for molecule in protonation_states:
+         if formalCharge(molecule) == charge:
+            # Return the molecule if we've found one in the desired protonation state.
+            return molecule
+      if formalCharge(molecule) != charge:
+         print "enumerateStates did not enumerate a molecule with desired formal charge."
+         print "Options are:"
+         for molecule in protonation_states:
+            print "%s, formal charge %d" % (molecule.GetTitle(), formalCharge(molecule))
+         raise "Could not find desired formal charge."
+    
    # Return the molecule.
    return molecule
 #=============================================================================================
@@ -492,7 +507,8 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
     # Create an internal output stream to expand states into.
     ostream = oemolostream()
     ostream.openstring()
-
+    ostream.SetFormat(OEFormat_SDF)
+    
     # Default parameters.
     only_count_states = False # enumerate states, don't just count them
 
@@ -515,15 +531,16 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
             if (verbose): print "Enumerating tautomer states..."
             states_enumerated += OEEnumerateTautomers(molecule, functor, verbose)    
     print "Enumerated a total of %d states." % states_enumerated
-            
+
     # Collect molecules from output stream into a list.
     states = list()
     if (states_enumerated > 0):    
         state = OEMol()
         istream = oemolistream()
-        istream.openstring(ostream.GetString())    
+        istream.openstring(ostream.GetString())
+        istream.SetFormat(OEFormat_SDF)
         while OEReadMolecule(istream, state):
-            states.append(state)
+           states.append(OEMol(state)) # append a copy
 
     # Return the list of expanded states as a Python list of OEMol() molecules.
     return states
@@ -1237,13 +1254,17 @@ def modifySubstructureName(mol2file, name):
 
    NOTES
      This is useful becuase the OpenEye tools leave this name set to <0>.
+     The transformation is only applied to the first molecule in the mol2 file.
+
+   TODO
+     This function is still in David Mobley unreadable-coding style.  It should be rewritten to be comprehensible by humans.
    """
 
    # Read mol2 file.
    file = open(mol2file, 'r')
    text = file.readlines()
    file.close()
-   
+
    # Find the atom records.
    atomsec = []
    ct = 0
