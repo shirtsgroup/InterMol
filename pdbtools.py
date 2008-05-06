@@ -38,7 +38,7 @@ def readAtomsFromPDB(pdbfilename):
       chain - the one-character chain ID of the chain to import (default ' ')
 
     RETURN VALUES
-      sequence (dictionary) - sequence[residue_id] is the one-letter code corresponding to residue index residue_id
+      atoms - a list of atom{} dictionaries
 
     The ATOM records are read, and the sequence for which there are atomic coordinates is stored.
 
@@ -48,9 +48,10 @@ def readAtomsFromPDB(pdbfilename):
     pdbfile = open(pdbfilename, 'r')
     lines = pdbfile.readlines()
     pdbfile.close()
+    
 
     # Read atoms.
-    atoms = [ ]
+    atoms = []
     for line in lines:
         if line[0:6] == "ATOM  ":
             # Parse line into fields.
@@ -79,7 +80,7 @@ def readAtomsFromPDB(pdbfilename):
             atom["charge"] = line[78:80]
             
             atoms.append(atom)
-            
+
     # Return list of atoms.
     return atoms
 
@@ -122,8 +123,31 @@ def writeAtomsToPDB(pdbfilename, atoms, renumber = False, ignh = False):
     # Write atoms.
     for atom in atoms:
       if (not ignh) or (not isAtomNameHydrogen(atom["name"] )):   # Ignore hydrogens if desired
-        pdbfile.write('ATOM  %(serial)5d %(name)4s%(altLoc)c%(resName)4s%(chainID)c%(resSeq)4d%(iCode)c   %(x)8.3f%(y)8.3f%(z)8.3f%(occupancy)6.2f%(tempFactor)6.2f%(element)2s%(charge)2s\n' % atom)
+        pdbfile.write('ATOM %(serial)6d %(name)4s%(altLoc)c%(resName)4s%(chainID)c%(resSeq)4d%(iCode)c   %(x)8.3f%(y)8.3f%(z)8.3f%(occupancy)6.2f%(tempFactor)6.2f%(element)2s%(charge)2s\n' % atom)
     pdbfile.close()
+
+def new_atom(self): 
+    """Return a new 'blank' atom dictionary, filled with dummy values."""
+
+    atom = {}
+    atom["x"] = 0.0
+    atom["y"] = 0.0
+    atom["z"] = 0.0
+    atom["tempFactor"] = 1.0
+    atom["resName"] = 'DUM '
+    atom["serial"] = 1        
+    atom["name"] = ' C  '
+    atom["altLoc"] = ' '
+    atom["chainID"] = 'A'
+    atom["resSeq"] = 1
+    atom["iCode"] = ' '
+    atom["occupancy"] = 1.0
+    atom["segID"] = ''
+    atom["element"] = ''
+    atom["charge"] = ''
+
+    return new_atom
+
 
 def isAtomNameHydrogen( atomName ):
     """Returns True if the atomName denotes a non-water hydrogen."""
@@ -403,7 +427,7 @@ def countSolventResiduesFromGromacsStructure(gstruct):
     return [ nClres, nNares, nsolres ]
       
 
-def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False):
+def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False, stripDummy=False):
     """Take in a *.gro Grofile file and write it as a PDB file."""
     
     gstruct = GromacsStructure(name=grofile, header="title" )
@@ -433,6 +457,9 @@ def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False):
             atoms.append(atom)
         elif (atom["resName"].count('Cl')>0) or (atom["resName"].count('Na')>0):
           if not stripIons:
+            atoms.append(atom)
+        elif (atom["resName"].count('DMM')>0):
+          if not stripDummy:
             atoms.append(atom)
         else:
             atoms.append(atom)
@@ -568,8 +595,7 @@ def isPDBProtonationSame( pdbfile1, pdbfile2 ):
     
     return (state1 == state2)
 
-    
-    
+
     
     
     
