@@ -146,7 +146,7 @@ def new_atom():
     atom["element"] = ''
     atom["charge"] = ''
 
-    return new_atom
+    return atom
 
 
 def isAtomNameHydrogen( atomName ):
