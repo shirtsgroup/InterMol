@@ -126,7 +126,7 @@ def writeAtomsToPDB(pdbfilename, atoms, renumber = False, ignh = False):
         pdbfile.write('ATOM %(serial)6d %(name)4s%(altLoc)c%(resName)4s%(chainID)c%(resSeq)4d%(iCode)c   %(x)8.3f%(y)8.3f%(z)8.3f%(occupancy)6.2f%(tempFactor)6.2f%(element)2s%(charge)2s\n' % atom)
     pdbfile.close()
 
-def new_atom(self): 
+def new_atom(): 
     """Return a new 'blank' atom dictionary, filled with dummy values."""
 
     atom = {}
