@@ -1,4 +1,10 @@
 README
+mmtools/pipelinetools/examples
+
+Try:
+>>> ./thread_multichain
+
+This will thread a mutant sequence onto the three-chain PDB structure 1bb1.pdb
 
 FILES
 
