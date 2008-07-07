@@ -1,0 +1,2 @@
+python2.4 ../thread_model.py --pdb 1bb1.pdb --seq 1bb1_mutant.seq --outpdb result.pdb
+
