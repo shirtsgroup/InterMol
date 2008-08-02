@@ -128,39 +128,65 @@ def rename_termini(npdb):
     
     ARGUMENTS
         npdb - 
-    
+
     """
 
-    # Get three-letter residue names of N- and C-termini.
-    ntrname = npdb[1][0][17:20]
-    ctrname = npdb[-2][0][17:20]
+    # Modified by Vincent Voelz August 1, 2008 to rename the termini for multiple chains
 
-    # Rename N-terminal residue 'XXX' to 'NXXX'.
-    for j in [0,1]:
-        for i in range(len(npdb[j])):
-            npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
+    # NOTES
+    # Find all instances of 'NTR' and 'CTR'.  These names appear as different residues, even though they
+    # demarcate the N- and C- terminal parts of the terminal residues
+
+    # First find *all* instances of termini
+    NTerminiRes = []
+    CTerminiRes = []
+    for i in range(0,len(npdb)):
+        if npdb[i][0][17:20] == 'NTR':
+            NTerminiRes.append(i)
+        if npdb[i][0][17:20] == 'CTR':
+            CTerminiRes.append(i)
             
-    # Rename C-terminal residue from 'XXX' to 'CXXX', with some exceptions (noted below).
-    # Also rename terminal oxygen atoms.
-    for j in [-1,-2]:
-        for i in range(len(npdb[j])):
-            # VAV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
-            if ctrname=='LYN':      
-                npdb[j][i] = npdb[j][i][0:17]+'CLYP'+npdb[j][i][21:]
-            else:   
-                npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
-                            
-            # DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
-            # Adding the below to do the renaming.
-            if npdb[j][i][13:16].split()[0]=='O':
-                npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
-            elif npdb[j][i][13:16].split()[0]=='OXT':
-                npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
+    # check to see if there are equal numbers of termini residues found
+    if len(NTerminiRes) != len(CTerminiRes):
+        raise "len(NTerminiRes) != len(CTerminiRes)"
+
+    # Do renamimng for all pairs of termini found
+    for k in range(0,len(CTerminiRes)):
+        
+        NResIndex = NTerminiRes[k]
+        CResIndex = CTerminiRes[k]
+        
+        
+        # Get three-letter residue names of N- and C-termini.
+        ntrname = npdb[NResIndex+1][0][17:20]
+        ctrname = npdb[CResIndex-1][0][17:20]
+    
+        # Rename N-terminal residue 'XXX' to 'NXXX'.
+        for j in [NResIndex,NResIndex+1]:
+            for i in range(len(npdb[j])):
+                npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
                 
-            #VAV 6/5/2007: gmx ffamber doesn't have "CD1" as an ILE/CILE atomname, only "CD"
-            if ctrname=='ILE':      
-                if npdb[j][i][13:16].split()[0]=='CD1':
-                    npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
+        # Rename C-terminal residue from 'XXX' to 'CXXX', with some exceptions (noted below).
+        # Also rename terminal oxygen atoms.
+        for j in [CResIndex-1,CResIndex]:
+            for i in range(len(npdb[j])):
+                # VAV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
+                if ctrname=='LYN':      
+                    npdb[j][i] = npdb[j][i][0:17]+'CLYP'+npdb[j][i][21:]
+                else:   
+                    npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
+                                
+                # DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
+                # Adding the below to do the renaming.
+                if npdb[j][i][13:16].split()[0]=='O':
+                    npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
+                elif npdb[j][i][13:16].split()[0]=='OXT':
+                    npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
+                    
+                #VAV 6/5/2007: gmx ffamber doesn't have "CD1" as an ILE/CILE atomname, only "CD"
+                if ctrname=='ILE':      
+                    if npdb[j][i][13:16].split()[0]=='CD1':
+                        npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
         
 def nest_pdb(pdbarr):
     """Collect lines of the PDB file by residue.
