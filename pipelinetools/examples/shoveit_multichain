@@ -1,0 +1,2 @@
+python2.4 ../shoveit.py -p 1bb1.pdb -f ffamber03 -c 0.15 -s 1bb1_mutant.seq -o result_shoveit
+
