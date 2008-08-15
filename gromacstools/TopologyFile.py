@@ -116,7 +116,6 @@ class TopologyFile(object):
     ifdefs = []
     i = 0
     while i < len(templines):
-      print 'templines[',i,']',templines
       if len(templines[i]) >= len('#ifdef '):
         if templines[i][0:len('#ifdef ')] == '#ifdef ':
           ifdefs.append([])
@@ -592,6 +591,11 @@ Protein             3
     if self.atoms.has_key(atomnum):
         self.atoms[atomnum][7] = '%6.4f'%mass
 
+  def set_atomnum(self, atomnum, newatomnum):
+    """Set the atomnum (int) of the specified atom number."""
+    if self.atoms.has_key(atomnum):
+        self.atoms[atomnum][0] = str(newatomnum)
+
         
   # ADDING AND REMOVING
   
@@ -620,10 +624,100 @@ Protein             3
     if Renumber:
       self.renumber_atoms()
       
-  def renumber_atoms(self):
-    """Renumber the atoms in consecutive order from 1 to N"""
-    pass
-  
+  def renumber_atoms(self, NameOrdering=None, Verbose=False):
+    """Renumber the atoms in consecutive order from 1 to N.
+    
+    OPTIONAL
+    NameOrdering    a list of tuples [(resnum,'CB'),(resnum,'HB1'), (resnum,'HB2'), ... ] specifying the 1 to N order
+    """
+    
+    # find all the viable atom numbers
+    ViableAtomNumbers = [atomnum for atomnum in self.atoms.keys()]
+    ViableAtomNumbers.sort()
+
+    # make a mapping from current to future numbering: {currentnum:futurenum}
+    mapping = {}
+    for i in range(len(ViableAtomNumbers)):
+      mapping[ViableAtomNumbers[i]] = i + 1
+      
+    # order the atoms by NameOrdering, if specified 
+    if NameOrdering != None:
+      for currentnum, futurenum in mapping.iteritems():
+        FoundIt = False
+        for NameTuple in NameOrdering:
+          if (self.get_atomresnum(currentnum) == NameTuple[0]) & (self.get_atomname(currentnum) == NameTuple[1]):
+            mapping[currentnum] = NameOrdering.index(NameTuple) + 1
+            FoundIt = True
+        if not FoundIt:
+            raise "Can't find atom name tuple %r in the specified NameOrdering %r"%(NameTuple,NameOrdering)
+    
+    # map to the new numbering
+    newatoms = {}
+    newbonds = {}
+    newpairs = {}
+    newangles = {}
+    newdihedrals = {}
+    
+    for atomnum, atomlist in self.atoms.iteritems():
+      try:
+        newatoms[mapping[atomnum]] = [ str(mapping[int(atomlist[0])]), atomlist[1], atomlist[2], atomlist[3], atomlist[4],
+                                       str(mapping[int(atomlist[5])]), atomlist[6], atomlist[7] ] + atomlist[8:]
+      except:
+        raise "Problems mapping atomnum %d : %d"%(atomnum,atomlist)
+      
+    for bondkey, bondlist in self.bonds.iteritems():
+      try:
+        newbondkey = (mapping[bondkey[0]], mapping[bondkey[1]])
+        newbonds[ newbondkey ] = [ str(mapping[int(bondlist[0])]), str(mapping[int(bondlist[1])]) ] + bondlist[2:]
+      except:
+        raise "Problems mapping pairkey %r : %r"%(pairkey,pairlist)
+    
+    for pairkey, pairlist in self.pairs.iteritems():
+      try:
+        newpairkey = (mapping[pairkey[0]], mapping[pairkey[1]])
+        newpairs[ newpairkey ] = [ str(mapping[int(pairlist[0])]), str(mapping[int(pairlist[1])]) ] + pairlist[2:]
+      except:
+        raise "Problems mapping pairkey %r : %r"%(pairkey,pairlist)
+    
+    for anglekey, anglelist in self.angles.iteritems():
+      try:
+        newanglekey = (mapping[anglekey[0]], mapping[anglekey[1]], mapping[anglekey[2]])
+        newangles[ newanglekey ] = [ str(mapping[int(anglelist[0])]), str(mapping[int(anglelist[1])]), str(mapping[int(anglelist[2])]) ] + anglelist[3:]
+      except:
+        raise "Problems mapping anglekey %r : %r"%(anglekey,anglelist)
+    
+    for dihedralkey, dihedralist in self.dihedrals.iteritems():
+      try:
+        newdihedralkey = (mapping[dihedralkey[0]], mapping[dihedralkey[1]], mapping[dihedralkey[2]], mapping[dihedralkey[3]])
+        newdihedrals[ newdihedralkey ] = [ str(mapping[int(dihedralist[0])]), str(mapping[int(dihedralist[1])]),
+                                           str(mapping[int(dihedralist[2])]), str(mapping[int(dihedralist[3])]) ] + dihedralist[4:]
+      except:
+        raise "Problems mapping dihedralkey %r : %r"%(dihedralkey,dihedralist)
+
+    if Verbose: 
+      print 'newatoms', newatoms  
+      print 'newbonds', newbonds  
+      print 'newpairs', newpairs  
+      print 'newangles', newangles  
+      print 'newdihedrals', newdihedrals  
+
+    self.atoms = copy.copy(newatoms)
+    self.bonds = copy.copy(newbonds)
+    self.pairs = copy.copy(newpairs)
+    self.angles = copy.copy(newangles)
+    self.dihedrals = copy.copy(newdihedrals)
+      
+    
+    # Q: do a final ordering?
+    # A: NOPE.  When printed with __repr__() the keys will be ordered.
+    
+    return
+
+  def get_new_atomnum(self):
+    """Returns a new atom number, i.e. returns N+1 if the atoms run from 1 to N."""
+    atomnums = self.atoms.keys()
+    atomnums.sort()
+    return atomnums[-1] + 1
         
   # FORMATTING        
         
