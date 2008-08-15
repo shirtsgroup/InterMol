@@ -31,11 +31,11 @@ def rename_residues(pdbarr, renameTermini=True):
     print "Nest/unnest leads to",len(unnest_pdb(npdb)),"items"
 
     # Convert residue and atom names to be appropriate for AMBER.
-    rename_charged(npdb)
-    histidine_search(npdb)
-    disulfide_search(npdb)
+    npdb = rename_charged(npdb)
+    npdb = histidine_search(npdb)
+    npdb = disulfide_search(npdb)
     if (renameTermini):
-        rename_termini(npdb)
+        npdb = rename_termini(npdb)
 
     # Un-nest PDB
     pdbarr = unnest_pdb(npdb)
@@ -45,6 +45,8 @@ def rename_residues(pdbarr, renameTermini=True):
 
     # Return the PDB file.
     return pdbarr
+
+    
 
 
 def rename_charged(npdb):
@@ -74,7 +76,7 @@ def rename_charged(npdb):
             npdb[i]=map(lambda x:x.replace('GLU','GLH'),npdb[i])
         # Glutamate requires no sub
 
-    return
+    return npdb
 
 
 def labeledPDB_to_AmberPDB(labeledPDBfile, outPDBfile, renameResidues=True):
@@ -187,6 +189,8 @@ def rename_termini(npdb):
                 if ctrname=='ILE':      
                     if npdb[j][i][13:16].split()[0]=='CD1':
                         npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
+    return npdb
+
         
 def nest_pdb(pdbarr):
     """Collect lines of the PDB file by residue.
@@ -290,7 +294,7 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
         npdb[i]=map(lambda x:x.replace('CYS','CYS2'),npdb[i])           
         npdb[i]=map(lambda x:x.replace('CYD','CYS2'),npdb[i])           
         
-    return
+    return npdb
 
 def atom_is_present(pdblines, atomname):
     """Returns TRUE if the given atom is present in the given PDB atom lines.
@@ -333,7 +337,7 @@ def histidine_search(npdb):
             else:
                 raise "No protons found for histidine."
 
-    return
+    return npdb
 
 def pdb_cleanup(pdbarr):
     """Remove extraneous entries from MCCE PDB files.
