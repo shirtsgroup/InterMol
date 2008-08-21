@@ -48,15 +48,15 @@ def readAtomsFromPDB(pdbfilename):
     pdbfile = open(pdbfilename, 'r')
     lines = pdbfile.readlines()
     pdbfile.close()
-    
+
 
     # Read atoms.
     atoms = []
     for line in lines:
-        if line[0:6] == "ATOM  ":
+        if line[0:5] == "ATOM ":
             # Parse line into fields.
             atom = { }
-            atom["serial"] = int(line[6:11])
+            atom["serial"] = int(line[5:11])
             atom["name"] = line[12:16]
             atom["altLoc"] = line[16:17]
             atom["resName"] = line[17:21]
