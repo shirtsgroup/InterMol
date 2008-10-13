@@ -20,6 +20,7 @@
 # - Turn off MODELLER debug output.
 #=============================================================================================
 # CHANGELOG:
+# 2008-10-13 PMK Added allhydrogen option
 # 2007-08-20 VAV Added ACE and NH2 cappipn
 # 2007-06-20 JDC Fixed a bug in processing of SEQADV, but still not sure it's robust.
 # 2007-06-19 JDC Added new method modelMissingAtoms to model missing atoms and residues.
@@ -313,7 +314,7 @@ for [pdb_file, seq_file] in files:
         # Return dictionary of present residues.
         return sequence
 
-    def modelMissingAtoms(self, pdbFilename, outputFilename, chain=' ', debug = False):
+    def modelMissingAtoms(self, pdbFilename, outputFilename, chain=' ', debug = False, allHydrogen = False):
         """Model missing atoms/residues in a specified PDB file using MODELLER.
       
         REQUIRED ARGUMENTS
@@ -443,12 +444,20 @@ for [pdb_file, seq_file] in files:
         if debug: model.write(file=os.path.join(tmpdir,'built.pdb'))
         
         # Override the 'select_atoms' routine in the 'automodel' class to select only the atoms with undefined atomic coordinates in template PDB.
-        class mymodel(modeller.automodel.automodel):
-            def select_atoms(self):
-                missing_atoms = modeller.selection()
-                for atom_index in missing_atom_indices:
-                    missing_atoms.add(self.atoms[atom_index])
-                return missing_atoms
+        if (allHydrogen):
+            class mymodel(modeller.automodel.allhmodel):
+                def select_atoms(self):
+                    missing_atoms = modeller.selection()
+                    for atom_index in missing_atom_indices:
+                        missing_atoms.add(self.atoms[atom_index])
+                    return missing_atoms
+        else:
+            class mymodel(modeller.automodel.automodel):
+                def select_atoms(self):
+                    missing_atoms = modeller.selection()
+                    for atom_index in missing_atom_indices:
+                        missing_atoms.add(self.atoms[atom_index])
+                    return missing_atoms
 
         # Ensure selected atoms feel all nonbonded interactions.
         env.edat.nonbonded_sel_atoms = 1
@@ -485,7 +494,7 @@ for [pdb_file, seq_file] in files:
 
         return
 
-    def makeModel(self, pdbFilename, sequenceFilename, outFile, projName=' ', chain=' ', captermini=False):
+    def makeModel(self, pdbFilename, sequenceFilename, outFile, projName=' ', chain=' ', captermini=False, allHydrogen=False):
         """Creates a PDB file for the sequence by fitting it to the PDB file using Modeller.
 
         myModel.make_model(pdbFile, sequenceFilename, outFile)
@@ -549,8 +558,16 @@ for [pdb_file, seq_file] in files:
         print >> modSeqFile, seq + "*"
         modSeqFile.close()
 	
-	
-        if (captermini):
+
+        if (allHydrogen):
+	    class mymodel (allhmodel):
+                if (captermini):
+                    def special_patches(self, aln):
+                        # Acylate the N-terminal
+                        self.patch(residue_type='ACE ', residues=(self.residues[0]))
+                        self.patch(residue_type='CT2 ', residues=(self.residues[-1]))
+
+        elif (captermini):
 	    class mymodel (automodel):
 		def special_patches(self, aln):
 		    # Acylate the N-terminal 
@@ -575,7 +592,7 @@ for [pdb_file, seq_file] in files:
         aln.write(file='alignment.pap', alignment_format='PAP')
 
         # make a single model
-        if (captermini):
+        if (captermini | allHydrogen):
             a = mymodel(env, alnfile='alignment.ali', knowns='template', sequence='target')
         else:
             a = automodel(env, alnfile='alignment.ali', knowns='template', sequence='target')
