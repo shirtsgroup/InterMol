@@ -506,24 +506,29 @@ class System:
 
 
     
-  def prepareResolvatedFromTemplate(self, grofile, grotemplate, growater, protocol='racecar3', checkForFatalErrors=True, mockrun=False, cleanup=False):
+  def prepareResolvatedFromTemplate(self, grofile, grotemplate, growater, protocol='racecar3', checkForFatalErrors=True, mockrun=False, cleanup=False, gromppOut=()):
       """
       REQUIRED ARGUMENTS
       grofile                  a *.gro file with only the protein residues, and the correct periodic box dimensions
                                The residue names are allowed to clash with the protonation state, which will be reset using 'pdb2gmx -ignh' anyway
       grotemplate              a template grofile containing the correct numbers of ions and solvent molecules   
       growater                 a *.gro file for a single molecule
-      
+      gromppOut = use if want to bypass pdb2gmx, provide topfile and posre file in form (topfile, posrefile)
       """
       self.checkForFatalErrors = checkForFatalErrors
       self.mockrun = mockrun
       self.debug = False
 
       # get the grofile in the right protonation state
-      pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], grofile, self.files.grofile, self.files.topfile)
-      self.rungmx( pdb2gmx )
+      if gromppOut == ():
+        pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], grofile, self.files.grofile, self.files.topfile)
+        self.rungmx( pdb2gmx )
+      else:
+        commands.getoutput('cp %s %s'%(grofile, self.files.grofile ))
+        commands.getoutput('cp %s %s'%(gromppOut[0], self.files.topfile ))
+        commands.getoutput('cp %s %s'%(gromppOut[1], "posre.itp" ))
       self.useTIP3P( self.files.topfile )
-      
+
       # center the protein in the box
       editconf = '%s/editconf -f %s -c -o %s'%(os.environ['GMXPATH'], self.files.grofile, self.files.next_gro()  )
       self.rungmx( editconf, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
@@ -531,6 +536,8 @@ class System:
       
       # fill the coil grofile with the right number of ion and SOL residues from the grofile template
       [ nClres, nNares, nsolres ] = countSolventResiduesFromGrofile(grotemplate)
+      print "nClres: ", nClres, "nNares: ", nNares, "nsolres: ", nsolres,"\n"
+
       totalsolventres = (nsolres + nClres + nNares)
             
       # solvate the box 
@@ -570,122 +577,43 @@ class System:
 	  while nsolres_sofar > totalsolventres:
 	    g.removeatom(-1)
 	    print '### Now %d water residues - we want %d total ###'%(nsolres_sofar,totalsolventres)
-	    
+	    [ nClres_sofar, nNares_sofar, nsolres_sofar ] = countSolventResiduesFromGromacsStructure(g)
+
 	  g.write( self.files.next_gro() )
 	  self.files.increment_gro()
-	  
+	  #change number of waters in the top file		  
+	  copycommand = "cp topol.top %s" %(self.files.topfile)
+	  print copycommand	  
+	  output = commands.getoutput(copycommand)
+	  line = "echo SOL %d >> %s" %(totalsolventres,self.files.topfile)
+	  print line
+	  output = commands.getoutput(line)
+	  print output
+
       else:
 	  print 'Perfect number of waters!'
 	  
-      # minimize the system
+      #add ions
       ### make a tpr file with grompp
-      grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.tprfile, self.files.topfile)
+      grompp = '%s/grompp -f ./em.mdp -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.grofile, self.files.tprfile, self.files.topfile)
       self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )	
-      ### run minimization
-      minimize = '%s/mdrun -v -s %s -c %s '%(os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
-      self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-      self.files.increment_gro()    # must increment filename for any new gmx file 
 
-
-      # add ions
-      # create a make_ndx *.ndx file and 
-      self.make_ndx(self.files.grofile, self.files.ndxfile, groups=['protein', 'sol'] )
-      # the solvent groupu is guaranteed to be group "1"
-      solgroup = 1
-      genion = 'echo %d | %s/genion -s %s -n  %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, os.environ['GMXPATH'], self.files.tprfile,  self.files.ndxfile, self.files.next_gro(), self.setup.positiveIonName, nNares, self.setup.positiveIonCharge, self.setup.negativeIonName, nClres, self.setup.negativeIonCharge)
+      # the solvent groupu is guaranteed to be group "6"
+      solgroup = 6
+      genion = 'echo %d | %s/genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, nNares, self.setup.positiveIonCharge, self.setup.negativeIonName, nClres, self.setup.negativeIonCharge)
+      print genion
       self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
       self.files.increment_gro()    # must increment filename for any new gmx file 
 
-      ### generate a new topolgy file for the ion-ated grofile  
-      pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.next_top())
-      self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+      # run minimimzation with the new ions
+      ### make a tpr file with grompp
+      grompp = '%s/grompp -f ./em.mdp -c %s -o %s -p system.top '%(os.environ['GMXPATH'], self.files.grofile, self.files.next_tpr())
+      self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
+      self.files.increment_tpr()    # must increment filename for any new gmx file 
+      ### run minimization
+      minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
+      self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
       self.files.increment_gro()    # must increment filename for any new gmx file 
-      self.files.increment_top()    # must increment filename for any new gmx file 
-      self.useTIP3P( self.files.topfile )
-	      
-      if (self.protocol == 'racecar2') | (self.protocol == 'racecar3') | (self.protocol == 'quicktest') | (self.protocol == 'shirts-free-energy'):
-  
-	  # run minimimzation once more with the new ions
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-	  ### run minimization
-	  minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
-	  self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_gro()    # must increment filename for any new gmx file 
-  
-	  # run equilibration phase 1: just water with frozen protein.  
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-	  ### run equilibration
-	  equilibrate = '%s/mdrun -v -s %s -c %s '%(os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
-	  self.rungmx( equilibrate, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_gro()    # must increment filename for any new gmx file 
-	  
-	  # Make an index for the separately temperature groups "protein" and "sol"
-	  self.make_ndx( self.files.grofile, self.files.ndxfile )
-	  
-	  # run equilibration phase 2: protein and sol.  
-	  if (self.protocol == 'racecar2'):
-	      self.files.set_mdpEquilibration('racecar2_equil2.mdp')
-	  elif (self.protocol == 'racecar3'):
-	      self.files.set_mdpEquilibration('racecar3_equil2.mdp')
-	  elif (self.protocol == 'quicktest'): 
-	      self.files.set_mdpEquilibration('quicktest_equil2.mdp')
-	  elif (self.protocol == 'shirts-free-energy'):
-	      self.files.set_mdpEquilibration('shirts-free-energy-equil2.mdp')
-	  else:
-	      raise "Protocol Error!"
-  
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s -n %s'%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-	  ### run equilibrate
-	  equilibrate = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
-	  self.rungmx( equilibrate, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_gro()    # must increment filename for any new gmx file 
-  
-	  # Just to be safe, make a new index for the separate temperature groups "protein" and "sol"
-	  self.make_ndx( self.files.grofile, self.files.next_ndx() )
-	  self.files.increment_ndx()    # must increment filename for any new gmx file 
-		  
-	  # setup files for simulation 
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s -n %s'%(os.environ['GMXPATH'], self.files.mdpfile_Simulation, self.files.grofile, self.files.next_tpr(), self.files.topfile, self.files.ndxfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-		  
-  
-      elif self.protocol == 'default':
-	
-	  # run minimimzation once more with the new ions
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Minimization, self.files.grofile, self.files.next_tpr(), self.files.topfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-	  ### run minimization
-	  minimize = '%s/mdrun -v -s %s -c %s '%( os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro() )
-	  self.rungmx( minimize, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_gro()    # must increment filename for any new gmx file 
-	  
-	  # setup files for equilibration 
-	  ### make a tpr file with grompp
-	  grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
-	  self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	  self.files.increment_tpr()    # must increment filename for any new gmx file 
-		  
-  
-      else:
-	
-	  print 'The preparation protocol %s is not supported! Exiting....'%self.protocol
-	  sys.exit(1)
-  
-
-	  
 
       # copy the final files to the final output directory
       self.copyFilesToOutputDir()
