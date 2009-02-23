@@ -4,7 +4,8 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
-from openeye.oeproton import *
+#from openeye.oeproton import *
+from openeye.oequacpac import *
 from openeye.oeiupac import *
 import os
 
@@ -355,7 +356,7 @@ Optional arguments:
    
    return molecule
 
-def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
+def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None, verbose = False):
    """Fit a multi conformer OE molecule (second argument) to a reference OE molecule using the OE Shape toolkit; write the resulting matches to specified outfile. Optionally specify the maximum number of conformers, 'maxconfs', to only get the best maxconfs matches written to that output file. Scores will be printed to stdout. Loosely based on OE Shape tookit documentation."""
 
    outfs = oemolostream(outfile)
@@ -382,9 +383,10 @@ def fit_mol_to_refmol(refmol, fitmol_conformers, outfile, maxconfs = None):
       #Write output
       OEWriteMolecule(outfs, outmol)
 
-      print "FitConfIdx: %-4d" %score.fitconfidx,
-      print "RefConfIdx: %-4d" % score.refconfidx,
-      print "Tanimoto: %.2f" % score.tanimoto
+      if verbose:
+        print "FitConfIdx: %-4d" %score.fitconfidx,
+        print "RefConfIdx: %-4d" % score.refconfidx,
+        print "Tanimoto: %.2f" % score.tanimoto
       tanimotos.append(score.tanimoto)
       resCount +=1
 

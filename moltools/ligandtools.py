@@ -4,7 +4,7 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
-from openeye.oeproton import *
+#from openeye.oeproton import * #DLM 2/23/09 I believe this is not necessary and not in current OEChem tools
 from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
