@@ -5,6 +5,7 @@ from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
 #from openeye.oeproton import * #DLM 2/23/09 I believe this is not necessary and not in current OEChem tools
+from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction
 from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
