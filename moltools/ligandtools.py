@@ -298,7 +298,8 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
    omega = OEOmega()
 
    # Set verbosity.
-   omega.SetVerbose(verbose)
+   #omega.SetVerbose(verbose)
+   #DLM 2/27/09: Seems to be obsolete in current OEOmega
 
    # Set maximum number of conformers.
    if maxconfs:
