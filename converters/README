@@ -6,3 +6,6 @@ CONTENTS
 
   amb2gmx.pl - A Perl-based converter from AMBER "new" style topology files to gromacs topology files capable of converting small molecules produced by ANTECHAMBER / AMBER LEaP or even entire systems set up in LEaP.
 
+
+NOTE: 
+  amb2gmx.pl is now deprecated and has been replaced by acpypi (http://code.google.com/p/acpypi/)
