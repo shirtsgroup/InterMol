@@ -158,7 +158,6 @@ def createMoleculeFromIUPAC(name, verbose = False, charge = None):
 
    # Generate a conformation with Omega
    omega = OEOmega()
-   omega.SetVerbose(verbose) # set verbosity as specified by user
    omega.SetIncludeInput(False) # don't include input
    omega.SetMaxConfs(1) # set maximum number of conformations to 1
    omega(molecule) # generate conformation      
