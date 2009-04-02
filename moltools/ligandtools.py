@@ -158,6 +158,9 @@ def createMoleculeFromIUPAC(name, verbose = False, charge = None):
 
    # Generate a conformation with Omega
    omega = OEOmega()
+   #omega.SetVerbose(verbose)
+   #DLM 2/27/09: Seems to be obsolete in current OEOmega
+   
    omega.SetIncludeInput(False) # don't include input
    omega.SetMaxConfs(1) # set maximum number of conformations to 1
    omega(molecule) # generate conformation      
@@ -435,6 +438,7 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
 
    WARNING
      This module is currently broken, as atom names get all jacked up during readMolecule() for these mol2 files.
+     DLM 4/2/2009: I believe I have fixed the module by switching antechamber to use sybyl atom types. However please note that these will not work as input to tleap and must use GAFF/AMBER atom types there. 
    """
 
    # Create temporary working directory and move there.
@@ -454,7 +458,7 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
    formal_charge = formalCharge(molecule)
 
    # Run antechamber to assign GAFF atom types and charge ligand.
-   command = 'antechamber -i %(uncharged_molecule_filename)s -fi mol2 -o %(charged_molecule_filename)s -fo mol2 -c %(charge_model)s -nc %(formal_charge)d' % vars()
+   command = 'antechamber -i %(uncharged_molecule_filename)s -fi mol2 -o %(charged_molecule_filename)s -fo mol2 -c %(charge_model)s -nc %(formal_charge)d -at sybyl' % vars()
    if judgetypes: command += ' -j %(judgetypes)d' % vars()
    if verbose: print command
    output = commands.getoutput(command)
@@ -463,7 +467,6 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
    # Read new mol2 file.
    print "Reading charged molecule from %(charged_molecule_filename)s" % vars()   
    charged_molecule = readMolecule(charged_molecule_filename)
-   # TODO: Atom names get all jacked up here -- is there a way to fix this?
 
    # Clean up temporary working directory.
    if cleanup:
