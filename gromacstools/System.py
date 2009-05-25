@@ -322,11 +322,18 @@ class System:
     		
     # prepare the simultion 	
     if self.version == '3.1':	
-
         # pdb2gmx, and useTIP3P
         pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.infile, self.files.grofile, self.files.topfile)
+
+    elif self.version == '3.3':
+        # pdb2gmx, and useTIP3P
+        pdb2gmx = '%s/pdb2gmx -ff %s -f %s -o %s -p %s -ignh'%(os.environ['GMXPATH'], self.useff[2:], self.files.infile, self.files.grofile, self.files.topfile)
+
+    if (1): 
 	self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors)
         self.useTIP3P( self.files.topfile )
+
+
 	
 	pdb2gmxlines = self.status.loglines[-1][1].split('\n')
 	for line in pdb2gmxlines:
@@ -799,16 +806,30 @@ class System:
     # calculate how many ions to add to the box
     [np, nn, nwaters] = self.counterions()	 
 
-    # get the solvent atomgroup number from genion
-    solgroup = self.getSolventGroupFromGenion()
+    if self.version == '3.1':
+        # get the solvent atomgroup number from genion
+        solgroup = self.getSolventGroupFromGenion()
+        # add ions	   
+        genion = 'echo %d | %s/genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+        self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+        self.files.increment_gro()    # must increment filename for any new gmx file 
 
-    # add ions	   
-    genion = 'echo %d | %s/genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(solgroup, os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
-    self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
-    self.files.increment_gro()    # must increment filename for any new gmx file 
+    elif self.version == '3.3':
+        # add ions
+        genion = '%s/genion -s %s -o %s -pname %s -np %d -pq %d -nname %s -nn %d -nq %d -g genion.log'%(os.environ['GMXPATH'], self.files.tprfile, self.files.next_gro(), self.setup.positiveIonName, np, self.setup.positiveIonCharge, self.setup.negativeIonName, nn, self.setup.negativeIonCharge)
+
+        self.rungmx( genion, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
+        if (np+nn) > 0:  # genion 3.3 WILL NOT produce a new gro if there is nothing to be done
+            self.files.increment_gro()    # must increment filename for any new gmx file 
+
 
     ### generate a new topolgy file for the ion-ated grofile  
-    pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.next_top())
+    if self.version == '3.1':
+        pdb2gmx = 'echo %s | %s/pdb2gmx -f %s -o %s -p %s -ignh -H14'%(self.forcefieldCodes[self.useff], os.environ['GMXPATH'], self.files.grofile, self.files.next_gro(), self.files.next_top())
+    if self.version == '3.3':
+        pdb2gmx = '%s/pdb2gmx -ff %s -f %s -o %s -p %s -ignh'%(os.environ['GMXPATH'], self.useff[2:], self.files.grofile, self.files.next_gro(), self.files.next_top())
+
+
     self.rungmx( pdb2gmx, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors )
     self.files.increment_gro()    # must increment filename for any new gmx file 
     self.files.increment_top()    # must increment filename for any new gmx file 
