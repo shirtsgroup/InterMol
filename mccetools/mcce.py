@@ -33,8 +33,11 @@ TODO
 - Do something less confusing with the parameter dictionary.
 - Test on proteins with known pKas
 - Select most likely global protonation state, rather than on a per-residue basis.
+- Add an option to mcce tools to make hydrogen output naming compatible with amber rather than gromacs
 
 REVISION LOG
+- 5-26-2009: HF: Modified ps_mostlikely so that users can specify the protonation state of particular residues numbers manually.
+-                Added a input parameter manualProtonation to ps_mostlikely, protonation_state, ps_processmcce, and protonatePDB.
 - 6-06-2007: JDC: Made to conform more closely to Pande group style guide.  Added/modified documentation.  Fixed bug in doubly-protonated HIS renaming.
 - 6-05-2007: VAV;  Fixed xtraprms={} bugs
 - 5-21-2007: JDC: Updating according to current Pande lab style guide.
@@ -249,14 +252,15 @@ def run_mcce(mcceparams):
     os.chdir(os.getcwd())
     write_paramfile(mcceparams, 'run.prm')
     output = commands.getoutput( os.path.join(mcceparams['MCCE_HOME'],'bin/mcce') )
+
     return output
     
-def ps_mostlikely(fort38path):
+def ps_mostlikely(fort38path,manualProtonation={}):
     """Finds the set of most likely protonation states from the file fort38path/fort.38. Assumes one set of pH values in the given file.
 
     ARGUMENTS
         fort38path - absolute pathname of the directory in which the fort.38 file produced by MCCE appears
-        
+        manualProtonation - Manually specify protonation state of particular residues numbers.
     RETURNS
         searchstring - regular expression query string for most likely states
         neutrallines - regular expression query string for neutral states
@@ -293,6 +297,15 @@ def ps_mostlikely(fort38path):
                 # Next option for the same residue
                 stackprob=float(stackline.split(" ")[1])
                 nextprob=float(nextline.split(" ")[1])
+                residuenum=int(stackline[6:10])
+                # Look if this is specified manually.
+                for key in manualProtonation.keys() :
+                    if (key == residuenum) :
+                        if (manualProtonation[key] == stackline[3:4]):
+                            stackprob+=1.0
+                        if (manualProtonation[key] == nextline[3:4]):
+                            nextprob+=1.0
+                # Compare probability
                 if (nextprob > stackprob):
                     stack.append(nextline)
                 else:
@@ -322,7 +335,7 @@ def renumber_atoms(pdbarr):
         pdbarr[i]=pdbarr[i][0:6]+str(i+1).rjust(5)+pdbarr[i][11:]        
 
 
-def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}):
+def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}, manualProtonation={}):
     """Performs a pH titration on all titratable residues in a PDB file."""
     
     #Convert PDB file name to path, as paramgen expects an absolute path
@@ -337,20 +350,21 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeled
         
     # Create a temporary directory with the run.prm file and run MCCE
     tempdir=tempfile.mkdtemp();
-    print "Running MCCE in temporary directory %s..." % tempdir
 
-    # remember our curent working directory
+    print "Running MCCE in temporary directory %s..." % tempdir 
+
+    # remember our current working directory
     thisdir = '%s'%os.path.abspath(os.getcwd())
         
     # run mcce in the temporary directory
     os.chdir(tempdir)
     output = run_mcce(params)
-    print output
+    print output  
         
     # chdir back to where we came from
     os.chdir(thisdir)
 
-    pdbarr = ps_processmcce(tempdir, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini )
+    pdbarr = ps_processmcce(tempdir, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini, manualProtonation=manualProtonation )
 
     # Generate a breakpoint for interactive testing...
     #       raw_input("about to clean house...")
@@ -427,7 +441,7 @@ def titrate(pdbfile, pHstart, pHstep, pHiters, mccepath, cleanup=True, prmfile=N
         
     return pdbarr
 
-def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}):
+def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, labeledPDBOnly=False, renameTermini=True, xtraprms={}, manualProtonation={}):
     """Determine the most likely protonation state for a given protein structure.
 
     REQUIRED ARGUMENTS
@@ -442,13 +456,17 @@ def protonatePDB(pdbfile, outfile, pH, mccepath, cleanup=True, prmfile=None, lab
         labeledPDBOnly    If True, only pdbarr with the 'labeled' step2_out.pdb (appended with "0", "+", "-") will be returned
         xtraprms          Any additional extra MCCE parameters to be defined (overriding those from file or default)
                           These are specified as a dictionary of strings, e.g.:   {'MONTE_NEQ':'300'}
+        manualProtonation  Manually specify protonation state of particular residues numbers. 
+                          These are specified as a dictionary, e.g.: {82:'+', 87:'0',43:'-'} (residue number:protonation state)
+                          Note that MCCE considers protonation state of residues independently, 
+                          so one should think carefully whether this option affects protonation state of surrounding residues.
     """
 
     # Store current working directory.
     thisdir = os.getcwd()
     
     # Determine most likely protonation state, storing result in 'pdbarr'.
-    pdbarr = protonation_state(pdbfile,pH,mccepath,cleanup=cleanup, prmfile=prmfile, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini, xtraprms=xtraprms)
+    pdbarr = protonation_state(pdbfile,pH,mccepath,cleanup=cleanup, prmfile=prmfile, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini, xtraprms=xtraprms, manualProtonation=manualProtonation)
     
     # Write PDB file name to absolute path
     outpath=os.path.join(thisdir,outfile)
@@ -492,7 +510,7 @@ def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=Tru
         
     return
 
-def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True):
+def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True, manualProtonation={}):
     """Handles the file processing work for protonation_state
     
     ARGUMENTS
@@ -500,7 +518,7 @@ def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True):
     """
 
     # Build and use a regex to grab the appropriate entries from the MCCE PDB
-    sstr,neut,pos,neg=ps_mostlikely(tempdir)
+    sstr,neut,pos,neg=ps_mostlikely(tempdir,manualProtonation=manualProtonation)
     rx=re.compile(sstr)
     print "searchstring: \"",sstr
     print "neut: \"",neut
@@ -532,7 +550,7 @@ def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True):
         return pdbarr
     else:
         pdbarr=rename.rename_residues(pdbarr, renameTermini=renameTermini)
-        pdbarr=rename.pdb_cleanup(pdbarr)
+        pdbarr=rename.pdb_cleanup(pdbarr) 
         return pdbarr
 
 
