@@ -119,8 +119,7 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
       ostream.close()     
 
    # Delete the temporary PDB file.
-   # TODO: Modify this to use os.path commands.
-   commands.getoutput('rm %s' % ofilename)
+   os.remove(ofilename)
 
    # Return the molecule.
    return molecule
