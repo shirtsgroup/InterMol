@@ -15,8 +15,8 @@ import re
 
 REQUIREMENTS
 
-  AMBER and Antechamber installations (in PATH).  Be sure to download the latest version of Antechamber separately.
-  MMTOOLSPATH environment variable set to the location of mmtools (for amb2gmx.pl).
+  AmberTools installations (in PATH).  Be sure to download the latest version of Antechamber separately.
+  MMTOOLSPATH environment variable set to the location of mmtools (for acpypi.py).
 
 TODO
   Implement scheme described by Christopher Bayly for minimizing artifacts in AM1BCC parameterization by enumerating
@@ -28,6 +28,12 @@ AUTHORS
 
   Originally by David L. Mobley, UCSF, 6/28/2007.
   Rewritten by John D. Chodera, Stanford, 1/20/2008.
+  Update by Hideki Fujioka, Tulane, 6/04/2009.
+  Update by D. Mobley, University of New Orleans, 6/05/2009
+
+CHANGELOG
+  6/4/2009: HF switched parameterizeForGromacs to use Acpypi from Google code, which is superior to previous amb2gmx.pl
+  6/5/2009: DLM minor changes to test case at end; switched perturbGromacsTopology to handle acpypi (rather than amb2gmx) generated topologies -- mainly modifying handling of the comments so these are preserved rather than clobbered.
 
 """
 
@@ -618,9 +624,8 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
      
    REQUIREMENTS
-     antechamber (must be in PATH)
-     amb2gmx.pl conversion script (must be in MMTOOLSPATH)
-     AMBER installation (in PATH)
+     acpypi.py conversion script (must be in MMTOOLSPATH)
+     AmberTools installation (in PATH)
 
    EXAMPLES
      # create a molecule
@@ -716,8 +721,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
 
    REQUIREMENTS
      antechamber (must be in PATH)
-     amb2gmx.pl conversion script (must be in MMTOOLSPATH)
-     AMBER installation (in PATH)
+     acpypi.py conversion script (must be in MMTOOLSPATH)
 
    EXAMPLES
      # create a molecule
@@ -738,20 +742,21 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    amber_coordinate_filename = os.path.join(working_directory, 'amber.crd')
    parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname)
    
-   # Use amb2gmx.pl to convert from AMBER to gromacs topology/coordinates.
-   amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
-   command = '%(amb2gmx)s --prmtop %(amber_topology_filename)s --crd %(amber_coordinate_filename)s --outname gromacs' % vars()
+   # Use acpypi to convert from AMBER to gromacs topology/coordinates.
+   acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
+   command = '%(acpypi)s -p %(amber_topology_filename)s -x %(amber_coordinate_filename)s ' % vars()
    if verbose: print command
-   amb2gmx_output = commands.getoutput(command)
-   if verbose: print amb2gmx_output
+   acpypi_output = commands.getoutput(command)
+   if verbose: print acpypi_output
 
    # Restore old directory.
    os.chdir(old_directory)   
 
    # Copy gromacs topology/coordinates to desired output files.
-   commands.getoutput('cp %s %s' % (os.path.join(working_directory, 'gromacs.gro'), coordinate_filename))
-   commands.getoutput('cp %s %s' % (os.path.join(working_directory, 'gromacs.top'), topology_filename))
-
+   IUPACname = molecule.GetTitle() # Get IUPAC NAME
+   commands.getoutput('cp %s %s' % (os.path.join(working_directory, IUPACname[0:3]+'_GMX.gro'), coordinate_filename))
+   commands.getoutput('cp %s %s' % (os.path.join(working_directory, IUPACname[0:3]+'_GMX.top'), topology_filename))
+   
    # Clean up temporary files.
    if cleanup:
       commands.getoutput('rm -r %s' % working_directory)
@@ -763,16 +768,19 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
 # METHODS FOR MANIPULATING GROMACS TOPOLOGY AND COORDINATE FILES
 #=============================================================================================
 def stripcomments(line):
-   """Return line with whitespace and comments stripped.
+   """Return (line, comments) with whitespace and comments stripped.
    """
    # strip comments
    index = line.find(';')
+   comments =''
    if index > -1:
+      comments = line[index:]
       line = line[0:index]
    # strip whitespace
    line = line.strip()
+   comments = comments.strip()
    # return stripped line
-   return line         
+   return line,comments         
 
 def extract_section(lines, section):
    """Identify lines associate with a section.
@@ -790,7 +798,7 @@ def extract_section(lines, section):
    nlines = len(lines)
    for start_index in range(nlines):
       # get line
-      line = stripcomments(lines[start_index])
+      line,comments = stripcomments(lines[start_index])
       # split into elements
       elements = line.split()
       # see if keyword is matched
@@ -807,7 +815,7 @@ def extract_section(lines, section):
    # Locate end of section.
    for end_index in range(start_index, nlines):
       # get line
-      line = stripcomments(lines[end_index])
+      line,comments = stripcomments(lines[end_index])
       # split into elements
       elements = line.split()
       # see if keyword is matched
@@ -835,7 +843,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
      perturb_atom_indices (list of ints) - if not None, only atoms with gromacs .top file indices in included range will be perturbed (default: None)
 
    NOTES
-     This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
+     This code currently only handles the special format gromacs topology files produced by acpypi -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
     
    TODO
@@ -862,7 +870,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    indices = extract_section(lines, 'atomtypes')
    for index in indices:
       # extract the line
-      line = stripcomments(lines[index])
+      line,comments = stripcomments(lines[index])
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -900,7 +908,9 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    indices = extract_section(lines, 'atoms')
    for index in indices:
       # extract the line
-      line = stripcomments(lines[index])
+      print "Before stripping, line is:", lines[index]
+      line,comments = stripcomments(lines[index])
+      print "Now it is", line, comments
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -928,7 +938,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       if perturb_charges: atom['chargeB'] = 0.0 # perturbed charges
       
       # construct a new line
-      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f ; perturbed\n" % atom
+      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f" % atom + " %(comments)s perturbed\n" % vars()
       
       # replace the line
       lines[index] = line
@@ -943,7 +953,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    indices = extract_section(lines, 'bonds')
    for index in indices:
       # extract the line
-      line = stripcomments(lines[index])
+      line,comments = stripcomments(lines[index])
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -961,7 +971,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          if (bond['i'] not in perturb_atom_indices) and (bond['j'] not in perturb_atom_indices): continue      
       # construct a new line
       line = "%(i)5d %(j)5d %(function)5d%(Req)12.4e%(Keq)12.4e" % bond
-      line += " %(Req)12.4e%(Keq)12.4e\n" % bond
+      line += " %(Req)12.4e%(Keq)12.4e" % bond + comments+'\n'
       # replace the line
       lines[index] = line
 
@@ -969,7 +979,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    indices = extract_section(lines, 'angles')
    for index in indices:
       # extract the line
-      line = stripcomments(lines[index])
+      line,comments = stripcomments(lines[index])
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -988,7 +998,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          if (angle['i'] not in perturb_atom_indices) and (angle['j'] not in perturb_atom_indices) and (angle['k'] not in perturb_atom_indices): continue      
       # construct a new line
       line = "%(i)5d %(j)5d %(k)5d %(function)5d%(theta)12.4e%(cth)12.4e" % angle
-      line += " %(theta)12.4e%(cth)12.4e\n" % angle
+      line += " %(theta)12.4e%(cth)12.4e" % angle + comments+'\n'
       # replace the line
       lines[index] = line
 
@@ -1012,7 +1022,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
       indices = extract_section(lines, 'dihedrals') # extract non-blank, non-comment lines
       for index in indices:
          # extract the line
-         line = stripcomments(lines[index])         
+         line,comments = stripcomments(lines[index])         
          # parse the line
          elements = line.split()
          nelements = len(elements)
@@ -1040,10 +1050,10 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
          line = "    %-4s %-4s %-4s %-4s %3d%12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (i, j, k, l, function, C[0], C[1], C[2], C[3], C[4], C[5])         
          if (j,k) in rotatable_bonds:
             # perturb rotatable bonds
-            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f ; perturbed" % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0) + "\n"
+            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f %s perturbed" % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, comments) + "\n"
          else:
             # don't perturb 
-            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (C[0], C[1], C[2], C[3], C[4], C[5]) + "\n"
+            line += " %12.5f%12.5f%12.5f%12.5f%12.5f%12.5f" % (C[0], C[1], C[2], C[3], C[4], C[5]) + comments + "\n"
 
          # replace the line
          lines[index] = line
@@ -1077,7 +1087,7 @@ def totalCharge(topology_filename):
    indices = extract_section(lines, 'atoms')
    for index in indices:
       # extract the line
-      line = stripcomments(lines[index])
+      line,comments = stripcomments(lines[index])
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -1723,7 +1733,6 @@ def add_ligand_to_topology(prottop,ligtop,complextop):
 if __name__ == '__main__':
 
    # Test all capabilities of ligandtools.   
-   from mmtools.moltools.ligandtools import *
 
    # Create a molecule.
    molecule = createMoleculeFromIUPAC('phenol')
@@ -1760,10 +1769,11 @@ if __name__ == '__main__':
    # Write GAFF parameters for gromacs, using antechamber to generate AM1-BCC charges.
    parameterizeForGromacs(molecule, topology_filename = 'phenol-antechamber.top', coordinate_filename = 'phenol-antechamber.gro', charge_model = 'bcc', resname = 'PHE')
 
-   # Modify gromacs topology file for alchemical free energy calculation.
+   # Modify gromacs topology file for alchemical free energy calculation after storing unperturbed copy
+   os.system('cp phenol.top phenol_unperturbed.top')
    perturbGromacsTopology('phenol.top', molecule)
 
-   # Convert .top file to .itp file.
+   # Convert .top file to .itp file
    top_to_itp('phenol.top', 'phenol.itp', moleculetype = 'phenol')
 
    # Insert the ligand into the system.
