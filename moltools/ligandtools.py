@@ -755,7 +755,6 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    os.chdir(old_directory)   
 
    # Copy gromacs topology/coordinates to desired output files.
-   print commands.getoutput('ls %s' % working_directory)
    shutil.copy( os.path.join(working_directory, 'OUT_GMX.gro'), coordinate_filename )
    shutil.copy( os.path.join(working_directory, 'OUT_GMX.top'), topology_filename)
    
