@@ -10,6 +10,7 @@ from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
 import re
+import shutil
 
 """Tools for working with small-molecule ligands in setting up free energy calculations with AMBER and gromacs.
 
@@ -34,7 +35,7 @@ AUTHORS
 CHANGELOG
   6/4/2009: HF switched parameterizeForGromacs to use Acpypi from Google code, which is superior to previous amb2gmx.pl
   6/5/2009: DLM minor changes to test case at end; switched perturbGromacsTopology to handle acpypi (rather than amb2gmx) generated topologies -- mainly modifying handling of the comments so these are preserved rather than clobbered.
-
+  6/30/2009: DLM modified parameterizeForGromacs to use shutil rather than commands.getoutput for copying, improving errorchecking; fixed a bug for some residue names that caused files to fail to be copied back.
 """
 
 #=============================================================================================
@@ -710,7 +711,8 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
 
    ARGUMENTS
      ligmol2 (string) - mol2 filename of ligand with partial charges and AMBER atomtypes
-     outname (string) - prefix of filenames for gromacs topology/coordinate files to be produced
+     topology_filename (string) - name of output topology file
+     coordinate_filename (string) - name of output coordinate file
 
    OPTIONAL ARGUMENTS
      charge_model (string) - if not False, antechamber is used to assign charges (default: False) -- if set to 'bcc', for example, AM1-BCC charges will be used
@@ -744,7 +746,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    
    # Use acpypi to convert from AMBER to gromacs topology/coordinates.
    acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
-   command = '%(acpypi)s -p %(amber_topology_filename)s -x %(amber_coordinate_filename)s ' % vars()
+   command = '%(acpypi)s -p %(amber_topology_filename)s -x %(amber_coordinate_filename)s -b OUT' % vars()
    if verbose: print command
    acpypi_output = commands.getoutput(command)
    if verbose: print acpypi_output
@@ -753,9 +755,9 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    os.chdir(old_directory)   
 
    # Copy gromacs topology/coordinates to desired output files.
-   IUPACname = molecule.GetTitle() # Get IUPAC NAME
-   commands.getoutput('cp %s %s' % (os.path.join(working_directory, IUPACname[0:3]+'_GMX.gro'), coordinate_filename))
-   commands.getoutput('cp %s %s' % (os.path.join(working_directory, IUPACname[0:3]+'_GMX.top'), topology_filename))
+   print commands.getoutput('ls %s' % working_directory)
+   shutil.copy( os.path.join(working_directory, 'OUT_GMX.gro'), coordinate_filename )
+   shutil.copy( os.path.join(working_directory, 'OUT_GMX.top'), topology_filename)
    
    # Clean up temporary files.
    if cleanup:
