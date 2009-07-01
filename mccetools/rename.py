@@ -6,6 +6,8 @@ Routines to rename atoms and residues from a 'labeled' step2_out.pdb file  ("0",
 REVISION LOG
 - 8-21-2007: VAV; spun these functions into their own python file 
 - 10-10-2007: DLM: re-incorporating the proper handling of cysteine residues renamed CYD by MCCE which need to be renamed CYS2.
+- 6-30-2009: DLM, additional bugfix relating to naming of CYS2, in this case it was messing up pdb formatting.
+- 6-30-2009: DLM, additional bugfix relating to hydrogen and CD naming for NILE/CILE
 
 TO DO:
 - See description of disulfide_search function -- need to fix naming for CYD residues that are not disulfide bonded.
@@ -167,6 +169,19 @@ def rename_termini(npdb):
         for j in [NResIndex,NResIndex+1]:
             for i in range(len(npdb[j])):
                 npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
+                #DLM 6/30/2009: As for VAV edit below in CILE case: use correct naming for CD (not CD1) for ILE/NILE:
+                if ntrname=='ILE':
+                    if npdb[j][i][13:16].split()[0]=='CD1':
+                        npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
+                    #DLM 6/30/2009: In NILE case, the hydrogen naming may also be incorrect
+                    #in particular 1HD1 should be HD1, 2HD1 should be HD2, and 3HD1 should be HD3
+                    if npdb[j][i][12:16].split()[0]=='1HD1':
+                       npdb[j][i] = npdb[j][i][0:12]+' HD1'+npdb[j][i][16:]
+                    elif npdb[j][i][12:16].split()[0]=='2HD1':
+                       npdb[j][i] = npdb[j][i][0:12]+' HD2'+npdb[j][i][16:]
+                    elif npdb[j][i][12:16].split()[0]=='3HD1':
+                       npdb[j][i] = npdb[j][i][0:12]+' HD3'+npdb[j][i][16:]
+                #End DLM 6/30/2009
                 
         # Rename C-terminal residue from 'XXX' to 'CXXX', with some exceptions (noted below).
         # Also rename terminal oxygen atoms.
@@ -186,9 +201,18 @@ def rename_termini(npdb):
                     npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
                     
                 #VAV 6/5/2007: gmx ffamber doesn't have "CD1" as an ILE/CILE atomname, only "CD"
-                if ctrname=='ILE':      
+                if ctrname=='ILE':
                     if npdb[j][i][13:16].split()[0]=='CD1':
                         npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
+                    #DLM 6/30/2009: In NILE case, the hydrogen naming may also be incorrect
+                    #in particular 1HD1 should be HD1, 2HD1 should be HD2, and 3HD1 should be HD3
+                    if npdb[j][i][12:16].split()[0]=='1HD1':
+                        npdb[j][i] = npdb[j][i][0:12]+' HD1'+npdb[j][i][16:]
+                    elif npdb[j][i][12:16].split()[0]=='2HD1':
+                        npdb[j][i] = npdb[j][i][0:12]+' HD2'+npdb[j][i][16:]
+                    elif npdb[j][i][12:16].split()[0]=='3HD1':
+                        npdb[j][i] = npdb[j][i][0:12]+' HD3'+npdb[j][i][16:]
+                #End DLM 6/30/2009
     return npdb
 
         
@@ -291,8 +315,9 @@ def disulfide_search(npdb, min_dist = 1.8, max_dist = 2.2):
         
     # Rename the residues we selected
     for i in residues_to_rename:
-        npdb[i]=map(lambda x:x.replace('CYS','CYS2'),npdb[i])           
-        npdb[i]=map(lambda x:x.replace('CYD','CYS2'),npdb[i])           
+        #DLM 6/30/2009: Additional bugfix -- replace 'CYS ' with 'CYS2', not 'CYS' with 'CYS2'
+        npdb[i]=map(lambda x:x.replace('CYS ','CYS2'),npdb[i])           
+        npdb[i]=map(lambda x:x.replace('CYD ','CYS2'),npdb[i])           
         
     return npdb
 
