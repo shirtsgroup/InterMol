@@ -5,7 +5,7 @@ import rename
 Calculation of residue pKa and likely protonation states using the MCCE (multiconformer continuum electrostatics) package.
 
 DESCRIPTION
-  This package contains various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram Haque; D. Mobley edited in May 2007. Variously edited by John D. Chodera, Vincent Voelz, and Greg Bowman thereafter.
+  This package contains various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram Haque; D. Mobley edited in May 2007. Variously edited by John D. Chodera, Vincent Voelz, and Greg Bowman thereafter. Extended by Hideki Fujioka (Tulane/LONI) and D. Mobley (University of New Orleans), 2009.
 
 REQUIREMENTS
 - MCCE (available from http://www.sci.ccny.cuny.edu/~mcce)
@@ -20,7 +20,6 @@ KNOWN LIMITATIONS
 - C terminal residues are determined by the last residue in the pdb file, which means the last residue in the file needs to not be a HET atom or similar, but rather the terminal residue of the protein.
 
 KNOWN BUGS
-- There may be a bug with the determination of protonation states because a Lysine-rich 13-residue N-terminal segment of 3gb1 came out entirely neutral.
 
 TODO
 - We should be sure to strip out waters and possibly HETATMs first, though we are unlikely to get these from MODELLER.
@@ -36,6 +35,7 @@ TODO
 - Add an option to mcce tools to make hydrogen output naming compatible with amber rather than gromacs
 
 REVISION LOG
+- 7-1-2009: DLM, fixed a bug relating to insertion codes, wherein residues with insertion codes could occasionally have their backbone atoms omitted from the final PDB file due to parsing of MCCE residue codes. 
 - 5-26-2009: HF: Modified ps_mostlikely so that users can specify the protonation state of particular residues numbers manually.
 -                Added a input parameter manualProtonation to ps_mostlikely, protonation_state, ps_processmcce, and protonatePDB.
 - 6-06-2007: JDC: Made to conform more closely to Pande group style guide.  Added/modified documentation.  Fixed bug in doubly-protonated HIS renaming.
@@ -275,7 +275,11 @@ def ps_mostlikely(fort38path,manualProtonation={}):
     stack=[]
     # We want any _000 line - they're common to all protonation states
     searchstring="_000 "
-    
+    #DLM 7/1/2009: Insertion codes may result in residues numbered ie A0221A000 rather than A0221_000 so we need to search for these also
+    for char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+       searchstring = searchstring+'|'+char+"000 "
+    #end DLM
+
     # Overview:
     # Grab a line and compare to the last one.
     # If it's the same residue, keep the more likely one.
@@ -316,7 +320,12 @@ def ps_mostlikely(fort38path,manualProtonation={}):
 
     # Generate regular expressions for neutral/pos/neg states based on charge labeling in our duplicate array.
     # Select the lines for any particular state, then transform each line into a regular expression, then join lines with | operator.
-    neutrallines = "_000 |"+("|".join(map(lambda x: x[0:3]+r" "+x[5:15],filter(lambda x:re.search(r'^...0',x),lines2))))
+    neutrallines='_000 |'
+    #DLM 7/1/2009: Insertion codes may result in residues numbered ie A0221A000 rather than A0221_000 so we need to search for these also
+    for char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+       neutrallines=neutrallines+char+'000 |'
+    #End DLM
+    neutrallines = neutrallines+("|".join(map(lambda x: x[0:3]+r" "+x[5:15],filter(lambda x:re.search(r'^...0',x),lines2))))
     poslines = "|".join(map(lambda x: x[0:3]+r" "+x[5:15],filter(lambda x:re.search(r'^...\+',x),lines2)))
     neglines = "|".join(map(lambda x: x[0:3]+r" "+x[5:15],filter(lambda x:re.search(r'^...-',x),lines2)))
 
@@ -365,6 +374,7 @@ def protonation_state(pdbfile, pH, mccepath, cleanup=True, prmfile=None, labeled
     os.chdir(thisdir)
 
     pdbarr = ps_processmcce(tempdir, labeledPDBOnly=labeledPDBOnly, renameTermini=renameTermini, manualProtonation=manualProtonation )
+    print pdbarr
 
     # Generate a breakpoint for interactive testing...
     #       raw_input("about to clean house...")
