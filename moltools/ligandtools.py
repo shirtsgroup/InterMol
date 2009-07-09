@@ -31,11 +31,14 @@ AUTHORS
   Rewritten by John D. Chodera, Stanford, 1/20/2008.
   Update by Hideki Fujioka, Tulane, 6/04/2009.
   Update by D. Mobley, University of New Orleans, 6/05/2009
+  Additions and fixes by D. Mobley, UNO, 7/2009
 
 CHANGELOG
   6/4/2009: HF switched parameterizeForGromacs to use Acpypi from Google code, which is superior to previous amb2gmx.pl
   6/5/2009: DLM minor changes to test case at end; switched perturbGromacsTopology to handle acpypi (rather than amb2gmx) generated topologies -- mainly modifying handling of the comments so these are preserved rather than clobbered.
   6/30/2009: DLM modified parameterizeForGromacs to use shutil rather than commands.getoutput for copying, improving errorchecking; fixed a bug for some residue names that caused files to fail to be copied back.
+  7/9/2009: DLM added fitMolToRefmol function to fit a target molecule onto a reference molecule
+
 """
 
 #=============================================================================================
@@ -282,7 +285,7 @@ def normalizeMolecule(molecule):
    return molecule
 #=============================================================================================
 def expandConformations(molecule, maxconfs = None, threshold = None, include_original = False, torsionlib = None, verbose = False):   
-   """Enumerate conformations of the molecule with OpenEye's Omega.
+   """Enumerate conformations of the molecule with OpenEye's Omega after normalizing molecule. 
 
    ARGUMENTS
    molecule (OEMol) - molecule to enumerate conformations for
@@ -293,13 +296,14 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
      threshold (real) - threshold in RMSD (in Angstroms) for retaining conformers -- lower thresholds retain more conformers (default: None)
      torsionlib (string) - if a path to an Omega torsion library is given, this will be used instead (default: None)
      verbose (boolean) - if True, omega will print extra information
-     
+
    RETURN VALUES
      expanded_molecule - molecule with expanded conformations
 
    EXAMPLES
      # create a new molecule with Omega-expanded conformations
      expanded_molecule = expandConformations(molecule)
+
      
    """
    # Initialize omega
@@ -329,6 +333,7 @@ def expandConformations(molecule, maxconfs = None, threshold = None, include_ori
 
    # Enumerate conformations.
    omega(expanded_molecule)
+
 
    # verbose output
    if verbose: print "%d conformation(s) produced." % expanded_molecule.NumConfs()
@@ -554,6 +559,68 @@ def enumerateStates(molecules, enumerate = "protonation", consider_aromaticity =
 
     # Return the list of expanded states as a Python list of OEMol() molecules.
     return states
+
+
+def fitMolToRefmol( fitmol, refmol, maxconfs = None, verbose = False):
+
+    """Fit a multi-conformer target molecule to a reference molecule using OpenEye Shape tookit, and return an OE molecule with the top conformers of the resulting fit. Tanimoto scores also returned.
+
+    ARGUMENTS
+      fitmol (OEMol) -- the (multi-conformer) molecule to be fit.
+      refmol (OEMol) -- the molecule to fit to
+
+    OPTIONAL ARGUMENTS
+      maxconfs -- Limit on number of conformations to return; default return all
+      verbose -- Turn verbosity on/off
+
+    RETURNS
+      outmol (OEMol) -- output (fit) molecule resulting from fitmol
+      scores
+
+    NOTES
+      Passing this a multi-conformer fitmol is recommended for any molecule with rotatable bonds as fitting only includes rotations and translations, so one of the provided conformers must already have right bond rotations."""
+
+    #Set up storage for overlay
+    best = OEBestOverlay()
+    #Set reference molecule
+    best.SetRefMol(refmol)
+
+    if verbose:
+        print "Reference title: ", refmol.GetTitle()
+        print "Fit title: ", fitmol.GetTitle()
+        print "Num confs: ", fitmol.NumConfs()
+
+    resCount = 0
+    #Each conformer-conformer pair generates multiple scores since there are multiple possible overlays; we only want the best. Load the best score for each conformer-conformer pair into an iterator and loop over it
+    scoreiter = OEBestOverlayScoreIter()
+    OESortOverlayScores(scoreiter, best.Overlay(fitmol), OEHighestTanimoto())
+    tanimotos = [] #Storage for scores
+    for score in scoreiter:
+        #Get the particular conformation of this match and transform to overlay onto reference structure
+
+        #tmpmol = OEGraphMol(fitmol.GetConf(OEHasConfIdx(score.fitconfidx)))
+        tmpmol = OEMol(fitmol.GetConf(OEHasConfIdx(score.fitconfidx)))
+        score.Transform(tmpmol)
+        #Store to output molecule
+        try: #If it already exists
+            outmol.NewConf(tmpmol)
+        except: #Otherwise
+            outmol = tmpmol
+
+        #Print some info
+        if verbose:
+            print "FitConfIdx: %-4d" % score.fitconfidx,
+            print "RefConfIdx: %-4d" % score.refconfidx,
+            print "Tanimoto: %.2f" % score.tanimoto
+        #Store score
+        tanimotos.append(score.tanimoto)
+        resCount+=1
+
+        if resCount == maxconfs: break
+
+    return ( outmol, tanimotos )
+
+
 #=============================================================================================
 # METHODS FOR WRITING OR EXPORTING MOLECULES
 #=============================================================================================
@@ -1271,7 +1338,7 @@ def modifySubstructureName(mol2file, name):
      The transformation is only applied to the first molecule in the mol2 file.
 
    TODO
-     This function is still in David Mobley unreadable-coding style.  It should be rewritten to be comprehensible by humans.
+     This function is still difficult to read.  It should be rewritten to be comprehensible by humans.
    """
 
    # Read mol2 file.
