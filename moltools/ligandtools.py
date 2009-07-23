@@ -4,8 +4,8 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
-#from openeye.oeproton import * #DLM 2/23/09 I believe this is not necessary and not in current OEChem tools
-from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction
+#from openeye.oeproton import * 
+from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction; replacing oeproton
 from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
@@ -429,7 +429,7 @@ def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = Fal
    # Return the charged molecule
    return charged_molecule
 #=============================================================================================
-def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetypes = None, cleanup = True, verbose = False):
+def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetypes = None, cleanup = True, verbose = False, netcharge = None):
    """Assign partial charges to a molecule.
 
    ARGUMENTS
@@ -440,6 +440,7 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
      judgetypes (integer) - if specified, this is provided as a -j argument to antechamber (default: None)
      cleanup (boolean) - clean up temporary files (default: True)
      verbose (boolean) - if True, verbose output of subprograms is displayed
+     netcharge (integer) -- if given, give -nc (netcharge) option to antechamber in calculation of charges
 
    RETURNS
      charged_molecule (OEMol) - the charged molecule with GAFF atom types
@@ -469,7 +470,11 @@ def assignPartialChargesWithAntechamber(molecule, charge_model = 'bcc', judgetyp
    formal_charge = formalCharge(molecule)
 
    # Run antechamber to assign GAFF atom types and charge ligand.
-   command = 'antechamber -i %(uncharged_molecule_filename)s -fi mol2 -o %(charged_molecule_filename)s -fo mol2 -c %(charge_model)s -nc %(formal_charge)d -at sybyl' % vars()
+   if netcharge:
+       chargestr='-nc %d' % netcharge
+   else:
+       chargestr=''
+   command = 'antechamber -i %(uncharged_molecule_filename)s -fi mol2 -o %(charged_molecule_filename)s -fo mol2 -c %(charge_model)s -nc %(formal_charge)d -at sybyl %(chargestr)' % vars()
    if judgetypes: command += ' -j %(judgetypes)d' % vars()
    if verbose: print command
    output = commands.getoutput(command)
@@ -773,7 +778,7 @@ quit""" % vars()
 
    return
 #=============================================================================================
-def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, charge_model = False, cleanup = True, show_warnings = True, verbose = False, resname = None):
+def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, charge_model = False, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge=None):
    """Parameterize small molecule with GAFF and write gromacs coordinate/topology files.
 
    ARGUMENTS
@@ -787,6 +792,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
      show_warnings (boolean) - show any warnings during conversion process (default: True)
      verbose (boolean) - show complete output of tools (default: False)
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
+     netcharge (integer) - if set, pass this net charge to calculation in antechamber (with -nc (netcharge)), otherwise assume zero.
 
    REQUIREMENTS
      antechamber (must be in PATH)
@@ -809,7 +815,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    # Create AMBER coordinate/topology files.
    amber_topology_filename = os.path.join(working_directory, 'amber.prmtop')
    amber_coordinate_filename = os.path.join(working_directory, 'amber.crd')
-   parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname)
+   parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname, netcharge = netcharge)
    
    # Use acpypi to convert from AMBER to gromacs topology/coordinates.
    acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
