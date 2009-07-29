@@ -688,7 +688,7 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL'):
 
    return
 #=============================================================================================
-def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None):
+def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge = None):
    """Parameterize small molecule with GAFF and write AMBER coordinate/topology files.
 
    ARGUMENTS
@@ -703,7 +703,8 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
      show_warnings (boolean) - show warnings during parameterization (default: True)
      verbose (boolean) - show all output from subprocesses (default: False)
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
-     
+     netcharge (integer) -- if set, pass this net charge to calculation in antechamber (with -nc (netcharge)), otherwise assumes zero.
+
    REQUIREMENTS
      acpypi.py conversion script (must be in MMTOOLSPATH)
      AmberTools installation (in PATH)
@@ -732,7 +733,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
                  
    # Run antechamber to assign GAFF atom types.
    gaff_mol2_filename = os.path.join(working_directory, 'gaff.mol2')   
-   command = 'antechamber -i %(tripos_mol2_filename)s -fi mol2 -o %(gaff_mol2_filename)s -fo mol2' % vars()
+   command = 'antechamber -i %(tripos_mol2_filename)s -fi mol2 -o %(gaff_mol2_filename)s -fo mol2 -nc %(netcharge)s' % vars()
    if judgetypes: command += ' -j %(judgetypes)d' % vars()
    if charge_model:
       formal_charge = formalCharge(molecule)
