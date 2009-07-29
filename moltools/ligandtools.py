@@ -4,7 +4,6 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
-#from openeye.oeproton import * 
 from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction; replacing oeproton
 from openeye.oeiupac import *
 from openeye.oeszybki import *
@@ -38,7 +37,7 @@ CHANGELOG
   6/5/2009: DLM minor changes to test case at end; switched perturbGromacsTopology to handle acpypi (rather than amb2gmx) generated topologies -- mainly modifying handling of the comments so these are preserved rather than clobbered.
   6/30/2009: DLM modified parameterizeForGromacs to use shutil rather than commands.getoutput for copying, improving errorchecking; fixed a bug for some residue names that caused files to fail to be copied back.
   7/9/2009: DLM added fitMolToRefmol function to fit a target molecule onto a reference molecule
-
+  7/29/2009: DLM modified assignPartialCharges to work on molecules coming from createMoleculeFromIUPAC; previously they wouldn't as the IUPAC name function doesn't assign atom names and the assignPartialCharges function requires atom names.
 """
 
 #=============================================================================================
@@ -151,6 +150,7 @@ def createMoleculeFromIUPAC(name, verbose = False, charge = None):
      OpenEye LexiChem's OEParseIUPACName is used to generate the molecle.
      The molecule is normalized by adding hydrogens.
      Omega is used to generate a single conformation.
+     Also note that atom names will be blank coming from this molecule. They are assigned when the molecule is written, or one can assign using OETriposAtomNames for example.
 
    EXAMPLES
      # Generate a mol2 file for phenol.
@@ -366,6 +366,15 @@ def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = Fal
      assignPartialCharges(molecule, charge_model = 'am1bcc')
    """
 
+   #Check that molecule has atom names; if not we need to assign them
+   assignNames = False
+   for atom in molecule.GetAtoms():
+       if atom.GetName()=='':
+          assignNames = True #In this case we are missing an atom name and will need to assign
+   if assignNames:
+      if verbose: print "Assigning TRIPOS names to atoms"
+      OETriposAtomNames(molecule)
+
    # Check input pameters.
    supported_charge_models  = ['am1bcc']
    if not (charge_model in supported_charge_models):
@@ -419,7 +428,6 @@ def assignPartialCharges(molecule, charge_model = 'am1bcc', multiconformer = Fal
       for atom in charged_molecule.GetAtoms():
          name = atom.GetName()
          partial_charges[name] += atom.GetPartialCharge()
-
    # Compute and store average partial charges in a copy of the original molecule.
    charged_molecule = OEMol(molecule)
    for atom in charged_molecule.GetAtoms():
