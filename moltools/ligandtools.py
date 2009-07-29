@@ -733,7 +733,10 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
                  
    # Run antechamber to assign GAFF atom types.
    gaff_mol2_filename = os.path.join(working_directory, 'gaff.mol2')   
-   command = 'antechamber -i %(tripos_mol2_filename)s -fi mol2 -o %(gaff_mol2_filename)s -fo mol2 -nc %(netcharge)s' % vars()
+   if netcharge:
+      chargstr = '-nc %d' % netcharge
+   else: chargestr=''
+   command = 'antechamber -i %(tripos_mol2_filename)s -fi mol2 -o %(gaff_mol2_filename)s -fo mol2 %(chargestr)s' % vars()
    if judgetypes: command += ' -j %(judgetypes)d' % vars()
    if charge_model:
       formal_charge = formalCharge(molecule)
