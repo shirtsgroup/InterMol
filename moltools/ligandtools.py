@@ -38,6 +38,7 @@ CHANGELOG
   6/30/2009: DLM modified parameterizeForGromacs to use shutil rather than commands.getoutput for copying, improving errorchecking; fixed a bug for some residue names that caused files to fail to be copied back.
   7/9/2009: DLM added fitMolToRefmol function to fit a target molecule onto a reference molecule
   7/29/2009: DLM modified assignPartialCharges to work on molecules coming from createMoleculeFromIUPAC; previously they wouldn't as the IUPAC name function doesn't assign atom names and the assignPartialCharges function requires atom names.
+  7/31/2009: Removed redundant (older) copy of add_ligand_to_gro
 """
 
 #=============================================================================================
@@ -915,18 +916,18 @@ def extract_section(lines, section):
    # return these indices
    return indices
 
-def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None):
+def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None):
    """Modify a gromacs topology file to add perturbed-state parameters.
 
    ARGUMENTS
      topology_file (string) - the name of the topology file to modify
-     molecule (OEMol) - molecule corresponding to contents of topology file -- must be the same one used to generate the topology file with parameterizeForGromacs()
 
    OPTIONAL ARGUMENTS
-     perturb_torsions (boolean) - if True, torsions whose central bond is not in an aromatic ring will be turned off in B state (default: True)
+     perturb_torsions (boolean) - if True, torsions whose central bond is not in an aromatic ring will be turned off in B state (default: True); note that molecule must also be specified in this case.
      perturb_vdw (boolean) - if True, van der Waals interactions will be turned off in B state (default: True)
      perturb_charges (boolean) - if True, charges will be turned off in B state (default: True)
      perturb_atom_indices (list of ints) - if not None, only atoms with gromacs .top file indices in included range will be perturbed (default: None)
+     molecule (OEMol) - molecule corresponding to contents of topology file -- must be the same one used to generate the topology file with parameterizeForGromacs(). NOTE: Required when using perturb_torsions.
 
    NOTES
      This code currently only handles the special format gromacs topology files produced by acpypi -- there are allowed variations in format that are not treated here.
@@ -942,7 +943,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
      # parameterize it for gromacs, using antechamber to assign AM1-BCC charges
      parameterizeForGromacs(molecule, topology_filename = 'phenol.top', coordinate_filename = 'phenol.gro', charge_model = 'bcc')
      # modify topology to prepare it for free energy calculations
-     perturbGromacsTopology('phenol.top', molecule)
+     perturbGromacsTopology('phenol.top', molecule = molecule)
 
    """
 
@@ -994,9 +995,7 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    indices = extract_section(lines, 'atoms')
    for index in indices:
       # extract the line
-      print "Before stripping, line is:", lines[index]
       line,comments = stripcomments(lines[index])
-      print "Now it is", line, comments
       # parse the line
       elements = line.split()
       nelements = len(elements)
@@ -1092,6 +1091,9 @@ def perturbGromacsTopology(topology_filename, molecule, perturb_torsions = True,
    if perturb_torsions:
       # Determine list of rotatable bonds to perturb.
       rotatable_bonds = list()
+      if not molecule:
+          raise RuntimeError('Error: OE molecule must be provided corresponding to the topology must be providded when using pertub_torsions') #Quick error check
+
       for bond in molecule.GetBonds():
          # This test is used because bond.IsRotor() doesn't seem to work correctly (e.g. phenol).
          if (not bond.IsAromatic()) and (bond.GetOrder() == 1) and (bond.GetBgn().GetDegree() > 1) and (bond.GetEnd().GetDegree() > 1):
@@ -1430,128 +1432,6 @@ def merge_protein_ligand_topologies(prottop,protgro,ligtop,liggro,complextop,com
    add_ligand_to_topology(prottop,ligtop,complextop)
    # Merge coordinate files.  
    add_ligand_to_gro(protgro,liggro,complexgro)
-
-   return
-#=============================================================================================
-def add_ligand_to_gro(protgro, liggro, complexgro):
-   """Append a gromacs coordinate file for a ligand to the coordinate file for a protein, producing a new coordinate file for the complex.
-
-   ARGUMENTS
-     protgro (string) - the filename of the (potentially solvated) protein coordinate file (gromacs .gro format)
-     liggro (string) - the filename of the ligand coordinate file (gromacs .gro format)
-     complexgro (string) - the filename of the complex coordinate file to write (gromacs .gro format)
-
-   NOTES
-     The ligand is inserted directly after the protein coordinates, before any solvent.  This is necessary for the merging of the protein and ligand into a single molecule.
-
-   """
-   
-   # Read input
-   file = open(protgro,'r')
-   prottext = file.readlines()
-   file.close()
-   file = open(liggro,'r')
-   ligtext = file.readlines()
-   file.close()
-
-   # For getting atomnumber
-   numline = re.compile(r'\s*(?P<num>\d+)\s*')
-
-   # Number of atoms
-   m=numline.match(prottext[1])
-   numprotatoms=int(m.group('num'))
-   m=numline.match(ligtext[1])
-   numligatoms=int(m.group('num'))
-
-   # Recognize solvent lines versus regular lines
-   solline = re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>SOL\s+(OW|HW1|HW2))(?P<mspc>\s*)(?P<anum>\d+)(?P<end>\s+.*)')
-   # Recognize regular lines
-   # The protein one may break if there are ever more than 9999 atoms in the protein, but I don't 
-   # mind for now. Maybe throw a exception if that happens though.
-   protline=re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>\w+(?<!SOL)\s+\w+[*]*\d*[*]*)(?P<mspc>\s+)(?P<anum>\d+)(?P<end>\s+.*)')
-   #recognize ion lines
-   ionline=re.compile(r'(?P<lspc>\s*)(?P<resn>\d+)(?P<name_type>\w+[+-]*\s+([C][L]|[N][aA]))(?P<anum>\d+)(?P<end>\s+.*)')
-
-   # Start creating new file
-   outtext=[]
-   outtext.append(prottext[0])
-   # New number of entries
-   newnumatom=numprotatoms+numligatoms
-   #print "Num prot atoms is "+str(numprotatoms)+", num lig atoms is "+str(numligatoms)
-   outtext.append(str(newnumatom)+'\n')
-
-   prottext=prottext[2:]
-   ligtext=ligtext[2:]
-   
-   # Now copy protein file through the end of the protein itself to the output file.
-   lastprotatom=0; newatom=0
-   lastprotres=0; newresn=0
-   lastligatom=0
-   lastligres=0
-   # To know where to insert the ligand
-   firstSol=True
-   #DLM 3-7-06: adding foundSol to handle case where no solvent is found and ligand should just be at end
-   foundSol=False
-   #Loop through file
-   for line in prottext:
-      #Check if it's a protein line
-      m=protline.match(line)
-      #If it is, just copy it; also store the atom number
-      if m:
-        outtext.append(line)
-        lastprotatom=int(m.group('anum'))
-        lastprotres=int(m.group('resn'))
-        lastprotmatches=m
-      #If it is a solvent or ion atom, then renumber it.
-      if not m:
-        soltxt=solline.match(line)
-        if soltxt:
-           foundSol=True #DLM added 3-6-06 to handle case where no solvent is found.
-           #If it is the first solvent molecule, put the ligand in first, renumbering the ligand
-           if firstSol:
-              for ligline in ligtext:
-                #Digest the ligand lines
-                ligcrd=protline.match(ligline)
-                #If it's a coordinate line, renumber and add.
-                if ligcrd:
-                  lastligres=int(ligcrd.group('resn'))+lastprotres
-                  lastligatom=int(ligcrd.group('anum'))+lastprotatom
-                  newtext=soltxt.group('lspc')+str(lastligres)+ligcrd.group('name_type')+soltxt.group('mspc')+str(lastligatom)+ligcrd.group('end')+'\n'
-                  outtext.append(newtext)
-              #Don't add the ligand again
-              firstSol=False
-
-           #Then, regarldess of whether it is the first  solvent molecule or not, renumber it and add it.
-           newresn=str(lastligres-lastprotres+int(soltxt.group('resn')))
-           newatom=str(lastligatom-lastprotatom+int(soltxt.group('anum')))
-           newtext=soltxt.group('lspc')+newresn+soltxt.group('name_type')+soltxt.group('mspc')+newatom+soltxt.group('end')+'\n'
-           outtext.append(newtext)
-                 
-        #Also add ions.
-        iontext=ionline.match(line)
-        if iontext:
-          ionresn=str(lastligres-lastprotres+int(iontext.group('resn')))
-          ionatom=str(lastligatom-lastprotatom+int(iontext.group('anum')))
-          newtext=iontext.group('lspc')+ionresn+iontext.group('name_type')+ionatom+iontext.group('end')+'\n'
-          outtext.append(newtext)
-          
-   #DLM adding 3-6-06 to handle case where no solvent is found
-   if not foundSol:
-      for ligline in ligtext:
-        #Digest the ligand lines
-        ligcrd=protline.match(ligline)
-        #If it's a coordinate line, renumber and add.
-        if ligcrd:
-           lastligres=int(ligcrd.group('resn'))+lastprotres
-           lastligatom=int(ligcrd.group('anum'))+lastprotatom
-           newtext=lastprotmatches.group('lspc')+str(lastligres)+ligcrd.group('name_type')+lastprotmatches.group('mspc')+str(lastligatom)+ligcrd.group('end')+'\n'
-           outtext.append(newtext)
-
-   #Then done looping over topology. Append the final box line.
-   outtext.append(prottext[-1])   
-   file=open(complexgro,'w')
-   file.writelines(outtext)
-   file.close()
 
    return
 #=============================================================================================
