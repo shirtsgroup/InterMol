@@ -1,5 +1,6 @@
 import tempfile
 import commands
+from math import *
 from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
@@ -31,6 +32,7 @@ AUTHORS
   Update by Hideki Fujioka, Tulane, 6/04/2009.
   Update by D. Mobley, University of New Orleans, 6/05/2009
   Additions and fixes by D. Mobley, UNO, 7/2009
+  Extended and generalized, D. Mobley, UNO, 8/2009
 
 CHANGELOG
   6/4/2009: HF switched parameterizeForGromacs to use Acpypi from Google code, which is superior to previous amb2gmx.pl
@@ -39,6 +41,8 @@ CHANGELOG
   7/9/2009: DLM added fitMolToRefmol function to fit a target molecule onto a reference molecule
   7/29/2009: DLM modified assignPartialCharges to work on molecules coming from createMoleculeFromIUPAC; previously they wouldn't as the IUPAC name function doesn't assign atom names and the assignPartialCharges function requires atom names.
   7/31/2009: Removed redundant (older) copy of add_ligand_to_gro
+  8/3/2009: DLM: Minor edits to documentation, optional arguments.
+  8/4/2009: DLM edited perturbGromacsTopology to add optional argument, vdw_decoupling, that will modify pairs and nonbond_params sections to maintain intramolecular vdw interactions for a molecule which is being deleted. Also made it optional to provide perturbGromacsTopology with a molecule, since this is only used when dihedrals are perturbed (so it is now only required in that case).
 """
 
 #=============================================================================================
@@ -916,7 +920,7 @@ def extract_section(lines, section):
    # return these indices
    return indices
 
-def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None):
+def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None, vdw_decoupling = False, decouple_atom_types = None):
    """Modify a gromacs topology file to add perturbed-state parameters.
 
    ARGUMENTS
@@ -928,11 +932,15 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
      perturb_charges (boolean) - if True, charges will be turned off in B state (default: True)
      perturb_atom_indices (list of ints) - if not None, only atoms with gromacs .top file indices in included range will be perturbed (default: None)
      molecule (OEMol) - molecule corresponding to contents of topology file -- must be the same one used to generate the topology file with parameterizeForGromacs(). NOTE: Required when using perturb_torsions.
+     vdw_decoupling (boolean) -- if True (default False), juggle gromacs pairs list and explicit specification of interactions in order to maintain A state intramolecular interactions within the molecule being perturbed. Assumes combination rule 2 and fudgeLJ=0.5.
+     decouple_atom_types (list of types): Used only with vdw_decoupling, to specify list of atom types to retain interactions between. If these are not provided, only interactions between perturbed atoms will be retained.
 
    NOTES
      This code currently only handles the special format gromacs topology files produced by acpypi -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
-    
+     Note also that the vdw decoupling portion of this code will work properly only if the atom types being decoupled do not occur elsewhere in the system. 
+     The vdw decoupling portion of this code also retains interactions only between *perturbed* atoms unless a separate list of atoms is specified.
+
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
      Generalize this code to allow it to operate more generally on a specified moleculetype.
@@ -945,6 +953,8 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
      # modify topology to prepare it for free energy calculations
      perturbGromacsTopology('phenol.top', molecule = molecule)
 
+
+
    """
 
    # Read the contents of the topology file.
@@ -954,6 +964,8 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
 
    # Parse atomtypes to build a list of all atom types for later use.
    atomtypes = list() # storage for atom types
+   sigma_by_type = dict() #Store sigmas and epsilons by atom type for later use
+   epsilon_by_type = dict()
    indices = extract_section(lines, 'atomtypes')
    for index in indices:
       # extract the line
@@ -972,6 +984,8 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
       atomtype['ptype'] = elements[4]
       atomtype['sigma'] = float(elements[5])
       atomtype['epsilon'] = float(elements[6])
+      epsilon_by_type[ atomtype['name'] ] = atomtype['epsilon']
+      sigma_by_type[ atomtype['name'] ] = atomtype['sigma']
       # append
       atomtypes.append(atomtype)
 
@@ -989,10 +1003,13 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
          lines.insert(indices[-1], line)
          indices.append(indices[-1]+1)
 
+
    # Process [ atoms ] section
    atoms = list()
    atom_indices = dict()
+   type_by_index = dict() #Store atom types by index for later use
    indices = extract_section(lines, 'atoms')
+   perturbed_types = [] #Keep track of which atom types are perturbed
    for index in indices:
       # extract the line
       line,comments = stripcomments(lines[index])
@@ -1011,11 +1028,16 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
       atom['cgnr'] = int(elements[5])
       atom['charge'] = float(elements[6])
       atom['mass'] = float(elements[7])
+      type_by_index[ atom['nr'] ] = atom['type']
 
       # skip if an atom range is specified, and this is not among the atoms we're looking for
       if perturb_atom_indices:
          if atom['nr'] not in perturb_atom_indices: continue
+            
          
+      # save types we are perturbing for later
+      if perturbed_types.count( atom['type'])==0:
+          perturbed_types.append( atom['type'] )
       # set perturbation type
       atom['typeB'] = atom['type']
       if perturb_vdw: atom['typeB'] += '_pert' # perturbed vdw type
@@ -1033,6 +1055,73 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
 
       # store lookup of atom atom names -> atom numbers
       atom_indices[atom['atom']] = atom['nr']
+
+
+
+   #If we are doing vdw decoupling, prepare a nonbond_params section explicitly specifying intramolecular interactions in order to retain them
+   if vdw_decoupling:
+        if not decouple_atom_types:
+            decouple_atom_types = perturbed_types #Types to retain interactions between
+
+        #Build section
+        nonbond_sec = [ '[ nonbond_params ]\n' ]
+        #Note that below could be rewritten more simply now that we are storing sigma and epsilon by each type
+        for type1 in decouple_atom_types:
+            idx1 = decouple_atom_types.index( type1)
+            for type2 in decouple_atom_types:
+                idx2 = decouple_atom_types.index(type2)
+                if idx2 >= idx1: #Prevent adding same lines twice
+                    sigma = 0.5*( sigma_by_type[type1] + sigma_by_type[type2] )
+                    epsilon = sqrt( epsilon_by_type[type1]*epsilon_by_type[type2] )
+                    #Add to parameters section
+                    nonbond_sec.append( type1 + '   ' + type2 + '   1   ' + str( sigma) + '  ' + str(epsilon) +'\n' )
+                    #Also add for perturbed atoms
+                    nonbond_sec.append( type1+'_pert' + '   ' + type2+'_pert' + '   1   ' + str( sigma) + '  ' + str(epsilon) +'\n' )
+                
+        #Add nonbond_sec into lines in appropriate place
+        molstart = lines.index('[ moleculetype ]\n')
+        for line in nonbond_sec:
+            lines.insert( molstart, line)
+            molstart+=1
+        lines.insert(molstart, '\n')
+
+
+   #If we are doing vdw decoupling, modify the pairs section to explicitly state interactions rather than having them determined from the parameters
+   if vdw_decoupling:
+        indices = extract_section(  lines, 'pairs' )
+        for index in indices:
+            # Extract line
+            line, comments = stripcomments( lines[index] )
+            # Parse line
+            elements = line.split()
+            nelements = len(elements)
+            # skip if not all elements found
+            if (nelements < 3): continue
+            #parse line
+            pair = dict()
+            pair['i'] = int(elements[0])
+            pair['j'] = int(elements[1])
+            pair['type'] = int(elements[2])
+            #Check for potential problems
+            if not pair['type']==1:
+                raise 'Error: ligandtools.py only knows how to do vdw decoupling for pairs type 1'
+            #Look up atomtypes
+            type_i = type_by_index[ pair['i']]
+            type_j = type_by_index[ pair['j']]
+            #Look up sigma and epsilon
+            epsilon_i = epsilon_by_type[ type_i ]
+            epsilon_j = epsilon_by_type[ type_j ]
+            sigma_i = sigma_by_type[ type_i ]
+            sigma_j = sigma_by_type[ type_j ]
+            #Compute total
+            sigma = 0.5*(sigma_i + sigma_j)
+            fudgeLJ = 0.5
+            epsilon = fudgeLJ*sqrt(epsilon_i*epsilon_j)
+            #Build new line
+            line = line.replace('\n','')
+            line = line + '   ' + str(sigma) + '   ' + str(epsilon) + '\n'
+            # replace the line
+            lines[index] = line
 
    # Process [ bonds ] section
    indices = extract_section(lines, 'bonds')
@@ -1092,7 +1181,7 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
       # Determine list of rotatable bonds to perturb.
       rotatable_bonds = list()
       if not molecule:
-          raise RuntimeError('Error: OE molecule must be provided corresponding to the topology must be providded when using pertub_torsions') #Quick error check
+          raise 'Error: OE molecule must be provided corresponding to the topology must be providded when using pertub_torsions' #Quick error check
 
       for bond in molecule.GetBonds():
          # This test is used because bond.IsRotor() doesn't seem to work correctly (e.g. phenol).
@@ -1737,14 +1826,8 @@ if __name__ == '__main__':
 
    # Modify gromacs topology file for alchemical free energy calculation after storing unperturbed copy
    os.system('cp phenol.top phenol_unperturbed.top')
-   perturbGromacsTopology('phenol.top', molecule)
+   perturbGromacsTopology('phenol.top', molecule = molecule)
 
    # Convert .top file to .itp file
    top_to_itp('phenol.top', 'phenol.itp', moleculetype = 'phenol')
 
-   # Insert the ligand into the system.
-   # gromacstools.injectLigand(system_topology = 'system.top', system_coordinates = 'system.gro', ligand_topology = 'phenol.top', ligand_coordinates = 'phenol.gro')
-
-   # Merge the protein and ligand molecules into one molecule to allow restraints to be applied between protein and ligand.
-   # gromacstools.mergeMolecules
-   
