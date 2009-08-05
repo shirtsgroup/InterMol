@@ -642,8 +642,10 @@ def fitMolToRefmol( fitmol, refmol, maxconfs = None, verbose = False):
 #=============================================================================================
 # METHODS FOR WRITING OR EXPORTING MOLECULES
 #=============================================================================================
-def writeMolecule(molecule, filename, substructure_name = 'MOL'):
+def writeMolecule(molecule, filename, substructure_name = 'MOL', preserve_atomtypes = False):
    """Write a molecule to a file in any format OpenEye autodetects from filename (such as .mol2).
+   WARNING: The molecule will be standardized before writing by the high-level OEWriteMolecule function.
+   OEWriteConstMolecule is used, to avoid changing the molecule you pass in.
 
    ARGUMENTS
      molecule (OEMol) - the molecule to be written
@@ -651,6 +653,7 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL'):
 
    OPTIONAL ARGUMENTS
      substructure_name (String) - if a mol2 file is written, this is used for the substructure name (default: 'MOL')
+     preserve_atomtypes (bool) - if True, a mol2 file will be written with atom types preserved
 
    RETURNS
      None
@@ -673,7 +676,8 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL'):
    def write_all_conformers(ostream, molecule):
       # write all conformers of each molecule
       for conformer in molecule.GetConfs():
-         OEWriteMolecule(ostream, conformer)
+         if preserve_atomtypes: OEWriteMol2File(ostream, conformer)
+         else: OEWriteConstMolecule(ostream, conformer)
       return
 
    # If 'molecule' is actually a list of molecules, write them all.
