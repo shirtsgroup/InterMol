@@ -43,12 +43,13 @@ CHANGELOG
   7/31/2009: Removed redundant (older) copy of add_ligand_to_gro
   8/3/2009: DLM: Minor edits to documentation, optional arguments.
   8/4/2009: DLM edited perturbGromacsTopology to add optional argument, vdw_decoupling, that will modify pairs and nonbond_params sections to maintain intramolecular vdw interactions for a molecule which is being deleted. Also made it optional to provide perturbGromacsTopology with a molecule, since this is only used when dihedrals are perturbed (so it is now only required in that case).
+  8/11/2009: DLM edited extractMoleculeFromPDB to add option of specifying an altloc typefor hetatm extraction, for example for cases where there are two ligands with residue name AB1 modeled at partial occupancy, distinguished only by altloc flags "A" and "B"
 """
 
 #=============================================================================================
 # METHODS FOR READING, EXTRACTING, OR CREATING MOLECULES
 #=============================================================================================
-def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None, outfile = None):
+def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None, outfile = None, altloc = None):
    """Extract a ligand specified in the HETATM records of a PDB file.
 
    ARGUMENTS
@@ -59,6 +60,7 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
      resname - limit HETATM extraction to this residue name, if specified (default: None)
      chain - limit HETATM extraction to this chain, if specified (default: None)
      outfile - if specified, the molecule is written to this output file (default: None)
+     altloc - if specified, limit HETATM extraction to this altloc identifier (default: None)
 
    RETURNS
      ligand (OEMol) - the ligand extracted from the PDB file
@@ -83,6 +85,7 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
       fieldtype = line[0:6].split()[0]
       if fieldtype == 'HETATM':
         tresname = line[17:20].split()[0]
+        taltloc = ilne[16:17]
         tresnum = int(line[22:26].split()[0])
         tatom = int(line[6:11].split()[0])
         tchain = line[21]
@@ -96,6 +99,9 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
         if resname:
           if tresname != resname:
             match = False
+        if altloc:
+            if taltloc != altloc:
+                match = False
 
         if match:
           ofile.write(line)
