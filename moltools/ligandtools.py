@@ -85,7 +85,7 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
       fieldtype = line[0:6].split()[0]
       if fieldtype == 'HETATM':
         tresname = line[17:20].split()[0]
-        taltloc = ilne[16:17]
+        taltloc = line[16:17]
         tresnum = int(line[22:26].split()[0])
         tatom = int(line[6:11].split()[0])
         tchain = line[21]
