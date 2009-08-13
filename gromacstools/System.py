@@ -193,7 +193,7 @@ class System:
     numff = int(lines.pop(0)) 
     for i in range(0,numff):
         fields = lines[i].split()
-	key = fields.pop(0)
+	key = fields.pop(0) #DLM: Looks like there is a bug in indentation here.
 	forcefields[ key ] = string.joinfields(fields)
 	forcefieldCodes[ key ] = str(i)
     return forcefields, forcefieldCodes

@@ -85,4 +85,6 @@ Tools for interacting with the Tinker molecular mechanics package.
 
 Various utility classes with physical constants, units, etc.
 
+* pdbtools
 
+Some tools for performing common operations on PDB files

@@ -1,0 +1,3 @@
+Tools for common operations on PDB files. See also modellertools, which can build in missing residues and loops, and ligandtools, which has some functions relating to extracting small molecules from pdb files. Also, mccetools can standardize to AMBER naming. 
+
+Here, in cleaners.py, there are tools relating to common preparatory actions on a PDB file, such as stripping out water molecules, cosolvents, and HETATM entries.
