@@ -44,6 +44,7 @@ CHANGELOG
   8/3/2009: DLM: Minor edits to documentation, optional arguments.
   8/4/2009: DLM edited perturbGromacsTopology to add optional argument, vdw_decoupling, that will modify pairs and nonbond_params sections to maintain intramolecular vdw interactions for a molecule which is being deleted. Also made it optional to provide perturbGromacsTopology with a molecule, since this is only used when dihedrals are perturbed (so it is now only required in that case).
   8/11/2009: DLM edited extractMoleculeFromPDB to add option of specifying an altloc typefor hetatm extraction, for example for cases where there are two ligands with residue name AB1 modeled at partial occupancy, distinguished only by altloc flags "A" and "B"
+  8/17/2009: DLM edited add_ligand_to_gro to add option to add ligand elsewhere in a gro file, aside from at the very end.
 """
 
 #=============================================================================================
@@ -809,7 +810,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    """Parameterize small molecule with GAFF and write gromacs coordinate/topology files.
 
    ARGUMENTS
-     ligmol2 (string) - mol2 filename of ligand with partial charges and AMBER atomtypes
+     molecule (OEMol) - OEMol molecule of ligand
      topology_filename (string) - name of output topology file
      coordinate_filename (string) - name of output coordinate file
 
@@ -1297,8 +1298,8 @@ def totalCharge(topology_filename):
    return total_charge
      
 #=============================================================================================
-def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
-   """Append ligand coordinates to the end of an existing gromacs .gro file.
+def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resnum = None):
+    """Append ligand coordinates to the end of an existing gromacs .gro file.
 
    ARGUMENTS
      targetgro (string) - gromacs .gro file to which ligand coordinates are to be appended (not modified)
@@ -1307,64 +1308,94 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP'):
 
    OPTIONAL ARGUMENTS
      resname (string) - name for ligand residue (default: 'TMP')
+     add_after_resnum (integer) -- Default None. If this is specified, ligand will be added to gro file after a specified residue number (i.e., after the protein, for example) rather than at the end of the file. 
 
    NOTES
      No effort is made to adjust box size.
      Ligand must be a single residue.
      New residue number is derived from last residue in target .gro file.
-     
-   """
+     In the case of add_after_resnum, everything is done as normally in terms of residue number and atom number calculation, EXCEPT that the ligand is inserted into the gro file after the specified residue number and then trjconv is used to correct the residue and atom numbering to be consecutive.
+    """
 
-   # Read ligand coordinates.
-   ligfile = open(liggro, 'r')
-   liglines = ligfile.readlines()
-   ligfile.close()
+    # Read ligand coordinates.
+    ligfile = open(liggro, 'r')
+    liglines = ligfile.readlines()
+    ligfile.close()
 
-   # Read target file coordinates.
-   targetfile = open(targetgro,'r')
-   targetlines = targetfile.readlines()
-   targetfile.close()
+    # Read target file coordinates.
+    targetfile = open(targetgro,'r')
+    targetlines = targetfile.readlines()
+    targetfile.close()
 
-   # Determine number of atoms in each file.
-   ligatoms = int(liglines[1].split()[0])
-   targetatoms = int(targetlines[1].split()[0])
+    # Determine number of atoms in each file.
+    ligatoms = int(liglines[1].split()[0])
+    targetatoms = int(targetlines[1].split()[0])
 
-   # Get number of last residue in target file.
-   lastres = targetlines[-2].split()[0]
-   i = len(lastres)
-   while not lastres[0:i].isdigit():
-     i-=1
-   lastresnum = int(lastres[0:i])
+    # Get number of last residue in target file.
+    lastres = targetlines[-2].split()[0]
+    i = len(lastres)
+    while not lastres[0:i].isdigit():
+        i-=1
+    lastresnum = int(lastres[0:i])
 
-   # Compute new residue number of ligand.
-   ligresnum = lastresnum+1
+    # Compute new residue number of ligand.
+    ligresnum = lastresnum+1
    
-   # Compute new number of atoms.
-   newatomnum = ligatoms+targetatoms
-   
-   # Create new gromacs .gro file in memory.
-   outtext = [ targetlines[0] ]
-   outtext.append(' %s\n' % newatomnum)
-   for line in targetlines[2:-1]:
-      outtext.append(line)
+    # Compute new number of atoms.
+    newatomnum = ligatoms+targetatoms
 
-   # Append the ligand coordinate lines, renumbering atom and residue numbers.
-   resnumname='%4s%-4s' % (ligresnum, resname)
-   for line in liglines[2:-1]:
-      anum = int( line[15:20].split()[0] )
-      newanum = targetatoms+anum
-      line = ' '+resnumname+line[9:15]+('%5s' % newanum)+line[20:]
-      outtext.append(line)
+    if not add_after_resnum:
+        # Create new gromacs .gro file in memory.
+        outtext = [ targetlines[0] ]
+        outtext.append(' %s\n' % newatomnum)
+        for line in targetlines[2:-1]:
+            outtext.append(line)
+    else: #If we want to add the ligand after a specified residue number rather than at the end
+        #Find the line corresponding to residue number we want to add
+        residueline = 1
+        resnum = 1
+        #Scan until we get to where we want to be
+        while resnum <= add_after_resnum:
+            residueline+=1
+            #Get number of residue
+            thisres = targetlines[ residueline ].split()[0]
+            i = len(thisres)
+            while not thisres[0:i].isdigit():
+                i-=1
+            resnum = int(thisres[0:i])
+            print "Residue line %s, residue %s..." % (residueline, resnum)
+        #Create new gromacs .gro file in memory
+        outtext = [ targetlines[0] ]
+        outtext.append(' %s\n' % newatomnum)
+        for line in targetlines[2:residueline]:
+            outtext.append(line)
 
-   # Add box line from target .gro file to end of file.
-   outtext.append(targetlines[-1])
+    # Append the ligand coordinate lines, renumbering atom and residue numbers.
+    resnumname='%4s%-4s' % (ligresnum, resname)
+    for line in liglines[2:-1]:
+        anum = int( line[15:20].split()[0] )
+        newanum = targetatoms+anum
+        line = ' '+resnumname+line[9:15]+('%5s' % newanum)+line[20:]
+        outtext.append(line)
 
-   # Write modified .gro file.
-   file = open(outgro, 'w')
-   file.writelines(outtext)
-   file.close()
+    #If we are not adding at the end, add the rest of the file
+    if add_after_resnum:
+        for line in targetlines[residueline:-1]:
+            outtext.append(line)
 
-   return
+    # Add box line from target .gro file to end of file.
+    outtext.append(targetlines[-1])
+
+    # Write modified .gro file.
+    file = open(outgro, 'w')
+    file.writelines(outtext)
+    file.close()
+
+    #If we wrote it into the middle of the gro file, use trjconv to correct residue/atom numbering
+    if add_after_resnum:
+        print commands.getoutput('echo 0 | trjconv -f %(outgro)s -s %(outgro)s -o temp_%(outgro)s' % vars() )
+
+    return
 #=============================================================================================
 def top_to_itp(topfile, outputitp, moleculetype = None):
    """Transform a gromacs .top topology file into an .itp file suitable for inclusion.
