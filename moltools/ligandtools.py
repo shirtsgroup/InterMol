@@ -1363,7 +1363,6 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
             while not thisres[0:i].isdigit():
                 i-=1
             resnum = int(thisres[0:i])
-            print "Residue line %s, residue %s..." % (residueline, resnum)
         #Create new gromacs .gro file in memory
         outtext = [ targetlines[0] ]
         outtext.append(' %s\n' % newatomnum)
@@ -1393,7 +1392,7 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
 
     #If we wrote it into the middle of the gro file, use trjconv to correct residue/atom numbering
     if add_after_resnum:
-        print commands.getoutput('echo 0 | trjconv -f %(outgro)s -s %(outgro)s -o temp_%(outgro)s' % vars() )
+        commands.getoutput('echo 0 | trjconv -f %(outgro)s -s %(outgro)s -o temp_%(outgro)s' % vars() )
 
     return
 #=============================================================================================
