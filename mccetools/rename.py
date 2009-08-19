@@ -9,6 +9,8 @@ REVISION LOG
 - 6-30-2009: DLM, additional bugfix relating to naming of CYS2, in this case it was messing up pdb formatting.
 - 6-30-2009: DLM, additional bugfix relating to hydrogen and CD naming for NILE/CILE
 - 7-1-2009: DLM, bugfix relating to handling of insertion ids; in cases where two consecutive residues (one of which had an insertion code but the same residue number) were the same amino acid, one residue would be omitted from the output, resulting in a consecutive sequence but a missing residue in the structure. Also fixed problem with naming of a hydrogen on GLH. 
+- 8-19-2009: DLM, fixed a bug introduced at the last revision, wherein some N-terminal residues, when capped, would be split in two due to having two atoms with the same name. This had been introduced when fixing the insertion code bug.
+
 
 TO DO:
 - See description of disulfide_search function -- need to fix naming for CYD residues that are not disulfide bonded.
@@ -244,15 +246,22 @@ def nest_pdb(pdbarr):
             residue.append(line)
         else:
             #DLM 7/1/2009: The following should be OK even for residues with insertion codes (mcce removes the insertion code) EXCEPT if the two residues in sequence have the same residue name (in which case they will be packed into the same residue here). To fix this, store a list of atoms that are already found for the present residue and start a new residue anytime a second copy of an atom is found. See noted edits.
+            #DLM 8/19/2009: This breaks cases of N-terminal residues, which may have two of the same atom names due to capping. Fix by only starting a new residue if the residue name is NOT NTR (which it will be if this is N-terminal) 
             if (line[17:27] == residue[-1][17:27]):
                 #DLM 7/1/2009:
                 if usedatoms.count(atom)==0:
                     usedatoms.append(atom)
                     residue.append(line) #Original line
-                else: #If we are finding a second copy of the atom it means we need to start a new residue
-                    nestedpdb.append(residue)
-                    residue=[line]
-                    usedatoms=[atom]
+                else: 
+                    if not line[17:20]=='NTR' and not line[17]=='N':
+                        #If we are finding a second copy of the atom it means we need to start a new residue EXCEPT if it is N-terminal
+                        print "Starting new residue for:", line
+                        nestedpdb.append(residue)
+                        residue=[line]
+                        usedatoms=[atom]
+                    else: #If it IS n-terminal, just save like before
+                        residue.append(line)
+                    
                 #End DLM
             else:
                 nestedpdb.append(residue)

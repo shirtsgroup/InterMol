@@ -520,7 +520,7 @@ def titratePDB(pdbfile, outfile, pHstart, pHstep, pHiters, mccepath, cleanup=Tru
         
     return
 
-def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True, manualProtonation={}):
+def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True, manualProtonation={}, verbose = False):
     """Handles the file processing work for protonation_state
     
     ARGUMENTS
@@ -530,10 +530,11 @@ def ps_processmcce(tempdir, labeledPDBOnly=False, renameTermini=True, manualProt
     # Build and use a regex to grab the appropriate entries from the MCCE PDB
     sstr,neut,pos,neg=ps_mostlikely(tempdir,manualProtonation=manualProtonation)
     rx=re.compile(sstr)
-    print "searchstring: \"",sstr
-    print "neut: \"",neut
-    print "pos: \"",pos
-    print "neg: \"",neg
+    if verbose:
+        print "searchstring: \"",sstr
+        print "neut: \"",neut
+        print "pos: \"",pos
+        print "neg: \"",neg
     f=open(tempdir+"/step2_out.pdb","rt")
     pdbarr=filter(lambda x:rx.search(x),f.readlines())
     f.close()
