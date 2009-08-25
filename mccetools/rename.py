@@ -10,7 +10,7 @@ REVISION LOG
 - 6-30-2009: DLM, additional bugfix relating to hydrogen and CD naming for NILE/CILE
 - 7-1-2009: DLM, bugfix relating to handling of insertion ids; in cases where two consecutive residues (one of which had an insertion code but the same residue number) were the same amino acid, one residue would be omitted from the output, resulting in a consecutive sequence but a missing residue in the structure. Also fixed problem with naming of a hydrogen on GLH. 
 - 8-19-2009: DLM, fixed a bug introduced at the last revision, wherein some N-terminal residues, when capped, would be split in two due to having two atoms with the same name. This had been introduced when fixing the insertion code bug.
-
+- 8/25-2009: DLM, fixed hydrogen naming problem for ASH, wherein hydrogen needed to be named HD2, not HD1.
 
 TO DO:
 - See description of disulfide_search function -- need to fix naming for CYD residues that are not disulfide bonded.
@@ -81,6 +81,8 @@ def rename_charged(npdb):
             npdb[i]=map(lambda x:x.replace('CYS','CYM'),npdb[i])
         elif (resname_and_state[i]=='ASP0'):
             npdb[i]=map(lambda x:x.replace('ASP','ASH'),npdb[i])
+            #DLM 8/25/2009: ASH needs to have HD2, not HD1, for some reason
+            npdb[i]=map(lambda x:x.replace('HD1 ASH','HD2 ASH'),npdb[i])
         #Aspartate requires no sub
         elif (resname_and_state[i]=='GLU0'):
             npdb[i]=map(lambda x:x.replace('GLU','GLH'),npdb[i])
