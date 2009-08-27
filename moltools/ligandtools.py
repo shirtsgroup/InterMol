@@ -1391,8 +1391,8 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
     file.close()
 
     #If we wrote it into the middle of the gro file, use trjconv to correct residue/atom numbering
-    if add_after_resnum:
-        commands.getoutput('echo 0 | trjconv -f %(outgro)s -s %(outgro)s -o temp_%(outgro)s' % vars() )
+    if add_after_resnum!=None:
+        commands.getoutput('echo 0 | trjconv -f %(outgro)s -s %(outgro)s -o %(outgro)s' % vars() )
 
     return
 #=============================================================================================
@@ -1821,6 +1821,7 @@ def add_ligand_to_topology(prottop,ligtop,complextop):
    #Write new topology
    file=open(complextop,'w')
    file.writelines(newtop)
+   file.close()
    #DONE.
    return
 #=============================================================================================
