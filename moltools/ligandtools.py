@@ -70,6 +70,8 @@ def extractMoleculeFromPDB(pdbfile, resnum = None, resname = None, chain = None,
      The molecule will be 'normalized' by protonating it and naming it according to its IUPAC name.
      Parts that are not recognized will be termed 'BLAH'.
 
+   LIMITATIONS/WARNINGS:
+     Note that in this approach, if the ligand does not have hydrogen atoms, bond types are assigned based on the bond angles in the PDB structure. Ligands are often poorly modeled in PDB structures, so this will often result in poor bond assignments, for example sp2 carbons may be treated as sp3 carbons, or vise versa. If using this tool, you should ALWAYS check that you are getting the molecule you expect in some other way, such as by inspecting a mol2 file.
    """
 
    # Read contents of source PDB file.
