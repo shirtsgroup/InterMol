@@ -45,6 +45,7 @@ CHANGELOG
   8/4/2009: DLM edited perturbGromacsTopology to add optional argument, vdw_decoupling, that will modify pairs and nonbond_params sections to maintain intramolecular vdw interactions for a molecule which is being deleted. Also made it optional to provide perturbGromacsTopology with a molecule, since this is only used when dihedrals are perturbed (so it is now only required in that case).
   8/11/2009: DLM edited extractMoleculeFromPDB to add option of specifying an altloc typefor hetatm extraction, for example for cases where there are two ligands with residue name AB1 modeled at partial occupancy, distinguished only by altloc flags "A" and "B"
   8/17/2009: DLM edited add_ligand_to_gro to add option to add ligand elsewhere in a gro file, aside from at the very end.
+  10/20/2009: DLM fixed a bug in add_ligand_to_topology wherein ligands with two dihedrals sections would not have the contents of one of the sections added to the resulting topology file.
 """
 
 #=============================================================================================
@@ -1687,8 +1688,10 @@ def add_ligand_to_topology(prottop,ligtop,complextop):
       #Now extract information from the sections we need.
       #Is this a section we want to save?
       if name in savelist:
-        #Make it an empty array for starters
-        ligsection[name]=[]
+        #Make it an empty array for starters, unless we have already created it.
+        #This may sometimes be the case, for example if there are multiple [dihedrals] sections
+        if not ligsection.has_key(name):
+           ligsection[name]=[]
         #Save lines in the section except those beginning with comments
         for line in sec:
           m=comment.match(line)
