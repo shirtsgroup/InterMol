@@ -46,6 +46,7 @@ CHANGELOG
   8/11/2009: DLM edited extractMoleculeFromPDB to add option of specifying an altloc typefor hetatm extraction, for example for cases where there are two ligands with residue name AB1 modeled at partial occupancy, distinguished only by altloc flags "A" and "B"
   8/17/2009: DLM edited add_ligand_to_gro to add option to add ligand elsewhere in a gro file, aside from at the very end.
   10/20/2009: DLM fixed a bug in add_ligand_to_topology wherein ligands with two dihedrals sections would not have the contents of one of the sections added to the resulting topology file.
+  10/20/2009: DLM incorporating minor changes from Gabe Rocklin into add_ligand_to_gro to fix problems with ligand numbering when combining with protein under some circumstances
 """
 
 #=============================================================================================
@@ -1366,6 +1367,7 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
             while not thisres[0:i].isdigit():
                 i-=1
             resnum = int(thisres[0:i])
+            atomnum = int(targetlines[residueline][15:20]) #DLM add 10/21/09
         #Create new gromacs .gro file in memory
         outtext = [ targetlines[0] ]
         outtext.append(' %s\n' % newatomnum)
@@ -1373,10 +1375,10 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
             outtext.append(line)
 
     # Append the ligand coordinate lines, renumbering atom and residue numbers.
-    resnumname='%4s%-4s' % (ligresnum, resname)
+    resnumname='%4s%-4s' % (resnum+1, resname)
     for line in liglines[2:-1]:
         anum = int( line[15:20].split()[0] )
-        newanum = targetatoms+anum
+        newanum = atomnum+anum
         line = ' '+resnumname+line[9:15]+('%5s' % newanum)+line[20:]
         outtext.append(line)
 
