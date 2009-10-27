@@ -47,6 +47,7 @@ CHANGELOG
   8/17/2009: DLM edited add_ligand_to_gro to add option to add ligand elsewhere in a gro file, aside from at the very end.
   10/20/2009: DLM fixed a bug in add_ligand_to_topology wherein ligands with two dihedrals sections would not have the contents of one of the sections added to the resulting topology file.
   10/20/2009: DLM incorporating minor changes from Gabe Rocklin into add_ligand_to_gro to fix problems with ligand numbering when combining with protein under some circumstances
+  10/27/2009: DLM fixing crash introduced by last fix that occurred when ligands were added at end of gro file (resnum was not defined).  
 """
 
 #=============================================================================================
@@ -1354,6 +1355,13 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
         outtext.append(' %s\n' % newatomnum)
         for line in targetlines[2:-1]:
             outtext.append(line)
+        #Compute residue number
+        thisres = line.split()[0]
+        i = len(thisres)
+        while not thisres[0:i].isdigit():
+            i-=1
+        resnum = int( thisres[0:i])
+        atomnum = int(line[15:20])
     else: #If we want to add the ligand after a specified residue number rather than at the end
         #Find the line corresponding to residue number we want to add
         residueline = 1
