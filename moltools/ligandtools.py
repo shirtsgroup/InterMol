@@ -47,7 +47,8 @@ CHANGELOG
   8/17/2009: DLM edited add_ligand_to_gro to add option to add ligand elsewhere in a gro file, aside from at the very end.
   10/20/2009: DLM fixed a bug in add_ligand_to_topology wherein ligands with two dihedrals sections would not have the contents of one of the sections added to the resulting topology file.
   10/20/2009: DLM incorporating minor changes from Gabe Rocklin into add_ligand_to_gro to fix problems with ligand numbering when combining with protein under some circumstances
-  10/27/2009: DLM fixing crash introduced by last fix that occurred when ligands were added at end of gro file (resnum was not defined).  
+  10/27/2009: DLM fixing crash introduced by last fix that occurred when ligands were added at end of gro file (resnum was not defined). 
+  10/28/2009: DLM fixing bug in perturbGromacsTopology wherein A & B state charges were nonzero for transformations involving turning off vdw interactions; made some other minor modifications there to make it easier to avoid this problem.
 """
 
 #=============================================================================================
@@ -863,7 +864,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    # Copy gromacs topology/coordinates to desired output files.
    shutil.copy( os.path.join(working_directory, 'OUT_GMX.gro'), coordinate_filename )
    shutil.copy( os.path.join(working_directory, 'OUT_GMX.top'), topology_filename)
-   
+  
    # Clean up temporary files.
    if cleanup:
       commands.getoutput('rm -r %s' % working_directory)
@@ -1007,13 +1008,12 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
 
    # augment the 'atomtypes' list with perturbed atom types,    
    if perturb_vdw:
-      indices = extract_section(lines, 'atomtypes')         
+      indices = extract_section(lines, 'atomtypes')
       for atomtype in atomtypes:
          # make perturbed record
          perturbed_atomtype = atomtype
          perturbed_atomtype['name'] += '_pert'
          perturbed_atomtype['epsilon'] = 0.0
-         # form the line
          line = "%(name)-10s%(bond_type)6s      0.0000  0.0000  A %(sigma)13.5e%(epsilon)13.5e ; perturbed\n" % perturbed_atomtype
          # insert the new line
          lines.insert(indices[-1], line)
@@ -1056,9 +1056,14 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
           perturbed_types.append( atom['type'] )
       # set perturbation type
       atom['typeB'] = atom['type']
-      if perturb_vdw: atom['typeB'] += '_pert' # perturbed vdw type
       atom['chargeB'] = atom['charge']
-      if perturb_charges: atom['chargeB'] = 0.0 # perturbed charges
+      if perturb_vdw: 
+          atom['typeB'] += '_pert' # perturbed vdw type
+          #DLM edit 10/28/09 -- set A&B state charges to zero whenever we are turning off vdw
+          atom['chargeB'] = 0.0
+          atom['charge'] = 0.0
+      if perturb_charges: 
+          atom['chargeB'] = 0.0 # perturbed charges
       
       # construct a new line
       line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f" % atom + " %(comments)s perturbed\n" % vars()
