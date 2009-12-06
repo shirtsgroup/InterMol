@@ -41,6 +41,8 @@ def rename_residues(pdbarr, renameTermini=True):
     npdb = rename_charged(npdb)
     npdb = histidine_search(npdb)
     npdb = disulfide_search(npdb)
+    
+    print '### renameTermini =', renameTermini
     if (renameTermini):
         npdb = rename_termini(npdb)
 
@@ -89,6 +91,8 @@ def rename_charged(npdb):
             #DLM 7-1-2009: Fix GLY HE1 to HE2
             npdb[i] = map(lambda x:x.replace('HE1 GLH','HE2 GLH'),npdb[i])
         # Glutamate requires no sub
+        
+        # Also, charge states for TYR are ignored....
 
 
     return npdb
@@ -158,10 +162,13 @@ def rename_termini(npdb):
     NTerminiRes = []
     CTerminiRes = []
     for i in range(0,len(npdb)):
-        if npdb[i][0][17:20] == 'NTR':
+        if (npdb[i][0][17:20] == 'NTR') | (npdb[i][0][17:20] == 'NTG'):
             NTerminiRes.append(i)
         if npdb[i][0][17:20] == 'CTR':
             CTerminiRes.append(i)
+            
+    print '### NTerminiRes:', NTerminiRes
+    print '### CTerminiRes:', CTerminiRes
             
     # check to see if there are equal numbers of termini residues found
     if len(NTerminiRes) != len(CTerminiRes):
@@ -177,10 +184,17 @@ def rename_termini(npdb):
         # Get three-letter residue names of N- and C-termini.
         ntrname = npdb[NResIndex+1][0][17:20]
         ctrname = npdb[CResIndex-1][0][17:20]
+        
+        print '### renaming NTR to', 'N'+ntrname
+        print '### renaming CTR to', 'C'+ctrname
     
         # Rename N-terminal residue 'XXX' to 'NXXX'.
         for j in [NResIndex,NResIndex+1]:
-            for i in range(len(npdb[j])):
+            if ntrname=='LYS':
+              for i in range(len(npdb[j])):
+                npdb[j][i] = npdb[j][i][0:17]+'NLYP'+npdb[j][i][21:]
+            else:
+              for i in range(len(npdb[j])):
                 npdb[j][i] = npdb[j][i][0:17]+'N'+ntrname+npdb[j][i][21:]
                 #DLM 6/30/2009: As for VAV edit below in CILE case: use correct naming for CD (not CD1) for ILE/NILE:
                 if ntrname=='ILE':
@@ -228,6 +242,69 @@ def rename_termini(npdb):
                 #End DLM 6/30/2009
     return npdb
 
+def rename_MODELLER_termini(npdb):
+    """Renames a nested pdb's N- and C- termini, including
+    last residue's O and OXT (from MODELLER) to OC1 and OC2 (gromcs)."""
+
+    # Find the N-terminal residue 
+    NResIndex = 0
+    while npdb[NResIndex][0].split()[0] != 'ATOM':
+        NResIndex += 1
+
+    # Find C-terminal residue
+    CResIndex = -2 #  the last res should be an 'END' residue
+
+    # Get three-letter residue names of N- and C-termini.
+    ntrname = npdb[NResIndex][0][17:20]
+    ctrname = npdb[CResIndex][0][17:20]
+
+    if ntrname == 'LYS':
+        ntrname = 'LYP'
+    if ctrname == 'LYS':
+        ctrname = 'LYP'
+
+    print '### renaming NTR to', 'N'+ntrname
+    print '### renaming CTR to', 'C'+ctrname
+
+    # Rename N-terminal residue 'XXX' to 'NXXX'.
+    for i in range(len(npdb[NResIndex])):
+        npdb[NResIndex][i] = npdb[NResIndex][i][0:17]+'N'+ntrname+npdb[NResIndex][i][21:]
+
+    # Rename C-terminal residue, including OXT
+    for j in [CResIndex]:
+
+            for i in range(len(npdb[j])):
+                # VAV 5/14/2007: gmx ffamber does not have CLYN, only CLYP 
+                if ctrname=='LYN':
+                    npdb[j][i] = npdb[j][i][0:17]+'CLYP'+npdb[j][i][21:]
+                else:
+                    npdb[j][i] = npdb[j][i][0:17]+'C'+ctrname+npdb[j][i][21:]
+
+                # DLM 5/9/2007: Though this says that it changes the O and OXT names, it doesn't
+                # Adding the below to do the renaming.
+                if npdb[j][i][13:16].split()[0]=='O':
+                    npdb[j][i] = npdb[j][i][0:13]+'OC1'+npdb[j][i][16:]
+                elif npdb[j][i][13:16].split()[0]=='OXT':
+                    npdb[j][i] = npdb[j][i][0:13]+'OC2'+npdb[j][i][16:]
+     
+                #VAV 6/5/2007: gmx ffamber doesn't have "CD1" as an ILE/CILE atomname, only "CD"
+                if ctrname=='ILE':  
+                    if npdb[j][i][13:16].split()[0]=='CD1':
+                        npdb[j][i] = npdb[j][i][0:13]+'CD '+npdb[j][i][16:]
+
+    # Rename non-terminal lysines
+    for j in range(len(npdb)):
+      for i in range(len(npdb[j])):
+          if npdb[j][i][17:20] == 'LYS':
+              npdb[j][i] = npdb[j][i][0:17] + 'LYP' + npdb[j][i][20:]
+
+    # Rename histidines
+    for j in range(len(npdb)):
+      for i in range(len(npdb[j])):
+          if npdb[j][i][17:20] == 'HIS':
+              npdb[j][i] = npdb[j][i][0:17] + 'HIP' + npdb[j][i][20:]
+
+    return npdb
         
 def nest_pdb(pdbarr):
     """Collect lines of the PDB file by residue.
