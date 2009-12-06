@@ -24,7 +24,7 @@ DEBUG = True
 #-----------------------------------
 
 
-def thread_model(pdbTemplate, sequence, outPdbFile, captermini=False):
+def thread_model(pdbTemplate, sequence, outPdbFile, chain="_", captermini=False):
     """Uses Modeller to thread a sequence onto a template structure.
     If captermini=True, will cap the N- and C- termnini with ACE and NH2, respectively. """
     
@@ -45,7 +45,7 @@ def thread_model(pdbTemplate, sequence, outPdbFile, captermini=False):
         fseq.close()
 
     myModel = modelPDB.ModelPDB()
-    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile, captermini=captermini)
+    myModel.makeModel(pdbTemplate, sequenceFilename, outPdbFile, chain="_", captermini=captermini)
     
     # if capping, rebuild the PDB with ACE and NME residue names 
     if (captermini):
@@ -55,6 +55,8 @@ def thread_model(pdbTemplate, sequence, outPdbFile, captermini=False):
     if not os.path.exists(sequence):
         os.remove(sequenceFilename)
         os.rmdir(tmpdir)
+
+
 
 
 def protonate(inpdbfile, outpdbfile, pH):
@@ -92,7 +94,7 @@ def build_gmx(protein, outdir, forcefield='ffamber99p', protocol='racecar2'):
 
 
 
-def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', captermini=False, debug=False, verbose=True, cleanup=False, implicitOptions=None, useTable=None):
+def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', captermini=False, debug=False, verbose=True, cleanup=False, implicitOptions=None, useTable=None, MultiChain=False, SkipMCCE=False):
     """Shoves a pipelineProtein object through the entire MODELLER -> MCCE --> gromacs pipeline.
 
     For capping the termini with ACE and NH2:
@@ -104,6 +106,13 @@ def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', capte
     2. Calculate the protonation state via MCCE (which will know how to handle ACE and NH2 residues because
        of the patches ace.tpl and nh2.tpl in param04 and param08 --> PDB with ffamber-named residues
     3. feed through gromacstools in normal fashion
+
+    OPTIONS
+
+    MultiChain     If set to True, will thread a multichain model.  NOTE: the sequence of the 
+                   mutiple chains (in the protein object) must be demarcated by '/'.  Example:
+                   AKEEFWVY/AWEKKLELEQVID
+
     """
 
     thisdir = '%s'%os.path.abspath(os.curdir)
@@ -111,12 +120,26 @@ def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', capte
     protein.print_info()
 
     # Build a PDB model from the pdbTemplate using MODELLER
-    thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout, captermini=captermini)
+    if MultiChain:
+        thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout, captermini=captermini)
+    else:
+        thread_model(protein.pdbfile, protein.seqfile, protein.modelPDBout, captermini=captermini)
     
 
     # run mcce
     mcceOut = os.path.abspath(protein.mccePDBout)
-    if (1):
+    if SkipMCCE:
+        # reformat the MODELLER PDB with the right names
+        fin = open(protein.modelPDBout,'r')
+        modelPDBlines = fin.readlines()
+        fin.close()
+        npdb = mcce.rename.nest_pdb(modelPDBlines)
+        outlines = mcce.rename.unnest_pdb(mcce.rename.rename_MODELLER_termini(npdb))
+        fout = open(mcceOut,'w')
+        fout.writelines(outlines)
+        fout.close() 
+        print 'Writing PDB to', mcceOut
+    else:
         prmFile = '../../mccetools/prmfiles/run.prm.quick'
         prmFile = os.path.abspath(prmFile)
         if (captermini):
@@ -130,6 +153,9 @@ def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', capte
         # g = system.GromacsSystem(mcceOut, useff=forcefield)    # the old gromacstools way
         g = System(mcceOut, finalOutputDir=outdir, finalOutputName=protein.basename, useff=forcefield)
         g.setup.setSaltConditions(protein.salt, protein.saltconc)
+        if protein.cosolvent != None:
+            g.setup.setCosolventConditions(protein.cosolvent, protein.cosolventconc)
+ 
         if protein.boxProtocol == 'small':
             g.setup.set_boxType = 'octahedron'
             g.setup.set_boxSoluteDistance(1.5)   # periodic box margin distance, in nanometers
@@ -137,6 +163,15 @@ def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', capte
             g.setup.set_boxType = 'octahedron'
             g.setup.setUseAbsBoxSize(True)
             g.setup.setAbsBoxSize('7.0')   # periodic box absolute size, in nanometers (string)
+        elif protein.boxProtocol[0:3] == 'unf':
+            g.setup.set_boxType = 'octahedron'
+            g.setup.setUseAbsBoxSize(True)
+            if protein.boxProtocol == 'unf100':
+                g.setup.setAbsBoxSize('10.0') 
+            if protein.boxProtocol == 'unf110':
+                g.setup.setAbsBoxSize('11.0')
+            if protein.boxProtocol == 'unf120':
+                g.setup.setAbsBoxSize('12.0')
 
         thisOutDir = os.path.join(thisdir, protein.basename)
         print 'Writing equilibration directory to',thisOutDir,'...'
@@ -157,15 +192,14 @@ def shoveit(protein, outdir, forcefield='ffamber99p', protocol='racecar2', capte
     os.chdir(thisdir) 
 
 
-
-
 #----------------------------------
 # CLASSES
 #----------------------------------
 
 class PipelineProtein:
 
-    def __init__(self, pdb=None, seq=None, salt='NaCl', saltconc=0.100, pH=7.0, boxProtocol='small'):
+    def __init__(self, pdb=None, seq=None, salt='NaCl', saltconc=0.100, pH=7.0, boxProtocol='small',
+                       cosolvent = None, cosolventconc = 0.0):
         """Initialize a default data in protein object."""
 
         self.pdbfile  = pdb
@@ -174,9 +208,18 @@ class PipelineProtein:
         self.saltconc = saltconc
         self.pH       = pH
         self.boxProtocol = boxProtocol
+        self.boxProtocolOptions = {'small' : '15A margin around the protein. Octahedron',
+                                   'big'   : '70A absolute boxsize.  Octahedron',
+                                   'unf100': '100A absolute boxsize.  Octahedron',
+                                   'unf110': '110A absolute boxsize.  Octahedron',
+                                   'unf120': '120A absolute boxsize.  Octahedron' }
+        self.cosolvent = cosolvent
+        self.cosolventconc = cosolventconc
+        self.cosolventOptions = { None : 'no cosolvent',
+                                 'gnd' : 'guanidinium' }
 
         # to be added along the way
-        self.modelPDBout = None   # PDB filename to write after the MODELLER phase    
+        self.modelPDBout = None   # PDB filename to write after the MODELLER phase    gencoil(sequence, outdir, nconf=10, temperature=300.0, dimension=None, useNN='single'):
         self.mccePDBout  = None   # PDB filename to write after the MCCE phase
         self.basename = None      # Basename for output files
 
