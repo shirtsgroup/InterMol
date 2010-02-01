@@ -49,6 +49,7 @@ CHANGELOG
   10/20/2009: DLM incorporating minor changes from Gabe Rocklin into add_ligand_to_gro to fix problems with ligand numbering when combining with protein under some circumstances
   10/27/2009: DLM fixing crash introduced by last fix that occurred when ligands were added at end of gro file (resnum was not defined). 
   10/28/2009: DLM fixing bug in perturbGromacsTopology wherein A & B state charges were nonzero for transformations involving turning off vdw interactions; made some other minor modifications there to make it easier to avoid this problem.
+  2/1/2010: DLM minor bugfix to add_ligand_to_gro concerning formatting of residue naming, per G. Rocklin.
 """
 
 #=============================================================================================
@@ -1388,11 +1389,11 @@ def add_ligand_to_gro(targetgro, liggro, outgro, resname = 'TMP', add_after_resn
             outtext.append(line)
 
     # Append the ligand coordinate lines, renumbering atom and residue numbers.
-    resnumname='%4s%-4s' % (resnum+1, resname)
+    resnumname='%5s%-4s' % (resnum+1, resname)
     for line in liglines[2:-1]:
         anum = int( line[15:20].split()[0] )
         newanum = atomnum+anum
-        line = ' '+resnumname+line[9:15]+('%5s' % newanum)+line[20:]
+        line = resnumname+line[9:15]+('%5s' % newanum)+line[20:]
         outtext.append(line)
 
     #If we are not adding at the end, add the rest of the file
