@@ -5,7 +5,10 @@ from openeye.oechem import *
 from openeye.oeomega import *
 from openeye.oeiupac import *
 from openeye.oeshape import *
-from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction; replacing oeproton
+try:
+   from openeye.oequacpac import * #DLM added 2/25/09 for OETyperMolFunction; replacing oeproton
+except:
+   from openeye.oeproton import * #GJR temporary fix because of old version of openeye tools
 from openeye.oeiupac import *
 from openeye.oeszybki import *
 import os
@@ -50,6 +53,7 @@ CHANGELOG
   10/27/2009: DLM fixing crash introduced by last fix that occurred when ligands were added at end of gro file (resnum was not defined). 
   10/28/2009: DLM fixing bug in perturbGromacsTopology wherein A & B state charges were nonzero for transformations involving turning off vdw interactions; made some other minor modifications there to make it easier to avoid this problem.
   2/1/2010: DLM minor bugfix to add_ligand_to_gro concerning formatting of residue naming, per G. Rocklin.
+  2/6/2010: GJR Small modifications to perturbGromacsTopology to implement the 'reverse' option for dual-topology relative free energy calculations, as well as modifications to add_ligand_to_top to merge the atom_types and nonbond_params sections in the event multiple ligands have been inserted into the same topology file using this scheme
 """
 
 #=============================================================================================
@@ -938,7 +942,7 @@ def extract_section(lines, section):
    # return these indices
    return indices
 
-def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None, vdw_decoupling = False, decouple_atom_types = None):
+def perturbGromacsTopology(topology_filename, reverse=False, molecule = None, perturb_torsions = True, perturb_vdw = True, perturb_charges = True, perturb_atom_indices = None, vdw_decoupling = False, decouple_atom_types = None):
    """Modify a gromacs topology file to add perturbed-state parameters.
 
    ARGUMENTS
@@ -952,6 +956,7 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
      molecule (OEMol) - molecule corresponding to contents of topology file -- must be the same one used to generate the topology file with parameterizeForGromacs(). NOTE: Required when using perturb_torsions.
      vdw_decoupling (boolean) -- if True (default False), juggle gromacs pairs list and explicit specification of interactions in order to maintain A state intramolecular interactions within the molecule being perturbed. Assumes combination rule 2 and fudgeLJ=0.5.
      decouple_atom_types (list of types): Used only with vdw_decoupling, to specify list of atom types to retain interactions between. If these are not provided, only interactions between perturbed atoms will be retained.
+     reverse (boolean) -- if True (default False), will swap the A and B states of the perturbation.  Useful for multiple-topology relative FE calculations.
 
    NOTES
      This code currently only handles the special format gromacs topology files produced by acpypi -- there are allowed variations in format that are not treated here.
@@ -1067,7 +1072,11 @@ def perturbGromacsTopology(topology_filename, molecule = None, perturb_torsions 
           atom['chargeB'] = 0.0 # perturbed charges
       
       # construct a new line
-      line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f" % atom + " %(comments)s perturbed\n" % vars()
+      if not reverse:
+         line = "%(nr)6d %(type)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(charge)10.5f %(mass)10.6f %(typeB)10s %(chargeB)10.5f %(mass)10.6f" % atom + " %(comments)s perturbed\n" % vars()
+      if reverse:
+         line = "%(nr)6d %(typeB)10s %(resnr)6d %(residue)6s %(atom)6s %(cgnr)6d %(chargeB)10.5f %(mass)10.6f %(type)10s %(charge)10.5f %(mass)10.6f" % atom + " %(comments)s perturbed\n" % vars()
+         
       
       # replace the line
       lines[index] = line
@@ -1747,14 +1756,35 @@ def add_ligand_to_topology(prottop,ligtop,complextop):
 
       #Now decide what to do with section
       #Any atomtypes and nonbonded params come before the moleculetypes section.
+
+      if name=='nonbond_params':
+         if 'atomtypes' in copylist and '[ atomtypes ]\n' in prottext[0:loc]:
+            if ligsection.has_key('atomtypes'):
+               while newtop[-1] == '\n':
+                  newtop = newtop[0:-1]
+               
+               for line in ligsection['atomtypes']:
+                  if 'atomtypes' not in line and line <> '\n': newtop.append(line)
+               if newtop[-1] <> '\n': newtop.append('\n')
+               ligsection.pop('atomtypes')
+
       if name=='moleculetype':
          #For each ligand section to copy
          for ligname in copylist:
            #If I've found this section (i.e. there will be no nonbonded params for charge topology)    
            if ligsection.has_key(ligname):
+              while newtop[-1] == '\n':
+                 newtop = newtop[0:-1]
               #For each line here, append the line
               for line in ligsection[ligname]:
-                newtop.append(line)
+                 if '[ %s ]\n' % ligname not in prottext and line <> '\n':
+                    newtop.append(line)
+                 else:
+                    if ligname not in line and line <> '\n': newtop.append(line)
+              if newtop[-1] <> '\n': newtop.append('\n')                    
+
+
+                    
          #Now add moleculetypes section.
          for line in sec:
             newtop.append(line)
