@@ -27,6 +27,7 @@ TODO
   conformations with Omega and minimizing with MMFF with all charges set to their absolute values to minimize intramolecular
   contacts between fragments.
   Move methods that operate on gromacs topology and coordinate files to 'gromacstools'.
+  Make conflicts between atomtypes added to the same topology identified and automatically resolved by renaming atoms/atomtypes?
 
 AUTHORS
 
