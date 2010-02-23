@@ -1,51 +1,47 @@
-title               =  equilibrate-default
-cpp                 =  cpp
+; A short equilibrattion of the entire system
 
-integrator          =  md
-dt                  =  0.002    ; 2 ps !
-nsteps              =  1000   ; total 2.0 ps
-comm_mode           =  none
-nstcomm             =  1
-nstxout             =  10
-nstvout             =  0
-nstfout             =  0
-nstlog              =  10
-nstenergy           =  10
-nstxtcout           =  10
-xtc_grps            =  Protein
-nstlist             =  10
-ns_type             =  grid
-pbc                 =  xyz  ; means yes
-rlist               =  0.9
-rcoulomb            =  0.9
-coulombtype         =  Reaction-Field
-epsilon_r           =  80
-vdwtype             =  cut-off
+title                   = equilibrate 
+cpp                     = cpp
+integrator              = md
 
-rvdw                =  0.9
-; Berendsen temperature coupling is on in two groups
-Tcoupl              =  berendsen
-tc-grps             =  Protein          Other
-tau_t               =  0.1              0.1      
-ref_t               =  308              308
-; Energy monitoring
-energygrps          =  Protein Other
-; Isotropic pressure coupling is now on
-;Pcoupl             =  no
-Pcoupltype          =  isotropic
-tau_p               =  1
-compressibility     =  4.5e-5
-ref_p               =  1.01325
+nsteps                  = 1000    ; 10 ps = 5000 for testing; 100 ps = 50000 for quick,  1 ns = 500000 is better...
+nstlist                 = 10
+dt                      = 0.002
+constraints             = hbonds   
+constraint-algorithm    = shake   ; lincs would work here too...
+ns_type                 = grid
 
-; Generate velocites is on at 300 K.
-gen_vel             =  no
-gen_temp            =  308
-gen_seed            =  173529
+coulombtype             = reaction-field
+epsilon_r		= 78
+rcoulomb		= 1.0
+rlist			= 1.0 
 
-; Duan-Kollman used hbonds not all-bonds
-; but we wanted to increase dt (earlier)
-; so I've always used all-bonds
+vdwtype			= switch
+rvdw_switch		= 0.8
+rvdw			= 1.0
 
-constraints = all-bonds
-constraint_algorithm = lincs
-4
+tcoupl                  = nose-hoover 
+tc_grps                 = protein bath 
+tau_t                   = 0.109 0.109
+ref_t                   = 300 300
+energygrps		= protein bath
+
+annealing = no
+
+pcoupl			= no
+
+comm_grps		= protein bath 
+comm_mode		= linear
+nstcomm			= 1
+
+gen_vel			= yes
+gen_temp		= 300
+gen_seed		= -1
+
+nstlog                  = 100      ; should 1000 for all  these
+nstenergy               = 100
+nstxout                 = 0
+nstvout                 = 0
+nstxtcout               = 100
+xtc-precision           = 1000
+
