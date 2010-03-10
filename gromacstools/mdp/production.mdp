@@ -1,0 +1,52 @@
+; Settings for performing a 5ns pressure equiibration run
+
+title                   = production
+cpp                     = cpp
+integrator              = md
+
+nsteps                  = 2500000    ; should be 2500000
+nstlist                 = 10
+dt                      = 0.002
+constraints             = hbonds       
+constraint-algorithm    = shake        ; lincs would also work here...
+shake_tol               = 0.0001       ; 
+ns_type                 = grid
+
+coulombtype             = reaction-field
+epsilon_r		= 78
+rcoulomb		= 1.2
+rlist			= 1.2 
+
+vdwtype			= switch
+rvdw_switch		= 1.0
+rvdw			= 1.2
+
+tcoupl                  = nose-hoover 
+tc_grps                 = protein bath   
+tau_t                   = 0.0109 0.0109
+ref_t                   = 300 300
+energygrps		= protein bath 
+
+annealing = no
+
+pcoupl                  = berendsen     ; John's recommendatiion for energy conservation
+pcoupl_type             = isotropic
+tau_p                   = 1
+compressibility         = 4.5e-5
+ref_p                   = 1
+
+comm_grps		= protein bath 
+comm_mode		= linear
+nstcomm			= 1
+
+gen_vel			= yes
+gen_temp		= 300
+gen_seed		= -1
+
+nstlog                  = 5000     ; every 10 ps 
+nstenergy               = 5000     ; every 10 ps 
+nstxout                 = 0 
+nstvout                 = 0 
+nstxtcout               = 5000     ; every 10 ps
+xtc_grps                = protein ions
+xtc-precision           = 1000
