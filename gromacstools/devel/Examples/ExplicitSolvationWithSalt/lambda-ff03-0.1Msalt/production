@@ -1,0 +1,1 @@
+/Users/vincentvoelz/local/gromacs-3.1.4/i386-apple-darwin8.9.2/bin/mdrun -v -s /Users/vincentvoelz/scripts/mmtools/gromacstools/devel/Examples/ExplicitSolvationWithSalt/lambda-ff03-0.1Msalt/lambda.tpr -c /Users/vincentvoelz/scripts/mmtools/gromacstools/devel/Examples/ExplicitSolvationWithSalt/lambda-ff03-0.1Msalt/lambda.gro 

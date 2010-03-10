@@ -1,0 +1,233 @@
+Log file opened: nodeid 0, nnodes = 1, host = unknown, process = 45049
+                         :-)  G  R  O  M  A  C  S  (-:
+
+                               Grunge ROck MAChoS
+
+                            :-)  VERSION 3.1.4  (-:
+
+
+       Copyright (c) 1991-2002, University of Groningen, The Netherlands
+         This program is free software; you can redistribute it and/or
+          modify it under the terms of the GNU General Public License
+         as published by the Free Software Foundation; either version 2
+             of the License, or (at your option) any later version.
+
+ :-)  /Users/vincentvoelz/local/gromacs-3.1.4/i386-apple-darwin8.9.2/bin/mdrun  (-:
+
+
+++++++++ PLEASE CITE THE FOLLOWING REFERENCE ++++++++
+E. Lindahl and B. Hess and D. van der Spoel
+GROMACS 3.0: A package for molecular simulation and trajectory analysis
+J. Mol. Mod. 7 (2001) pp. 306-317
+-------- -------- --- Thank You --- -------- --------
+
+
+++++++++ PLEASE CITE THE FOLLOWING REFERENCE ++++++++
+H. J. C. Berendsen, D. van der Spoel and R. van Drunen
+GROMACS: A message-passing parallel molecular dynamics implementation
+Comp. Phys. Comm. 91 (1995) pp. 43-56
+-------- -------- --- Thank You --- -------- --------
+
+There are 0 atoms for free energy perturbation
+Input Parameters:
+   integrator           = md
+   nsteps               = 2500000
+   ns_type              = Grid
+   nstlist              = 10
+   ndelta               = 2
+   bDomDecomp           = FALSE
+   decomp_dir           = 0
+   nstcomm              = 1
+   nstlog               = 5000
+   nstxout              = 0
+   nstvout              = 0
+   nstfout              = 0
+   nstenergy            = 5000
+   nstxtcout            = 5000
+   init_t               = 0
+   delta_t              = 0.002
+   xtcprec              = 1000
+   nkx                  = 0
+   nky                  = 0
+   nkz                  = 0
+   pme_order            = 4
+   ewald_rtol           = 1e-05
+   ewald_geometry       = 0
+   epsilon_surface      = 0
+   optimize_fft         = FALSE
+   ePBC                 = xyz
+   bUncStart            = FALSE
+   bShakeSOR            = FALSE
+   etc                  = Nose-Hoover
+   epc                  = Berendsen
+   epctype              = Isotropic
+   tau_p                = 1
+   ref_p (3x3):
+      ref_p[    0]={ 1.00000e+00,  0.00000e+00,  0.00000e+00}
+      ref_p[    1]={ 0.00000e+00,  1.00000e+00,  0.00000e+00}
+      ref_p[    2]={ 0.00000e+00,  0.00000e+00,  1.00000e+00}
+   compress (3x3):
+      compress[    0]={ 4.50000e-05,  0.00000e+00,  0.00000e+00}
+      compress[    1]={ 0.00000e+00,  4.50000e-05,  0.00000e+00}
+      compress[    2]={ 0.00000e+00,  0.00000e+00,  4.50000e-05}
+   bSimAnn              = FALSE
+   zero_temp_time       = 0
+   rlist                = 1.2
+   coulombtype          = Reaction-Field
+   rcoulomb_switch      = 0
+   rcoulomb             = 1.2
+   vdwtype              = Switch
+   rvdw_switch          = 1
+   rvdw                 = 1.2
+   epsilon_r            = 78
+   DispCorr             = No
+   fudgeQQ              = 0.8333
+   free_energy          = no
+   init_lambda          = 0
+   sc_alpha             = 0
+   sc_sigma             = 0.3
+   delta_lambda         = 0
+   disre_weighting      = Conservative
+   disre_mixed          = FALSE
+   dr_fc                = 1000
+   dr_tau               = 0
+   nstdisreout          = 100
+   orires_fc            = 0
+   orires_tau           = 0
+   nstorireout          = 100
+   em_stepsize          = 0.01
+   em_tol               = 100
+   niter                = 20
+   fc_stepsize          = 0
+   nstcgsteep           = 1000
+   ConstAlg             = Shake
+   shake_tol            = 0.0001
+   lincs_order          = 4
+   lincs_warnangle      = 30
+   bd_temp              = 300
+   bd_fric              = 0
+   ld_seed              = 1993
+   cos_accel            = 0
+   userint1             = 0
+   userint2             = 0
+   userint3             = 0
+   userint4             = 0
+   userreal1            = 0
+   userreal2            = 0
+   userreal3            = 0
+   userreal4            = 0
+grpopts:
+   nrdf:	        3124       48159
+   ref_t:	         300         300
+   tau_t:	      0.0109      0.0109
+   acc:	           0           0           0
+   nfreeze:           N           N           N
+   energygrp_excl[  0]: 0 0
+   energygrp_excl[  1]: 0 0
+   efield-x:
+      n = 0
+   efield-xt:
+      n = 0
+   efield-y:
+      n = 0
+   efield-yt:
+      n = 0
+   efield-z:
+      n = 0
+   efield-zt:
+      n = 0
+CPU=  0, lastcg= 9293, targetcg= 4646, myshift=    0
+nsb->shift =   1, nsb->bshift=  0
+Neighbor Search Blocks
+nsb->nodeid:         0
+nsb->nnodes:      1
+nsb->cgtotal:  9294
+nsb->natoms:  25321
+nsb->shift:       1
+nsb->bshift:      0
+Nodeid   index  homenr  cgload  workload
+     0       0   25321    9294      9294
+
+Max number of bonds per atom is 4
+Table routines are used for coulomb: TRUE
+Table routines are used for vdw:     TRUE
+Using shifted Lennard-Jones, switch between 1 and 1.2 nm
+Cut-off's:   NS: 1.2   Coulomb: 1.2   LJ: 1.2
+Reaction-Field:
+epsRF =         78, I   =          0, volume =     253.29, kappa  =          0
+rc    =        1.2, krf =   0.283823, crf    =    1.24204, epsfac =    138.935
+The electrostatics potential has its minimum at rc = 1.20774
+Generated table with 900 data points for RF.
+Tabscale = 500 points/nm
+Generated table with 900 data points for LJ6Switch.
+Tabscale = 500 points/nm
+Generated table with 900 data points for LJ12Switch.
+Tabscale = 500 points/nm
+Going to determine what solvent types we have.
+There are 8042 molecules, 9294 charge groups and 25321 atoms
+There are 0 optimized solvent molecules on node 0
+There are 8013 optimized water molecules on node 0
+Center of mass motion removal mode is Linear
+We have the following groups for center of mass motion removal:
+  0:  protein, initial mass: 8799.07
+  1:  bath, initial mass: 145189
+There are: 25321 Atom
+Removing pbc first time
+Done rmpbc
+
+Constraining the starting coordinates (step -2)
+
+++++++++ PLEASE CITE THE FOLLOWING REFERENCE ++++++++
+H. J. C. Berendsen, J. P. M. Postma, A. DiNola and J. R. Haak
+Molecular dynamics with coupling to an external bath
+J. Chem. Phys. 81 (1984) pp. 3684-3690
+-------- -------- --- Thank You --- -------- --------
+
+
+++++++++ PLEASE CITE THE FOLLOWING REFERENCE ++++++++
+S. Miyamoto and P. A. Kollman
+SETTLE: An Analytical Version of the SHAKE and RATTLE Algorithms for Rigid
+Water Models
+J. Comp. Chem. 13 (1992) pp. 952-962
+-------- -------- --- Thank You --- -------- --------
+
+
+++++++++ PLEASE CITE THE FOLLOWING REFERENCE ++++++++
+J. P. Ryckaert and G. Ciccotti and H. J. C. Berendsen
+Numerical Integration of the Cartesian Equations of Motion of a System with
+Constraints; Molecular Dynamics of n-Alkanes
+J. Comp. Phys. 23 (1977) pp. 327-341
+-------- -------- --- Thank You --- -------- --------
+
+Going to use C-settle (8013 waters)
+wo = 0.888099, wh =0.0559503, wohh = 18.016, rc = 0.075695, ra = 0.00655606
+rb = 0.0520322, rc2 = 0.15139, rone = 1, dHH = 0.15139, dOH = 0.09572
+
+Constraining the coordinates at t0-dt (step -1)
+Started mdrun on node 0 Mon Feb 15 09:08:49 2010
+Initial temperature: 299.08 K
+Grid: 10 x 10 x 10 cells
+           Step           Time         Lambda      Annealing
+              0        0.00000        0.00000        1.00000
+
+There are 1282 atoms in your xtc output selection
+Large VCM(group protein):     -0.02204,      0.01771,     -0.02146, ekin-cm:      5.54381
+   Energies (kJ/mol)
+           Bond          Angle    Proper Dih. Ryckaert-Bell.          LJ-14
+    1.18443e+03    2.92370e+03    1.83939e+02    3.56149e+03    1.23524e+03
+     Coulomb-14        LJ (SR)   Coulomb (SR)      Potential    Kinetic En.
+    1.02713e+04    5.16880e+04   -4.21605e+05   -3.50557e+05    6.40614e+04
+   Total Energy    Temperature Pressure (bar)
+   -2.86495e+05    3.00481e+02   -1.29927e+03
+
+           Step           Time         Lambda      Annealing
+           5000       10.00000        0.00000        1.00000
+
+   Energies (kJ/mol)
+           Bond          Angle    Proper Dih. Ryckaert-Bell.          LJ-14
+    9.16024e+02    2.47404e+03    1.59966e+02    3.37405e+03    1.26902e+03
+     Coulomb-14        LJ (SR)   Coulomb (SR)      Potential    Kinetic En.
+    1.03825e+04    4.78501e+04   -3.98869e+05   -3.32443e+05    6.38101e+04
+   Total Energy    Temperature Pressure (bar)
+   -2.68633e+05    2.99302e+02    6.62944e+01
+
