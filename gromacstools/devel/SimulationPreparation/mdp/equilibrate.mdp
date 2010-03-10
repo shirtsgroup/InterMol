@@ -1,0 +1,47 @@
+; A short equilibrattion of the entire system
+
+title                   = equilibrate 
+cpp                     = cpp
+integrator              = md
+
+nsteps                  = 1000    ; 10 ps = 5000 for testing; 100 ps = 50000 for quick,  1 ns = 500000 is better...
+nstlist                 = 10
+dt                      = 0.002
+constraints             = hbonds   
+constraint-algorithm    = shake   ; lincs would work here too...
+ns_type                 = grid
+
+coulombtype             = reaction-field
+epsilon_r		= 78
+rcoulomb		= 1.0
+rlist			= 1.0 
+
+vdwtype			= switch
+rvdw_switch		= 0.8
+rvdw			= 1.0
+
+tcoupl                  = nose-hoover 
+tc_grps                 = protein bath 
+tau_t                   = 0.109 0.109
+ref_t                   = 300 300
+energygrps		= protein bath
+
+annealing = no
+
+pcoupl			= no
+
+comm_grps		= protein bath 
+comm_mode		= linear
+nstcomm			= 1
+
+gen_vel			= yes
+gen_temp		= 300
+gen_seed		= -1
+
+nstlog                  = 100      ; should 1000 for all  these
+nstenergy               = 100
+nstxout                 = 0
+nstvout                 = 0
+nstxtcout               = 100
+xtc-precision           = 1000
+

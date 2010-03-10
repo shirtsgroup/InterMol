@@ -1,0 +1,45 @@
+; Perform a short equilibration with the 'protein' group frozen
+; NOTE: the index groups here are assumed to be: protein, sol, ions, and bath (i.e. ions + sol)
+
+title                   = equilibrateWithFrozenProtein 
+cpp                     = cpp
+integrator              = md        
+
+freezegrps		= protein   
+freezedim		= Y Y Y
+
+nsteps                  = 1000        ; 5000 would be better
+nstlist                 = 10
+dt                      = 0.002
+constraints             = hbonds        
+constraint-algorithm    = shake       ; lincs would also work here
+ns_type                 = grid
+
+coulombtype             = reaction-field
+epsilon_r		= 78
+rcoulomb		= 1.0
+rlist			= 1.0 
+
+vdwtype			= switch
+rvdw_switch		= 0.8
+rvdw			= 1.0
+
+tcoupl                  = no
+tc_grps                 = bath
+ref_t                   = 300  
+tau_t                   = 0.0109
+  
+comm_grps		= bath
+comm_mode		= linear
+nstcomm			= 1
+
+gen_vel			= yes
+gen_temp		= 300
+gen_seed		= -1
+
+nstlog                  = 100 
+nstenergy               = 100
+nstxout                 = 0
+nstvout                 = 0
+nstxtcout               = 100
+xtc-precision           = 1000
