@@ -122,10 +122,12 @@ tlc2olc = {
 
 
 def GromacsStructureFromGrofile(grofile):
-
+    """Create a GromacsStructure objects from a grofile."""
+    
     gstruct = GromacsStructure(name=grofile, header="title" )
     gstruct.load(grofile)
     return gstruct
+
 
 def GromacsStructureFromPDB(pdbfile):
     """Take in a PDB file a GromacsStructure class."""
@@ -180,11 +182,13 @@ def PDBFromGrofile(grofile, stripWaters=False, stripIons=False, stripDummy=False
 
     return p
 
+
 def writeGrofileFromPDB(pdbfile, grofile):
     """Take in a PDB file and write it as a *.gro file."""
     
     gstruct = GromacsStructureFromPDB(pdbfile)
     gstruct.write(grofile)
+    
     
 def writePDBFromGrofile(grofile, pdbfile, stripWaters=False, stripIons=False, stripDummy=False):
     """Take in a *.gro Grofile file and write it as a PDB file."""

@@ -2,8 +2,6 @@ from os.path import exists
 # from numpy import *	# do I need this?
 from os import system,unlink
 
-from PDBAtom import *
-
 
 # HISTORY
 
@@ -41,6 +39,10 @@ class PDBStructure:
 	# Read atoms.
 	self.atoms = []
 	for line in lines:
+	    
+	    # debug
+	    print line
+	    
 	    if line[0:5] == "ATOM ":
 		# Parse line into fields.
 		atom = { }

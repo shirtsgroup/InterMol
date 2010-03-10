@@ -1,5 +1,7 @@
 import sys, os
 
+from mmtools.gromacstools.devel.Structure import *
+
 # Modification Histroy:
 # VAV:  Feb 8, 2010:    recasting as an IndexFile.py object with methods
 #
@@ -18,7 +20,9 @@ import sys, os
 
 
 class IndexFile( object ):
-    """A class for reading, writing, and creating GROMACS *.ndx index files from various atom selections"""
+    """A class for reading, writing, and creating GROMACS *.ndx index files from various atom selections.
+    Methods include a way to create atom groups by way of a simple text script."""
+    
     
     def __init__(self, ndxfile=None):
 	"""Initialize the Index File object."""
@@ -28,73 +32,143 @@ class IndexFile( object ):
 	
 	if self.ndxfile != None:
 	    self.readIndexFile(self.ndxfile)
+
 	    
     def readIndexFile(self, ndxfile):
-	"""Read in the information from a GROMACS *.ndx index file."""
-	pass
-    
-    def writeIndexFile(self, ndxfile):
-	"""Read in the information from a GROMACS *.ndx index file."""
+	"""Read in the information from a GROMACS *.ndx index file, allocating a list of IndexGroup 
+	objects self.indexGroups.  If self.indexGroups already exists, the atom groups will be added
+	to the existing list, avoiding duplicates."""
+	
+	fin = open(ndxfile,'r')
+	lines = fin.readlines()
+	fin.close()
+	
+	# get rid of blank lines at the top
+	while lines[0] == '':
+	    lines.pop(0)
+	    
+	# the first line should be  '[ name ]'
+	try:
+	    while len(lines) > 0:
+		name = lines.pop(0).replace('[','').replace(']','').strip()
+		atomlist = []
+		while lines[0][0] != '[':
+		    atomList += [int(s) for s in lines.pop(0).split()]
+		# avoid duplicates     
+		addMe = True
+		for i in range(len(self.indexGroups)):
+		    if self.indexGroups[i].name == name:
+			if atomList == self.indexGroups[i].atomList:
+			    addMe = False
+			    print 'WARNING: Index group %s is a redundant duplicate -- NOT ADDING.'%name
+			else:
+			    print 'Competing index group %s has same name existing index group, but a different atomList!'%name
+			    raise IndexFileFormatError		      
+		self.indexGroups.append( IndexGroup(name, atomList) )
+	except:
+	    raise IndexFileFormatError
+
+	
+    def writeIndexFile(self, ndxfile, skipEmptyGroups=True):
+	"""Write the atom groups to a GROMACS *.ndx index file."""
 
 	fout = open(ndxfile, 'w')
 	for group in self.indexGroups:
-	    fout.write(group.getIndexGroupText())
-	    fout.write('\n') # blank line separating index groups
+	    if skipEmptyGroups and (len(group.atomList)==0):
+		continue
+	    else:
+		fout.write(group.getIndexGroupText())
+		fout.write('\n') # blank line separating index groups
 	fout.close()
     
-    def parseSelectionsByGroup( selections ):
-	# have a file like:
-	# [ nameofgroup1 ]
-	# cmd1
-	# [ nameofgroup2 ]
-	# cmd2
-	# cmd3
-	# and there might be blank lines
-	# just return lists 
-	indexGroups = []
-	i = -1
-	for line in selections:
-	     if line[0] == "[" :
-		 # this indicates a new index group
-		 indexGroups.append( [] )
-		 i += 1
-	     if i > -1 :
-		 indexGroups[ i ].append( line )
     
-	return indexGroups
-    
-    def getSelections( file, grofile ):
-	SELECTIONS = open( file )
-	selections = SELECTIONS.readlines()
-	SELECTIONS.close()
-    
-	# selections file consists of blank lines, lines beginning with these keywords, and      
-	# titles. Keywords: 'all', 'not', 'atomname', 'residues'
-	# titles begin and end with "["/"]"tmptsYYJC
-	# example: 
-	# [ helix1-CA ]
-	# residues 4-10
-	# only CA
-	# this little file will produce an index group called 'helix1-CA' which consists of atoms
-	# in resiudes 4 through 10 which are called 'CA'
-    
-	selections = parseSelectionsByGroup( selections )
-    
-	# each element in 'selections' represents an index group. AtomSelection object will parse
-	# them.
+    def addIndexGroup(self, name, atomList):
+	"""Add a new index group to the index file object."""
 	
-	indexGroups = []
+        self.indexGroups.append( IndexGroup(name, atomList) )
+	
+    def removeIndexGroup(self, name):
+	"""Remove the index group(s) corresponding to the name supplied."""
+	
+	for i in range(len(self.indexGroups)):
+	    if self.indexGroups[i].name == name:
+		self.indexGroups.pop(i)
+	
     
-	for selection in selections:
-	    iGroup = AtomSelection( selection, grofile ).index
-	    indexGroups.append( iGroup ) 
+    def getAtomListFromGrofile(self, grofile, ResName=None, ResNum=None, AtomName=None, AtomNum=None):
+	"""Returns a list of atom indices that meet all of the criteria of the specified quanities:
     
-	return indexGroups
-
+        REQUIRED
+	grofile        The *.gro structure file to select atom indices from
+	
+        OPTIONS
+	ResName        a string 'TYR LEU', or a list of strings ['TYR', LEU'].  Left unspecified, will select all (default)
+	ResNum         a number 6, or a list of numbers [4,5,6,7,8,9,45].   Left unspecified, will select all (default)
+	AtomName       a string 'N CA CB', or a list of strings ['N', CA', 'CB'].  Left unspecified, will select all (default)
+	AtomNum        a number 345, or a list of numbers [4,5,6,7,8,9,45].   Left unspecified, will select all (default)
+	"""
+	
+	print 'Filtering atoms matching:'
+	if ResName:   print '    ResName  =', ResName
+	else:         print '    ResName  = ALL'
+	if ResNum:    print '    ResNum   =', ResNum
+	else:         print '    ResNum   = ALL'
+	if AtomName:  print '    AtomName =', AtomName
+	else:         print '    AtomName = ALL'
+	if AtomNum:   print '    AtomNum  =', AtomNum
+	else:         print '    AtomNum  = ALL'
+	print '...working'
 
 	
+	g = structureTools.GromacsStructureFromGrofile(grofile)
 	
-    
+	# get a list of all the atom indices
+	all_indices = range(1,g.natoms+1)
+	
+	# filter the ResName list for our selections
+	if ResName != None:
+	    if isinstance(ResName, str): ResName = ResName.split()
+	    ResName_indices = []
+	    for i in range(len(g.atoms)):
+		if sum([(g.atoms[i].resname.strip()==res) for res in ResName]):
+		       ResName_indices.append( g.atoms[i].atomnum )
+	else:
+	    ResName_indices = all_indices
+	    
+	# filter the ResNum list for our selections
+	if ResNum != None:
+	    if isinstance(ResNum, int): ResNum = [ResNum]
+	    ResNum_indices = []
+	    for num in ResNum:
+		ResNum_indices += [a.atomnum for a in g.atoms if a.resnum==num]
+	else:
+	    ResNum_indices = all_indices
+	    
+	# filter the AtomName list for our selections
+	if AtomName != None:
+	    if isinstance(AtomName, str): AtomName = AtomName.split()
+	    AtomName_indices = []
+	    for name in AtomName:
+		AtomName_indices += [a.atomnum for a in g.atoms if a.atomname.strip()==name]
+	else:
+	    AtomName_indices = all_indices
+	    
+	# filter the ResName list for our selections
+	if AtomNum != None:
+	    if isinstance(AtomNum, int): AtomNum = [AtomNum]
+	    AtomNum_indices = []
+	    for num in AtomNum:
+		AtomNum_indices += [a.atomnum for a in g.atoms if a.atomnum.strip()==num]
+	else:
+	    AtomNum_indices = all_indices
+	
+	# finding the intersection of all lists...
+	IntersectionOfAllLists = list(set(all_indices) & set(ResName_indices) & set(ResNum_indices) \
+				      & set(AtomName_indices) & set(AtomNum_indices))
+	print '...Done'
+	
+	return IntersectionOfAllLists
+	
 
 class IndexGroup( object ):
     """ class for one index group in an index file"""
@@ -108,9 +182,9 @@ class IndexGroup( object ):
     def formatName( self, name ):
         name = name.strip()
         if name[0] != "[" :
-            name = "[" + name
+            name = "[ " + name
         if name[-1] != "]" :
-            name = name + "]"
+            name = name + " ]"
         return name 
 
     def formatAtomList( self ):
@@ -126,7 +200,8 @@ class IndexGroup( object ):
 	numberInRow = width / precision
 	buffer = ''
   
-	# print 'self.atomList',self.atomList
+	# sort the list, in case it's not
+	self.atomList.sort()
 	
         for atom in self.atomList:          
 	    formattingString = "%%-%ds " % precision
@@ -147,156 +222,8 @@ class IndexGroup( object ):
 	return self.name + '\n' + self.formatAtomList() + '\n'
     
 
-class AtomSelection( object ):
-    # parses an atom selection
-    def __init__( self, selections, grofile ):
-        self.selections = selections
-        self.grofile = grofile
 
-        self.atomNames = []
-        self.residues = []
-        self.includeHydrogen = True
-	self.onlyCA = False
-
-        self.lastAtom = -1
-        self.lastRes = -1
-        self.lastReadRes = -1
-
-        self.parse()
-        self.index = self.generateIndex()
-
-    def parse( self ):
-        self.name = self.selections[0]
-        putativeCommands = self.selections[1:]
-        
-        for command in putativeCommands :
-            if "not hydrogen" in command :
-                self.includeHydrogen = False
-            if "only CA" in command:
-                self.onlyCA = True
-            if "residue" in command :
-                self.getResNums( command )
-
-    def getResNums( self, command ):
-        command = command.replace("residues","")
-        command = command.replace("residue","")
-        command = command.replace(" ","")
-
-        resNumbers = command.split(",")
-        self.residues = []
-        for resRange in resNumbers:
-            if "-" in resRange:
-                resRangeValues = resRange.split("-")
-                min = int( resRangeValues[0] )
-                max = 1 + int( resRangeValues[1] )
-                myRange = range( min, max )
-                for resno in myRange: 
-                    resno = "%d" % resno
-                    self.residues.append( resno.strip() )
-            else:
-                self.residues.append( resRange.strip() )
-
-    def getAtomNames( self, command ):
-        self.atomNames = command.split()[1:]
-
-    def generateIndex( self ):
-        FILE = open( self.grofile )
-	grofile = FILE.readlines()[2:-1]    # changed from [2:-2] -- it wasn't picking up the last line!!!!!    
-        FILE.close()
-
-        atomlist = []        
-        name = self.name.strip()
-
-        for line in grofile :
-            ( isHydrogen, isCA, resnum, atomNumber ) = self.parseGroLine( line )
-
-            do = False 
-
-            if resnum in self.residues : do = True
-            if self.onlyCA == True and isCA == False : do = False
-            if self.includeHydrogen == False and isHydrogen == True : do = False
-
-            if do == True : atomlist.append( int( atomNumber ) )
-
-        if atomlist : 
-            myNewIndex = IndexGroup( name, atomlist )
-        else:
-            myNewIndex = None
- 
-        return myNewIndex
-
-    def parseGroLine( self, line ):
-        # gro line looks like:
-        #     1NLEU  HD21   17   2.833   2.474   1.648  0.0000  0.0000  0.0000
-        # 0123456789012345678901234567890123456789012345678901234567890123456789
-        isHydrogen = False
-        isCA = False
-
-        # only get res/atom numbers first time
-        resnum = ""
-        if self.lastRes == -1:
-          resnum = line[0:5].strip()
-          self.lastReadRes = int(resnum)
-          self.lastRes = int(resnum)
-        else:
-           # if current res# from reading line != lastRes then move to next res
-           if self.lastReadRes != int(line[0:5]):
-             self.lastReadRes = int(line[0:5])
-             resnum = str(self.lastRes + 1)
-           else:
-             resnum = str(self.lastRes)
-        self.lastRes = int(resnum)
-        if self.lastAtom == -1:
-          atomnum = line[15:20].strip()
-        else:
-          atomnum = str(self.lastAtom + 1)
-        self.lastAtom = int(atomnum)
-
-        atomname = line[9:15].strip()
-        if "H" in atomname : isHydrogen = True
-        if "CA" in atomname : isCA = True
-
-        return ( isHydrogen, isCA, resnum, atomnum )
+# IndexFile.py exceptions
+class IndexFileFormatError(Exception): pass
 
 
-if __name__ == "__main__":
-    
-    usage = """
-    USAGE:  atomSelect.py  selectionsFile  groFile
-    
-    Displays a set of make_ndx-style index groups for a given *.gro file based on
-    the selections made in the selectionsFile  
-    
-    INPUT
-    
-    selectionsFile        a file consisting of blank lines, lines beginning with these
-		          keywords, and titles. Keywords: 'all', 'not', 'atomname', 'residues'
-		          titles begin and end with "[" and "]"
-			  
-		          example: 
-		          [ helix1-CA ]
-		          residues 4-10
-		          only CA
-			  
-		          this little file will produce an index group called 'helix1-CA'
-			  which consists of atoms in resiudes 4 through 10 which are called 'CA'
-
-    selectionsFile        a file consisting of blank lines, lines beginning with these
-		          keywords, and titles. Keywords: 'all', 'not', 'atomname', 'residues'.
-    """
-    
-    if len(sys.argv) < 3:
-	print usage
-	sys.exit(1)
-    
-    selectionsFile = sys.argv[1]
-    groFile = sys.argv[2]
-    
-    indexGroups = getSelections( selectionsFile, groFile )
-    #print "there are %d index groups" % len( indexGroups )
-    for group in indexGroups:
-        try:
-            group.displayIndexGroup() 
-        except:
-            pass
- 

@@ -1,6 +1,7 @@
 import sys,os,tempfile, string
 
 from Ion import *
+import mmtools.utilities.Units as Units
 
 class IonEnvironmentCalculation(object):
     # JDC: This class lacked a docstring, so I created one.
@@ -26,42 +27,43 @@ class IonEnvironmentCalculation(object):
       gromacsSystem.prepare(outname='prod', os.path.abspath(os.curdir))      
     """        
 
-    # JDC: 'useff' might be named something more clear, like 'forcefieldName', or perhaps 'ffname'.
-    def __init__(self, useff):
-        # JDC: Added documentation on what required argument 'useff' signified.
+    def __init__(self, system):
         """Initialize the ion calculator given the gromacs forcefield of choice.
         
         REQUIRED ARGUMENTS
-          useff - the name of the forcefield to use in calling grompp (e.g. 'ffamber99p')
+          system - a SimulationPreparation.SystemSetup() object containing salt concentration, forcefield information, etc. 
         """
         
-        # Store the chosen forcefield.
-        # JDC: Shouldn't we check here to see if this forcefield is supported, so we can throw an exception of not?
-        self.useff = useff
+        # Store all the system info
+        self.system = system  # a SystemSetup() object containing salt concentration, forcefields, etc,
         
         # All possible ion names that we know about and could occur in gromacs forcefield files.
         # JDC: Should this be moved to static class data?
         self.possibleIons = ['Ca','Cl','Na','Mg', 'K', 'Rb', 'CS', 'Li', 'Zn', 'Sr', 'Ba' ]
 
-        # Create empty dictionary to contain all the ions and ion information provided by the forcefield.
-        self.ions = {}    # a dictionary of Ion objects {'Cl', <Ion object> }
+        # Read list of ions, their charges, and masses from gromacs forcefield files, and
+        # create a dictionary to contain all the ions and ion information provided by the forcefield.
         
-        # Read list of ions, their charges, and masses from gromacs forcefield files.
-        # JDC: We should through a Exception of some sort if this fails.
-        self.getIons()  
+        #try:
+        if (1):
+            self.ions = self.getIons()    # a dictionary of Ion objects {'Cl', <Ion object> }
+        #except:
+        #   raise IonParsingError
         
         return
 
-    # JDC: Is this a private method, or part of the public API?
-    # JDC: Should this use arguments/return data, rather than operating on just internal object data?
-    # JDC: Does this need to be instantiated separately for each object, or should it be a Singleton, only performed once for each available forcefield upon first class startup?
+
     def getIons(self):
-        """Get atomic mass constants for all ion types listed in self.possibleIons from the gromacs forcefield files, storing them in self.ions.        
-        
+        """Get atomic mass constants for all ion types listed in self.possibleIons from the gromacs forcefield files
+        RETURNS
+          a dictionary of Ion() objects, indexed by the ion name.        
         """
 
+        # Initialize a dictionary to return
+        iondict = {}
+        
         # Read the contents of the .rtp (residue topology) file for this forcefield.
-        rtpfile = os.path.join(os.environ['GMXLIB'],(self.useff+'.rtp'))
+        rtpfile = os.path.join(os.environ['GMXLIB'],(self.system.forcefield+'.rtp'))
         fin = open(rtpfile,'r')
         rtplines  = fin.readlines()
         fin.close()
@@ -69,72 +71,73 @@ class IonEnvironmentCalculation(object):
         # Build up dictionary of ions present in .rtp file.
         for line in rtplines:
             fields = line.split()
-            # JDC: Instead of using fields[0], fields[1], fields[2], the line should be parsed into meaningfully-named tokens.
-            # This makes the comprehension of what this codes much more straightforward.
             if len(fields) > 0:
                 if (fields[0] in self.possibleIons):                
-                    # JDC: This idiom of parsing into named variables and then processing is much more readable, if more verbose, to other coders.
                     # Parse fields.
                     # Example format:
                     # Ca     amber99_15   2.00000     1
-                    atomName = fields[0]
-                    atomType = fields[1]
-                    charge = float(fields[2])
+                    atomName, atomType, charge = fields[0], fields[1], float(fields[2])
                     # Store this ion in object ion dictionary.
-                    self.ions[atomName] = Ion(atomName, atomType, charge)  
+                    iondict[atomName] = Ion(atomName, atomType, charge)  
                         
         # Read contents of .atp (atom type masses) file for this forcefield.
-        atpfile = os.path.join(os.environ['GMXLIB'],(self.useff+'.atp'))
+        atpfile = os.path.join(os.environ['GMXLIB'],(self.system.forcefield+'.atp'))
         fin = open(atpfile,'r')
         atplines  = fin.readlines()
         fin.close()
         
-        # Parse .atp file to determine atomic masses.
+        # Right now the Ion() objects in the iondict do not have an atomicMass or atomDescription
+        # We will parse .atp file to determine these
         for line in atplines:
+            # Parse fields
+            # Example format:
+            # amber94_30        35.45000	; Cl-
             fields = line.split()
             if len(fields) > 0:
-                # find the right ion
-                for key in self.ions.keys():
-                    # JDC: This could be more clear.
-                    if self.ions[key].atomType == fields[0]:  
-                        self.ions[key].atomicMass = float(fields[1])
-                        self.ions[key].atomDescription = string.joinfields(fields[3:])
+                # For each line of the *.atp file, try to find an Ion() object that matches it.
+                for key in iondict.keys():                    
+                    if iondict[key].atomType == fields[0]:  
+                        iondict[key].atomicMass = float(fields[1])
+                        iondict[key].atomDescription = string.joinfields(fields[3:])
 
-    # JDC: Should use Units class for concentration.  There is a 'Units.M' or 'Units.Molar' unit.
-    def molarityToFraction(self, concentration, solvent='water'):
+        # Return a dictionary of Ion() objects
+        return iondict
+
+
+    def molarityToNumberFraction(self, ionConcentration, solvent='water'):
         """Compute the number fraction of ion molecules given a Molar concentration.
         
         REQUIRED ARGUMENTS
-          concentration - the concentration of ions (Molar)
+          ionConcentration - the concentration of ions (Molar)
           
         OPTIONAL ARGUMENTS
           solvent - the name of the solvent ('water' is only solvent currently supported, defaults to 'water')
         
         RETURNS
-          ???????????
+          numberFraction - the number fraction (0. < numberFraction < 1.) representing the ratio of total numbers of 
+                           salt molecules to water molecules 
         """
 
-        # JDC: Should raise an exception if unrecognized solvent is passed.
         if solvent != 'water':
-            print 'Only solvent=\'water\' is supported.  Exiting.'
-            sys.exit(1)
-
-        # JDC: You should use Units class for computations like this.
-        # The calculation would be something like the following (if I understand what you're trying to do):
-        #
-        # import mmtools.utilities.Units as Units
-        # solventMass = 18.016 * Units.g / Units.mol
-        # solventDensity = 1.0 * Units.g / Units.cm**3
-        # solventConcentration = solventDensity / solventMass
-        # ionFraction = ionConcentration / solventConcentration        
-        #
-        # See how easy that is!!!
-        waterGramPerMol = 18.016
-        waterMolPerGram = 1./waterGramPerMol
-        waterGramPerLiter = 1000.0
-        waterMolPerLiter = waterMolPerGram * waterGramPerLiter
+            raise NonWaterSolventNotSupported
         
-        # JDC: I scratched my head for a while and couldn't figure out what the quantity in parenthesis represented.  Maybe I'm just tired, but it would be much less confusing if you assigned it to a variable like 'numberOfIonsInBox' and then returned *this* variable instead.        
-        return (concentration/waterMolPerLiter)
+        solventMass = 18.016 * Units.g / Units.mol
+        solventDensity = 1.0 * Units.g / (0.001 * Units.l)   # water is 1 g/mL
+        solventConcentration = solventDensity / solventMass
+        ionFraction = (ionConcentration * Units.mol / Units.l) / solventConcentration        
+        
+        print 'solventMass = 18.016 * Units.g / Units.mol = ', solventMass
+        print 'solventDensity = 1.0 * Units.g / Units.cm**3 = ', solventDensity
+        print 'solventConcentration = solventDensity / solventMass =', solventConcentration
+        print 'ionFraction = ionConcentration / solventConcentration = ', ionFraction
+        
+        return ionFraction
 
+
+# Exceptions
+class IonParsingError(Exception):
+    print "There was an error parsing the information about each ion from the forcefield files."
+        
+class NonWaterSolventNotSupported(Exception):
+    print "Currently, water is the only supported solvent."
         

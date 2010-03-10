@@ -908,7 +908,7 @@ class System:
 	### make a tpr file with grompp
 	grompp = '%s/grompp -f %s -c %s -o %s -p %s '%(os.environ['GMXPATH'], self.files.mdpfile_Equilibration, self.files.grofile, self.files.next_tpr(), self.files.topfile)
 	self.rungmx( grompp, mockrun=self.mockrun, checkForFatalErrors=self.checkForFatalErrors  )
-	self.files.increment_tpr()    # must increment filename for any new gmx file 
+	self.files.increment_tpr()    # must increment filename for any new gmx file def
 		
 
     else:
@@ -1051,94 +1051,6 @@ class System:
         fout.write(line)
     fout.close()
 
-
-  def counterions(self):
-    
-    # Find out the number of water molecules there are in the box
-    fin = open(self.files.topfile, 'r')
-    lines = fin.readlines()
-    fin.close()
-    foundit = False
-    nwaters = None
-    while ( (len(lines) > 0) & (foundit==False)):
-       fields = lines.pop().split()
-       print 'fields', fields       
-       if (fields[0] == 'SOL') or (fields[0] == 'HOH'):
-	   nwaters = int(fields[1])
-	   foundit = True
-
-    # Calculate the number of ions that should be in solution based on the concentration
-    numberfraction = self.ioncalc.molarityToFraction( self.setup.saltconc )
-    print
-    print 'Ratio of salt molecules to solvent molecules:', numberfraction
-   
-    ######################################################################################## 
-    # Let f be the fraction of salt molecules in a solution of total solvent molecules N.
-    # When the ions dissociate, there are a total of M*N*f (cations+anions), where
-    #
-    #     M = (self.setup.positiveStoichiometry + self.setup.negativeStoichiometry)
-    #
-    # When we add cations an anions with the genion* program, each *ion* displaces a
-    # solvent molecule! How many total salt molecules x should we introduce to maintain
-    # the correct concentration f?  x must satisfy the equation:
-    #
-    #     x/(N-Mx) = f
-    #
-    # which has the solution:
-    #
-    #     x = fN/(1+Mf)
-    #
-    #######################################################################################
-
-    M = (self.setup.positiveStoichiometry + self.setup.negativeStoichiometry)
-    # counterions for every salt molecule
-
-    nsaltmolecules = int(numberfraction*float(nwaters)/(1.+float(M)*numberfraction))
-    print 'Number of salt molecules to add:', nsaltmolecules
-     
-    # Balance the charge with the appropriate number of counterions
-    # Our philosophy here will adhere to simple rules:
-    #     1) always neutralize the charge in the box
-    #     2) always decrease the total numbers of ions, if possible
-    #     3) there will be divalent anions, only -1 charges.
-
-    # Here's the formula:
-
-    # Start with the number of counterions predicted from salt concentration
-    np = self.setup.positiveStoichiometry*nsaltmolecules
-    nn = self.setup.negativeStoichiometry*nsaltmolecules
-
-    print
-    print "Finding the best numbers of addded positive and negative ions..."
-
-    chargesOk=False 
-    total_ioncharge = (nn*self.setup.negativeIonCharge + np*self.setup.positiveIonCharge)                   
-    while (chargesOk==False):
-        if (total_ioncharge + self.totalChargeBeforeIons) > 0:
-            # are there enough pos ions to remove?
-            if np > 0:
-                np=np-1
-            else:
-                nn=nn+1
-        elif (total_ioncharge + self.totalChargeBeforeIons) < 0:
-            # are there enough neg ions to remove?
-            if nn > 0:
-                nn=nn-1
-            else:
-                np=np+1
-        else:
-            chargesOk=True
-	
-        total_ioncharge = (nn*self.setup.negativeIonCharge + np*self.setup.positiveIonCharge)                   
-	if total_ioncharge == self.totalChargeBeforeIons:
-	    chargesOk=True
-
-    print '...Done.'
-    print 'Total charge of system before added ions:', self.totalChargeBeforeIons
-    print 'Total charge of added ions:', total_ioncharge
-    print '    ',nn,self.setup.negativeIonName,np,self.setup.positiveIonName
-    
-    return [np, nn, (nwaters-np-nn)]
 
 
   def make_ndx(self, grofile, ndxfile, groups=['protein','ions','sol', 'bath','system'], implicitOptions=None, debug=False):
