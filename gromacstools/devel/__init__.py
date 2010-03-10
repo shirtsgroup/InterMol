@@ -1,4 +1,4 @@
-__all__ = ["Filenames", "GromacsData", "IonCalculator", "MdpFile", "Setup", "Status", "System", "TableMaker", "TopologyFile"]
+__all__ = ["Examples", "Scripts", "Structure", "Helpers", "SimulationPreparation", "Utilities" ]
 
 ### global module Exceptions ###
 class McceError(Exception): pass
