@@ -44,6 +44,7 @@ GromacsParameter.py
     derived classes to create a  series of Force objects with the correct parameters for given atomtypes.
     These helper functions are part of the GromacsTopology class. 
 
+    MRS: comment to test svn
 """
 
 class ParameterInfo(object):
