@@ -1,10 +1,11 @@
 ; ########################################################################
 ; #                                                                      # 
-; #             ffamber ports for GROMACS 3.1.4 - May 2006               #
-; #         Eric J. Sorin & Sanghyun Park - Stanford University          #
-; #   please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
-; #            for additional information, tools, and updates            #
-; #          please consult http://folding.stanford.edu/ffamber/         #
+; #            ffamber ports for GROMACS 3.1.4 - August 2007             #
+; #       Eric J. Sorin - CSU Long Beach, Dept. of Chem & Biochem        #
+; # With significant contributions from Sanghyun Park and Jory Z. Ruscio #
+; #   Please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
+; #            For additional information, tools, and updates            #
+; #          please consult http://chemistry.csulb.edu/ffamber/          #
 ; #            !!! Use the -H14 flag with pdb2gmx v3.1.4 !!!             #
 ; #                                                                      #
 ; ########################################################################
@@ -19,11 +20,12 @@
 
 ; ########################################################################
 ; #                                                                      # 
-; #             ffamber ports for GROMACS 3.1.4 - May 2006               #
-; #         Eric J. Sorin & Sanghyun Park - Stanford University          #
-; #   please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
-; #            for additional information, tools, and updates            #
-; #          please consult http://folding.stanford.edu/ffamber/         #
+; #            ffamber ports for GROMACS 3.1.4 - August 2007             #
+; #       Eric J. Sorin - CSU Long Beach, Dept. of Chem & Biochem        #
+; # With significant contributions from Sanghyun Park and Jory Z. Ruscio #
+; #   Please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
+; #            For additional information, tools, and updates            #
+; #          please consult http://chemistry.csulb.edu/ffamber/          #
 ; #            !!! Use the -H14 flag with pdb2gmx v3.1.4 !!!             #
 ; #                                                                      #
 ; ########################################################################
@@ -46,11 +48,12 @@
 
 ; ########################################################################
 ; #                                                                      # 
-; #             ffamber ports for GROMACS 3.1.4 - May 2006               #
-; #         Eric J. Sorin & Sanghyun Park - Stanford University          #
-; #   please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
-; #            for additional information, tools, and updates            #
-; #          please consult http://folding.stanford.edu/ffamber/         #
+; #            ffamber ports for GROMACS 3.1.4 - August 2007             #
+; #       Eric J. Sorin - CSU Long Beach, Dept. of Chem & Biochem        #
+; # With significant contributions from Sanghyun Park and Jory Z. Ruscio #
+; #   Please cite: Sorin & Pande (2005). Biophys. J. 88(4), 2472-2493.   #
+; #            For additional information, tools, and updates            #
+; #          please consult http://chemistry.csulb.edu/ffamber/          #
 ; #            !!! Use the -H14 flag with pdb2gmx v3.1.4 !!!             #
 ; #                                                                      #
 ; ########################################################################
@@ -674,7 +677,10 @@ Protein                 3
      106 amber99_11      7    LEU     CG    105 0.191982   12.01      ; qtot 0.09537
      107 amber99_18      7    LEU     HG    106 0.000825   1.008      ; qtot 0.09619
      108 amber99_11      7    LEU    CD1    107 -0.123036  12.01      ; qtot -0.02684
-     109 amber99_18      7    LEU   HD11    108 0.022376   1.008      ; qtot -0.004468
+     109 amber99_18      7   
+	self.ParameterDirectives = list()
+	self.MoleculeDefinitionDirectives = list()  # this is a list of lists (for multiple molecules)	
+	self.SystemDirectives = list() LEU   HD11    108 0.022376   1.008      ; qtot -0.004468
      110 amber99_18      7    LEU   HD12    109 0.022376   1.008      ; qtot 0.01791
      111 amber99_18      7    LEU   HD13    110 0.022376   1.008      ; qtot 0.04028
      112 amber99_11      7    LEU    CD2    111 -0.123036  12.01      ; qtot -0.08275

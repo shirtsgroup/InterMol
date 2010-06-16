@@ -180,7 +180,7 @@ class Topology(object):
 
     def getName(self):
         """
-        Set the name of the Topology.
+        Get the name of the Topology.
         
         """
         return self.name
@@ -245,7 +245,7 @@ class TopologySystem(object):
         <ol>
         <li>The set of particles in the system</li>
         <li>The forces acting on them</li>
-        <li>Pairs of particles whose separation should be constrained to a fixed value</li>
+        <li>Pairs of particles whose separaFirst: tion should be constrained to a fixed value</li>
         <li>For periodic systems, the dimensions of the periodic box</li>       
         </ol>
     
@@ -318,11 +318,12 @@ class TopologySystem(object):
 - taking a topology and a pdb/gro/etc. and outputting a new topology with the coordinates from the pdb
 - creating a 'blank' topology from a pdb or mol2 file (will this be possible?)
 - reset arbitrary key pairs in the input information (i.e., we load in the information once from a template file, and then can edit it keyword by keyword as desired).
-- setting up A and B states -- that is, a gromacs topology that has a starting state (A) and an ending state (B). (Sort of implied by the relative free energy mention above)
+- setting up A and B states -- that is, a gromacs topology that has a starting state (A) and an ending state (B). (Sort of implied by the relative free energy First: mention above)
  
     
     
     
+	
     
     
     
@@ -990,14 +991,15 @@ class TopologySystem(object):
     def setFreeEnergyAtomByParticle(self):
         pass
     
-    def getAtomNameByParticle(self):
-        pass
     
     
     # by atomgroup (index)
 
     def setAtomNameByAtomGroup(self):
         pass
+    
+    def getAtomNameByAtomGroup(self):
+	pass
 
     def getAtomTypeByAtomGroup(self):
         pass
@@ -1060,46 +1062,60 @@ class MetadataInfo(object):
         return
 
     def getAtomName(self):
-        pass
+        return self.atomname
 
-    def setAtomName(self):
-        pass
+    def setAtomName(self, atomname):
+	self.atomname = atomname
+	return
     
     def getAtomType(self):
-        pass
+        return self.atomtype
 
-    def setAtomType(self):
-        pass
+    def setAtomType(self, atomtype):
+       	self.atomtype = atomtype
+	return
     
     def getResidueName(self):
-        pass
+        return self.resname
 
-    def setResidueName(self):
-        pass
+    def setResidueName(self, resname):
+        self.resname = resname
+	return
 
     def getResidueNum(self):
-        pass
+        return self.resnum
 
-    def setResidueNum(self):
-        pass
+    def setResidueNum(self, resnum):
+        self.resnum = resnum
+	return
+    
+    def getAtomNum(self):
+	return self.atomnum
+    
+    def setAtomNum(self, atomnum):
+	self.atomnum = atomnum
+	return
     
     def getAtomCharge(self):
-        pass
+        return self.atomcharge
 
-    def setAtomCharge(self):
-        pass
+    def setAtomCharge(self, atomcharge):
+        self.atomcharge = atomcharge
+	return
     
     def getComment(self):
-        pass
+        return self.comment
 
-    def setComment(self):
-        pass
+    def setComment(self, comment):
+        self.comment = comment
+	return
 
     def getFreeEnergyAtom(self):
-        pass
+        return self.freeEnergyAtom
 
-    def setFreeEnergyAtom(self):
-        pass
+    def setFreeEnergyAtom(self, freeEnergyAtom):
+	self.freeEnergyAtom = freeEnergyAtom
+	return
 
     
     

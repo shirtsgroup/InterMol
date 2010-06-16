@@ -94,7 +94,7 @@ class GromacsTopology(Topology):
 	for mol in range(len(self.GromacsTopologyFileObject.MoleculeDefinitionDirectives)):
 	    self.molecules.append( self.ConvertMoleculeDirectivesToTopologySystem(self.GromacsTopologyFileObject.MoleculeDefinitionDirectives[mol]))	    
     
-	return
+        return
     
     
 
@@ -106,7 +106,411 @@ class GromacsTopology(Topology):
     def ConvertParameterDirectiveToGromacsParameter(self, parmDirective):
 	"""Takes a parmDirective (Directive object), and uses it
 	to create a GromacsParameter object to store the forcefield parameters."""
-	pass # VAV (May 30, 2010):  Needs to be implemented
+        
+        self.parameters=[]
+	
+	index = 0
+	while index < len(parmDirective.lines):
+            line = parmDirective.lines[index]
+            
+            if "bondtypes" in parmDirective.getName:
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    distance = line.split()[3]
+                    kspring = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsBondParameterInfo(atomtype1, atomtype2, func, distance, kspring, comment='')
+                    
+                if line.split()[2] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 2
+                    distance = line.split()[3]
+                    kspring = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsG96BondParameterInfo(atomtype1, atomtype2, func, distance, kspring, comment='')
+                    
+                if line.split()[2] == 3:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 3
+                    distance = line.split()[3]
+                    D = line.split()[4]
+                    beta = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsMorseBondParameterInfo(atomtype1, atomtype2, func, distance, D, beta, comment='')
+                    
+                if line.split()[2] == 4:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 4
+                    distance = line.split()[3]
+                    C2 = line.split()[4]
+                    C3 = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsCubicBondParameterInfo(atomtype1, atomtype2, func, distance, C2, C3, comment='')
+                    
+                if line.split()[2] == 5:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 5
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsConnectionBondParameterInfo(atomtype1, atomtype2, func, comment='')
+                    
+                if line.split()[2] == 6:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 6
+                    distance = line.split()[3]
+                    kspring = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsHarmonicBondParameterInfo(atomtype1, atomtype2, func, distance, kspring, comment='')
+
+            if "pairtypes" in parmDirective.getName:	
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    V = line.split()[3]
+                    W = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsPairTypes1ParameterInfo(atomtype1, atomtype2, func, V, W, comment='')
+                    
+                if line.split()[2] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 2
+                    fudgeQQ = line.split()[3]
+                    qi = line.split()[4]
+                    qj = line.split()[5]
+                    V = line.split()[6]
+                    W = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsPairTypes2ParameterInfo(atomtype1, atomtype2, func, fudgeQQ, qi, qj, V, W, comment='')
+                    
+            if "pairs_nb" in parmDirective.getName:
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    qi = line.split()[3]
+                    qj = line.split()[4]
+                    V = line.split()[5]
+                    W = line.split()[6]
+                    comment = line.split()[7]
+                    newGroParm = self.GromacsHarmonicBondParameterInfo(atomtype1, atomtype2, func, qi, qj, V, W, comment='')
+
+            if "angletypes" in parmDirective.getName:
+                if line.split()[3] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 1
+                    theta = line.split()[4]
+                    k = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta, k, comment='')
+                if line.split()[3] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 2
+                    theta = line.split()[4]
+                    k = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsG96AngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta, k, comment='')
+                if line.split()[3] == 3:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 3
+                    r1e = line.split()[4]
+                    r2e = line.split()[5]
+                    krr = line.split()[6]
+                    comment = line.split()[7]
+                    newGroParm = self.GromacsCrossBondBondAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, r1e, r2e, krr, comment='')
+                if line.split()[3] == 4:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 4
+                    r1e = line.split()[4]
+                    r2e = line.split()[5]
+                    r3e = line.split()[6]
+                    kr = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsCrossBondAngleAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, r1e, r2e, r3e, kr, comment='')
+                if line.split()[3] == 5:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 5
+                    theta = line.split()[4]
+                    k = line.split()[5]
+                    r13 = line.split()[6]
+                    kUB = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsUreyBradleyAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta, k, r13, kUB, comment='')
+                if line.split()[3] == 6:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 6
+                    theta = line.split()[4]
+                    C0 = line.split()[5]
+                    C1 = line.split()[6]
+                    C2 = line.split()[7]
+                    C3 = line.split()[8]
+                    C4 = line.split()[9]
+                    comment = line.split()[10]
+                    newGroParm = self.GromacsQuarticAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta, C0, C1, C2, C3, C4, comment='')
+
+                
+                
+            if "dihedraltypes" in parmDirective.getName:
+                if line.split()[4] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 1
+                    phi = line.split()[5]
+                    kphi = line.split()[6]
+                    multiplicity = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsProperDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, phi, kphi, multiplicity, comment='')
+
+                if line.split()[4] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 2
+                    xi = line.split()[5]
+                    kxi = line.split()[6]
+                    multiplicity = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsImproperDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, xi, kxi, comment='')
+
+                if line.split()[4] == 3:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 3
+                    C0 = line.split()[5]
+                    C1 = line.split()[6]
+                    C2 = line.split()[7]
+                    C3 = line.split()[8]
+                    C4 = line.split()[9]
+                    C5 = line.split()[10]
+                    comment = line.split()[11]
+                    newGroParm = self.GromacsRBDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, C0, C1, C2, C3, C4, C5, comment='')
+                    
+                if line.split()[4] == 5:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 5
+                    C1 = line.split()[5]
+                    C2 = line.split()[6]
+                    C3 = line.split()[7]
+                    C4 = line.split()[8]
+                    comment = line.split()[9]
+                    newGroParm = self.GromacsFourierDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, C1, C2, C3, C4, comment='')
+
+            if "exclusions" in parmDirective.getName:
+                indices = []
+                splitLine = line.split()
+                atomtype1 = line.split()[0]
+                for i in range(1, len(splitLine)-1):
+                    indices.append(splitLine[i])
+                comment = splitLine[len(splitLine)-1]
+                newGroParm = self.GromacsExclusionParameterInfo(atomtype1, indices(), comment='')
+                
+
+            if "constraints" in parmDirective.getName:
+
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    distance = line.split()[3]
+                    comment = line.split()[4]
+                    newGroParm = self.GromacsConstraintParameterInfo(atomtype1, atomtype2, func, distance, comment='')
+
+                if line.split()[2] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 2
+                    distance = line.split()[3]
+                    comment = line.split()[4]
+                    newGroParm = self.GromacsConstraintNCParameterInfo(atomtype1, atomtype2, func, distance, comment='')
+
+            if "settles" in parmDirective.getName:
+
+                if line.split()[3] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 1
+                    distanceOH = line.split()[4]
+                    distanceHH = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsSettleParameterInfo(atomtype1, atomtype2, atomtype3, func, distanceOH, distanceHH, comment='')
+
+            if "virtual_sites2" in parmDirective.getName:
+
+                if line.split()[3] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    func = 1
+                    a = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsDummy2ParameterInfo(atomtype1, atomtype2, atomtype3, func, a, comment='')
+
+            if "virtual_sites3" in parmDirective.getName:
+                
+                if line.split()[4] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 1
+                    a = line.split()[5]
+                    b = line.split()[6]
+                    comment = line.split()[7]
+                    newGroParm = self.GromacsDummy3ParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, comment='')
+
+                if line.split()[4] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]                
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 2
+                    a = line.split()[5]
+                    d = line.split()[6]
+                    comment = line.split()[7]
+                    newGroParm = self.GromacsDummy3fdParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, d, comment='')
+
+                if line.split()[4] == 3:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 3
+                    theta = line.split()[5]
+                    d = line.split()[6]
+                    comment = line.split()[7]
+                    newGroParm = self.GromacsDummy3fadParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, theta, d, comment='')
+
+                if line.split()[4] == 3:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 3
+                    a = line.split()[5]
+                    b = line.split()[6]
+                    c = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsDummy3outParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, c, comment='')
+
+            if "position_restraints" in parmDirective.getName:
+
+                if line.split()[1] == 1:
+                    atomtype1 = line.split()[0]
+                    func = 1
+                    kx = line.split()[1]
+                    ky = line.split()[2]
+                    kz = line.split()[3]
+                    comment = line.split()[4]
+                    newGroParm = self.GromacsPositionRestraintParameterInfo(atomtype1, func, kx, ky, kz, comment='')
+                    
+            if "distance_restraints" in parmDirective.getName:
+
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    Type = line.split()[3]
+                    label = line.split()[4]
+                    low = line.split()[5]
+                    up1 = line.split()[6]
+                    up2 = line.split()[7]
+                    weight = line.split()[8]
+                    comment = line.split()[9]
+                    newGroParm = self.GromacsDistanceRestraintParameterInfo(atomtype1, atomtype2, func, Type, label, low, up1, up2, weight, comment='')
+                    
+            if "orientation_restraints" in parmDirective.getName:
+                
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    exp = line.split()[3]
+                    label = line.split()[4]
+                    alpha = line.split()[5]
+                    c = line.split()[6]
+                    obs = line.split()[7]
+                    weight = line.split()[8]
+                    comment = line.split()[9]
+                    newGroParm = self.GromacsOrientationRestraintParameterInfo(atomtype1, atomtype2, func, exp, label, alpha, c, obs, weight, comment='')
+
+            if "angle_restraints" in parmDirective.getName:
+                
+                if line.split()[4] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    atomtype3 = line.split()[2]
+                    atomtype4 = line.split()[3]
+                    func = 1
+                    theta = line.split()[5]
+                    kc = line.split()[6]
+                    multiplicity = line.split()[7]
+                    comment = line.split()[8]
+                    newGroParm = self.GromacsAngleRestraintParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, theta, kc, multiplicity, comment='')
+                    
+            if "angle_restraints_z" in parmDirective.getName:
+
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    theta = line.split()[3]
+                    kc = line.split()[4]
+                    multiplicity = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsAngleRestraintParameterInfo(atomtype1, atomtype2, func, theta, kc, multiplicity, comment='')
+                    
+            if "nonbond_params" in parmDirective.getName:
+                if line.split()[2] == 1:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    V = line.split()[3]
+                    W = line.split()[4]
+                    comment = line.split()[5]
+                    newGroParm = self.GromacsLJNonbondedParameterInfo(atomtype1, atomtype2, func, V, W, comment='')
+                    
+                if line.split()[2] == 2:
+                    atomtype1 = line.split()[0]
+                    atomtype2 = line.split()[1]
+                    func = 1
+                    a = line.split()[3]
+                    b = line.split()[4]
+                    c6 = line.split()[5]
+                    comment = line.split()[6]
+                    newGroParm = self.GromacsBuckinghamNonbondedParameterInfo(atomtype1, atomtype2, func, a, b, c6, comment='')
+                
+            self.parameters.append(newGroParm)
+            index += 1
+            
+	
 	
 	
 
@@ -202,9 +606,10 @@ class GromacsTopologyFile(object):
         """
 	Read in the contents of a Gromacs topology file.
 	
+		
 	WHAT ARE WE PARSING?
 	
-	The contents of a *.top file is formatted in of blocks of Directives.  A Directive looks like this: [ my_directive ]	
+	The contents of a *.top file is formatted in blocks of Directives.  A Directive looks like this: [ my_directive ]	
 	From the gmx 3.1.4 manual, here's the description of what to expect:
 		
 	    * semicolon (;) and newline surround comments
@@ -218,7 +623,7 @@ class GromacsTopologyFile(object):
 
 	HOW DO WE PARSE THIS?
 	
-	The basic strategy is straighforward:  For each Directive's block of text, we'll create and ordered list of
+	The basic strategy is straighforward:  For each Directive's block of text, we'll create an ordered list of
 	Directive() objects, which are private container classess.  The only wrinkles here are that Gromacs *.top topology 
 	file have preprocesser statements:
 	
@@ -234,7 +639,8 @@ class GromacsTopologyFile(object):
 	    
 	To deal with this, we do our *own* preprocessing when we read in the file, in two passes:
 	
-	    1) We parse all #ifdef statements accoring to our internal list in self.defines (these can be set by the user 
+	    1) We parse all #ifdef statements accoring to ou
+		r internal list in self.defines (these can be set by the user 
 	       before reading the *.top file using methods addDefine() and delDefine()  )
 	    2) We consider each #include as a special kind of Directive class called an IncludeDirective, which in turn stores
 	       it's own GromacsTopology object (!)  Arbitrary levels of #include-nesting thus be read, and their parameters
@@ -251,6 +657,7 @@ class GromacsTopologyFile(object):
 	
 	# Read in the *.top topology file lines
 	self.lines = self.readLines(filename)
+		
 	
 	# Perform pre-processing of the #ifdef and #endif lines 
 	self.processedLines = self.preprocess()
@@ -275,6 +682,7 @@ class GromacsTopologyFile(object):
 	processedLines = []
 
         # Parse the #ifdef statements
+		
 	includeThisLine = True
         for line in self.lines:
 	    
@@ -292,6 +700,7 @@ class GromacsTopologyFile(object):
 	    else:
 		if includeThisLine:
 		    processedLines.append(line)
+		
 		
         # Concatenate any line continuations 
 	i = 0
@@ -311,6 +720,7 @@ class GromacsTopologyFile(object):
 	self.directives = []
 	
 	index = 0
+		
         while index < len(self.processedLines):
 	    
 	    line = self.processedLines[index]

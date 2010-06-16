@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys, glob
+sys.path.append("/home/ctk3b")
 import simtk.unit as units
 from mmtools.Topology.Topology import *
 
