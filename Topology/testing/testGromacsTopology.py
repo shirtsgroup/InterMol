@@ -28,8 +28,8 @@ print "Show only the ParameterDirectives:"
 print 'ParameterDirectives:'
 for d in g.GromacsTopologyFileObject.ParameterDirectives:
     print '\t',d.name.strip()
-    for i in range(0, len(d.lines)):
-    	print d.lines[i]
+    #for i in range(0, len(d.lines)):
+    #	print d.lines[i]
 
 print "Show each set of MoleculeDefiniton Directive:"
 for mol in range(len(g.GromacsTopologyFileObject.MoleculeDefinitionDirectives)):
@@ -37,10 +37,14 @@ for mol in range(len(g.GromacsTopologyFileObject.MoleculeDefinitionDirectives)):
   for d in g.GromacsTopologyFileObject.MoleculeDefinitionDirectives[mol]:
     print '\t\t', d.name.strip()
 
+
 print "Show the SystemDirectives:"
 for d in g.GromacsTopologyFileObject.SystemDirectives:
     print '\t', d.name.strip()
+    
+
+#g.readTopologyFile('lambda.top')
 
 #print "Show parameter contents"
 #for d in g.parameters:
-#    print '\t', d.parameters.directiveString()
+#    print '\t', d.directiveString()

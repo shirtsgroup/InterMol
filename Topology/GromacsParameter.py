@@ -44,8 +44,8 @@ GromacsParameter.py
     derived classes to create a  series of Force objects with the correct parameters for given atomtypes.
     These helper functions are part of the GromacsTopology class. 
 
-    MRS: comment to test svn
 """
+
 
 class ParameterInfo(object):
     """Parent class for ParameterInfo objects."""
@@ -68,28 +68,27 @@ class GromacsBondParameterInfo(GromacsParameterInfo):
     CT H0         1    0.10900   284512.0 ; 03GLY changed from 331 bsd on NMA nmodes; AA, SUGARS
 
     """
-    
+
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, kspring, comment=''):
-		"""
-		"""
-		self.atomtype1 = atomtype1
-		self.atomtype2 = atomtype2
-		self.func = func
-		self.distance = distance
-		self.kspring = kspring
-		self.comment = comment
-		return
+        """
+        """
+        self.atomtype1 = atomtype1
+        self.atomtype2 = atomtype2
+        self.func = func
+        self.distance = distance
+        self.kspring = kspring
+        self.comment = comment
+        return
 
     def directiveString(self):
         """Output a correctly-formatted string (with an ending newline) corresponding
 	to a line as in a GromacsTopologyFile directive  """
 	return '%s %s  %d    %f %f ; %s\n'%(atomtype1, atomtype2, func, distance, kspring, comment)
 
-empty
+
 class GromacsG96BondParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**4, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, kspring, comment=''):
@@ -110,9 +109,7 @@ class GromacsG96BondParameterInfo(GromacsParameterInfo):
 
 
 class GromacsMorseBondParameterInfo(GromacsParameterInfo):
-    
-    	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1), comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, D, beta, comment=''):
@@ -135,9 +132,7 @@ class GromacsMorseBondParameterInfo(GromacsParameterInfo):
 
 
 class GromacsCubicBondParameterInfo(GromacsParameterInfo):
-    
-    	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2, units.kilojoules_per_mole / units.nanometers**3, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, C2, C3, comment=''):
@@ -160,8 +155,7 @@ class GromacsCubicBondParameterInfo(GromacsParameterInfo):
 
 class GromacsConnectionBondParameterInfo(GromacsParameterInfo):
     
-    	"""
-	"""empty
+
 	
     @accepts_compatible_units(None, None, None, comment='')
     def __init__(self, atomtype1, atomtype2, func, comment=''):
@@ -182,8 +176,7 @@ class GromacsConnectionBondParameterInfo(GromacsParameterInfo):
 
 class GromacsHarmonicBondParameterInfo(GromacsParameterInfo):
 	
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, kspring, comment=''):
@@ -204,8 +197,7 @@ class GromacsHarmonicBondParameterInfo(GromacsParameterInfo):
 
 # Pair parameters
 class GromacsPairTypes1ParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 		
     @accepts_compatible_units(None, None, None, None, None, comment='')
     def __init__(self, atomtype1, atomtype2, func, V, W, comment=''):
@@ -226,10 +218,9 @@ class GromacsPairTypes1ParameterInfo(GromacsParameterInfo):
     
     
 class GromacsPairTypes2ParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-	@accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None comment='')
+	@accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None, comment='')
 	def __init__(self, atomtype1, atomtype2, func, fudgeQQ, qi, qj, V, W, comment=''):
 			"""
 			"""
@@ -250,10 +241,9 @@ class GromacsPairTypes2ParameterInfo(GromacsParameterInfo):
 		return '%s %s  %d    %s %f %f %f %f ; %s\n'%(atomtype1, atomtype2, func, fudgeQQ, qi, qj, V, W, comment)
 
 class GromacsPairTypesNBParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-	@accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None comment='')
+	@accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None, comment='')
 	def __init__(self, atomtype1, atomtype2, func, qi, qj, V, W, comment=''):
 			"""
 			"""
@@ -274,8 +264,7 @@ class GromacsPairTypesNBParameterInfo(GromacsParameterInfo):
 
 #angles
 class GromacsAngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.degrees, units.kilojoules_per_mole * radians**(-2), comment='')
 	def __init__(self, atomtype1, atomtype2, atomtype3, func, theta, k, comment=''):
@@ -296,8 +285,7 @@ class GromacsAngleParameterInfo(GromacsParameterInfo):
 		return '%s %s %s %d    %f %f ; %s\n'%(atomtype1, atomtype2, atomtype3, func, theta, k, comment)
 	
 class GromacsG96AngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.degrees, units.kilojoules_per_mole, comment='')
 	def __init__(self, atomtype1, atomtype2, atomtype3, func, theta, k, comment=''):
@@ -319,8 +307,7 @@ class GromacsG96AngleParameterInfo(GromacsParameterInfo):
 	
 	
 class GromacsCrossBondBondAngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*nanometers**(-2), comment='')
 	def __init__(self, atomtype1, atomtype2, atomtype3, func, r1e, r2e, krr, comment=''):
@@ -345,8 +332,7 @@ class GromacsCrossBondBondAngleParameterInfo(GromacsParameterInfo):
 
 	
 class GromacsCrossBondAngleAngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, kilojoules_per_mole*nanometers**(-2), comment='')
 	def __init__(self, atomtype1, atomtype2, atomtype3, func, r1e, r2e, r3e, kr, comment=''):
@@ -369,11 +355,10 @@ class GromacsCrossBondAngleAngleParameterInfo(GromacsParameterInfo):
 		return '%s %s %s %d    %f %f %f %f ; %s\n'%(atomtype1, atomtype2, atomtype3, func, r1e, r2e, r3e, kr, comment)
 	
 class GromacsUreyBradleyAngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.degrees, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole, units.kilojoules_per_mole*nanometers**(-2), comment='')
-	def __init__(self, atomtype1, atomtype2, atomtype3, func, theta, k, r13. kUB, comment=''):
+	def __init__(self, atomtype1, atomtype2, atomtype3, func, theta, k, r13, kUB, comment=''):
 			"""
 			"""
 			self.atomtype1 = atomtype1
@@ -393,8 +378,7 @@ class GromacsUreyBradleyAngleParameterInfo(GromacsParameterInfo):
 		return '%s %s %s %d    %f %f %f %f ; %s\n'%(atomtype1, atomtype2, atomtype3, func, theta, k, r13, kUB, comment)
 	
 class GromacsQuarticAngleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
 	@accepts_compatible_units(None, None, None, None, units.degrees, units.kilojoules_per_mole, units.kilojoules_per_mole*radians**(-1), units.kilojoules_per_mole*radians**(-2), units.kilojoules_per_mole*radians**(-3), units.kilojoules_per_mole*radians**(-4), comment='')
 	def __init__(self, atomtype1, atomtype2, atomtype3, func, theta, C0, C1, C2, C3, C4, comment=''):
@@ -421,10 +405,9 @@ class GromacsQuarticAngleParameterInfo(GromacsParameterInfo):
 
 # LJ/Coul nonbonded parameters
 class GromacsLJNonbondedParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 		
-        @accepts_compatible_units(None, None, None, None, None, comment='')
+    @accepts_compatible_units(None, None, None, None, None, comment='')
     def __init__(self, atomtype1, atomtype2, func, V, W, comment=''):
 		"""
 		"""
@@ -444,13 +427,13 @@ class GromacsLJNonbondedParameterInfo(GromacsParameterInfo):
 
 class GromacsBuckinghamNonbondedParameterInfo(GromacsParameterInfo):
 	
-	"""
-	[ nonbond_params ]
-	; ai    aj     	funct   a	b	c
-	C       C       2 2.07861e+04   2.94117e+01   1.17244e-03
-	"""
+    """
+    [ nonbond_params ]
+    ; ai    aj     	funct   a	b	c
+    C       C       2 2.07861e+04   2.94117e+01   1.17244e-03
+    """
 	
-        @accepts_compatible_units(None, None, None, units.kilojoules_per_mole, units.nanometers**(-1), units.kilojoules_per_mole * units.nanometers**6, comment='')
+    @accepts_compatible_units(None, None, None, units.kilojoules_per_mole, units.nanometers**(-1), units.kilojoules_per_mole * units.nanometers**6, comment='')
     def __init__(self, atomtype1, atomtype2, func, a, b, c6, comment=''):
 		"""
 		"""
@@ -466,14 +449,13 @@ class GromacsBuckinghamNonbondedParameterInfo(GromacsParameterInfo):
     def directiveString(self):
         """Output a correctly-formatted string (with an ending newline) corresponding
 	to a line as in a GromacsTopologyFile directive  """
-	return '%s %s  %d    %f %f %f ; %s\n'%(atomtype1, atomtype2, func, a, b, c6 comment)
+	return '%s %s  %d    %f %f %f ; %s\n'%(atomtype1, atomtype2, func, a, b, c6, comment)
 
 
 
 # Dihedral parameters
 class GromacsProperDihedralParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, None, None, units.degrees, units.kilojoules_per_mole, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, phi, kphi, multiplicity, comment=''):
@@ -497,11 +479,11 @@ class GromacsProperDihedralParameterInfo(GromacsParameterInfo):
 
 
 class GromacsImproperDihedralParameterInfo(GromacsParameterInfo):
-	"""
-	[ dihedrals ]
-	;  ai  aj      ak      al   funct     xi         kxi	
-	1	2	4	3	2 35.264     334.720	; default params
-	"""
+    """
+    [ dihedrals ]
+    ;  ai  aj      ak      al   funct     xi         kxi	
+    1	2	4	3	2 35.264     334.720	; default params
+    """
 	
     @accepts_compatible_units(None, None, None, None, None, units.degrees, units.kilojoules_per_mole / units.radians**2, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, xi, kxi, comment=''):
@@ -525,11 +507,11 @@ class GromacsImproperDihedralParameterInfo(GromacsParameterInfo):
 
 
 class GromacsRBDihedralParameterInfo(GromacsParameterInfo):
-	"""
-	[ dihedrals ]
-	;   ai    aj    ak    al funct       c0          c1          c2          c3          c4          c5
-	1     5     8     9   3   -4.524996    2.558516    3.932960   -1.966480    0.000000    0.000000
-	"""
+    """
+    [ dihedrals ]
+    ;   ai    aj    ak    al funct       c0          c1          c2          c3          c4          c5
+    1     5     8     9   3   -4.524996    2.558516    3.932960   -1.966480    0.000000    0.000000
+    """
 	
     @accepts_compatible_units(None, None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, C0, C1, C2, C3, C4, C5, comment=''):
@@ -556,8 +538,7 @@ class GromacsRBDihedralParameterInfo(GromacsParameterInfo):
     
     
 class GromacsFourierDihedralParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, C1, C2, C3, C4, comment=''):
@@ -585,11 +566,11 @@ class GromacsFourierDihedralParameterInfo(GromacsParameterInfo):
 
 # constraint parameters
 class GromacsConstraintParameterInfo(GromacsParameterInfo):
-	"""
-	[ constraints ]
-	;  ai    aj funct         dist
-	2    1    1            0.16432
-	"""
+    """
+    [ constraints ]
+    ;  ai    aj funct         dist
+    2    1    1            0.16432
+    """
 	
     @accepts_compatible_units(None, None, None, units.nanometers, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, comment=''):
@@ -609,11 +590,11 @@ class GromacsConstraintParameterInfo(GromacsParameterInfo):
 
 
 class GromacsConstraintNCParameterInfo(GromacsParameterInfo):
-	"""
-	[ constraints ]
-	;  ai    aj funct         dist
-	2    1    2           0.16432
-	"""
+    """
+    [ constraints ]
+    ;  ai    aj funct         dist
+    2    1    2           0.16432
+    """
 	
     @accepts_compatible_units(None, None, None, units.nanometers, comment='')
     def __init__(self, atomtype1, atomtype2, func, distance, comment=''):
@@ -635,8 +616,7 @@ class GromacsConstraintNCParameterInfo(GromacsParameterInfo):
 
 # settle parameters
 class GromacsSettleParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, func, distanceOH, distanceHH, comment=''):
@@ -660,10 +640,9 @@ class GromacsSettleParameterInfo(GromacsParameterInfo):
 
 # dummy parameters
 class GromacsDummy2ParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-    @accepts_compatible_units(None, None, None, None, None comment='')
+    @accepts_compatible_units(None, None, None, None, None, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, func, a, comment=''):
 		"""
 		"""
@@ -683,13 +662,13 @@ class GromacsDummy2ParameterInfo(GromacsParameterInfo):
 
 
 class GromacsDummy3ParameterInfo(GromacsParameterInfo):
-	"""
-	[ dummies3 ]
-	; Dummy from			funct	a		b
-	4	1	2	3	1	0.128012065	0.128012065
-	"""
+    """
+    [ dummies3 ]
+    ; Dummy from			funct	a		b
+    4	1	2	3	1	0.128012065	0.128012065
+    """
 	
-    @accepts_compatible_units(None, None, None, None, None, None, None comment='')
+    @accepts_compatible_units(None, None, None, None, None, None, None, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, comment=''):
 		"""
 		"""
@@ -710,10 +689,9 @@ class GromacsDummy3ParameterInfo(GromacsParameterInfo):
 
 
 class GromacsDummy3fdParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-    @accepts_compatible_units(None, None, None, None, None, None, units.nanometers comment='')
+    @accepts_compatible_units(None, None, None, None, None, None, units.nanometers, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, a, d, comment=''):
 		"""
 		"""
@@ -734,10 +712,9 @@ class GromacsDummy3fdParameterInfo(GromacsParameterInfo):
 
 
 class GromacsDummy3fadParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-    @accepts_compatible_units(None, None, None, None, None, units.degrees, units.nanometers comment='')
+    @accepts_compatible_units(None, None, None, None, None, units.degrees, units.nanometers, comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, theta, d, comment=''):
 		"""
 		"""
@@ -758,10 +735,9 @@ class GromacsDummy3fadParameterInfo(GromacsParameterInfo):
 
 
 class GromacsDummy3outParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-    @accepts_compatible_units(None, None, None, None, None, None, None units.nanometers**(-1) comment='')
+    @accepts_compatible_units(None, None, None, None, None, None, None, units.nanometers**(-1), comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, c, comment=''):
 		"""
 		"""
@@ -786,8 +762,7 @@ class GromacsDummy3outParameterInfo(GromacsParameterInfo):
 
 # restraint parameters
 class GromacsPositionRestraintParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, units.kilojoules_per_mole / units.nanometers**2, units.kilojoules_per_mole / units.nanometers**2, units.kilojoules_per_mole / units.nanometers**2, comment='')
     def __init__(self, atomtype1, func, kx, ky, kz, comment=''):
@@ -809,9 +784,7 @@ class GromacsPositionRestraintParameterInfo(GromacsParameterInfo):
 	return '%s  %d    %f %f %f ; %s\n'%(atomtype1, func, kx, ky, kz, comment)
 
 class GromacsDistanceRestraintParameterInfo(GromacsParameterInfo):
-	"""
-	"""
-	
+
     @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, None, comment='')
     def __init__(self, atomtype1, atomtype2, func, Type, label, low, up1, up2, weight, comment=''):
 
@@ -836,10 +809,9 @@ class GromacsDistanceRestraintParameterInfo(GromacsParameterInfo):
 	return '%s %s  %d    %s %s %f %f %f %s ; %s\n'%(atomtype1, atomtype2, func, Type, label, low, up1, up2, weight, comment)
 
 class GromacsOrientationRestraintParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
-    @accepts_compatible_units(None, None, None, None, None, None, None, units.amu, units.amu**(-1) comment='')
+    @accepts_compatible_units(None, None, None, None, None, None, None, units.amu, units.amu**(-1), comment='')
     #c should be in units "U nm^alpha"
     #need some way to implement this if you want a unit check on this value
     def __init__(self, atomtype1, atomtype2, func, exp, label, alpha, c, obs, weight, comment=''):
@@ -864,8 +836,7 @@ class GromacsOrientationRestraintParameterInfo(GromacsParameterInfo):
 
 
 class GromacsAngleRestraintParameterInfo(GromacsParameterInfo):
-	"""
-	"""
+
 	
     @accepts_compatible_units(None, None, None, None, None, units.degrees, units.kilojoules_per_mole,  comment='')
     def __init__(self, atomtype1, atomtype2, atomtype3, atomtype4, func, theta, kc, multiplicity, comment=''):
@@ -889,9 +860,7 @@ class GromacsAngleRestraintParameterInfo(GromacsParameterInfo):
 
 
 class GromacsAngleZRestraintParameterInfo(GromacsParameterInfo):
-	"""
-	"""
-	
+
     @accepts_compatible_units(None, None, None, units.degrees, units.kilojoules_per_mole,  comment='')
     def __init__(self, atomtype1, atomtype2,  func, theta, kc, multiplicity, comment=''):
 		"""
@@ -914,22 +883,43 @@ class GromacsAngleZRestraintParameterInfo(GromacsParameterInfo):
 
 # Exclusion parameters
 class GromacsExclusionParameterInfo(GromacsParameterInfo):
-	"""
-	[ exclusions ]
-	1	2	3
-	"""
+    """
+    [ exclusions ]
+    1	2	3
+    """
 	
  
-    def __init__(self, atomtype1, indices[], comment=''):
+    def __init__(self, atomtype1, indices, comment=''):
 	"""
 	"""
 	self.atomtype1 = atomtype1
-	self.indices[] = indices[]
+	self.indices = indices
         self.comment = comment
 	return
 
     def directiveString(self):
         """Output a correctly-formatted string (with an ending newline) corresponding
 	to a line as in a GromacsTopologyFile directive  """
-	return '%s %d ; %s\n'%(atomtype1,(i) for i in indices[], comment)
+	return '%s %d ; %s\n'%(atomtype1,indices, comment)
+    
+# Default Parameters
+class GromacsDefaultParameterInfo(GromacsParameterInfo):
+
+	
+ 
+    def __init__(self, func, cr, genpairs, fudgeLJ, fudgeQQ, comment=''):
+	"""
+	"""
+	self.func = func
+	self.cr = cr
+	self.genpairs = genpairs
+	self.fudgeLJ = fudgeLJ
+	self.fudgeQQ = fudgeQQ
+        self.comment = comment
+	return
+
+    def directiveString(self):
+        """Output a correctly-formatted string (with an ending newline) corresponding
+	to a line as in a GromacsTopologyFile directive  """
+	return '%d %d %s %d %d ; %s\n'%(func, cr, genpairs, fudgeLJ, fudgeQQ, comment)
 

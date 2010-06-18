@@ -197,7 +197,7 @@ class Topology(object):
 
     def getNumMolecules(self):
         """
-        Get the number of molecules in the toopology.
+        Get the number of molecules in the topology.
         
         """
         return len(self.molecules)
@@ -245,7 +245,7 @@ class TopologySystem(object):
         <ol>
         <li>The set of particles in the system</li>
         <li>The forces acting on them</li>
-        <li>Pairs of particles whose separaFirst: tion should be constrained to a fixed value</li>
+        <li>Pairs of particles whose separation should be constrained to a fixed value</li>
         <li>For periodic systems, the dimensions of the periodic box</li>       
         </ol>
     
