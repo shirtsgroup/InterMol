@@ -71,8 +71,6 @@ class ValueException(Exception):
 
     def __str__(self):
         return repr(self.value)
-    
-    
 
 #=============================================================================================
 # DECORATORS
@@ -89,7 +87,7 @@ def accepts(*types):
     @accepts(float, int)
     def function(a, b):
         return b*a
-    
+
     """
     def check_accepts(f):
         nargs = (f.func_code.co_argcount - 1) # exclude self
@@ -100,7 +98,7 @@ def accepts(*types):
                     assert isinstance(a, t), "arg %r does not match %s" % (a,t)
             return f(*args, **kwds)
         new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring        
+        new_f.func_doc = f.func_doc # copy docstring
         return new_f
     return check_accepts
 
@@ -111,20 +109,20 @@ def accepts_compatible_units(*units):
     Each argument of the function will be matched with an argument of @acceptunits.
     Those arguments of the function that correspond @acceptunits which are not None
     will be checked to ensure they are compatible with the specified units.
-    
+
     EXAMPLE
 
     @acceptsunits(units.meter, None, units.kilocalories_per_mole)
     def function(a, b, c): pass
     function(1.0 * units.angstrom, 3, 1.0 * units.kilojoules_per_mole)
-    
+
     """
     def check_units(f):
         nargs = (f.func_code.co_argcount - 1) # exclude self
         assert len(units) == nargs, "incorrect number of units supplied in @accepts_compatible_units decorator for class method %s" % (f.func_name)
         def new_f(*args, **kwds):
             for (a, u) in zip(args[1:], units):
-                if u is not None:                    
+                if u is not None:
                     assert (a.unit).is_compatible(u), "arg %r does not have units compatible with %s" % (a,u)
             return f(*args, **kwds)
         new_f.func_name = f.func_name # copy function name
@@ -138,10 +136,10 @@ def returns(rtype):
     EXAMPLE
 
     @returns(int)
-    def function(): return 7    
-            
+    def function(): return 7
+
     """
-    
+
     def check_returns(f):
         def new_f(*args, **kwds):
             result = f(*args, **kwds)
@@ -153,7 +151,6 @@ def returns(rtype):
     return check_returns
 
 
-    
 from Force import *
 
 #=============================================================================================
@@ -162,12 +159,13 @@ from Force import *
 
 class Topology(object):
     """
-    This class represents a molecular system topology.  
-    
+    This class represents a molecular system topology.
+
     The Topology object is the outermost container, and stores a list of TopologySystem objects  
     -- The TopologySystem these do most of the heavy lifting.
-    """    
-    
+
+    """
+
     def __init__(self, topology=None):
         """
         Create a new Topology object.
@@ -175,38 +173,38 @@ class Topology(object):
         If an Topology object is specified, it will be queried to construct the class.
 
         """
-        self.name = "Untitled"        
+        self.name = "Untitled"
         self.molecules      = list()   # molecules[i] is the ith TopologySystem object
 
     def getName(self):
         """
         Get the name of the Topology.
-        
+
         """
         return self.name
 
-        
+
     def setName(self, name):
         """
         Set the name of the Topology.
-        
+
         """
         self.name = name
         return 
-            
+
 
     def getNumMolecules(self):
         """
         Get the number of molecules in the topology.
-        
+
         """
         return len(self.molecules)
-    
+
 
     def addMolecule(self, molecule=None):
         """
         Add a molecule (i.e. a TopologySystem object) to the Topology object.
-        
+
         """
         if molecule == None:
             self.molecules.append( TopologySystem() )
@@ -218,7 +216,7 @@ class Topology(object):
     def delMolecule(self, index):
         """
         Delete a molecule from the Topology object at the specified index.
-        
+
         """
         self.molecules.pop(index)
         return
@@ -226,37 +224,35 @@ class Topology(object):
     def insertMolecule(self, index, molecule=None):
         """
         Insert a molecule into the Topology object at the specified index.
-        
+
         """
         if molecule == None:
             self.molecules.insert( index, TopologySystem() )
         else:
-            self.molecules.insert( index, opologySystem( system=molecule) )
+            self.molecules.insert( index, TopologySystem( system=molecule) )
         return
-
-
 
 
 
 class TopologySystem(object):
     """
     A TopologySystem object consists of:
-    
+
         <ol>
         <li>The set of particles in the system</li>
         <li>The forces acting on them</li>
         <li>Pairs of particles whose separation should be constrained to a fixed value</li>
-        <li>For periodic systems, the dimensions of the periodic box</li>       
+        <li>For periodic systems, the dimensions of the periodic box</li>
         </ol>
-    
+
         The particles and constraints are defined directly by the System object, while
         forces are defined by objects that extend the Force class.  After creating a
         System, call addParticle() once for each particle, addConstraint() for each constraint,
         and addForce() for each Force.
-        
-       
+
+
     Examples:
-    
+
     >>> system = TopologySystem()
 
     Add a particle.
@@ -272,7 +268,7 @@ class TopologySystem(object):
     0
 
     Create a deep copy.
-    
+
     >>> import copy
     >>> system_copy = copy.deepcopy(system)
 
@@ -283,10 +279,10 @@ class TopologySystem(object):
       Atom names, Atom types, along with functions to search through them.
 
 
-                
-    *** USAGE EXAMPLES *** 
-    
-      
+
+    *** USAGE EXAMPLES ***
+
+
     Topology class should have methods for:
 - insert and delete atoms
 - insert and delete connections between atoms
@@ -303,13 +299,13 @@ class TopologySystem(object):
    - select by atomic type
    - select by atom number
    - select by physical location
-   
-    
+
+
 
     VAV: see  GromacsTopology.py for these:
     - outputting a gromacs top + gro file
     - reading in a topology from a gromacs .itp/.top/.gro
-    
+
 
 
 
@@ -319,17 +315,17 @@ class TopologySystem(object):
 - creating a 'blank' topology from a pdb or mol2 file (will this be possible?)
 - reset arbitrary key pairs in the input information (i.e., we load in the information once from a template file, and then can edit it keyword by keyword as desired).
 - setting up A and B states -- that is, a gromacs topology that has a starting state (A) and an ending state (B). (Sort of implied by the relative free energy First: mention above)
- 
-    
-    
-    
-	
-    
-    
-    
-    
-    *** THINGS THAT WERE ALREADY IMPLEMENTED pyopenmm version*** 
-    
+
+
+
+
+
+
+
+
+
+    *** THINGS THAT WERE ALREADY IMPLEMENTED pyopenmm version***
+
     - merging (and splitting?) multiple topologies
     - generating angles from connectivities
     - generating torsions from connectivities
@@ -343,32 +339,32 @@ class TopologySystem(object):
              sigma (float)
        - partial charge (float)
        - mass (float)
-       
+
     VAV:  THIS IS CONTAINED IN THE MetadataInfo class:
          - involved in free energy calculations (bool)
          - atom name (string)
          - residue name (string)
-  
+
     VAV:  THIS IS CONTAINED IN THE Force.HarmonicBondForceBondInfo class:
      -list of bonds
          - list of parameters: two possibilities -- just a list that can be interpreted by whatever code we want, or exactly what's in the gromacs records
-  
+
     VAV:  THIS IS CONTAINED IN THE Force.HarmonicAngleForceInfo class:
      -list of angles
          - list of parameters: see above
-  
+
     VAV:  THIS IS CONTAINED IN THE Force.PeriodicTorsionForcePeriodicTorsionInfo class:
      -list of torsions
          - list of parameters: see above
-   
+
     VAV:  THIS IS CONTAINED IN THE Force.NonbondedForceExceptionInfo class:
     -list of 1,4's
          - list of parameters: see above
-         
+
     VAV:  THIS IS implemented via the AtomGroup class:
    - list of groups of atoms
       Groups are lists of atom indices, and a name string.
-      
+
     VAV: THIS IS implemented via self.molecules()
       -can represent either single molecules, or systems of molecules
 
@@ -386,15 +382,15 @@ class TopologySystem(object):
 
 
         Lists of "molecules"?
-        
+
         VAV sez:  One requirement was to store a list of "molecules" or objects (since an object may contain multiple molecules
         in the sense of containing multiple disconnected objects); each containing a list of atoms.  In this case, each "molecule"
         should be a separate Topology instance.  The GromacsTopology (and others, potentially) can serve as containers to store
         multiple "molecules"
-        
-        
+
+
         Combination rules to get vdW parameters for unspecified pairs?
-        
+
         MRS sez:  another desired feature is to track nonbonded parameters for specific pairs of atoms to override the above
         JDC sez:  Agreed.  There needs to be the ability to exclude 1,2 and 1,3 pairs and attenuate 1,4 pairs, at the very least.
                   The simplest way is to just include a list of 'exceptions' for nonbonded interactions. -John Chodera 5/26/10 7:49 PM 
@@ -402,38 +398,38 @@ class TopologySystem(object):
 
 
     *** TO DO ***
-    
+
     VAV: A task for MRS's students?
     - select by SMARTS string
      - Hand off the SMARTS string to open eye -- sdf/mol2 file
-    
+
 
     VAV:  These are NOT implemented yet:  They would require their own derived Topology classes (like GromacsTopology) 
     - reading in a topology from a hetgrpffgen file + pdb (Schrodinger OPLS-AA ?)  VAV: SchrodingerTopology.py ?
     - reading in a topology from Desmond templates(?)  VAV: DesmondTopology.py ?
     - reading in a topology from amber topology files (not necessary yet because of acpypi?) VAV: AmberTopology.py ?
 
-    
-    
+
+
     *** DISCUSSION - SHOULD THESE TO BE IMPLEMENTED? *** 
 
     -location: 3d coordinates: triplet of float (nm).
     -velocities?: triplet of float 
-    
+
     - includes the information necessary for the .gro and the .top in gromacs. ???
-    
+
     - list of dummy atoms and parameters for construction of dummy atoms ???
 
 
 
     *** PURPOSELY NOT IMPLEMENTED ***
-    
+
     MRS wrote:  "important note for free energy calculations:Each atom/angle/torsion should be able to have an arbitrary
                 number of parameter sets!  For now, it will usually be one or two.  But eventually, we'd like to be able
                 to support more.  So it should be a list of lists.
-    
+
     VAV: This can be done for now using multiple objects with different sets of parms.
-     
+
     JDC says:  "A critical question is how alchemical permutations are to be handled by this topology class.
                 Should one topology object contain just a single topology, or should there be multiple sets
                 of parameters for part or all of the molecule?  I favor just having *one* set of parameters
@@ -444,26 +440,25 @@ class TopologySystem(object):
        Translators between formats might come later.
     A: I don't think we want runfile info mixed with the topology object. -David Mobley 5/25/10 5:29 PM 
 
-    
+
 
     *** TO DO ***
-    
+
     - Very important:  need to lay out what changes need to be made to other files in MM tools
                    to be able to adapt to the new topology definition:
- 
-        
+
+
     """
-    
+
     def __init__(self, system=None):
         """
         Create a new System.
 
         TODO:
         If a TopologySystem object is specified, its attributes will be queried to construct the class.
-        
 
         """
-        
+
         self.name = ''
 
         # Set defaults.
@@ -472,63 +467,65 @@ class TopologySystem(object):
 
         self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
         self.forces      = list() # forces[i] is the ith force term
-        
+
         self.atomgroups  = list() # atomgroups[i] is the ith AtomGroup object
- 
-        
+
+
         # VAV: NOT IMPLEMENTED YET
         self.positions   = list() # positions[i] is the ith position 3-tuple (float) 
         self.velocities  = list() # velocities[i] is the ith velocity 3-tuple (float)
-        
-        
+
+
         self.periodicBoxVectors = [ units.Quantity((2.,0.,0.), units.nanometer), units.Quantity((0.,2.,0.), units.nanometer), units.Quantity((0.,0.,2.), units.nanometer) ] # periodic box vectors (only for periodic systems)
         # TODO: Store periodicBoxVectors as units.Quantity(numpy.array([3,3], numpy.float64), units.nanometer)?
 
         # Populate the system from a provided system, if given.
         if system is not None:
             self._copyDataUsingInterface(self, system)
-    
+
         return
 
     def _copyDataUsingInterface(self, dest, src):
         """
         Use the public interface to populate 'dest' from 'src'.
-        
+
         """
-        #dest.__init__()        
+        #dest.__init__()
         for index in range(src.getNumParticles()):
-            mass = src.getParticleMass(index)            
+            mass = src.getParticleMass(index)
             dest.addParticle(mass)
         for index in range(src.getNumConstraints()):
             args = src.getConstraintParameters(index)
             dest.addConstraint(*args)
         for index in range(src.getNumForces()):
-            force = src.getForce(index)            
+            force = src.getForce(index)
             dest.addForce(force)
         box_vectors = src.getPeriodicBoxVectors()
         dest.setPeriodicBoxVectors(*box_vectors)
-        
+
         return
-        
+
 
     def getName(self):
         """
         Get the name of the TopologySystem.
+
         """
         return self.name
-    
+
     def setName(self, name):
         """
         Set the name of the TopologySystem.
+
         """
         self.name = name
         return
-    
-    
+
+
     def getNumParticles(self):
         """
         Get the number of particles in this TopologySystem.
-        
+
         """
         return len(self.masses)
 
@@ -573,20 +570,20 @@ class TopologySystem(object):
     def getParticleMass(self, index):
         """
         Get the mass (in atomic mass units) of a particle.
-    
+
         @param index the index of the particle for which to get the mass
 
-        """        
+        """
         return self.masses[index]
 
 
     def getParticleMetadata(self, index):
         """
         Get the metadata of a particle.
-    
+
         @param index the index of the particle for which to get the mass
 
-        """        
+        """
         return self.metadata[index]
 
 
@@ -601,8 +598,8 @@ class TopologySystem(object):
 
         """
         masses[index] = mass
-        return       
-    
+        return
+
     def setParticleMetadata(self, index, atomname=None, atomtype=None, resname=None, resnum=None, \
                                          atomnum=None, atomcharge=None, comment=None, FreeEnergyAtom=False):
         """
@@ -611,8 +608,8 @@ class TopologySystem(object):
         @param index  the index of the particle for which to set the mass
 
         """
-        pass    
-    
+        pass
+
 
     def getNumConstraints(self):
         """
@@ -625,7 +622,7 @@ class TopologySystem(object):
     def addConstraint(self, particle1, particle2, distance):
         """
         Add a constraint to the System.
-        
+
         @param particle1 the index of the first particle involved in the constraint
         @param particle2 the index of the second particle involved in the constraint
         @param distance  the required distance between the two particles, measured in nm
@@ -635,7 +632,7 @@ class TopologySystem(object):
         if particle1 not in range(self.getNumParticles()):
             raise ValueError("particle1 must be in range(0, getNumParticles())")
         if particle2 not in range(self.getNumParticles()):
-            raise ValueError("particle1 must be in range(0, getNumParticles())")        
+            raise ValueError("particle1 must be in range(0, getNumParticles())")
         constraint = self.ConstraintInfo(particle1, particle2, distance)
         self.constraints.append(constraint)
 
@@ -644,7 +641,7 @@ class TopologySystem(object):
     def getConstraintParameters(self, index):
         """
         Get the parameters defining a distance constraint.
-        
+
         @param index     the index of the constraint for which to get parameters
         @return a tuple of (particle1, particle2, distance) for the given constraint index
 
@@ -656,7 +653,7 @@ class TopologySystem(object):
     def setConstraintParameters(self, index, particle1, particle2, distance):
         """
         Set the parameters defining a distance constraint.
-        
+
         @param index     the index of the constraint for which to set parameters
         @param particle1 the index of the first particle involved in the constraint
         @param particle2 the index of the second particle involved in the constraint
@@ -710,22 +707,22 @@ class TopologySystem(object):
 
         Currently, only rectangular boxes are supported.  This means that a, b, and c must be aligned with the
         x, y, and z axes respectively.  Future releases may support arbitrary triclinic boxes.
-        
+
         @returns a      the vector defining the first edge of the periodic box
         @returns b      the vector defining the second edge of the periodic box
         @returns c      the vector defining the third edge of the periodic box
-     
-        """        
+
+        """
         return self.periodicBoxVectors
 
     def setPeriodicBoxVectors(self, a, b, c):
         """
         Set the vectors which define the axes of the periodic box (measured in nm).  These will affect
         any Force added to the System that uses periodic boundary conditions.
-        
+
         Currently, only rectangular boxes are supported.  This means that a, b, and c must be aligned with the
         x, y, and z axes respectively.  Future releases may support arbitrary triclinic boxes.
-        
+
         @param a      the vector defining the first edge of the periodic box
         @param b      the vector defining the second edge of the periodic box
         @param c      the vector defining the third edge of the periodic box
@@ -733,7 +730,7 @@ class TopologySystem(object):
         """
         # TODO: Argument checking.
         self.periodicBoxVectors = [a,b,c]
-    
+
     #==========================================================================
     # CONTAINERS
     #==========================================================================
@@ -750,15 +747,14 @@ class TopologySystem(object):
             self.particle2 = particle2
             self.distance = distance
             return
-        
 
 
-        
+
     #==========================================================================
     # PYTHONIC EXTENSIONS
-    #==========================================================================    
-    
-    @property    
+    #==========================================================================
+
+    @property
     def nparticles(self):
         """
         The number of particles.
@@ -773,7 +769,7 @@ class TopologySystem(object):
 
         """
         return len(self.forces)
-        
+
     @property
     def nconstraints(self):
         """
@@ -787,7 +783,7 @@ class TopologySystem(object):
         Return an 'informal' human-readable string representation of the System object.
 
         """
-        
+
         r = ""
         r += "System object\n\n"
 
@@ -797,7 +793,7 @@ class TopologySystem(object):
         for index in range(self.getNumParticles()):
             mass = self.getParticleMass(index)
             r += "%8d %24s\n" % (index, str(mass))
-        r += "\n"        
+        r += "\n"
 
         # Show constraints.
         r += "Constraints:\n"
@@ -806,12 +802,12 @@ class TopologySystem(object):
             (particle1, particle2, distance) = self.getConstraintParameters(index)
             r += "%8d %8d %s" % (particle1, particle2, str(distance))
         r += "\n"
-        
+
         # Show forces.
         r += "Forces:\n"
         for force in self.forces:
             r += str(force)
-            
+
         return r
 
     def __add__(self, other):
@@ -838,14 +834,14 @@ class TopologySystem(object):
         >>> [system1, coordinates1] = testsystems.LennardJonesFluid()
         >>> system1 = System(system1) # convert to pure Python system
         >>> [system2, coordinates2] = testsystems.LennardJonesFluid()
-        >>> system2 = System(system2) # convert to pure Python system        
+        >>> system2 = System(system2) # convert to pure Python system
         >>> combined_system = system1 + system2
 
         """
         system = copy.deepcopy(self)
         system += other
         return system
-        
+
     def __iadd__(self, other):
         """
         Append specified system.
@@ -858,16 +854,16 @@ class TopologySystem(object):
 
         Both systems must have identical ordering of Force terms.
         Any non-particle settings from the first System override those of the second, if they differ.
-        
+
         EXAMPLES
 
         Append atoms from a second system to the first.
-    
+
         >>> import testsystems
         >>> [system1, coordinates1] = testsystems.LennardJonesFluid()
-        >>> system1 = System(system1) # convert to pure Python system        
+        >>> system1 = System(system1) # convert to pure Python system
         >>> [system2, coordinates2] = testsystems.LennardJonesFluid()
-        >>> system2 = System(system2) # convert to pure Python system        
+        >>> system2 = System(system2) # convert to pure Python system
         >>> system1 += system2
 
         """
@@ -893,29 +889,29 @@ class TopologySystem(object):
             force2_copy = copy.deepcopy(force2)
             offset = self.nparticles
             force1._appendForce(force2_copy, offset)
-                
+
         return
 
     #==========================================================================
     # Methods for selecting atom groups based on Metadata
     #==========================================================================
-   
+
     def selectAtomGroup(self, atomname=None, atomtype=None, resname=None, resnum=None, \
                               atomnum=None, atomcharge=None, freeEnergyAtom=False):
-        
+
         """Select particles according to specified metadata attributes.  Selections can be lists,
         or individual entries.
-        
+
         Examples:
-        
+
         Select all atomnames that are either N, CA or C, and in residue 4
 
         >>> selection = selectAtomGroup(atomname=['N','CA','C'], resnum=4)
         >>> selection = selectAtomGroup(atomname=['N','CA','C'], resnum=[4])
-        
+
         RETURNS an AtomGroup object
         """
-       
+
         # Convert the specification to lists (or None)
         if not isinstance(atomname,list) and (atomname!=None):
             AtomNameList = [ atomname ]
@@ -929,7 +925,7 @@ class TopologySystem(object):
             AtomChargeList = [ atomcharge ]
         if not isinstance(freeEnergyAtom,list) and (freeEnergyAtom!=None):
             freeEnergyList = [ freeEnergyAtom ]
-        
+
         group = AtomGroup()
         for metadatum in self.metadata:
             Keep = True
@@ -941,14 +937,14 @@ class TopologySystem(object):
             Keep *= ((metadatum.freeEnergyAtom in freeEnergyList) or freeEnergyList==None)
             if Keep:
                 group.addIndex(metadatum.particle)
-            
-        
+
+
     #==========================================================================
     # Methods for get and set of MetaData quantities
     #==========================================================================
-    
+
     # by particle (index)
-    
+
     def getAtomNameByParticle(self):
         pass
 
@@ -960,7 +956,7 @@ class TopologySystem(object):
 
     def setAtomTypeByParticle(self):
         pass
-    
+
     def getResidueNameByParticle(self):
         pass
 
@@ -972,13 +968,13 @@ class TopologySystem(object):
 
     def setResidueNumByParticle(self):
         pass
-    
+
     def getAtomChargeByParticle(self):
         pass
 
     def setAtomChargeByParticle(self):
         pass
-    
+
     def getCommentByParticle(self):
         pass
 
@@ -990,23 +986,23 @@ class TopologySystem(object):
 
     def setFreeEnergyAtomByParticle(self):
         pass
-    
-    
-    
+
+
+
     # by atomgroup (index)
 
     def setAtomNameByAtomGroup(self):
         pass
-    
+
     def getAtomNameByAtomGroup(self):
-	pass
+        pass
 
     def getAtomTypeByAtomGroup(self):
         pass
 
     def setAtomTypeByAtomGroup(self):
         pass
-    
+
     def getResidueNameByAtomGroup(self):
         pass
 
@@ -1018,13 +1014,13 @@ class TopologySystem(object):
 
     def setResidueNumByAtomGroup(self):
         pass
-    
+
     def getAtomChargeByAtomGroup(self):
         pass
 
     def setAtomChargeByAtomGroup(self):
         pass
-    
+
     def getCommentByAtomGroup(self):
         pass
 
@@ -1037,8 +1033,8 @@ class TopologySystem(object):
     def setFreeEnergyAtomByAtomGroup(self):
         pass
 
-    
-    
+
+
 class MetadataInfo(object):
     """
     A container class for storing atom names, types, residues
@@ -1065,80 +1061,79 @@ class MetadataInfo(object):
         return self.atomname
 
     def setAtomName(self, atomname):
-	self.atomname = atomname
-	return
-    
+        self.atomname = atomname
+        return
+
     def getAtomType(self):
         return self.atomtype
 
     def setAtomType(self, atomtype):
-       	self.atomtype = atomtype
-	return
-    
+        self.atomtype = atomtype
+        return
+
     def getResidueName(self):
         return self.resname
 
     def setResidueName(self, resname):
         self.resname = resname
-	return
+        return
 
     def getResidueNum(self):
         return self.resnum
 
     def setResidueNum(self, resnum):
         self.resnum = resnum
-	return
-    
+        return
+
     def getAtomNum(self):
-	return self.atomnum
-    
+        return self.atomnum
+
     def setAtomNum(self, atomnum):
-	self.atomnum = atomnum
-	return
-    
+        self.atomnum = atomnum
+        return
+
     def getAtomCharge(self):
         return self.atomcharge
 
     def setAtomCharge(self, atomcharge):
         self.atomcharge = atomcharge
-	return
-    
+        return
+
     def getComment(self):
         return self.comment
 
     def setComment(self, comment):
         self.comment = comment
-	return
+        return
 
     def getFreeEnergyAtom(self):
         return self.freeEnergyAtom
 
     def setFreeEnergyAtom(self, freeEnergyAtom):
-	self.freeEnergyAtom = freeEnergyAtom
-	return
+        self.freeEnergyAtom = freeEnergyAtom
+        return
 
-    
-    
-    
+
+
 class AtomGroup(object):
     """
     A class that stores a list of atom indices and an atomgroup name.
     Selection methods will return AtomGroup objects as the result of a selection query.
-    
-    Metadata properties can also be set using AtomGroup objects 
-    
+
+    Metadata properties can also be set using AtomGroup objects
+
     """
-    
+
     def __init__(self, atomgroup=None):
         """Initialize an AtomGroup class.  If an input class is provided, instantiate using the information from it."""
-        
+
         self.indices = list()
         self.name = None
-        
+
         if atomgroup:
             self.indices = copy.deepcopy(atomgroup.indices)
             self.name = copy.deepcopy(atomgroup.name)
-          
+
         return
 
     def addIndex(self, index):
@@ -1146,4 +1141,3 @@ class AtomGroup(object):
 
 
 
-    
