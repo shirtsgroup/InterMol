@@ -99,6 +99,26 @@ class GromacsTopology(Topology):
     def ConvertMoleculeDirectivesToTopologySystem(self, MoleculeDirectives):
         """Takes a list of MoleculeDirectives (Directive objects), and uses it
         to create a TopologySystem object with the correct forces."""
+
+        # For each of the molecule directives, tell you how atoms are bonded. 
+        # Going through each of the directives
+        # Start in a directive, go down the list of atoms, there are atom indices
+        # each index corresponds to at atom to a particular type
+        # each will have atom type. 
+        # How each of the atoms are bonded in a force
+        # option in writing a gro file -- if you read in any include file atoms, 
+        # how do you know whether it was an include 
+        # create an extra variable in the parameter info object / print me
+        
+        # Each Parameter info object has a flag that indicates if it
+        # comes from an include file or not.  The topology system
+        # object also has such a flag.  When you create the force
+        # objects from the parameter info objects, you check the
+        # topology system flag.  If any parameter objects that create
+        # force object are not from include files, then the entire
+        # topology system object must be printed.
+
+
         pass # VAV (May 30, 2010):  Needs to be implemented
 
     def ConvertParameterDirectiveToGromacsParameter(self, parmDirective):
