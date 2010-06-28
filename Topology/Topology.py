@@ -330,10 +330,10 @@ class TopologySystem(object):
     - generating angles from connectivities
     - generating torsions from connectivities
     - generating 1,4's from connectivities
-      *  VAV: Force.NonbondedForce.ecreateExceptionsFromBonds()
+      *  VAV: Force.NonbondedForce.createExceptionsFromBonds()
 
     VAV:  THIS IS CONTAINED IN THE Force.NonbondedForceParticleInfo class:
-    - nonbonded parameters for all atoms  
+    - nonbonded parameters for all atoms
        - VdW parameters:
              epsilon (float) (kJ/mol)
              sigma (float)

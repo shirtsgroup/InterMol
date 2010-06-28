@@ -83,7 +83,7 @@ class NonbondedForce(Force):
 
     """
 
-    NoCutoff = 0 #: No cutoff is applied to nonbonded interactions.  The full set of N^2 interactions is computed exactly. This necessarily means that periodic boundary conditions cannot be used.  This is the default.    
+    NoCutoff = 0 #: No cutoff is applied to nonbonded interactions.  The full set of N^2 interactions is computed exactly. This necessarily means that periodic boundary conditions cannot be used.  This is the default.
     CutoffNonPeriodic = 1 #: Interactions beyond the cutoff distance are ignored.  Coulomb interactions closer than the cutoff distance are modified using the reaction field method.
     CutoffPeriodic = 2 #: Periodic boundary conditions are used, so that each particle interacts only with the nearest periodic copy of each other particle.  Interactions beyond the cutoff distance are ignored.  Coulomb interactions closer than the cutoff distance are modified using the reaction field method.
     Ewald = 3 #: Periodic boundary conditions are used, and Ewald summation is used to compute the interaction of each particle with all periodic copies of every other particle.
@@ -920,7 +920,7 @@ class HarmonicAngleForce(Force):
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole / units.radians**2)    
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole / units.radians**2)
     def addAngle(self, particle1, particle2, particle3, angle, k):
         """
         Add an angle term to the force field.
@@ -2551,7 +2551,7 @@ class CustomNonbondedForce(Force):
     between the particles, as well as on any parameters you choose.  Then call addPerParticleParameter() to define per-particle
     parameters, and addGlobalParameter() to define global parameters.  The values of per-particle parameters are specified as
     part of the system definition, while values of global parameters may be modified during a simulation by calling Context::setParameter().
-    
+
     Next, call addParticle() once for each particle in the System to set the values of its per-particle parameters.
     The number of particles for which you set parameters must be exactly equal to the number of particles in the
     System, or else an exception will be thrown when you try to create a Context.  After a particle has been added,
@@ -3432,7 +3432,7 @@ class CustomExternalForce(Force):
         """
 
         # TODO: Allow coercion of Swig force objects into Python force objects.
-        
+
         # Check to make sure both forces are compatible.
         if type(self) != type(force):
             raise ValueError("other force object must be of identical Force subclass")

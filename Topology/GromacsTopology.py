@@ -11,10 +11,11 @@ import sys, os, tempfile, string, copy, pdb
 import simtk.unit as units
 
 
+from Force import *
 from Topology import *
 from GromacsParameter import *
 
-# Classes 
+# Classes
 
 
 class GromacsTopology(Topology):
@@ -109,7 +110,7 @@ class GromacsTopology(Topology):
         # option in writing a gro file -- if you read in any include file atoms, 
         # how do you know whether it was an include 
         # create an extra variable in the parameter info object / print me
-        
+
         # Each Parameter info object has a flag that indicates if it
         # comes from an include file or not.  The topology system
         # object also has such a flag.  When you create the force
@@ -129,291 +130,292 @@ class GromacsTopology(Topology):
         index = 0
         while index < len(parmDirective.lines):
             line = parmDirective.lines[index]
+            fields = line.split()
             if "defaults" in parmDirective.getName():
-                func = int(line.split()[0])
-                cr = int(line.split()[1])
-                genpairs = line.split()[2]
-                fudgeLJ = float(line.split()[3])
-                fudgeQQ = float(line.split()[4])
+                func = int(fields[0])
+                cr = int(fields[1])
+                genpairs = fields[2]
+                fudgeLJ = float(fields[3])
+                fudgeQQ = float(fields[4])
                 try:
-                    comment = line.split()[5]
+                    comment = fields[5]
                 except:
                     pass
                 newGroParm = GromacsDefaultParameterInfo(func, cr, genpairs, fudgeLJ, fudgeQQ, comment='')
 
             if "bondtypes" in parmDirective.getName():
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    distance = float(line.split()[3])
-                    kspring = float(line.split()[4])
+                    distance = float(fields[3])
+                    kspring = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
-                    newGroParm = GromacsBondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, kspring*units.kilojouls_per_mole * units.nanometers**(-2), comment='')
+                    newGroParm = GromacsBondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, kspring*units.kilojoules_per_mole * units.nanometers**(-2), comment='')
 
-                if line.split()[2] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 2
-                    distance = float(line.split()[3])
-                    kspring = float(line.split()[4])
+                    distance = float(fields[3])
+                    kspring = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
-                    newGroParm = GromacsG96BondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, kspring*units.kilojouls_per_mole * units.nanometers**(-4), comment='')
+                    newGroParm = GromacsG96BondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, kspring*units.kilojoules_per_mole * units.nanometers**(-4), comment='')
 
-                if line.split()[2] == '3':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '3':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 3
-                    distance = float(line.split()[3])
-                    D = float(line.split()[4])
-                    beta = float(line.split()[5])
+                    distance = float(fields[3])
+                    D = float(fields[4])
+                    beta = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsMorseBondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, D*units.kilojoules_per_mole, beta*units.nanometers**(-1), comment='')
 
-                if line.split()[2] == '4':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '4':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 4
-                    distance = float(line.split()[3])
-                    C2 = float(line.split()[4])
-                    C3 = float(line.split()[5])
+                    distance = float(fields[3])
+                    C2 = float(fields[4])
+                    C3 = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsCubicBondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, C2*units.kilojoules_per_mole * units.nanometers**(-2), C3*units.kilojoules_per_mole * units.nanometers**(-3), comment='')
 
-                if line.split()[2] == '5':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '5':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 5
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
                     newGroParm = GromacsConnectionBondParameterInfo(atomtype1, atomtype2, func, comment='')
 
-                if line.split()[2] == '6':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '6':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 6
-                    distance = float(line.split()[3])
-                    kspring = float(line.split()[4])
+                    distance = float(fields[3])
+                    kspring = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
                     newGroParm = GromacsHarmonicBondParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, kspring*units.kilojoules_per_mole * units.nanometers**(-2), comment='')
 
             if "pairtypes" in parmDirective.getName():
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    V = float(line.split()[3])
-                    W = float(line.split()[4])
+                    V = float(fields[3])
+                    W = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
                     newGroParm = GromacsPairTypes1ParameterInfo(atomtype1, atomtype2, func, V, W, comment='')
 
-                if line.split()[2] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 2
-                    fudgeQQ = float(line.split()[3])
-                    qi = float(line.split()[4])
-                    qj = float(line.split()[5])
-                    V = float(line.split()[6])
-                    W = float(line.split()[7])
+                    fudgeQQ = float(fields[3])
+                    qi = float(fields[4])
+                    qj = float(fields[5])
+                    V = float(fields[6])
+                    W = float(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsPairTypes2ParameterInfo(atomtype1, atomtype2, func, fudgeQQ, qi*units.elementary_charge, qj*units.elementary_charge, V, W, comment='')
 
             if "pairs_nb" in parmDirective.getName():
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    qi = float(line.split()[3])
-                    qj = float(line.split()[4])
-                    V = float(line.split()[5])
-                    W = float(line.split()[6])
+                    qi = float(fields[3])
+                    qj = float(fields[4])
+                    V = float(fields[5])
+                    W = float(fields[6])
                     try:
-                        comment = line.split()[7]
+                        comment = fields[7]
                     except:
                         pass
                     newGroParm = GromacsHarmonicBondParameterInfo(atomtype1, atomtype2, func, qi*units.elementary_charge, qj*units.elementary_charge, V, W, comment='')
 
             if "angletypes" in parmDirective.getName():
-                if line.split()[3] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 1
-                    theta = float(line.split()[4])
-                    k = float(line.split()[5])
+                    theta = float(fields[4])
+                    k = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta*units.degrees, k*units.kilojoules_per_mole * units.radians**(-2), comment='')
 
-                if line.split()[3] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 2
-                    theta = float(line.split()[4])
-                    k = float(line.split()[5])
+                    theta = float(fields[4])
+                    k = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsG96AngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta*units.degrees, k*units.kilojoules_per_mole, comment='')
 
-                if line.split()[3] == '3':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '3':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 3
-                    r1e = float(line.split()[4])
-                    r2e = float(line.split()[5])
-                    krr = float(line.split()[6])
+                    r1e = float(fields[4])
+                    r2e = float(fields[5])
+                    krr = float(fields[6])
                     try:
-                        comment = line.split()[7]
+                        comment = fields[7]
                     except:
                         pass
                     newGroParm = GromacsCrossBondBondAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, r1e*units.nanometers, r2e*units.nanometers, krr*units.kilojoules_per_mole*units.nanometers**(-2), comment='')
 
-                if line.split()[3] == '4':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '4':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 4
-                    r1e = float(line.split()[4])
-                    r2e = float(line.split()[5])
-                    r3e = float(line.split()[6])
-                    kr = float(line.split()[7])
+                    r1e = float(fields[4])
+                    r2e = float(fields[5])
+                    r3e = float(fields[6])
+                    kr = float(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsCrossBondAngleAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, r1e*units.nanometers, r2e*units.nanometers, r3e*units.nanometers, kr*units.kilojoules_per_mole*units.nanometers**(-2), comment='')
 
-                if line.split()[3] == '5':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '5':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 5
-                    theta = float(line.split()[4])
-                    k = float(line.split()[5])
-                    r13 = float(line.split()[6])
-                    kUB = float(line.split()[7])
+                    theta = float(fields[4])
+                    k = float(fields[5])
+                    r13 = float(fields[6])
+                    kUB = float(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsUreyBradleyAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta*units.degrees, k*units.kilojoules_per_mole, r13*units.nanometers, kUB*units.kilojoules_per_mole, comment='')
 
-                if line.split()[3] == '6':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '6':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 6
-                    theta = float(line.split()[4])
-                    C0 = float(line.split()[5])
-                    C1 = float(line.split()[6])
-                    C2 = float(line.split()[7])
-                    C3 = float(line.split()[8])
-                    C4 = float(line.split()[9])
+                    theta = float(fields[4])
+                    C0 = float(fields[5])
+                    C1 = float(fields[6])
+                    C2 = float(fields[7])
+                    C3 = float(fields[8])
+                    C4 = float(fields[9])
                     try:
-                        comment = line.split()[10]
+                        comment = fields[10]
                     except:
                         pass
                     newGroParm = GromacsQuarticAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, theta*units.degrees, C0*units.kilojoules_per_mole, C1*units.kilojoules_per_mole * units.radians**(-1), C2*units.kilojoules_per_mole * units.radians**(-2), C3*units.kilojoules_per_mole * units.radians**(-3), C4*units.kilojoules_per_mole * units.radians**(-4), comment='')
 
             if "dihedraltypes" in parmDirective.getName():
-                if line.split()[4] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 1
-                    phi = float(line.split()[5])
-                    kphi = float(line.split()[6])
-                    multiplicity = int(line.split()[7])
+                    phi = float(fields[5])
+                    kphi = float(fields[6])
+                    multiplicity = int(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsProperDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, phi*units.degrees, kphi*units.kilojoules_per_mole, multiplicity, comment='')
 
-                if line.split()[4] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 2
-                    xi = float(line.split()[5])
-                    kxi = float(line.split()[6])
-                    multiplicity = int(line.split()[7])
+                    xi = float(fields[5])
+                    kxi = float(fields[6])
+                    multiplicity = int(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsImproperDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, xi*units.degrees, kxi*units.kilojoules_per_mole*units.radians**(-2), comment='')
 
-                if line.split()[4] == '3':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '3':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 3
-                    C0 = float(line.split()[5])
-                    C1 = float(line.split()[6])
-                    C2 = float(line.split()[7])
-                    C3 = float(line.split()[8])
-                    C4 = float(line.split()[9])
-                    C5 = float(line.split()[10])
+                    C0 = float(fields[5])
+                    C1 = float(fields[6])
+                    C2 = float(fields[7])
+                    C3 = float(fields[8])
+                    C4 = float(fields[9])
+                    C5 = float(fields[10])
                     try:
-                        comment = line.split()[11]
+                        comment = fields[11]
                     except:
                         pass
                     newGroParm = GromacsRBDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, C0*units.kilojoules_per_mole, C1*units.kilojoules_per_mole, C2*units.kilojoules_per_mole, C3*units.kilojoules_per_mole, C4*units.kilojoules_per_mole, C5*units.kilojoules_per_mole, comment='')
 
-                if line.split()[4] == '5':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '5':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 5
-                    C1 = float(line.split()[5])
-                    C2 = float(line.split()[6])
-                    C3 = float(line.split()[7])
-                    C4 = float(line.split()[8])
+                    C1 = float(fields[5])
+                    C2 = float(fields[6])
+                    C3 = float(fields[7])
+                    C4 = float(fields[8])
                     try:
-                        comment = line.split()[9]
+                        comment = fields[9]
                     except:
                         pass
                     newGroParm = GromacsFourierDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, C1*units.kilojoules_per_mole, C2*units.kilojoules_per_mole, C3*units.kilojoules_per_mole, C4*units.kilojoules_per_mole, comment='')
 
             if "exclusions" in parmDirective.getName():
                 indices = []
-                splitLine = line.split()
-                atomtype1 = line.split()[0]
+                splitLine = fields
+                atomtype1 = fields[0]
                 for i in range(1, len(splitLine)-1):
                     indices.append(int(splitLine[i]))
                 try:
@@ -424,219 +426,219 @@ class GromacsTopology(Topology):
 
             if "constraints" in parmDirective.getName():
 
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    distance = float(line.split()[3])
+                    distance = float(fields[3])
                     try:
-                        comment = line.split()[4]
+                        comment = fields[4]
                     except:
                         pass
                     newGroParm = GromacsConstraintParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, comment='')
 
-                if line.split()[2] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 2
-                    distance = float(line.split()[3])
+                    distance = float(fields[3])
                     try:
-                        comment = line.split()[4]
+                        comment = fields[4]
                     except:
                         pass
                     newGroParm = GromacsConstraintNCParameterInfo(atomtype1, atomtype2, func, distance*units.nanometers, comment='')
 
             if "settles" in parmDirective.getName():
 
-                if line.split()[3] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 1
-                    distanceOH = float(line.split()[4])
-                    distanceHH = float(line.split()[5])
+                    distanceOH = float(fields[4])
+                    distanceHH = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsSettleParameterInfo(atomtype1, atomtype2, atomtype3, func, distanceOH*units.nanometers, distanceHH*units.nanometers, comment='')
 
             if "virtual_sites2" in parmDirective.getName():
 
-                if line.split()[3] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
+                if fields[3] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
                     func = 1
-                    a = float(line.split()[4])
+                    a = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
                     newGroParm = GromacsDummy2ParameterInfo(atomtype1, atomtype2, atomtype3, func, a, comment='')
 
             if "virtual_sites3" in parmDirective.getName():
 
-                if line.split()[4] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 1
-                    a = float(line.split()[5])
-                    b = float(line.split()[6])
+                    a = float(fields[5])
+                    b = float(fields[6])
                     try:
-                        comment = line.split()[7]
+                        comment = fields[7]
                     except:
                         pass
                     newGroParm = GromacsDummy3ParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, comment='')
 
-                if line.split()[4] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 2
-                    a = float(line.split()[5])
-                    d = float(line.split()[6])
+                    a = float(fields[5])
+                    d = float(fields[6])
                     try:
-                        comment = line.split()[7]
+                        comment = fields[7]
                     except:
                         pass
                     newGroParm = GromacsDummy3fdParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, d*units.nanometers, comment='')
 
-                if line.split()[4] == '3':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '3':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 3
-                    theta = float(line.split()[5])
-                    d = float(line.split()[6])
+                    theta = float(fields[5])
+                    d = float(fields[6])
                     try:
-                        comment = line.split()[7]
+                        comment = fields[7]
                     except:
                         pass
                     newGroParm = GromacsDummy3fadParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, theta*units.degrees, d*units.nanometers, comment='')
 
-                if line.split()[4] == '3':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '3':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 3
-                    a = float(line.split()[5])
-                    b = float(line.split()[6])
-                    c = float(line.split()[7])
+                    a = float(fields[5])
+                    b = float(fields[6])
+                    c = float(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsDummy3outParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, c*units.nanometers**(-1), comment='')
 
             if "position_restraints" in parmDirective.getName():
 
-                if line.split()[1] == '1':
-                    atomtype1 = line.split()[0]
+                if fields[1] == '1':
+                    atomtype1 = fields[0]
                     func = 1
-                    kx = float(line.split()[1])
-                    ky = float(line.split()[2])
-                    kz = float(line.split()[3])
+                    kx = float(fields[1])
+                    ky = float(fields[2])
+                    kz = float(fields[3])
                     try:
-                        comment = line.split()[4]
+                        comment = fields[4]
                     except:
                         pass
                     newGroParm = GromacsPositionRestraintParameterInfo(atomtype1, func, kx*units.kilojoules_per_mole*units.nanometers**(-2), ky*units.kilojoules_per_mole*units.nanometers**(-2), kz*units.kilojoules_per_mole*units.nanometers**(-2), comment='')
 
             if "distance_restraints" in parmDirective.getName():
 
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    Type = line.split()[3]
-                    label = line.split()[4]
-                    low = float(line.split()[5])
-                    up1 = float(line.split()[6])
-                    up2 = float(line.split()[7])
-                    weight = float(line.split()[8])
+                    Type = fields[3]
+                    label = fields[4]
+                    low = float(fields[5])
+                    up1 = float(fields[6])
+                    up2 = float(fields[7])
+                    weight = float(fields[8])
                     try:
-                        comment = line.split()[9]
+                        comment = fields[9]
                     except:
                         pass
                     newGroParm = GromacsDistanceRestraintParameterInfo(atomtype1, atomtype2, func, Type, label, low*units.nanometers, up1*units.nanometers, up2*units.nanometers, weight, comment='')
 
             if "orientation_restraints" in parmDirective.getName():
 
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    exp = line.split()[3]
-                    label = line.split()[4]
-                    alpha = float(line.split()[5])
-                    c = float(line.split()[6])
-                    obs = float(line.split()[7])
-                    weight = float(line.split()[8])
+                    exp = fields[3]
+                    label = fields[4]
+                    alpha = float(fields[5])
+                    c = float(fields[6])
+                    obs = float(fields[7])
+                    weight = float(fields[8])
                     try:
-                        comment = line.split()[9]
+                        comment = fields[9]
                     except:
                         pass
                     newGroParm = GromacsOrientationRestraintParameterInfo(atomtype1, atomtype2, func, exp, label, alpha, c, obs*units.amu, weight*units.amu**(-1), comment='')
 
             if "angle_restraints" in parmDirective.getName():
 
-                if line.split()[4] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
-                    atomtype3 = line.split()[2]
-                    atomtype4 = line.split()[3]
+                if fields[4] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
+                    atomtype3 = fields[2]
+                    atomtype4 = fields[3]
                     func = 1
-                    theta = float(line.split()[5])
-                    kc = float(line.split()[6])
-                    multiplicity = int(line.split()[7])
+                    theta = float(fields[5])
+                    kc = float(fields[6])
+                    multiplicity = int(fields[7])
                     try:
-                        comment = line.split()[8]
+                        comment = fields[8]
                     except:
                         pass
                     newGroParm = GromacsAngleRestraintParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, theta*units.degrees, kc*units.kilojoules_per_mole, multiplicity, comment='')
             if "angle_restraints_z" in parmDirective.getName():
 
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    theta = float(line.split()[3])
-                    kc = float(line.split()[4])
-                    multiplicity = int(line.split()[5])
+                    theta = float(fields[3])
+                    kc = float(fields[4])
+                    multiplicity = int(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsAngleRestraintParameterInfo(atomtype1, atomtype2, func, theta*units.degrees, kc*units.kilojoules_per_mole, multiplicity, comment='')
 
             if "nonbond_params" in parmDirective.getName():
-                if line.split()[2] == '1':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '1':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    V = float(line.split()[3])
-                    W = float(line.split()[4])
+                    V = float(fields[3])
+                    W = float(fields[4])
                     try:
-                        comment = line.split()[5]
+                        comment = fields[5]
                     except:
                         pass
                     newGroParm = GromacsLJNonbondedParameterInfo(atomtype1, atomtype2, func, V, W, comment='')
 
-                if line.split()[2] == '2':
-                    atomtype1 = line.split()[0]
-                    atomtype2 = line.split()[1]
+                if fields[2] == '2':
+                    atomtype1 = fields[0]
+                    atomtype2 = fields[1]
                     func = 1
-                    a = float(line.split()[3])
-                    b = float(line.split()[4])
-                    c6 = float(line.split()[5])
+                    a = float(fields[3])
+                    b = float(fields[4])
+                    c6 = float(fields[5])
                     try:
-                        comment = line.split()[6]
+                        comment = fields[6]
                     except:
                         pass
                     newGroParm = GromacsBuckinghamNonbondedParameterInfo(atomtype1, atomtype2, func, a*kilojoules_per_mole, b*units.nanometers**(-1), c6*units.kilojoules_per_mole*uits.nanometers**6, comment='')
@@ -659,13 +661,13 @@ class GromacsTopology(Topology):
 
 
 
-class GromacsTopologyFile(object):  
+class GromacsTopologyFile(object):
 
-    def __init__(self, topfile=None, defines=None): 
+    def __init__(self, topfile=None, defines=None):
         """A class to store and modify information in Gromacs *.top topology files.
 
         A Gromacs *.top topology file stores not only the connectivity for each molecule in the system, but (usually as #includes),
-        all of the forcefield parameters for all possible (or at least all common) combinations of bonded atom types. 
+        all of the forcefield parameters for all possible (or at least all common) combinations of bonded atom types.
 
         Some information about default #define parameters, from gmx 3.1.4 manual:
 
@@ -695,11 +697,11 @@ class GromacsTopologyFile(object):
         self.processed_lines = []
 
         # Store an ordered list of Directive objects, to be created after parsing the lines 
-        self.directives = []  
+        self.directives = []
 
 
         self.ParameterDirectives = list()
-        self.MoleculeDefinitionDirectives = list()  # this is a list of lists (for multiple molecules)        
+        self.MoleculeDefinitionDirectives = list()  # this is a list of lists (for multiple molecules)
         self.SystemDirectives = list()
 
         # Read in the contents of the topology file, if supplied
@@ -738,7 +740,7 @@ class GromacsTopologyFile(object):
 
         WHAT ARE WE PARSING?
 
-        The contents of a *.top file is formatted in blocks of Directives.  A Directive looks like this: [ my_directive ]        
+        The contents of a *.top file is formatted in blocks of Directives.  A Directive looks like this: [ my_directive ]
         From the gmx 3.1.4 manual, here's the description of what to expect:
 
             * semicolon (;) and newline surround comments
@@ -824,24 +826,21 @@ class GromacsTopologyFile(object):
                         includeThisLine = False
             elif line[0:6] == '#endif':
                 includeThisLine = True
-
             else:
                 if includeThisLine:
                     processedLines.append(line)
-
-        # Concatenate any line continuations 
+        # Concatenate any line continuations
         i = 0
         while i < len(processedLines)-1:
             if len(processedLines[i].strip()) > 0:
                 if processedLines[i].strip()[-1] == '\\':
                     processedLines[i] = processedLines[i].strip() + processedLines.pop(i+1)
             i += 1
-
         return processedLines
 
 
     def parseDirectives(self):
-        """Parse the lines of the topology file contents into an ordered list of Directive containers.""" 
+        """Parse the lines of the topology file contents into an ordered list of Directive containers."""
 
         self.directives = []
 
@@ -855,8 +854,8 @@ class GromacsTopologyFile(object):
                 # Is the line an include?
                 if line.count('#include') > 0 and line[0] == '#':
                     # Then create an IncludeDirective
+                    pdb.set_trace()
                     self.directives.append( self.IncludeDirective(line) )
-
                 # Is the line a comment (or a set of comments)?
                 elif line[0] == ';':
                     linetxt = ''
@@ -891,13 +890,13 @@ class GromacsTopologyFile(object):
                             myDirective.header += self.processedLines[index]
                         # ... and data lines get appended to Directive.lines.
                         else:
-                            myDirective.lines.append( self.processedLines[index] ) 
+                            myDirective.lines.append( self.processedLines[index] )
                         index += 1
 
                         if not (index < len(self.processedLines)):
                             break
 
-                    self.directives.append( myDirective ) 
+                    self.directives.append( myDirective )
 
 
             # Go to the next line
@@ -924,7 +923,7 @@ class GromacsTopologyFile(object):
         while index < len(expandedDirectives) and ( expandedDirectives[index].name.count( '[ moleculetype ]' ) == 0 ):
             self.ParameterDirectives.append( expandedDirectives.pop(index) )
 
-        # finally group lists of lists of molecule directives   
+        # finally group lists of lists of molecule directives
         index = 0
         while index < len(expandedDirectives):
             if expandedDirectives[index].name.count( '[ moleculetype ]' ) > 0:
@@ -1051,10 +1050,9 @@ class GromacsTopologyFile(object):
             self.classType = 'IncludeDirective'
             self.name  = includeString   # should be entire '#include\n'
             self.includeFileName = self.name.replace('#include ','').replace('"','').strip()
-
             if not os.path.exists(self.includeFileName):
                 self.includeFileName = os.path.join(os.environ['GMXLIB'], self.includeFileName)
-
+            pdb.set_trace()
             self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=self.includeFileName)
             return
 

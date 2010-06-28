@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, glob
+import os, sys, glob, pdb
 from mmtools.Topology.GromacsTopology import *
 
 
@@ -29,23 +29,26 @@ print 'ParameterDirectives:'
 for d in g.GromacsTopologyFileObject.ParameterDirectives:
     print '\t',d.name.strip()
     #for i in range(0, len(d.lines)):
-    #	print d.lines[i]
+    #    print d.lines[i]
 
 print "Show each set of MoleculeDefiniton Directive:"
 for mol in range(len(g.GromacsTopologyFileObject.MoleculeDefinitionDirectives)):
   print '\tmol', mol
   for d in g.GromacsTopologyFileObject.MoleculeDefinitionDirectives[mol]:
     print '\t\t', d.name.strip()
+    #for i in range(0, len(d.lines)):
+    #    print d.lines[i]
 
 print "Show the SystemDirectives:"
 for d in g.GromacsTopologyFileObject.SystemDirectives:
     print '\t', d.name.strip()
-    
 
-print "Read TopologyFile"
-g.readTopologyFile('lambda.top')
-print "Done."
+#print "Read TopologyFile"
+#g.readTopologyFile('lambda.top')
+#print "Done."
 
-print "Show parameter contents"
-for d in g.parameters:
-    print '\t', d.directiveString()
+#print "Show parameter contents"
+#for d in g.parameters:
+#    print '\t', d.directiveString()
+
+pdb.set_trace()
