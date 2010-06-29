@@ -869,10 +869,10 @@ class GromacsTopologyFile(object):
                     
                 # Is the line a comment (or a set of comments)?
                 elif self.processedLines[index][0] == ';':
-                    if debug: print '### line', index,': found comment:', self.processedLines[index]
+                    if debug: print '### line', index,': found comment:', self.processedLines[index].strip()
                     linetxt = ''
                     while self.processedLines[index][0] == ';':
-                        if debug: print '### line', index,': found continued comments:', self.processedLines[index]
+                        if debug: print '### line', index,': found continued comments:', self.processedLines[index].strip()
                         linetxt += self.processedLines[index]
                         index += 1
                         if not (index < len(self.processedLines)):
@@ -898,7 +898,7 @@ class GromacsTopologyFile(object):
                 # Is the line a blank line?
                 elif self.processedLines[index].strip() == '':
                     # ignore it
-                    if debug: print '### line', index,': ignoring black line'
+                    if debug: print '### line', index,': ignoring blank line'
                     
                     # Go to the next line
                     index += 1
@@ -906,18 +906,20 @@ class GromacsTopologyFile(object):
 
                 # Is the line the start of a directive?
                 elif self.processedLines[index][0] == '[' and self.processedLines[index].count(']') > 0:
-                    if debug: print '### line', index, ': Found a directive:', self.processedLines[index]
-                    myDirective = self.Directive(line, header='')
+                    
+                    if debug: print '### line', index, ': Found a directive:', self.processedLines[index].strip()
+                    myDirectiveName = self.processedLines[index].strip()
+                    myDirective = self.Directive(myDirectiveName, header='')
                     index += 1
                     # until we hit a blank line (or the end of the file) ...
                     while len(self.processedLines[index].strip()) > 0:
                         # comments get concatenated to the header
                         if self.processedLines[index][0] == ';':
-                            if debug: print '### line', index, ': Found a directive header:', self.processedLines[index]
+                            if debug: print '### line', index, ': Found a directive header:', self.processedLines[index].strip()
                             myDirective.header += self.processedLines[index]
                         # ... and data lines get appended to Directive.lines.
                         else:
-                            if debug: print '### line', index, ': Found a directive line:', self.processedLines[index]
+                            if debug: print '### line', index, ': Found a directive line:', self.processedLines[index].strip()
                             myDirective.lines.append( self.processedLines[index] )
                         index += 1
 
@@ -934,10 +936,6 @@ class GromacsTopologyFile(object):
                     index += 1
             
             
-        if debug:
-            print '*** Here are the directives we\'ve found so far: ***'
-            for d in self.directives:
-                print d.name
             
 
     def organizeDirectives(self):
