@@ -839,57 +839,85 @@ class GromacsTopologyFile(object):
         return processedLines
 
 
-    def parseDirectives(self):
+    def parseDirectives(self, debug=True):
         """Parse the lines of the topology file contents into an ordered list of Directive containers."""
 
         self.directives = []
 
         index = 0
+        
+        if debug:
+            print '*** Parsing the following lines: ***'
+            for line in self.processedLines:
+                print line.strip()
 
         while index < len(self.processedLines):
 
-            line = self.processedLines[index]
-            if len(line) > 0:
+            if debug: print '### line',index, ':', self.processedLines[index].strip()
+            
+            if len(self.processedLines[index]) > 0:
 
                 # Is the line an include?
-                if line.count('#include') > 0 and line[0] == '#':
+                if self.processedLines[index].count('#include') > 0 and self.processedLines[index][0] == '#':
                     # Then create an IncludeDirective
+                    if debug: print '### line', index,': creating an IncludeDirective' 
                     pdb.set_trace()
-                    self.directives.append( self.IncludeDirective(line) )
+                    self.directives.append( self.IncludeDirective(self.processedLines[index]) )
+                    
+                    # Go to the next line
+                    index += 1
+                    
                 # Is the line a comment (or a set of comments)?
-                elif line[0] == ';':
+                elif self.processedLines[index][0] == ';':
+                    if debug: print '### line', index,': found comment:', self.processedLines[index]
                     linetxt = ''
                     while self.processedLines[index][0] == ';':
+                        if debug: print '### line', index,': found continued comments:', self.processedLines[index]
                         linetxt += self.processedLines[index]
                         index += 1
                         if not (index < len(self.processedLines)):
                             break
+                        
                     # Then create an CommentDirective
+                    if debug: print '### Adding comment:', linetxt
                     self.directives.append( self.CommentDirective(linetxt) )
+                    
+                    # Go to the next line?   No - index is already incremented in the while loop.
 
                 # Is the line a define?
                 elif line[0] == '#':
                     # Then create an DefineDirective
-                    self.directives.append( self.DefineDirective(line) )
+                    if debug: print '### line', index,': creating DefineDirective'
+                    self.directives.append( self.DefineDirective(self.processedLines[index]) )
                     # Also, add the #define string to our list of defines
-                    self.addDefine(line.strip().split()[1])
+                    self.addDefine(self.processedLines[index].strip().split()[1])
+                    
+                    # Go to the next line
+                    index += 1
 
                 # Is the line a blank line?
-                elif line.strip() == '':
+                elif self.processedLines[index].strip() == '':
                     # ignore it
-                    pass
+                    if debug: print '### line', index,': ignoring black line'
+                    
+                    # Go to the next line
+                    index += 1
+                    
 
                 # Is the line the start of a directive?
-                elif line[0] == '[' and line.count(']') > 0:
+                elif self.processedLines[index][0] == '[' and self.processedLines[index].count(']') > 0:
+                    if debug: print '### line', index, ': Found a directive:', self.processedLines[index]
                     myDirective = self.Directive(line, header='')
                     index += 1
                     # until we hit a blank line (or the end of the file) ...
                     while len(self.processedLines[index].strip()) > 0:
                         # comments get concatenated to the header
                         if self.processedLines[index][0] == ';':
+                            if debug: print '### line', index, ': Found a directive header:', self.processedLines[index]
                             myDirective.header += self.processedLines[index]
                         # ... and data lines get appended to Directive.lines.
                         else:
+                            if debug: print '### line', index, ': Found a directive line:', self.processedLines[index]
                             myDirective.lines.append( self.processedLines[index] )
                         index += 1
 
@@ -897,10 +925,20 @@ class GromacsTopologyFile(object):
                             break
 
                     self.directives.append( myDirective )
+                    
+                    # Go to the next line -- no already incremented in the while loop above.
 
 
-            # Go to the next line
-            index += 1
+                else:
+                    # Go to the next line
+                    index += 1
+            
+            
+        if debug:
+            print '*** Here are the directives we\'ve found so far: ***'
+            for d in self.directives:
+                print d.name
+            
 
     def organizeDirectives(self):
         """Organize the Directives into Parameter, MoleculeDefinition, and System groups"""
