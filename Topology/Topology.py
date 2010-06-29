@@ -161,7 +161,7 @@ class Topology(object):
     """
     This class represents a molecular system topology.
 
-    The Topology object is the outermost container, and stores a list of TopologySystem objects  
+    The Topology object is the outermost container, and stores a list of TopologySystem objects along with a corresponding structure object
     -- The TopologySystem these do most of the heavy lifting.
 
     """
@@ -170,7 +170,7 @@ class Topology(object):
         """
         Create a new Topology object.
 
-        If an Topology object is specified, it will be queried to construct the class.
+        If a Topology object is specified, it will be queried to construct the class.
 
         """
         self.name = "Untitled"
@@ -469,11 +469,6 @@ class TopologySystem(object):
         self.forces      = list() # forces[i] is the ith force term
 
         self.atomgroups  = list() # atomgroups[i] is the ith AtomGroup object
-
-
-        # VAV: NOT IMPLEMENTED YET
-        self.positions   = list() # positions[i] is the ith position 3-tuple (float) 
-        self.velocities  = list() # velocities[i] is the ith velocity 3-tuple (float)
 
 
         self.periodicBoxVectors = [ units.Quantity((2.,0.,0.), units.nanometer), units.Quantity((0.,2.,0.), units.nanometer), units.Quantity((0.,0.,2.), units.nanometer) ] # periodic box vectors (only for periodic systems)

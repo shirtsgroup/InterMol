@@ -41,7 +41,7 @@ class GromacsTopology(Topology):
     TO DO
 
     * Some parameters will be specified using the #included *.itp, while others are specified in the file.
-    * Be able to write specified sets of parameters to *.itp files at will. 
+    * Be able to write specified sets of parameters to *.itp files at will.
 
     NOTES
 
@@ -104,7 +104,7 @@ class GromacsTopology(Topology):
         # For each of the molecule directives, tell you how atoms are bonded. 
         # Going through each of the directives
         # Start in a directive, go down the list of atoms, there are atom indices
-        # each index corresponds to at atom to a particular type
+        # each index corresponds to an atom of a particular type
         # each will have atom type. 
         # How each of the atoms are bonded in a force
         # option in writing a gro file -- if you read in any include file atoms, 
