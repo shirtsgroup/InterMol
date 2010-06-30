@@ -3,7 +3,7 @@
 #=============================================================================================
 
 """
-Topology.py
+System.py
 
 Classes and methods for creating and manipulating molecular system topologies.   
 
@@ -27,6 +27,7 @@ COPYRIGHT
 
 
 EXAMPLES
+
 
 
 TODO
@@ -154,31 +155,31 @@ def returns(rtype):
 from Force import *
 
 #=============================================================================================
-# Topology base class
+# System base class
 #=============================================================================================
 
-class Topology(object):
+class System(object):
     """
     This class represents a molecular system topology.
 
-    The Topology object is the outermost container, and stores a list of TopologySystem objects along with a corresponding structure object
-    -- The TopologySystem these do most of the heavy lifting.
+    The System object is the outermost container, and stores a list of Topology objects along with a corresponding structure object
+    -- The Topology these do most of the heavy lifting.
 
     """
 
     def __init__(self, topology=None):
         """
-        Create a new Topology object.
+        Create a new System object.
 
-        If a Topology object is specified, it will be queried to construct the class.
+        If a System object is specified, it will be queried to construct the class.
 
         """
         self.name = "Untitled"
-        self.molecules      = list()   # molecules[i] is the ith TopologySystem object
+        self.molecules      = list()   # molecules[i] is the ith Topology object
 
     def getName(self):
         """
-        Get the name of the Topology.
+        Get the name of the System.
 
         """
         return self.name
@@ -186,7 +187,7 @@ class Topology(object):
 
     def setName(self, name):
         """
-        Set the name of the Topology.
+        Set the name of the System.
 
         """
         self.name = name
@@ -195,15 +196,15 @@ class Topology(object):
 
     def getNumMolecules(self):
         """
-        Get the number of molecules in the topology.
+        Get the number of molecules in the System.
 
         """
         return len(self.molecules)
 
 
-    def addMolecule(self, molecule=None):
+"""    def addMolecule(self, molecule=None):
         """
-        Add a molecule (i.e. a TopologySystem object) to the Topology object.
+        #Add a molecule (i.e. a TopologySystem object) to the Topology object.
 
         """
         if molecule == None:
@@ -215,7 +216,7 @@ class Topology(object):
 
     def delMolecule(self, index):
         """
-        Delete a molecule from the Topology object at the specified index.
+        #Delete a molecule from the Topology object at the specified index.
 
         """
         self.molecules.pop(index)
@@ -223,7 +224,7 @@ class Topology(object):
 
     def insertMolecule(self, index, molecule=None):
         """
-        Insert a molecule into the Topology object at the specified index.
+        #Insert a molecule into the Topology object at the specified index.
 
         """
         if molecule == None:
@@ -231,12 +232,12 @@ class Topology(object):
         else:
             self.molecules.insert( index, TopologySystem( system=molecule) )
         return
+"""
 
 
-
-class TopologySystem(object):
+class Topology(object):
     """
-    A TopologySystem object consists of:
+    A Topology object consists of:
 
         <ol>
         <li>The set of particles in the system</li>
@@ -245,32 +246,32 @@ class TopologySystem(object):
         <li>For periodic systems, the dimensions of the periodic box</li>
         </ol>
 
-        The particles and constraints are defined directly by the System object, while
+        The particles and constraints are defined directly by the Topology object, while
         forces are defined by objects that extend the Force class.  After creating a
-        System, call addParticle() once for each particle, addConstraint() for each constraint,
+        Topology, call addParticle() once for each particle, addConstraint() for each constraint,
         and addForce() for each Force.
 
 
     Examples:
 
-    >>> system = TopologySystem()
+    >>> topology = Topology()
 
     Add a particle.
 
     >>> mass = 12.0 * units.amu
-    >>> system.addParticle(mass)
+    >>> topology.addParticle(mass)
     0
 
     Add a NonbondedForce.
 
     >>> nonbondedForce = NonbondedForce()
-    >>> system.addForce(nonbondedForce)
+    >>> topology.addForce(nonbondedForce)
     0
 
     Create a deep copy.
 
     >>> import copy
-    >>> system_copy = copy.deepcopy(system)
+    >>> topology_copy = copy.deepcopy(topology)
 
 
     * A pyopenmm.System-like object stores the atoms in each molecule, their connectivity and forces:
@@ -452,10 +453,10 @@ class TopologySystem(object):
 
     def __init__(self, system=None):
         """
-        Create a new System.
+        Create a new Topology.
 
         TODO:
-        If a TopologySystem object is specified, its attributes will be queried to construct the class.
+        If a Topology object is specified, its attributes will be queried to construct the class.
 
         """
 
@@ -503,14 +504,14 @@ class TopologySystem(object):
 
     def getName(self):
         """
-        Get the name of the TopologySystem.
+        Get the name of the Topology.
 
         """
         return self.name
 
     def setName(self, name):
         """
-        Set the name of the TopologySystem.
+        Set the name of the Topology.
 
         """
         self.name = name
@@ -519,7 +520,7 @@ class TopologySystem(object):
 
     def getNumParticles(self):
         """
-        Get the number of particles in this TopologySystem.
+        Get the number of particles in this Topology.
 
         """
         return len(self.masses)
@@ -527,7 +528,7 @@ class TopologySystem(object):
     @accepts_compatible_units(units.amu)
     def addParticle(self, mass):
         """
-        Add a particle to the System.
+        Add a particle to the Topology.
 
         @param mass   the mass of the particle (in atomic mass units)
         @return the index of the particle that was added
@@ -542,7 +543,7 @@ class TopologySystem(object):
 
     def delParticle(self, index, renumber=True):
         """
-        Delete a particle from the System.
+        Delete a particle from the Topology.
         Removes all references (forces, constraints, metadata), bonds) to this particle
 
         @return the index of the particle that was deleted
@@ -552,7 +553,7 @@ class TopologySystem(object):
 
     def insertParticle(self, index, mass, metadata):
         """
-        Insert a particle into the System at the specifed insertion index
+        Insert a particle into the Topology at the specifed insertion index
         Renumbers all references (forces, constraints, metadata), bonds) to this particle accordingly
 
         @return the index of the particle that was inserted
@@ -608,7 +609,7 @@ class TopologySystem(object):
 
     def getNumConstraints(self):
         """
-        Get the number of distance constraints in this System.
+        Get the number of distance constraints in this Topology.
 
         """
         return len(self.constraints)
@@ -616,7 +617,7 @@ class TopologySystem(object):
     @accepts_compatible_units(None, None, units.nanometer)
     def addConstraint(self, particle1, particle2, distance):
         """
-        Add a constraint to the System.
+        Add a constraint to the Topology.
 
         @param particle1 the index of the first particle involved in the constraint
         @param particle2 the index of the second particle involved in the constraint
@@ -666,7 +667,7 @@ class TopologySystem(object):
 
     def addForce(self, force):
         """
-        Add a Force to the System.
+        Add a Force to the Topology.
 
         @param force   the Force object to be added
         @return        the index within the System of the Force that was added
@@ -681,14 +682,14 @@ class TopologySystem(object):
 
     def getNumForces(self):
         """
-        Get the number of Force objects that have been added to the System.
+        Get the number of Force objects that have been added to the Topology.
 
         """
         return len(self.forces)
 
     def getForce(self, index):
         """
-        Get a const reference to one of the Forces in this System.
+        Get a const reference to one of the Forces in this Topology.
 
         @param index  the index of the Force to get
 
@@ -760,7 +761,7 @@ class TopologySystem(object):
     @property
     def nforces(self):
         """
-        The number of force objects in the system.
+        The number of force objects in the topology.
 
         """
         return len(self.forces)
@@ -775,7 +776,7 @@ class TopologySystem(object):
 
     def __str__(self):
         """
-        Return an 'informal' human-readable string representation of the System object.
+        Return an 'informal' human-readable string representation of the Topology object.
 
         """
 

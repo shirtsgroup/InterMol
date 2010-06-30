@@ -839,13 +839,13 @@ class GromacsTopologyFile(object):
         return processedLines
 
 
-    def parseDirectives(self, debug=True):
+    def parseDirectives(self, debug=False):
         """Parse the lines of the topology file contents into an ordered list of Directive containers."""
 
         self.directives = []
 
         index = 0
-        
+
         if debug:
             print '*** Parsing the following lines: ***'
             for line in self.processedLines:
@@ -854,19 +854,18 @@ class GromacsTopologyFile(object):
         while index < len(self.processedLines):
 
             if debug: print '### line',index, ':', self.processedLines[index].strip()
-            
+
             if len(self.processedLines[index]) > 0:
 
                 # Is the line an include?
                 if self.processedLines[index].count('#include') > 0 and self.processedLines[index][0] == '#':
                     # Then create an IncludeDirective
                     if debug: print '### line', index,': creating an IncludeDirective' 
-                    pdb.set_trace()
                     self.directives.append( self.IncludeDirective(self.processedLines[index]) )
-                    
+
                     # Go to the next line
                     index += 1
-                    
+
                 # Is the line a comment (or a set of comments)?
                 elif self.processedLines[index][0] == ';':
                     if debug: print '### line', index,': found comment:', self.processedLines[index].strip()
@@ -877,21 +876,21 @@ class GromacsTopologyFile(object):
                         index += 1
                         if not (index < len(self.processedLines)):
                             break
-                        
+
                     # Then create an CommentDirective
                     if debug: print '### Adding comment:', linetxt
                     self.directives.append( self.CommentDirective(linetxt) )
-                    
+
                     # Go to the next line?   No - index is already incremented in the while loop.
 
                 # Is the line a define?
-                elif line[0] == '#':
+                elif self.processedLines[index][0] == '#':
                     # Then create an DefineDirective
                     if debug: print '### line', index,': creating DefineDirective'
                     self.directives.append( self.DefineDirective(self.processedLines[index]) )
                     # Also, add the #define string to our list of defines
                     self.addDefine(self.processedLines[index].strip().split()[1])
-                    
+
                     # Go to the next line
                     index += 1
 
@@ -899,14 +898,13 @@ class GromacsTopologyFile(object):
                 elif self.processedLines[index].strip() == '':
                     # ignore it
                     if debug: print '### line', index,': ignoring blank line'
-                    
+
                     # Go to the next line
                     index += 1
-                    
 
                 # Is the line the start of a directive?
                 elif self.processedLines[index][0] == '[' and self.processedLines[index].count(']') > 0:
-                    
+
                     if debug: print '### line', index, ': Found a directive:', self.processedLines[index].strip()
                     myDirectiveName = self.processedLines[index].strip()
                     myDirective = self.Directive(myDirectiveName, header='')
@@ -927,16 +925,14 @@ class GromacsTopologyFile(object):
                             break
 
                     self.directives.append( myDirective )
-                    
+
                     # Go to the next line -- no already incremented in the while loop above.
 
 
                 else:
                     # Go to the next line
                     index += 1
-            
-            
-            
+
 
     def organizeDirectives(self):
         """Organize the Directives into Parameter, MoleculeDefinition, and System groups"""
@@ -1088,7 +1084,6 @@ class GromacsTopologyFile(object):
             self.includeFileName = self.name.replace('#include ','').replace('"','').strip()
             if not os.path.exists(self.includeFileName):
                 self.includeFileName = os.path.join(os.environ['GMXLIB'], self.includeFileName)
-            pdb.set_trace()
             self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=self.includeFileName)
             return
 

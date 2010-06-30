@@ -2,12 +2,10 @@
 
 #include "ffamber_tip3p.itp"
 
-[ moleculetype ]
-; Name               nrexcl 
+[ moleculetype ]; Name               nrexcl 
 Protein                 3 
 
-[ atoms ]
-;     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
+[ atoms ];     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
        1 amber99_39      1   NPRO      N      1 -0.202     14.01      ; qtot -0.202
        2 amber99_17      1   NPRO     H1      2 0.312      1.008      ; qtot 0.11
        3 amber99_17      1   NPRO     H2      2 0.312      1.008      ; qtot 0.422
@@ -1263,8 +1261,7 @@ Protein                 3
     1253 amber99_45     80   CTYR    OC1   1252 -0.807     16         ; qtot 0.807
     1254 amber99_45     80   CTYR    OC2   1253 -0.807     16         ; qtot 8.068e-07
 
-[ bonds ]
-;     ai     aj  funct c0 c1 c2 c3
+[ bonds ];     ai     aj  funct c0 c1 c2 c3
        1      2      1 
        1      3      1 
        1      4      1 
@@ -2528,8 +2525,7 @@ Protein                 3
     1252   1253      1 
     1252   1254      1 
 
-[ pairs ]
-;     ai     aj  funct c0 c1 c2 c3
+[ pairs ];     ai     aj  funct c0 c1 c2 c3
        1      8      1 
        1      9      1 
        1     11      1 
@@ -5832,8 +5828,7 @@ Protein                 3
     1247   1248      1 
     1249   1251      1 
 
-[ angles ]
-;     ai     aj     ak  funct c0 c1 c2 c3
+[ angles ];     ai     aj     ak  funct c0 c1 c2 c3
        1      4      5      1 
        1      4      6      1 
        1      4      7      1 
@@ -8127,8 +8122,7 @@ Protein                 3
     1249   1248   1250      1 
     1253   1252   1254      1 
 
-[ dihedrals ]
-;     ai     aj     ak     al  funct c0 c1 c2 c3
+[ dihedrals ];     ai     aj     ak     al  funct c0 c1 c2 c3
        1      4      7      8      3 
        1      4      7      9      3 
        1      4      7     10      3 
@@ -11387,52 +11381,38 @@ Protein                 3
     1252   1235   1237   1239      3 
     1252   1235   1237   1240      3 
 
-[ moleculetype ]
-; molname            nrexcl 
+[ moleculetype ]; molname            nrexcl 
 Cl                      1 
 
-[ atoms ]
-;     id atomtype   resnum residuename atoname   cgnr charge     mass       
+[ atoms ];     id atomtype   resnum residuename atoname   cgnr charge     mass       
        1 amber99_30      1     Cl     Cl      1 -1         35.450000  
 
-[ bonds ]
-;                      
+[ bonds ];                      
 
-[ pairs ]
-;                      
+[ pairs ];                      
 
-[ angles ]
-;                             
+[ angles ];                             
 
-[ dihedrals ]
-;                                    
+[ dihedrals ];                                    
 
-[ moleculetype ]
-; molname            nrexcl 
+[ moleculetype ]; molname            nrexcl 
 Na                      1 
 
-[ atoms ]
-;     id atomtype   resnum residuename atoname   cgnr charge     mass       
+[ atoms ];     id atomtype   resnum residuename atoname   cgnr charge     mass       
        1 amber99_31      1     Na     Na      1 1          22.990000  
 
-[ bonds ]
-;                      
+[ bonds ];                      
 
-[ pairs ]
-;                      
+[ pairs ];                      
 
-[ angles ]
-;                             
+[ angles ];                             
 
-[ dihedrals ]
-;                                    
+[ dihedrals ];                                    
 
-[ system ]
-; Name
+[ system ]; Name
 p4744_lam5w_300K in water
 
-[ molecules ]
-; Compound        #mols
+[ molecules ]; Compound        #mols
 Protein          1
 SOL              8013
 Cl               14

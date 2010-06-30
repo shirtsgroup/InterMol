@@ -14,8 +14,7 @@
 
 #define _FF_AMBER99
 
-[ defaults ]
-; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+[ defaults ]; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
 1               2               yes             0.5     0.8333
 
 ; ########################################################################
@@ -30,20 +29,87 @@
 ; #                                                                      #
 ; ########################################################################
 
-; name     bond_type  mass   charge ptype  sigma      epsilon
-
+[ atomtypes ]; name     bond_type  mass   charge ptype  sigma      epsilon
 ; spc water - use only with spc.itp & settles
-
 ;tip4p-EW
-
 ; tip4p
-
 ;tip5p
-
 ;tip3p heavy
-
 ; dummy defs
 ; MW=Dummy mass for tip4p/EW/5p water extra point charge
+amber99_0     H0     0.0000  0.0000  A   2.47135e-01  6.56888e-02
+amber99_1     BR     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_2     C      0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_3     CA     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_4     CB     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_5     CC     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_6     CK     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_7     CM     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_8     CN     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_9     CQ     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_10    CR     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_11    CT     0.0000  0.0000  A   3.39967e-01  4.57730e-01
+amber99_12    CV     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_13    CW     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_14    C*     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_15    Ca     0.0000  0.0000  A   3.05240e-01  1.92376e+00
+amber99_16    F      0.0000  0.0000  A   3.11815e-01  2.55224e-01
+amber99_17    H      0.0000  0.0000  A   1.06908e-01  6.56888e-02
+amber99_18    HC     0.0000  0.0000  A   2.64953e-01  6.56888e-02
+amber99_19    H1     0.0000  0.0000  A   2.47135e-01  6.56888e-02
+amber99_20    H2     0.0000  0.0000  A   2.29317e-01  6.56888e-02
+amber99_21    H3     0.0000  0.0000  A   2.11499e-01  6.56888e-02
+amber99_22    HA     0.0000  0.0000  A   2.59964e-01  6.27600e-02
+amber99_23    H4     0.0000  0.0000  A   2.51055e-01  6.27600e-02
+amber99_24    H5     0.0000  0.0000  A   2.42146e-01  6.27600e-02
+amber99_25    HO     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_26    HS     0.0000  0.0000  A   1.06908e-01  6.56888e-02
+amber99_27    HW     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_28    HP     0.0000  0.0000  A   1.95998e-01  6.56888e-02
+amber99_29    I      0.0000  0.0000  A   4.18722e-01  1.67360e+00
+amber99_30    Cl     0.0000  0.0000  A   4.40104e-01  4.18400e-01
+amber99_31    Na     0.0000  0.0000  A   3.32840e-01  1.15897e-02
+amber99_32    IB     0.0000  0.0000  A   8.90899e-01  4.18400e-01
+amber99_33    Mg     0.0000  0.0000  A   1.41225e-01  3.74342e+00
+amber99_34    N      0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_35    NA     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_36    NB     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_37    NC     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_38    N2     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_39    N3     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_40    N*     0.0000  0.0000  A   3.25000e-01  7.11280e-01
+amber99_41    O      0.0000  0.0000  A   2.95992e-01  8.78640e-01
+amber99_42    OW     0.0000  0.0000  A   3.15061e-01  6.36386e-01
+amber99_43    OH     0.0000  0.0000  A   3.06647e-01  8.80314e-01
+amber99_44    OS     0.0000  0.0000  A   3.00001e-01  7.11280e-01
+amber99_45    O2     0.0000  0.0000  A   2.95992e-01  8.78640e-01
+amber99_46    P      0.0000  0.0000  A   3.74177e-01  8.36800e-01
+amber99_47    S      0.0000  0.0000  A   3.56359e-01  1.04600e+00
+amber99_48    SH     0.0000  0.0000  A   3.56359e-01  1.04600e+00
+amber99_49    CU     0.0000  0.0000  A   3.39967e-01  3.59824e-01
+amber99_50    FE     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_51    K      0.0000  0.0000  A   4.73602e-01  1.37235e-03
+amber99_52    Rb     0.0000  0.0000  A   5.26699e-01  7.11280e-04
+amber99_53    Cs     0.0000  0.0000  A   6.04920e-01  3.37230e-04
+amber99_54    OW     0.0000  0.0000  A   3.16557e-01  6.50629e-01
+amber99_55    HW     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_56    Li     0.0000  0.0000  A   2.02590e-01  7.65672e-02
+amber99_57    Zn     0.0000  0.0000  A   1.95998e-01  5.23000e-02
+amber99_58    Sr     0.0000  0.0000  A   3.10247e-01  4.94658e-01
+amber99_59    Ba     0.0000  0.0000  A   3.78472e-01  1.97050e-01
+amber99_60    HW     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_61    OW     0.0000  0.0000  A   3.16435e-01  6.80946e-01
+amber99_62    HW     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_63    OW     0.0000  0.0000  A   3.15365e-01  6.48520e-01
+amber99_64    HW     0.0000  0.0000  A   0.00000e+00  0.00000e+00
+amber99_65    OW     0.0000  0.0000  A   3.12000e-01  6.69440e-01
+amber99_66    HW     4.0320  0.0000  A   0.00000e+00  0.00000e+00
+amber99_67    OW     9.9520  0.0000  A   3.15061e-01  6.36386e-01
+MW           MW      0.0000  0.0000  A   0.00000e+00  0.00000e+00
+MNH3         MNH3    0.0000  0.0000  A   0.00000e+00  0.00000e+00
+MNH2         MNH2    0.0000  0.0000  A   0.00000e+00  0.00000e+00
+MCH3A        MCH3A   0.0000  0.0000  A   0.00000e+00  0.00000e+00
+MCH3B        MCH3B   0.0000  0.0000  A   0.00000e+00  0.00000e+00
 
 
 ; ########################################################################
@@ -58,10 +124,106 @@
 ; #                                                                      #
 ; ########################################################################
 
-; i    j  func       b0          kb
+[ bondtypes ]; i    j  func       b0          kb
+  CT H0         1    0.10900   284512.0 ; 03GLY changed from 331 bsd on NMA nmodes; AA, SUGARS
+  C  C          1     0.1525   259408.0 ; new99
+  C  OS         1     0.1323   376560.0 ; new99
+  C  H4         1     0.1080   307105.6 ; new99
+  C  H5         1     0.1080   307105.6 ; new99
+  CA OH         1     0.1364   376560.0 ; new99
+  CM OS         1     0.1240   401664.0 ; new99
+  Cl CT         1     0.1766   194137.6 ; new99
+  Br CT         1     0.1944   133051.2 ; new99
+  I  CT         1     0.2166   123846.4 ; new99
+  F  CA         1     0.1359   323004.8 ; new99
+  Cl CA         1     0.1727   161502.4 ; new99
+  I  CA         1     0.2075   143092.8 ; new99
+  Br CA         1     0.1890   143929.6 ; new99
+  OW HW         1    0.09572   462750.4 ; P water
+  HW HW         1    0.15136   462750.4 ; P water
+  C  CA         1    0.14090   392459.2 ; 7,(1986),230; TYR
+  C  CB         1    0.14190   374049.6 ; 7,(1986),230; GUA
+  C  CM         1    0.14440   343088.0 ; 7,(1986),230; THY,URA
+  C  CT         1    0.15220   265265.6 ; 7,(1986),230; AA
+  C  N*         1    0.13830   354803.2 ; 7,(1986),230; CYT,URA
+  C  NA         1    0.13880   349782.4 ; 7,(1986),230; GUA.URA
+  C  NC         1    0.13580   382417.6 ; 7,(1986),230; CYT
+  C  O          1    0.12290   476976.0 ; 7,(1986),230; AA,CYT,GUA,THY,URA
+  C  O2         1    0.12500   548940.8 ; 7,(1986),230; GLU,ASP
+  C  OH         1    0.13640   376560.0 ; 7,(1986),230; TYR
+  CA CA         1    0.14000   392459.2 ; 7,(1986),230; BENZENE,PHE,TRP,TYR
+  CA CB         1    0.14040   392459.2 ; 7,(1986),230; ADE,TRP
+  CA CM         1    0.14330   357313.6 ; 7,(1986),230; CYT
+  CA CT         1    0.15100   265265.6 ; 7,(1986),230; PHE,TYR
+  CA HA         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; PHE,TRP,TYR
+  CA H4         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; no assigned
+  CA N2         1    0.13400   402500.8 ; 7,(1986),230; ARG,CYT,GUA
+  CA NA         1    0.13810   357313.6 ; 7,(1986),230; GUA
+  CA NC         1    0.13390   404174.4 ; 7,(1986),230; ADE,CYT,GUA
+  CB CB         1    0.13700   435136.0 ; 7,(1986),230; ADE,GUA
+  CB N*         1    0.13740   364844.8 ; 7,(1986),230; ADE,GUA
+  CB NB         1    0.13910   346435.2 ; 7,(1986),230; ADE,GUA
+  CB NC         1    0.13540   385764.8 ; 7,(1986),230; ADE,GUA
+  CK H5         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; ADE,GUA
+  CK N*         1    0.13710   368192.0 ; 7,(1986),230; ADE,GUA
+  CK NB         1    0.13040   442667.2 ; 7,(1986),230; ADE,GUA
+  CM CM         1    0.13500   459403.2 ; 7,(1986),230; CYT,THY,URA
+  CM CT         1    0.15100   265265.6 ; 7,(1986),230; THY
+  CM HA         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; CYT,URA
+  CM H4         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; CYT,URA
+  CM H5         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; not assigned
+  CM N*         1    0.13650   374886.4 ; 7,(1986),230; CYT,THY,URA
+  CQ H5         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; ADE
+  CQ NC         1    0.13240   420073.6 ; 7,(1986),230; ADE
+  CT CT         1    0.15260   259408.0 ; 7,(1986),230; AA, SUGARS
+  CT HC         1    0.10900   284512.0 ; ged from 331 bsd on NMA nmodes; AA, SUGARS
+  CT H1         1    0.10900   284512.0 ; ged from 331 bsd on NMA nmodes; AA, RIBOSE
+  CT H2         1    0.10900   284512.0 ; ged from 331 bsd on NMA nmodes; SUGARS
+  CT H3         1    0.10900   284512.0 ; ged from 331 bsd on NMA nmodes; not assigned
+  CT HP         1    0.10900   284512.0 ; nged from 331; AA-lysine, methyl ammonium cation
+  CT N*         1    0.14750   282001.6 ; 7,(1986),230; ADE,CYT,GUA,THY,URA
+  CT N2         1    0.14630   282001.6 ; 7,(1986),230; ARG
+  CT OH         1    0.14100   267776.0 ; 7,(1986),230; SUGARS
+  CT OS         1    0.14100   267776.0 ; 7,(1986),230; NUCLEIC ACIDS
+  H  N2         1    0.10100   363171.2 ; 7,(1986),230; ADE,CYT,GUA,ARG
+  H  N*         1    0.10100   363171.2 ; plain unmethylated bases ADE,CYT,GUA,ARG
+  H  NA         1    0.10100   363171.2 ; 7,(1986),230; GUA,URA,HIS
+  HO OH         1    0.09600   462750.4 ; 7,(1986),230; SUGARS,SER,TYR
+  HO OS         1    0.09600   462750.4 ; 7,(1986),230; NUCLEOTIDE ENDS
+  O2 P          1    0.14800   439320.0 ; 7,(1986),230; NA PHOSPHATES
+  OH P          1    0.16100   192464.0 ; 7,(1986),230; NA PHOSPHATES
+  OS P          1    0.16100   192464.0 ; 7,(1986),230; NA PHOSPHATES
+  C* HC         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes, not needed AA
+  C  N          1    0.13350   410032.0 ; 7,(1986),230; AA
+  C* CB         1    0.14590   324678.4 ; 7,(1986),230; TRP
+  C* CT         1    0.14950   265265.6 ; 7,(1986),230; TRP
+  C* CW         1    0.13520   456892.8 ; 7,(1986),230; TRP
+  CA CN         1    0.14000   392459.2 ; 7,(1986),230; TRP
+  CB CN         1    0.14190   374049.6 ; 7,(1986),230; TRP
+  CC CT         1    0.15040   265265.6 ; 7,(1986),230; HIS
+  CC CV         1    0.13750   428441.6 ; 7,(1986),230; HIS(delta)
+  CC CW         1    0.13710   433462.4 ; 7,(1986),230; HIS(epsilon)
+  CC NA         1    0.13850   353129.6 ; 7,(1986),230; HIS
+  CC NB         1    0.13940   343088.0 ; 7,(1986),230; HIS
+  CN NA         1    0.13800   358150.4 ; 7,(1986),230; TRP
+  CR H5         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes;HIS
+  CR NA         1    0.13430   399153.6 ; 7,(1986),230; HIS
+  CR NB         1    0.13350   408358.4 ; 7,(1986),230; HIS
+  CT N          1    0.14490   282001.6 ; 7,(1986),230; AA
+  CT N3         1    0.14710   307105.6 ; 7,(1986),230; LYS
+  CT S          1    0.18100   189953.6 ; ged from 222.0 based on dimethylS nmodes
+  CT SH         1    0.18100   198321.6 ; ged from 222.0 based on methanethiol nmodes
+  CV H4         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes; HIS
+  CV NB         1    0.13940   343088.0 ; 7,(1986),230; HIS
+  CW H4         1    0.10800   307105.6 ; ged from 340. bsd on C6H6 nmodes;HIS(epsilon,+)
+  CW NA         1    0.13810   357313.6 ; 7,(1986),230; HIS,TRP
+  H  N          1    0.10100   363171.2 ; 7,(1986),230; AA
+  H  N3         1    0.10100   363171.2 ; 7,(1986),230; LYS    
+  HS SH         1    0.13360   229283.2 ; 7,(1986),230; CYS
+  S  S          1    0.20380   138908.8 ; 7,(1986),230; CYX   (SCHERAGA)
+  CT F          1    0.13800   307105.6 ; 13,(1992),963;CF4; R0=1.332 FOR CHF3
 
-[ angletypes ]
-;  i    j    k  func       th0       cth
+[ angletypes ];  i    j    k  func       th0       cth
 H0  CT  H0           1   109.500    292.880 ; 03GLY
 H0  CT  N            1   109.500    418.400 ; 03GLY AA general  changed based on NMA nmodes
 C   CT  H0           1   109.500    418.400 ; 03GLY AA general  changed based on NMA nmodes
@@ -296,8 +458,7 @@ F   CT  F            1   109.100    644.336 ; JCC,13,(1992),963;
 F   CT  H1           1   109.500    418.400 ; new99
 N   C   N            1   120.000    585.760 ; Added for Urea (same as N2-CA-N2) - EJS
 
-[ dihedraltypes ]
-;i  j   k  l	 func      phase      kd      pn
+[ dihedraltypes ];i  j   k  l	 func      phase      kd      pn
 ;impropers treated as propers in GROMACS to use correct AMBER analytical function
 CA  CA  CA  OH       1      180.00     4.60240     2 	; new99
 H5  O   C   OH       1      180.00     4.60240     2 	; new99
@@ -345,8 +506,7 @@ X   X   CA  H5       1      180.00     4.60240     2	; bsd.on C6H6 nmodes
 
 #define nucleic_imp_11     180.00     4.60240      2    ; missing NA impropers due to defined propers
 
-[ dihedraltypes ]
-;i  j   k  l	 func	C0  ...  C5
+[ dihedraltypes ];i  j   k  l	 func	C0  ...  C5
 ;propers treated as RBs in GROMACS to use combine multiple AMBER torsions per quartet
 ; mainchain torsions changed in AMBER03 shown below
 ;N   CT  C   N     3    23.84880     7.11280   -16.73600     0.00000     0.00000     0.00000 	; amber99
@@ -459,11 +619,17 @@ X   CW  NA  X     3    12.55200     0.00000   -12.55200     0.00000     0.00000 
 
 ; missing protein mainchain torsions
 
+#define backbone_prop_1   20.92000     0.00000   -20.92000     0.00000     0.00000     0.00000 ; CT-C-N-H
+
 #define backbone_prop_2   29.28800    -8.36800   -20.92000     0.00000     0.00000     0.00000 ; O-C-N-H
 
 ;#define backbone_prop_3   2.84512    -4.10032    16.73600     2.51040   -16.73600     0.00000 ; old amber99
 
+#define backbone_prop_3    9.82361    -1.36942    -7.39396     3.79907     0.00000     0.00000 ; new amber03 C-N-CT-Cb
+
 ;#define backbone_prop_4  10.46000    -3.34720    -7.11280     0.00000     0.00000     0.00000 ; old amber99
+
+#define backbone_prop_4    8.08349    -1.41503    -2.88780    -3.78066     0.00000     0.00000 ; new amber03 C-N-CT-C
 
 #define backbone_prop_5   12.42271    -1.91418   -10.50853     0.00000     0.00000     0.00000 ; new 03GLY C-N-CT-H0  
 
@@ -471,7 +637,11 @@ X   CW  NA  X     3    12.55200     0.00000   -12.55200     0.00000     0.00000 
 
 ; missing protein sidechain torsions
 
+#define sidechain_prop_1  20.08320     0.00000   -20.08320     0.00000     0.00000     0.00000 ; ARG sidechains
+
 ;#define proline_prop_1    2.84512    -4.10032    16.73600     2.51040   -16.73600     0.00000 ; old amber99 torsion
+
+#define proline_prop_1     9.82361    -1.36942    -7.39396     3.79907     0.00000     0.00000 ; new amber03 torsion
 
 #define hyp_prop_1         0.65270     1.95811    12.46832    -2.61082     0.00000     0.00000 ; HYP for amber99: S Park, R J Radmer, T E Klein & V S Pande (submitted).
 
@@ -508,6 +678,8 @@ X   CW  NA  X     3    12.55200     0.00000   -12.55200     0.00000     0.00000 
 #define aromatic_prop_12  29.28800     0.00000   -29.28800     0.00000     0.00000     0.00000 ; X-CB-CA-X (TRP)
 
 ; missing nucleic torsions
+
+#define proper_X_CT_N*_X   0.00000     0.00000     0.00000     0.00000     0.00000     0.00000
 
 #define proper_X_CM_CT_X   0.00000     0.00000     0.00000     0.00000     0.00000     0.00000
 
@@ -547,28 +719,22 @@ X   CW  NA  X     3    12.55200     0.00000   -12.55200     0.00000     0.00000 
 
 
 
-[ moleculetype ]
-; molname	nrexcl
+[ moleculetype ]; molname	nrexcl
 SOL		1
 
 [ atoms ]
-
-[ settles ]
-; OW	funct	doh	dhh
+[ settles ]; OW	funct	doh	dhh
 1       1       0.09572 0.15139
 
-[ exclusions ]
-1	2	3
+[ exclusions ]1	2	3
 2	1	3
 3	1	2
 
 
-[ moleculetype ]
-; Name               nrexcl 
+[ moleculetype ]; Name               nrexcl 
 Protein                 3 
 
-[ atoms ]
-;     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
+[ atoms ];     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
        1 amber99_39      1   NPRO      N      1 -0.202     14.01      ; qtot -0.202
        2 amber99_17      1   NPRO     H1      2 0.312      1.008      ; qtot 0.11
        3 amber99_17      1   NPRO     H2      2 0.312      1.008      ; qtot 0.422
@@ -1824,8 +1990,7 @@ Protein                 3
     1253 amber99_45     80   CTYR    OC1   1252 -0.807     16         ; qtot 0.807
     1254 amber99_45     80   CTYR    OC2   1253 -0.807     16         ; qtot 8.068e-07
 
-[ bonds ]
-;     ai     aj  funct c0 c1 c2 c3
+[ bonds ];     ai     aj  funct c0 c1 c2 c3
        1      2      1 
        1      3      1 
        1      4      1 
@@ -3089,8 +3254,7 @@ Protein                 3
     1252   1253      1 
     1252   1254      1 
 
-[ pairs ]
-;     ai     aj  funct c0 c1 c2 c3
+[ pairs ];     ai     aj  funct c0 c1 c2 c3
        1      8      1 
        1      9      1 
        1     11      1 
@@ -6393,8 +6557,7 @@ Protein                 3
     1247   1248      1 
     1249   1251      1 
 
-[ angles ]
-;     ai     aj     ak  funct c0 c1 c2 c3
+[ angles ];     ai     aj     ak  funct c0 c1 c2 c3
        1      4      5      1 
        1      4      6      1 
        1      4      7      1 
@@ -8688,8 +8851,7 @@ Protein                 3
     1249   1248   1250      1 
     1253   1252   1254      1 
 
-[ dihedrals ]
-;     ai     aj     ak     al  funct c0 c1 c2 c3
+[ dihedrals ];     ai     aj     ak     al  funct c0 c1 c2 c3
        1      4      7      8      3 
        1      4      7      9      3 
        1      4      7     10      3 
@@ -11948,52 +12110,38 @@ Protein                 3
     1252   1235   1237   1239      3 
     1252   1235   1237   1240      3 
 
-[ moleculetype ]
-; molname            nrexcl 
+[ moleculetype ]; molname            nrexcl 
 Cl                      1 
 
-[ atoms ]
-;     id atomtype   resnum residuename atoname   cgnr charge     mass       
+[ atoms ];     id atomtype   resnum residuename atoname   cgnr charge     mass       
        1 amber99_30      1     Cl     Cl      1 -1         35.450000  
 
-[ bonds ]
-;                      
+[ bonds ];                      
 
-[ pairs ]
-;                      
+[ pairs ];                      
 
-[ angles ]
-;                             
+[ angles ];                             
 
-[ dihedrals ]
-;                                    
+[ dihedrals ];                                    
 
-[ moleculetype ]
-; molname            nrexcl 
+[ moleculetype ]; molname            nrexcl 
 Na                      1 
 
-[ atoms ]
-;     id atomtype   resnum residuename atoname   cgnr charge     mass       
+[ atoms ];     id atomtype   resnum residuename atoname   cgnr charge     mass       
        1 amber99_31      1     Na     Na      1 1          22.990000  
 
-[ bonds ]
-;                      
+[ bonds ];                      
 
-[ pairs ]
-;                      
+[ pairs ];                      
 
-[ angles ]
-;                             
+[ angles ];                             
 
-[ dihedrals ]
-;                                    
+[ dihedrals ];                                    
 
-[ system ]
-; Name
+[ system ]; Name
 p4744_lam5w_300K in water
 
-[ molecules ]
-; Compound        #mols
+[ molecules ]; Compound        #mols
 Protein          1
 SOL              8013
 Cl               14
