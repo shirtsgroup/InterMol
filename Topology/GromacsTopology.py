@@ -12,7 +12,7 @@ import simtk.unit as units
 
 
 from Force import *
-from Topology import *
+from System import *
 from GromacsParameter import *
 
 # Classes

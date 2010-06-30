@@ -1,3 +1,25 @@
+#=============================================================================================
+# MODULE DOCSTRING
+#=============================================================================================
+
+"""
+Structure.py
+
+Classes and methods creating and manipulating molecular structure files
+
+REQUIREMENTS
+
+The SimTK python_units package must be installed See: https://simtk.org/home/python_units
+
+"""
+
+#=============================================================================================
+# GLOBAL IMPORTS
+#=============================================================================================
+
+from mmtools.Topology.System import *
+import simtk.unit as units
+
 tlc2olc = {
 "ALA" : "A" ,
 "CYS" : "C" ,
@@ -29,17 +51,35 @@ tlc2olc = {
 "TYR" : "Y"
 }
 
-import pdb
+#=============================================================================================
+# Structure base class
+#=============================================================================================
 
 class Structure(object):
-    """Parent class for structure objects"""
+    """
+    Parent class for structure objects.  Contains methods to convert from derived classes into the general structure object.
+
+    """
+
     def __init__(self):
-        self.molecules = []
+        """
+        General structure contains a list of molecules which is a list of Atom objects.  Each atom object contains a list of coordinates, velocities and forces.
+
+        """
+        self.molecules = list()
 
     def addMolecule(self):
+        """
+        Insert a molecule with known coordinates into the general structure molecule.
+
+        """
         pass
 
     def convertFromGromacsStructure(self, gromacsStructure):
+        """
+        Converts a gromacs structure into the general structure
+
+        """
         for molecule in gromacsStructure.molecules:
             newMolecule = []
             for atom in molecule.atomList:
@@ -50,27 +90,47 @@ class Structure(object):
             self.molecules.append(newMolecule)
         return
 
-    def convertToGromacsStructure(self):
+    def convertFromPDBStructure(self, PDBStructure):
+        pass
 
-        return
+    def convertFromAmberStructure(self, amberStructure):
+        pass
 
-
+    def convertFromSchroedingerStructure(self, schroedingerStructure):
+        pass
 
 class Atom(object):
+    """
+    A general atom class that contains the physical parameters of an atom including the initial cartiesian coordinates, velocities and forces
 
-    def __init__(self, positions=[0.0, 0.0, 0.0], velocities=[0.0, 0.0, 0.0], forces=[0.0, 0.0, 0.0]):
-        self.positions = positions
-        self.velocities = velocities
-        self.forces = forces
+    """
 
+    @accepts_compatible_units(units.nanometers, units.nanometers, units.nanometers, units.nanometers / units.seconds, units.nanometers / units.seconds, units.nanometers / units.seconds, units.newton, units.newton ,units.newton)
+    def __init__(self, x, y, z, vx, vy, vz, fx, fy, fz):
+        self.positions = [x, y, z]
+        self.velocities = [vx, vy, vz]
+        self.forces = [fx, fy, fz]
 
 
 class GromacsStructure(Structure):
-#===================WARNING==========================
-# ONLY WORKS FOR .GRO FILES WITH ZERO OR ONE PROTEIN(S)
-#====================================================
+    """
+    A derived class of the structure object.
+
+    #===================WARNING============================
+    # ONLY WORKS FOR .GRO FILES WITH ZERO OR ONE PROTEIN(S)
+    #======================================================
+
+    """
 
     def __init__(self, structure=None, grofile=None, name=None):
+        """
+        Can take in either a general structure object or a .gro file and create a derived structure class.  Includes the system title, number of atoms, a list of GromacsMolecule objects which contains a list of GromacsAtoms.
+
+        """
+
+        self.name = name
+        if self.name == None: 
+            self.name = "Untitled"
 
         self.title = ''
         self.nSystem = ''
@@ -87,6 +147,11 @@ class GromacsStructure(Structure):
         return
 
     def readStructureFile(self, grofile):
+        """
+        Reads in the contents of the structure file
+
+        """
+
         self.GromacsStructureFileObject = GromacsStructureFile(grofile=grofile)
         self.title = self.GromacsStructureFileObject.title
         self.nSystem = self.GromacsStructureFileObject.nSystem
@@ -95,6 +160,10 @@ class GromacsStructure(Structure):
         return
 
     def processMolecules(self):
+        """
+        Converts the preprocessedMolecules
+
+        """
 
         tempList = list()
         moleculeList = list()
@@ -116,7 +185,7 @@ class GromacsStructure(Structure):
                 vx=0.0
                 vy=0.0
                 vz=0.0
-            atom=GromacsAtom(resnum,resname,atomname,atomnum,x,y,z,vx,vy,vz)
+            atom=GromacsAtom(resnum, resname, atomname, atomnum, x*units.nanometers, y*units.nanometers, z*units.nanometers, vx*units.nanometers / units.seconds, vy*units.nanometers / units.seconds, vz*units.nanometers / units.seconds)
             tempList.append(atom)
 
         #extract protein
@@ -181,6 +250,10 @@ class GromacsStructure(Structure):
         self.GromacsStructureFileObject.write(filename)
         return
 
+    def convertFromStructure(self Structure, System):
+
+        return
+
 class GromacsAtom(object):
     """A type which contains all the known information about one atom in a gromacs structure,
     topology, or trajectory. (For now just works with the gro structure file.)
@@ -201,6 +274,7 @@ class GromacsAtom(object):
     - printgroatom()- prints the atom as it's formatted in the gro file (used by the GromacsStructure type)
     """
 
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.nanometers / units.seconds, units.nanometers / units.seconds, units.nanometers / units.seconds)
     def __init__(self, resnum=0, resname="", atomname="", atomnum=0, x=0.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0):
         self.resnum=resnum
         self.resname=resname
