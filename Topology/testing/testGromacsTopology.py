@@ -7,7 +7,7 @@ from mmtools.Topology.GromacsTopology import *
 # Tests of the Topology.GromacsTopology tools
 
 print "Create a GromacsTopology object from file ...",
-g = GromacsTopology(topfile='lambda.top')
+g = GromacsTopology(topfile='LG2.top')
 print "Done."
 
 print "Write 'out.top' from the contents of the GromacsTopology object ...",
@@ -17,6 +17,8 @@ print "Done."
 print "Write 'out-expanded.top' with all of the (nested) #include files expanded ...",
 g.writeTopologyFile('out-expanded.top', ExpandIncludes=True, RebuildDirectives=False)
 print "Done."
+
+
 
 print "Show all the directives defined in the GromacsTopologyFileObject:"
 all_directives = g.GromacsTopologyFileObject.getAllDirectives([])
@@ -43,12 +45,18 @@ print "Show the SystemDirectives:"
 for d in g.GromacsTopologyFileObject.SystemDirectives:
     print '\t', d.name.strip()
 
-#print "Read TopologyFile"
-#g.readTopologyFile('lambda.top')
-#print "Done."
+print "Read TopologyFile"
+g.readTopologyFile('LG2.top')
+print "Done."
 
 #print "Show parameter contents"
 #for d in g.parameters:
-#    print '\t', d.directiveString()
+    #pdb.set_trace()
+    #for line in d:
+        #print '\t', line.directiveString()
+
+#print "Write 'out-rebuild.top' from the contents of the GromacsTopology object ...",
+#g.writeTopologyFile('out-rebuild.top', ExpandIncludes=False, RebuildDirectives=True)
+#print "Done."
 
 pdb.set_trace()

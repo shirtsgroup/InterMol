@@ -8139,7 +8139,7 @@ Protein                 3
 
 [ dihedrals ]
 ;     ai     aj     ak     al  funct c0 c1 c2 c3
-       1      4      7      8      3 
+;       1      4      7      8      3 
        1      4      7      9      3 
        1      4      7     10      3 
        1     13     15     16      3 

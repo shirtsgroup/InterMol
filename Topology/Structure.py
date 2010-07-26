@@ -17,8 +17,8 @@ The SimTK python_units package must be installed See: https://simtk.org/home/pyt
 # GLOBAL IMPORTS
 #=============================================================================================
 
-from mmtools.Topology.System import *
-import simtk.unit as units
+import os
+from Decorators import *
 
 tlc2olc = {
 "ALA" : "A" ,
@@ -31,11 +31,13 @@ tlc2olc = {
 "CPHE" : "F" ,
 "GLY" : "G" ,
 "HIS" : "H" ,
+"HID" : "H" ,
 "HIE" : "H" ,
 "HIP" : "H" ,
 "ILE" : "I" ,
 "NLE" : "J" ,
 "LYS" : "K" ,
+"LYN" : "K" ,
 "LYP" : "K" ,
 "LEU" : "L" ,
 "NLEU" : "L" ,
@@ -80,13 +82,13 @@ class Structure(object):
         Converts a gromacs structure into the general structure
 
         """
+
         for molecule in gromacsStructure.molecules:
-            newMolecule = []
+            newMolecule = Molecule()
+            newMolecule.name = molecule.getName().strip()
             for atom in molecule.atomList:
-                positions = [atom.x, atom.y, atom.z]
-                velocities = [atom.vx, atom.vy, atom.vz]
-                newAtom = Atom(positions, velocities)
-                newMolecule.append(newAtom)
+                newAtom = StrucAtom(atom.resnum, atom.resname, atom.atomname, atom.atomnum, atom.x, atom.y, atom.z, atom.vx, atom.vy, atom.vz)
+                newMolecule.atomList.append(newAtom)
             self.molecules.append(newMolecule)
         return
 
@@ -99,18 +101,59 @@ class Structure(object):
     def convertFromSchroedingerStructure(self, schroedingerStructure):
         pass
 
-class Atom(object):
+class Molecule(object):
+
+    """
+    A list of Atom objects.
+
+    """
+
+    def __init__(self, name = None):
+        self.name = name
+        if self.name == None: 
+            self.name = "Untitled"
+
+        self.atomList = list()
+
+    def getLength(self):
+        return len(self.atomList)
+
+    def getName(self):
+        return self.name
+
+    def __copy__(self): return Molecule(self)
+
+    def printMolecule(self):
+        outtxt = ''
+        for atom in self.atomList:
+            outtxt += atom.printStrucAtom() + '\n'
+        return outtxt
+
+class StrucAtom(object):
     """
     A general atom class that contains the physical parameters of an atom including the initial cartiesian coordinates, velocities and forces
 
     """
 
-    @accepts_compatible_units(units.nanometers, units.nanometers, units.nanometers, units.nanometers / units.seconds, units.nanometers / units.seconds, units.nanometers / units.seconds, units.newton, units.newton ,units.newton)
-    def __init__(self, x, y, z, vx, vy, vz, fx, fy, fz):
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.nanometers / units.seconds, units.nanometers / units.seconds, units.nanometers / units.seconds, units.kilojoules_per_mole / units.nanometers, units.kilojoules_per_mole / units.nanometers ,units.kilojoules_per_mole / units.nanometers)
+    def __init__(self, resnum, resname, atomname = None, atomnum = None, x=0.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, fx=0.0, fy=0.0, fz=0.0):
+        self.resnum = resnum
+        self.resname = resname
+        self.atomname = atomname
+        self.atomnum = atomnum
         self.positions = [x, y, z]
         self.velocities = [vx, vy, vz]
         self.forces = [fx, fy, fz]
 
+    def printStrucAtom(self):
+        if type(self.forces[0]) == float and type(self.velocities[0]) == float:
+            return 'Resnum: % 1d, Resname: %5s\nPositions: % 8.4f% 8.4f% 8.4f\n' % (self.resnum, self.resname, self.positions[0]._value ,self.positions[1]._value, self.positions[2]._value)
+        elif type(self.forces[0]) == float:
+            return 'Resnum: % 1d, Resname: %5s\nPositions: % 8.4f% 8.4f% 8.4f\nVelocities: %8.4f% 8.4f% 8.4f\n' % (self.resnum, self.resname, self.positions[0]._value ,self.positions[1]._value, self.positions[2]._value, self.velocities[0]._value, self.velocities[1]._value, self.velocities[2]._value)
+        elif type(self.velocities[0]) == float:
+            return 'Resnum: % 1d, Resname: %5s\nPositions: % 8.4f% 8.4f% 8.4f\nForces: %8.4f% 8.4f% 8.4f\n' % (self.resnum, self.resname, self.positions[0]._value ,self.positions[1]._value, self.positions[2]._value, self.forces[0]._value, self.forces[1]._value, self.forces[2]._value)
+        else:
+            return 'Resnum: % 1d, Resname: %5s\nPositions: % 8.4f% 8.4f% 8.4f\nVelocities: %8.4f% 8.4f% 8.4f\nForces: % 8.4f% 4.4f% 4.4f\n' % (self.resnum, self.resname, self.positions[0]._value ,self.positions[1]._value, self.positions[2]._value, self.velocities[0]._value, self.velocities[1]._value, self.velocities[2]._value, self.forces[0]._value, self.forces[1]._value, self.forces[2]._value)
 
 class GromacsStructure(Structure):
     """
@@ -161,18 +204,18 @@ class GromacsStructure(Structure):
 
     def processMolecules(self):
         """
-        Converts the preprocessedMolecules
+        Converts the preprocessedMolecules lines into GromacsMolecules and GromacsAtoms
 
         """
 
         tempList = list()
         moleculeList = list()
 
-        #create atoms from "preprocessedMolecules"
+        # Create GromacsAtoms from "preprocessedMolecules"
         for line in self.GromacsStructureFileObject.preprocessedMolecules:
             resnum=int(line[0:5])
-            resname=line[5:9]
-            atomname=line[9:15]
+            resname=line[5:9].strip()
+            atomname=line[9:15].strip()
             atomnum=int(line[15:20])
             x=float(line[20:28])
             y=float(line[28:36])
@@ -185,10 +228,15 @@ class GromacsStructure(Structure):
                 vx=0.0
                 vy=0.0
                 vz=0.0
-            atom=GromacsAtom(resnum, resname, atomname, atomnum, x*units.nanometers, y*units.nanometers, z*units.nanometers, vx*units.nanometers / units.seconds, vy*units.nanometers / units.seconds, vz*units.nanometers / units.seconds)
+            atom=GromacsAtom(resnum, resname, atomname, atomnum, x*units.nanometers, y*units.nanometers, z*units.nanometers, vx*units.nanometers*units.picoseconds**(-1), vy*units.nanometers*units.picoseconds**(-1), vz*units.nanometers*units.picoseconds**(-1))
             tempList.append(atom)
 
-        #extract protein
+        # Extract protein
+        if os.path.exists(os.path.join(os.environ['GMXLIB'], 'aminoacids.dat')):
+            fin = open(os.path.join(os.environ['GMXLIB'], 'aminoacids.dat'), 'r')
+            proteinList = fin.readlines()
+        else:
+            proteinList = tlc2olc
         currentMolecule = GromacsMolecule()
         for atom in tempList:
             resname = atom.getResname()
@@ -201,7 +249,7 @@ class GromacsStructure(Structure):
             if atom in tempList:
                 tempList.remove(atom)
 
-        #extract other molecules
+        # Extract non-protein molecules
         if len(tempList) > 0:
             oldResnum = tempList[0].getResnum()
             currentMolecule = GromacsMolecule()
@@ -223,6 +271,10 @@ class GromacsStructure(Structure):
         return moleculeList
 
     def processBoxVector(self):
+        """
+        Converts box vector string into similarity matrix
+
+        """
         fields = self.GromacsStructureFileObject.boxvector.split()
         nBoxVector = len(fields)
 
@@ -247,12 +299,25 @@ class GromacsStructure(Structure):
         return boxvector
 
     def writeStructureFile(self, filename):
+        """
+        Write a gromacs structure object into a filename.gro file.
+
+        """
         self.GromacsStructureFileObject.write(filename)
         return
 
-    def convertFromStructure(self Structure, System):
+    def convertFromStructure(self, Structure, System):
+        """
+        Convert a general structure object into a gromacs structure object.
 
-        return
+        """
+        #newGromacsStructure = GromacsStructure()
+
+        #for molecule in Structure.molecules:
+        #    newMolecule = GromacsMolecule()
+        #    for atom in Structure.molecules.atomList:
+        #        newAtom = GromacsAtom(atom.x, atom.y, atom.z, atom.vx, atom.vy, atom.vz)
+        pass
 
 class GromacsAtom(object):
     """A type which contains all the known information about one atom in a gromacs structure,
@@ -272,6 +337,7 @@ class GromacsAtom(object):
     - __copy__()        - makes a copy of the atom (TEST!)
     - position()        - returns the position as a 3-d tuple (make this work on the velocity also)
     - printgroatom()- prints the atom as it's formatted in the gro file (used by the GromacsStructure type)
+
     """
 
     @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.nanometers / units.seconds, units.nanometers / units.seconds, units.nanometers / units.seconds)
@@ -301,16 +367,27 @@ class GromacsAtom(object):
         return (self.x, self.y, self.z)
 
     def printGroAtom(self):
-        """prints the atom as it would be formatted in the .gro file"""
+        """
+        Prints the atom as it would be formatted in the .gro file
+
+        """
+
         resnum="%5d" % self.resnum
         resname="%-4s" % self.resname # should be left justified
         atomname="%6s" % self.atomname
         atomnum="%5d" % self.atomnum
-        pos="% 8.3f% 8.3f% 8.3f" % (self.x, self.y, self.z)
-        vel="% 8.4f% 8.4f% 8.4f" % (self.vx, self.vy, self.vz)
+        pos="% 8.3f% 8.3f% 8.3f" % (self.x._value, self.y._value, self.z._value)
+        try:
+            vel="% 8.4f% 8.4f% 8.4f" % (self.vx._value, self.vy._value, self.vz._value)
+        except:
+            vel="% 8.4f% 8.4f% 8.4f" % (self.vx, self.vy, self.vz)
         return resnum+resname+atomname+atomnum+pos+vel
 
 class GromacsMolecule(object):
+    """
+    A special list of GromacsAtom objects.
+
+    """
 
     def __init__(self, name = None):
         self.name = name
@@ -322,6 +399,9 @@ class GromacsMolecule(object):
     def getLength(self):
         return len(self.atomList)
 
+    def getName(self):
+        return self.name
+
     def __copy__(self): return GromacsMolecule(self)
 
     def printGroMolecule(self):
@@ -331,7 +411,10 @@ class GromacsMolecule(object):
         return outtxt
 
 class GromacsStructureFile(object):
+    """
+    A class to store and modify information in the Gromacs *.gro structure file.
 
+    """
     def __init__(self, grofile = None):
 
         self.lines = []

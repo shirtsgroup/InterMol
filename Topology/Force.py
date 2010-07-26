@@ -1,5 +1,8 @@
-from System import *
+#=============================================================================================
+# GLOBAL IMPORTS
+#=============================================================================================
 
+from Decorators import *
 
 #=============================================================================================
 # Force base class
@@ -176,7 +179,7 @@ class NonbondedForce(Force):
         """
         return self.cutoffDistance
 
-    @accepts_compatible_units(units.nanometer)
+    @accepts_compatible_units(units.nanometers)
     def setCutoffDistance(self, cutoffDistance):
         """
         Set the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use
@@ -507,6 +510,7 @@ class NonbondedForceExceptionInfo(object):
         self.epsilon = epsilon
 
         return
+
 #=============================================================================================
 # BondForce
 #=============================================================================================
@@ -556,7 +560,7 @@ class BondForce(Force):
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def addBond(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
@@ -587,7 +591,7 @@ class BondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.k)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def setBondParameters(self, index, particle1, particle2, length, k):
         """
         Set the force field parameters for a bond term.
@@ -654,7 +658,7 @@ class BondForceBondInfo(object):
     """
     Information about a bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def __init__(self, particle1, particle2, length, k):
         # Store data.
         self.particle1 = particle1
@@ -662,6 +666,46 @@ class BondForceBondInfo(object):
         self.length = length
         self.k = k
         return
+
+#=============================================================================================
+# G96BondForce
+#=============================================================================================
+
+class G96BondForce(Force):
+    pass
+
+class G96BondForceBondInfo(object):
+    pass
+
+#=============================================================================================
+# MorseBondForce
+#=============================================================================================
+
+class MorseBondForce(Force):
+    pass
+
+class MorseBondForceBondInfo(object):
+    pass
+
+#=============================================================================================
+# CubicBondForce
+#=============================================================================================
+
+class CubicBondForce(Force):
+    pass
+
+class CubicBondForceBondInfo(object):
+    pass
+
+#=============================================================================================
+# ConnectionBondForce
+#=============================================================================================
+
+class ConnectionBondForce(Force):
+    pass
+
+class ConnectionBondForceBondInfo(object):
+    pass
 
 #=============================================================================================
 # HarmonicBondForce
@@ -846,18 +890,18 @@ class HarmonicBondForceBondInfo(object):
         return
 
 #=============================================================================================
-# HarmonicAngleForce
+# AngleForce
 #=============================================================================================
 
-class HarmonicAngleForce(Force):
+class AngleForce(Force):
     """
     This class implements an interaction between groups of three particles that varies harmonically with the angle
-    between them.  To use it, create a HarmonicAngleForce object then call addAngle() once for each angle.  After
+    between them.  To use it, create a AngleForce object then call addAngle() once for each angle.  After
     an angle has been added, you can modify its force field parameters by calling setAngleParameters().
 
     EXAMPLE
 
-    Create and populate a HarmonicAngleForce object.
+    Create and populate a AngleForce object.
 
     >>> angle = 120.0 * units.degree
     >>> k = 0.01 * units.kilocalories_per_mole / units.degree**2
@@ -880,7 +924,7 @@ class HarmonicAngleForce(Force):
 
     def __init__(self, force=None):
         """
-        Create a HarmonicAngleForce.
+        Create a AngleForce.
 
         """
         # Initialize defaults.
@@ -933,7 +977,7 @@ class HarmonicAngleForce(Force):
         @return the index of the angle that was added
 
         """
-        angle = HarmonicAngleForceAngleInfo(particle1, particle2, particle3, angle, k)
+        angle = AngleForceAngleInfo(particle1, particle2, particle3, angle, k)
         self.angles.append(angle)
         return
 
@@ -965,7 +1009,7 @@ class HarmonicAngleForce(Force):
         @param k         the harmonic force constant for the angle
         """
 
-        angle = HarmonicAngleForceAngleInfo(particle1, particle2, particle3, angle, k)
+        angle = AngleForceAngleInfo(particle1, particle2, particle3, angle, k)
         self.angles[index] = angle
         return
 
@@ -1017,7 +1061,7 @@ class HarmonicAngleForce(Force):
 
         return
 
-class HarmonicAngleForceAngleInfo(object):
+class AngleForceAngleInfo(object):
     """
     Information about a harmonic angle.
     """
@@ -1031,6 +1075,55 @@ class HarmonicAngleForceAngleInfo(object):
         self.k = k
         return
 
+#=============================================================================================
+# G96AngleForce
+#=============================================================================================
+
+class G96AngleForce(Force):
+    pass
+
+class G96AngleForceAngleInfo(object):
+    pass
+
+#=============================================================================================
+# CrossBondBondAngleForce
+#=============================================================================================
+
+class CrossBondBondAngleForce(Force):
+    pass
+
+class CrossBondBondAngleForceAngleInfo(object):
+    pass
+
+#=============================================================================================
+# CrossBondAngleAngleForce
+#=============================================================================================
+
+class CrossBondAngleAngleForce(Force):
+    pass
+
+class CrossBondAngleAngleForceAngleInfo(object):
+    pass
+
+#=============================================================================================
+# UreyBradleyAngleForce
+#=============================================================================================
+
+class UreyBradleyAngleForce(Force):
+    pass
+
+class UreyBradleyAngleForceAngleInfo(object):
+    pass
+
+#=============================================================================================
+# QuarticAngleForce
+#=============================================================================================
+
+class QuarticAngleForce(Force):
+    pass
+
+class QuarticAngleForceAngleInfo(object):
+    pass
 
 #=============================================================================================
 # LJ1Force
@@ -1045,11 +1138,11 @@ class LJ1Force(Force):
 
         """
         # Initialize defaults.
-        self.torsions = list()
+        self.forces = list()
 
         # Populate data structures from swig object, if specified
         if force is not None:
-            self._copyDataUsingInterface(self, RBforce)
+            self._copyDataUsingInterface(self, force)
 
         return
 
@@ -1059,9 +1152,9 @@ class LJ1Force(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1069,19 +1162,19 @@ class LJ1Force(Force):
         """
         Construct a Swig object.
         """
-        force = openmm.LJ1TorsionForce()
+        force = openmm.LJ1Force()
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of LJ1 pair terms in the potential function
 
         """
-        return len(self.torsions)
+        return len(self.forces)
 
     @accepts_compatible_units(None, None, None, None)
-    def addTorsion(self, particle1, particle2, V, W):
+    def addForce(self, particle1, particle2, V, W):
         """
         Add a LJ1 pair term to the force field.
 
@@ -1089,41 +1182,41 @@ class LJ1Force(Force):
         @param particle2    the index of the second particle forming the pair
         @param V
         @param W
-        @return the index of the torsion that was added
+        @return the index of the force that was added
 
         """
-        torsion = LJ1ForceLJ1Info(particle1, particle2, V, W)
-        self.torsions.append(torsion) 
+        force = LJ1ForceLJ1Info(particle1, particle2, V, W)
+        self.forces.append(force) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a LJ1 pair term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index        the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns V
         @returns W
 
         """
-        torsion = self.torsions[index]
-        return (torsion.particle1, torsion.particle2, torsion.V, torsion.W)
+        force = self.forces[index]
+        return (force.particle1, force.particle2, force.V, force.W)
 
     @accepts_compatible_units(None, None, None, None, None)
-    def setTorsionParameters(self, index, particle1, particle2, V, W):
+    def setForceParameters(self, index, particle1, particle2, V, W):
         """
         Set the force field parameters for a LJ1 pair term.
 
-        @param index        the index of the torsion for which to set parameters
+        @param index        the index of the force for which to set parameters
         @param particle1    the index of the first particle forming the pair
         @param particle2    the index of the second particle forming the pair 
         @param V
         @param W
 
         """
-        torsion = LJ1ForceLJ1Info(particle1, particle2, V, W)
-        self.torsions[index] = torsion
+        force = LJ1ForceLJ1Info(particle1, particle2, V, W)
+        self.forces[index] = force
         return
 
     #==========================================================================
@@ -1131,8 +1224,8 @@ class LJ1Force(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
-        return len(self.torsions)
+    def nforces(self):
+        return len(self.force)
 
     def __str__(self):
         """
@@ -1142,12 +1235,12 @@ class LJ1Force(Force):
 
         r = ""
 
-        # Show torsions.
-        if (self.ntorsions > 0):
+        # Show forces.
+        if (self.nforces > 0):
             r += "Torsions:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "V", "W")
-            for (index, torsion) in enumerate(self.torsions):
-                r += "%8d %10d %10d %24s %24s\n" % (index, torsion.particle1, torsion.particle2, str(torsion.V), str(torsion.W))
+            for (index, force) in enumerate(self.forces):
+                r += "%8d %10d %10d %24s %24s\n" % (index, force.particle1, force.particle2, str(force.V), str(force.W))
             r += "\n"
             r += "\n"
 
@@ -1166,12 +1259,12 @@ class LJ1Force(Force):
             raise ValueError("other force object must be of identical Force subclass")
 
         # Combine systems.
-        for torsion in force.torsions:
-            torsion.particle1 += offset
-            torsion.particle2 += offset
-            torsion.particle3 += offset
-            torsion.particle4 += offset
-            self.torsions.append(torsion)
+        for force in force.forces:
+            force.particle1 += offset
+            force.particle2 += offset
+            force.particle3 += offset
+            force.particle4 += offset
+            self.forces.append(force)
 
         return
 
@@ -1189,7 +1282,6 @@ class LJ1ForceLJ1Info(object):
 
         return
 
-
 #=============================================================================================
 # LJ2Force
 #=============================================================================================
@@ -1203,7 +1295,7 @@ class LJ2Force(Force):
 
         """
         # Initialize defaults.
-        self.torsions = list()
+        self.forces = list()
 
         # Populate data structures from swig object, if specified
         if force is not None:
@@ -1237,7 +1329,7 @@ class LJ2Force(Force):
         Get the number of LJ2 pair terms in the potential function
 
         """
-        return len(self.torsions)
+        return len(self.forces)
 
     @accepts_compatible_units(None, None, None, units.elementary_charge, units.elementary_charge,  None, None)
     def addTorsion(self, particle1, particle2, fudgeQQ, qi, qj, V, W):
@@ -1251,18 +1343,18 @@ class LJ2Force(Force):
         @param qj
         @param V
         @param W
-        @return the index of the torsion that was added
+        @return the index of the force that was added
 
         """
-        torsion = LJ2ForceLJ2Info(particle1, particle2, fudgeQQ, qi, qj, V, W)
-        self.torsions.append(torsion) 
+        force = LJ2ForceLJ2Info(particle1, particle2, fudgeQQ, qi, qj, V, W)
+        self.forces.append(force) 
         return
 
     def getTorsionParameters(self, index):
         """
         Get the force field parameters for a LJ2 pair term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index        the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns fudgeQQ
@@ -1273,15 +1365,15 @@ class LJ2Force(Force):
 
 
         """
-        torsion = self.torsions[index]
-        return (torsion.particle1, torsion.particle2, torsion.fudgeQQ, torsion.qi, torsion.qj, torsion.V, torsion.W)
+        force = self.forces[index]
+        return (force.particle1, force.particle2, force.fudgeQQ, force.qi, force.qj, force.V, force.W)
 
     @accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None)
     def setTorsionParameters(self, index, particle1, particle2, fudgeQQ, qi, qj, V, W):
         """
         Set the force field parameters for a LJ1 pair term.
 
-        @param index        the index of the torsion for which to set parameters
+        @param index        the index of the force for which to set parameters
         @param particle1    the index of the first particle forming the pair
         @param particle2    the index of the second particle forming the pair 
         @param fudgeQQ
@@ -1291,8 +1383,8 @@ class LJ2Force(Force):
         @param W
 
         """
-        torsion = LJ2ForceLJ2Info(particle1, particle2, fudgeQQ, qi, qj, V, W)
-        self.torsions[index] = torsion
+        force = LJ2ForceLJ2Info(particle1, particle2, fudgeQQ, qi, qj, V, W)
+        self.forces[index] = force
         return
 
     #==========================================================================
@@ -1300,8 +1392,8 @@ class LJ2Force(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
-        return len(self.torsions)
+    def nforces(self):
+        return len(self.forces)
 
     def __str__(self):
         """
@@ -1311,12 +1403,12 @@ class LJ2Force(Force):
 
         r = ""
 
-        # Show torsions.
-        if (self.ntorsions > 0):
+        # Show forces.
+        if (self.nforces > 0):
             r += "Torsions:\n"
             r += "%8s %10s %10s %24s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "fudgeQQ", "qi", "qj", "V", "W")
-            for (index, torsion) in enumerate(self.torsions):
-                r += "%8d %10d %10d %24s %24s %24s %24s %24s\n" % (index, torsion.particle1, torsion.particle2, str(torsion.fudgeQQ), str(torsion.qi), str(torsion.qj), str(torsion.V), str(torsion.W))
+            for (index, force) in enumerate(self.forces):
+                r += "%8d %10d %10d %24s %24s %24s %24s %24s\n" % (index, force.particle1, force.particle2, str(force.fudgeQQ), str(force.qi), str(force.qj), str(force.V), str(force.W))
             r += "\n"
             r += "\n"
 
@@ -1335,12 +1427,12 @@ class LJ2Force(Force):
             raise ValueError("other force object must be of identical Force subclass")
 
         # Combine systems.
-        for torsion in force.torsions:
-            torsion.particle1 += offset
-            torsion.particle2 += offset
-            torsion.particle3 += offset
-            torsion.particle4 += offset
-            self.torsions.append(torsion)
+        for force in force.forces:
+            force.particle1 += offset
+            force.particle2 += offset
+            force.particle3 += offset
+            force.particle4 += offset
+            self.forces.append(force)
 
         return
 
@@ -1360,7 +1452,6 @@ class LJ2ForceLJ1Info(object):
 
         return
 
-
 #=============================================================================================
 # LJNBForce
 #=============================================================================================
@@ -1374,7 +1465,7 @@ class LJNBForce(Force):
 
         """
         # Initialize defaults.
-        self.torsions = list()
+        self.forces = list()
 
         # Populate data structures from swig object, if specified
         if force is not None:
@@ -1408,7 +1499,7 @@ class LJNBForce(Force):
         Get the number of LJNB pair terms in the potential function
 
         """
-        return len(self.torsions)
+        return len(self.forces)
 
     @accepts_compatible_units(None, None, units.elementary_charge, units.elementary_charge, None,  None)
     def addTorsion(self, particle1, particle2, qi, qj, V, W):
@@ -1421,18 +1512,18 @@ class LJNBForce(Force):
         @param qj
         @param V
         @param W
-        @return the index of the torsion that was added
+        @return the index of the force that was added
 
         """
-        torsion = LJNBForceLJNBInfo(particle1, particle2, qi, qj, V, W)
-        self.torsions.append(torsion) 
+        force = LJNBForceLJNBInfo(particle1, particle2, qi, qj, V, W)
+        self.forces.append(force) 
         return
 
     def getTorsionParameters(self, index):
         """
         Get the force field parameters for a LJNB pair term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index        the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns qi
@@ -1442,15 +1533,15 @@ class LJNBForce(Force):
 
 
         """
-        torsion = self.torsions[index]
-        return (torsion.particle1, torsion.particle2, torsion.qi, torsion.qj, torsion.V, torsion.W)
+        force = self.forces[index]
+        return (force.particle1, force.particle2, force.qi, force.qj, force.V, force.W)
 
     @accepts_compatible_units(None, None, None, units.elementary_charge, units.elementary_charge, None, None)
     def setTorsionParameters(self, index, particle1, particle2, qi, qj, V, W):
         """
         Set the force field parameters for a LJ1 pair term.
 
-        @param index        the index of the torsion for which to set parameters
+        @param index        the index of the force for which to set parameters
         @param particle1    the index of the first particle forming the pair
         @param particle2    the index of the second particle forming the pair 
         @param qi
@@ -1459,8 +1550,8 @@ class LJNBForce(Force):
         @param W
 
         """
-        torsion = LJNBForceLJNBInfo(particle1, particle2, qi, qj, V, W)
-        self.torsions[index] = torsion
+        force = LJNBForceLJNBInfo(particle1, particle2, qi, qj, V, W)
+        self.forces[index] = force
         return
 
     #==========================================================================
@@ -1468,8 +1559,8 @@ class LJNBForce(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
-        return len(self.torsions)
+    def nforces(self):
+        return len(self.forces)
 
     def __str__(self):
         """
@@ -1479,12 +1570,12 @@ class LJNBForce(Force):
 
         r = ""
 
-        # Show torsions.
-        if (self.ntorsions > 0):
+        # Show forces.
+        if (self.nforces > 0):
             r += "Torsions:\n"
             r += "%8s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "qi", "qj", "V", "W")
-            for (index, torsion) in enumerate(self.torsions):
-                r += "%8d %10d %10d %24s %24s %24s %24s\n" % (index, torsion.particle1, torsion.particle2, str(torsion.qi), str(torsion.qj), str(torsion.V), str(torsion.W))
+            for (index, force) in enumerate(self.forces):
+                r += "%8d %10d %10d %24s %24s %24s %24s\n" % (index, force.particle1, force.particle2, str(force.qi), str(force.qj), str(force.V), str(force.W))
             r += "\n"
             r += "\n"
 
@@ -1503,12 +1594,12 @@ class LJNBForce(Force):
             raise ValueError("other force object must be of identical Force subclass")
 
         # Combine systems.
-        for torsion in force.torsions:
-            torsion.particle1 += offset
-            torsion.particle2 += offset
-            torsion.particle3 += offset
-            torsion.particle4 += offset
-            self.torsions.append(torsion)
+        for force in force.forces:
+            force.particle1 += offset
+            force.particle2 += offset
+            force.particle3 += offset
+            force.particle4 += offset
+            self.forces.append(force)
 
         return
 
@@ -2242,8 +2333,6 @@ class FourierTorsionForceFourierTorsionInfo(object):
         self.C3 = C3
         self.C4 = C4
         return
-
-
 
 #=============================================================================================
 # GBSAOBCForce
@@ -3068,7 +3157,6 @@ class CustomNonbondedForce(Force):
             self.exclusions.append(offset_exclusion)
 
         return
-
 
 class CustomNonbondedForceParticleInfo(object):
     def __init__(self, *parameters):

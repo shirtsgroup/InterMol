@@ -1,10 +1,5 @@
 #include "ffoplsaa.itp"
-
 #include "LG2.itp"
-
-; Include water topology
-
-#include "ffoplsaa_tip3p.itp"
 
 [ system ]
 p3863_fkbprelative_ligand
@@ -12,5 +7,3 @@ p3863_fkbprelative_ligand
 [ molecules ]
 ; Compound        #mols
 LG2              1
-SOL              892
-

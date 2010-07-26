@@ -5,7 +5,7 @@
 """
 System.py
 
-Classes and methods for creating and manipulating molecular system topologies.   
+Classes and methods for creating and manipulating molecular system topologies.
 
 REQUIREMENTS
 
@@ -40,119 +40,12 @@ TODO
 # GLOBAL IMPORTS
 #=============================================================================================
 
-import re
+import re, os, sys, pdb
 import copy
-import numpy 
-
-import simtk.unit as units
-
-
-#=============================================================================================
-# EXCEPTIONS
-#=============================================================================================
-
-class UnitsException(Exception):
-    """
-    Exception denoting that an argument has the incorrect units.
-
-    """
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-class ValueException(Exception):
-    """
-    Exception denoting that an argument has the incorrect value.
-
-    """
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-#=============================================================================================
-# DECORATORS
-#=============================================================================================
-
-#TODO: Do we need to use 'from functools import wraps' to help us here?
-
-def accepts(*types):
-    """
-    Decorator for class methods that should accept only specified types.
-
-    EXAMPLE
-
-    @accepts(float, int)
-    def function(a, b):
-        return b*a
-
-    """
-    def check_accepts(f):
-        nargs = (f.func_code.co_argcount - 1) # exclude self
-        assert len(types) == nargs, "incorrect number of args supplied in @accepts decorator for class method %s" % (f.func_name)        
-        def new_f(*args, **kwds):
-            for (a, t) in zip(args[1:], types):
-                if a is not None:
-                    assert isinstance(a, t), "arg %r does not match %s" % (a,t)
-            return f(*args, **kwds)
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
-        return new_f
-    return check_accepts
-
-def accepts_compatible_units(*units):
-    """
-    Decorator for class methods that should accept only arguments compatible with specified units.
-
-    Each argument of the function will be matched with an argument of @acceptunits.
-    Those arguments of the function that correspond @acceptunits which are not None
-    will be checked to ensure they are compatible with the specified units.
-
-    EXAMPLE
-
-    @acceptsunits(units.meter, None, units.kilocalories_per_mole)
-    def function(a, b, c): pass
-    function(1.0 * units.angstrom, 3, 1.0 * units.kilojoules_per_mole)
-
-    """
-    def check_units(f):
-        nargs = (f.func_code.co_argcount - 1) # exclude self
-        assert len(units) == nargs, "incorrect number of units supplied in @accepts_compatible_units decorator for class method %s" % (f.func_name)
-        def new_f(*args, **kwds):
-            for (a, u) in zip(args[1:], units):
-                if u is not None:
-                    assert (a.unit).is_compatible(u), "arg %r does not have units compatible with %s" % (a,u)
-            return f(*args, **kwds)
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
-        return new_f
-    return check_units
-
-def returns(rtype):
-    """
-    Decorator for functions that should only return specific types.
-    EXAMPLE
-
-    @returns(int)
-    def function(): return 7
-
-    """
-
-    def check_returns(f):
-        def new_f(*args, **kwds):
-            result = f(*args, **kwds)
-            assert isinstance(result, rtype), "return value %r does not match %s" % (result,rtype)
-            return result
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
-        return new_f
-    return check_returns
-
-
+import numpy
 from Force import *
+from Structure import *
+
 
 #=============================================================================================
 # System base class
@@ -167,7 +60,7 @@ class System(object):
 
     """
 
-    def __init__(self, topology=None):
+    def __init__(self, structureList=None, topologyList=None, inputFileType=None):
         """
         Create a new System object.
 
@@ -175,7 +68,51 @@ class System(object):
 
         """
         self.name = "Untitled"
-        self.molecules      = list()   # molecules[i] is the ith Topology object
+        self.structureMolecules = list()
+        self.topologyMolecules = list()
+
+        self.loadStructure(structureList, inputFileType)
+        self.loadTopology(topologyList, inputFileType)
+
+        self.mapping = Mapping(self.structureMolecules, self.topologyMolecules)
+
+    def loadStructure(self, structureFiles, inputFileType):
+        if type(structureFiles) == str():
+            temp = structureFiles
+            structureFiles = list()
+            structureFiles.append(temp)
+
+        if inputFileType == "Gromacs":
+            from GromacsTopology import *
+            for structure in structureFiles:
+                # Create GromacsStructure/readStructureFile
+                gs = GromacsStructure(grofile=structure)
+                gs.readStructureFile(structure)
+                # Create generic Structure/convertFromGromacsStructure
+                s = Structure()
+                s.convertFromGromacsStructure(gs)
+                self.structureMolecules.extend(s.molecules)
+
+        if inputFileType == "Amber": pass
+        if inputFileType == "Desmond": pass
+
+    def loadTopology(self, topologyFiles, inputFileType):
+        if type(topologyFiles) == str():
+            temp = topologyFiles
+            topologyFiles = list()
+            topologyFiles.append(temp)
+
+        if inputFileType == "Gromacs":
+            from GromacsTopology import *
+            for topology in topologyFiles:
+                # Create object/readTopologyFile
+                g = GromacsTopology(topfile=topology)
+                g.readTopologyFile(topology)
+                self.topologyMolecules.extend(g.molecules)
+
+        if inputFileType == "Amber": pass
+        if inputFileType == "Desmond": pass
+
 
     def getName(self):
         """
@@ -191,7 +128,7 @@ class System(object):
 
         """
         self.name = name
-        return 
+        return
 
 
     def getNumMolecules(self):
@@ -202,15 +139,15 @@ class System(object):
         return len(self.molecules)
 
 
-"""    def addMolecule(self, molecule=None):
+    def addMolecule(self, molecule=None):
         """
-        #Add a molecule (i.e. a TopologySystem object) to the Topology object.
+        #Add a molecule (i.e. a Topology object) to the System object.
 
         """
         if molecule == None:
-            self.molecules.append( TopologySystem() )
+            self.molecules.append( Topology() )
         else:
-            self.molecules.append( TopologySystem( system=molecule) )
+            self.molecules.append( Topology( system=molecule) )
         return
 
 
@@ -222,6 +159,7 @@ class System(object):
         self.molecules.pop(index)
         return
 
+
     def insertMolecule(self, index, molecule=None):
         """
         #Insert a molecule into the Topology object at the specified index.
@@ -232,7 +170,68 @@ class System(object):
         else:
             self.molecules.insert( index, TopologySystem( system=molecule) )
         return
-"""
+
+
+class Mapping(object):
+
+    def __init__(self, structureMolecules, topologyMolecules):
+        self.proteinMap = {}
+
+        # need to loop through File List first and pair up the files
+
+
+
+        """
+        Set up 'proteinMap' with the following form for each entry:
+
+        {key:list()}
+
+        where - 'key' is the name of a topology
+        and   - 'list()' contains pairwise entries of the form ['molecule', 'dict{strucAtom:topAtom}']
+
+        Example:
+
+         TopMol      StrucMol          Atoms
+
+        {Protein : (['Protein', {strucAtom:topAtom])
+                                 strucAtom:topAtom
+                                    ...   :  ...  }
+         solute: (['MOL', {strucAtom:topAtom])
+                           strucAtom:topAtom
+                              ...   :  ...  }
+         WAT: (['WAT1', {strucAtom:topAtom  ], ['WAT2', {strucAtom:topAtom  ], ['WAT3', {strucAtom:topAtom  ])}
+                         strucAtom:topAtom               strucAtom:topAtom               strucAtom:topAtom
+                            ...   :  ...  }                 ...   :  ...  }                 ...   :  ...  }
+        """
+
+        # for every 'key'
+        for topology in topologyMolecules:
+            molnameList = list()
+            # find every corresponding 'molecule'
+            for molecule in structureMolecules:
+                if molecule.name == topology.name: ### needs "translation" for differing nomenclature
+                    atomMap = {}
+                    # for every 'topAtom' in 'key'
+                    for topAtom in topology.atoms:
+                        # find every corresponding 'strucAtom' in 'molecule'
+                        for strucAtom in molecule.atomList:
+                            if strucAtom.atomname == topAtom.atomname and strucAtom.resname == topAtom.metadata.resname:
+                                # add {'strucAtom' : 'topAtom'} pairs into an 'atomMap' dictionary
+                                atomMap[strucAtom.atomnum] = topAtom.ID
+                    # append current ['molecule', 'dict{strucAtom:topAtom}'] entry to 'molnameList()'
+                    molnameList.append([str(molecule.atomList[0].resnum) + molecule.name, atomMap])
+            if topology.name not in self.proteinMap:
+                self.proteinMap[topology.name] = molnameList
+
+
+
+    def find_key(dic, val):
+        """
+        Return the key of dictionary dic given the value
+
+        """
+
+        return [k for k, v in symbol_dic.iteritems() if v == val][0]
 
 
 class Topology(object):
@@ -463,16 +462,15 @@ class Topology(object):
         self.name = ''
 
         # Set defaults.
-        self.masses      = list() # masses[i] is a Quantity denoting the mass of particle i
-        self.metadata    = list() # metadata[i] is the MetadataInfo entry for particle i
 
+        self.atoms = list()
         self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
-        self.forces      = list() # forces[i] is the ith force term
+        self.forces = list() # forces[i] is the ith force term
 
-        self.atomgroups  = list() # atomgroups[i] is the ith AtomGroup object
+        self.atomgroups = list() # atomgroups[i] is the ith AtomGroup object
 
 
-        self.periodicBoxVectors = [ units.Quantity((2.,0.,0.), units.nanometer), units.Quantity((0.,2.,0.), units.nanometer), units.Quantity((0.,0.,2.), units.nanometer) ] # periodic box vectors (only for periodic systems)
+        #self.periodicBoxVectors = [ units.Quantity((2.,0.,0.), units.nanometer), units.Quantity((0.,2.,0.), units.nanometer), units.Quantity((0.,0.,2.), units.nanometer) ] # periodic box vectors (only for periodic systems)
         # TODO: Store periodicBoxVectors as units.Quantity(numpy.array([3,3], numpy.float64), units.nanometer)?
 
         # Populate the system from a provided system, if given.
@@ -1031,33 +1029,43 @@ class Topology(object):
 
 
 
-class MetadataInfo(object):
+class TopAtom(object):
     """
-    A container class for storing atom names, types, residues
+    ;     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
+            1 amber99_39      1   NPRO      N      1 -0.202     14.01      ; qtot -0.202
+
     """
 
-    def __init__(self, particle, atomname=None, atomtype=None, resname=None, resnum=None, \
-                                  atomnum=None, atomcharge=None, comment=None, freeEnergyAtom=False):
-        """
-        ;     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
-               1 amber99_39      1   NPRO      N      1 -0.202     14.01      ; qtot -0.202
-        """
-        self.particle = particle
+    def __init__(self, ID, atomtype, resnum, resname, atomname, cgnr, charge, mass, V, W, freeEnergyAtom=False):
+        self.ID = ID
         self.atomname = atomname
-        self.atomtype = atomtype
-        self.resname = resname
-        self.resnum = resnum
-        self.atomnum = atomnum
-        self.atomcharge = atomcharge
-        self.comment = comment
-        self.freeEnergyAtom = freeEnergyAtom  # boolean
+        self.metadata = Metadata(atomtype, resnum, resname, cgnr)
+        self.mass = mass
+        self.charge = charge
+        self.V = V
+        self.W = W
+        self.freeEnergyAtom = freeEnergyAtom
+
+    def getID(self):
+        return self.ID
+
+    def setID(self, ID):
+        self.ID = ID
         return
 
-    def getAtomName(self):
-        return self.atomname
 
-    def setAtomName(self, atomname):
-        self.atomname = atomname
+class Metadata(object):
+    """
+    A container class for storing atomtypes, residue names, residue numbers and charge numbers
+
+    """
+
+    def __init__(self, atomtype=None, resnum=None, resname=None, cgnr=None):
+
+        self.atomtype = atomtype
+        self.resnum = resnum
+        self.resname = resname
+        self.cgnr = cgnr
         return
 
     def getAtomType(self):
@@ -1065,6 +1073,13 @@ class MetadataInfo(object):
 
     def setAtomType(self, atomtype):
         self.atomtype = atomtype
+        return
+
+    def getPtype(self):
+        return self.ptype
+
+    def setPtype(self, ptype):
+        self.ptype = ptype
         return
 
     def getResidueName(self):
@@ -1081,33 +1096,19 @@ class MetadataInfo(object):
         self.resnum = resnum
         return
 
-    def getAtomNum(self):
-        return self.atomnum
+    def getCGNR(self):
+        return self.cgnr
 
-    def setAtomNum(self, atomnum):
-        self.atomnum = atomnum
+    def setCGNR(self, cgnr):
+        self.cgnr = cgnr
         return
 
-    def getAtomCharge(self):
-        return self.atomcharge
+    #def getFreeEnergyAtom(self):
+    #    return self.freeEnergyAtom
 
-    def setAtomCharge(self, atomcharge):
-        self.atomcharge = atomcharge
-        return
-
-    def getComment(self):
-        return self.comment
-
-    def setComment(self, comment):
-        self.comment = comment
-        return
-
-    def getFreeEnergyAtom(self):
-        return self.freeEnergyAtom
-
-    def setFreeEnergyAtom(self, freeEnergyAtom):
-        self.freeEnergyAtom = freeEnergyAtom
-        return
+    #def setFreeEnergyAtom(self, freeEnergyAtom):
+    #    self.freeEnergyAtom = freeEnergyAtom
+    #    return
 
 
 
