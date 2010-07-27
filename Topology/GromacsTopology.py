@@ -436,8 +436,6 @@ class GromacsTopology(object):
                             currentMoleculeDirective.addBond(particle1, particle2, length, k)
 
                         if func == 2:
-                            raise "Bond type not implemented"
-                            """
                             newMoleculeDirective = G96BondForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
                             if len(fields) > 3:
@@ -448,11 +446,8 @@ class GromacsTopology(object):
                                 length = self.parameters[i][j].distance
                                 k = self.parameters[i][j].kspring
                             currentMoleculeDirective.addBond(particle1, particle2, length, k)
-                            """
 
                         if func == 3:
-                            raise "Bond type not implemented"
-                            """
                             newMoleculeDirective = MorseBondForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
                             if len(fields) > 3:
@@ -464,11 +459,8 @@ class GromacsTopology(object):
                                 D = self.parameters[i][j].D
                                 beta = self.parameters[i][j].beta
                             currentMoleculeDirective.addBond(particle1, particle2, length, D, beta)
-                            """
 
                         if func == 4:
-                            raise "Bond type not implemented"
-                            """
                             newMoleculeDirective = CubicBondForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
                             if len(fields) > 3:
@@ -480,19 +472,13 @@ class GromacsTopology(object):
                                 C2 = self.parameters[i][j].C2
                                 C3 = self.parameters[i][j].C3
                             currentMoleculeDirective.addBond(particle1, particle2, length, C2, C3)
-                            """
 
                         if func == 5:
-                            raise "Bond type not implemented"
-                            """
                             newMoleculeDirective = ConnectionBondForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
                             currentMoleculeDirective.addBond(particle1, particle2)
-                            """
 
                         if func == 6:
-                            raise "Bond type not implemented"
-                            """
                             newMoleculeDirective = HarmonicBondForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
                             if len(fields) > 3:
@@ -503,19 +489,15 @@ class GromacsTopology(object):
                                 length = self.parameters[i][j].distance
                                 k = self.parameters[i][j].kspring
                             currentMoleculeDirective.addBond(particle1, particle2, length, k)
-                            """
 
                         if func == 7:
                             raise "Bond type not implemented"
-                            # Not implemented in GromacsParameter.py
 
                         if func == 8:
                             raise "Bond type not implemented"
-                            # Not implemented in GromacsParameter.py
 
                         if func == 9:
                             raise "Bond type not implemented"
-                            # Not implemented in GromacsParameter.py
 
                 # Fill in pairs
                 if "pairs" in directive.name:
@@ -597,8 +579,6 @@ class GromacsTopology(object):
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k)
 
                         if func == 2:
-                            raise "Angle type not implemented"
-                            """
                             newMoleculeDirective = G96AngleForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
                             if len(fields) > 4:
@@ -609,11 +589,8 @@ class GromacsTopology(object):
                                 angle = self.parameters[i][j].theta
                                 k = self.parameters[i][j].k
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k)
-                            """
 
                         if func == 3:
-                            raise "Angle type not implemented"
-                            """
                             newMoleculeDirective = CrossBondBondAngleForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
                             if len(fields) > 4:
@@ -626,11 +603,8 @@ class GromacsTopology(object):
                                 r2e = self.parameters[i][j].r2e
                                 krr = self.parameters[i][j].krr
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, r1e, r2e, krr)
-                            """
 
                         if func == 4:
-                            raise "Angle type not implemented"
-                            """
                             newMoleculeDirective = CrossBondAngleAngleForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
                             if len(fields) > 4:
@@ -645,11 +619,8 @@ class GromacsTopology(object):
                                 r3e = self.parameters[i][j].r3e
                                 kr = self.parameters[i][j].kr
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, r1e, r2e, r3e, kr)
-                            """
 
                         if func == 5:
-                            raise "Angle type not implemented"
-                            """
                             newMoleculeDirective = UreyBradleyAngleForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
                             if len(fields) > 4:
@@ -664,11 +635,8 @@ class GromacsTopology(object):
                                 r13 = self.parameters[i][j].r13
                                 kUB = self.parameters[i][j].kUB
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k, r13, kUB)
-                            """
 
                         if func == 6:
-                            raise "Angle type not implemented"
-                            """
                             newMoleculeDirective = QuarticAngleForce()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
                             if len(fields) > 4:
@@ -686,11 +654,9 @@ class GromacsTopology(object):
                                 C3 = self.parameters[i][j].C3
                                 C4 = self.parameters[i][j].C4
                             currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, C0, C1, C2, C3, C4)
-                            """
 
                         if func == 8:
                             raise "Angle type not implemented"
-                            # Not implemented in GromacsParameter.py
 
                 # Fill in dihedrals
                 if "dihedrals" in directive.name:

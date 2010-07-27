@@ -352,7 +352,7 @@ class GromacsPairTypes11ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
+        return '%s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
 
 
 class GromacsPairTypes123ParameterInfo(GromacsParameterInfo):
@@ -380,7 +380,7 @@ class GromacsPairTypes123ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
+        return '%s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
 
 
 class GromacsPairTypes21ParameterInfo(GromacsParameterInfo):
@@ -411,7 +411,7 @@ class GromacsPairTypes21ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %s %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.fudgeQQ, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
+        return '%s   %s       %d    %f   %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.fudgeQQ, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
 
 
 class GromacsPairTypes223ParameterInfo(GromacsParameterInfo):
@@ -442,7 +442,7 @@ class GromacsPairTypes223ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %s %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.fudgeQQ, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
+        return '%s   %s       %d    %f    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.fudgeQQ, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
 
 
 class GromacsPairTypesNB13ParameterInfo(GromacsParameterInfo):
@@ -472,7 +472,7 @@ class GromacsPairTypesNB13ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
+        return '%s   %s       %d    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
 
 
 class GromacsPairTypesNB2ParameterInfo(GromacsParameterInfo):
@@ -502,7 +502,7 @@ class GromacsPairTypesNB2ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
+        return '%s   %s       %d    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.qi._value, self.qj._value, self.V._value, self.W._value, self.comment)
 
 
 # Angle parameters
@@ -532,7 +532,7 @@ class GromacsAngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.comment)
 
 
 class GromacsG96AngleParameterInfo(GromacsParameterInfo):
@@ -561,7 +561,7 @@ class GromacsG96AngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.comment)
 
 
 class GromacsCrossBondBondAngleParameterInfo(GromacsParameterInfo):
@@ -591,7 +591,7 @@ class GromacsCrossBondBondAngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.r1e._value, self.r2e._value, self.krr._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.r1e._value, self.r2e._value, self.krr._value, self.comment)
 
 
 class GromacsCrossBondAngleAngleParameterInfo(GromacsParameterInfo):
@@ -622,7 +622,7 @@ class GromacsCrossBondAngleAngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.r1e._value, self.r2e._value, self.r3e._value, self.kr._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.r1e._value, self.r2e._value, self.r3e._value, self.kr._value, self.comment)
 
 
 class GromacsUreyBradleyAngleParameterInfo(GromacsParameterInfo):
@@ -653,7 +653,7 @@ class GromacsUreyBradleyAngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.r13._value, self.kUB._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.k._value, self.r13._value, self.kUB._value, self.comment)
 
 
 class GromacsQuarticAngleParameterInfo(GromacsParameterInfo):
@@ -686,7 +686,7 @@ class GromacsQuarticAngleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %d    %f %f %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.C0._value, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.comment)
+        return '%s   %s   %s       %d    %f   %f   %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.theta._value, self.C0._value, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.comment)
 
 
 # LJ/Coul nonbonded parameters
@@ -715,7 +715,7 @@ class GromacsLJNonbonded13ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
+        return '%s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
 
 
 class GromacsLJNonbonded2ParameterInfo(GromacsParameterInfo):
@@ -743,7 +743,7 @@ class GromacsLJNonbonded2ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
+        return '%s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.V, self.W, self.comment)
 
 
 class GromacsBuckinghamNonbondedParameterInfo(GromacsParameterInfo):
@@ -772,7 +772,7 @@ class GromacsBuckinghamNonbondedParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.a._value, self.b._value, self.c6._value, self.comment)
+        return '%s   %s       %d    %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.a._value, self.b._value, self.c6._value, self.comment)
 
 
 # Dihedral parameters
@@ -804,7 +804,7 @@ class GromacsProperDihedralParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %f %f %d ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.phi._value, self.kphi._value, self.multiplicity, self.comment)
+        return '%s   %s   %s   %s       %d    %f   %f   %d ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.phi._value, self.kphi._value, self.multiplicity, self.comment)
 
 
 class GromacsImproperDihedralParameterInfo(GromacsParameterInfo):
@@ -834,7 +834,7 @@ class GromacsImproperDihedralParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.xi._value, self.kxi._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.xi._value, self.kxi._value, self.comment)
 
 
 class GromacsRBDihedralParameterInfo(GromacsParameterInfo):
@@ -868,7 +868,7 @@ class GromacsRBDihedralParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %f %f %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.C0._value, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.C5._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f   %f   %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.C0._value, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.C5._value, self.comment)
 
 
 class GromacsFourierDihedralParameterInfo(GromacsParameterInfo):
@@ -900,7 +900,7 @@ class GromacsFourierDihedralParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %f %f %f %f %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f   %f   %f   %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.C1._value, self.C2._value, self.C3._value, self.C4._value, self.comment)
 
 
 # Constraint parameters
@@ -928,7 +928,7 @@ class GromacsConstraintParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.distance._value, self.comment)
+        return '%s   %s       %d    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.distance._value, self.comment)
 
 
 class GromacsConstraintNCParameterInfo(GromacsParameterInfo):
@@ -955,7 +955,7 @@ class GromacsConstraintNCParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s  %d    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.distance._value, self.comment)
+        return '%s   %s       %d    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.func, self.distance._value, self.comment)
 
 
 # Settle parameters
@@ -985,7 +985,7 @@ class GromacsSettleParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.distanceOH._value, self.distanceHH._value, self.comment)
+        return '%s   %s   %s       %d    %f    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.distanceOH._value, self.distanceHH._value, self.comment)
 
 
 # Dummy parameters
@@ -1014,7 +1014,7 @@ class GromacsDummy2ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s  %d    %s ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.a, self.comment)
+        return '%s   %s   %s       %d    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.func, self.a, self.comment)
 
 
 class GromacsDummy3ParameterInfo(GromacsParameterInfo):
@@ -1044,7 +1044,7 @@ class GromacsDummy3ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %s %s ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.b, self.comment)
+        return '%s   %s   %s   %s       %d    %f    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.b, self.comment)
 
 
 class GromacsDummy3fdParameterInfo(GromacsParameterInfo):
@@ -1074,7 +1074,7 @@ class GromacsDummy3fdParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %s %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.d._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.d._value, self.comment)
 
 
 class GromacsDummy3fadParameterInfo(GromacsParameterInfo):
@@ -1104,7 +1104,7 @@ class GromacsDummy3fadParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %f %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.theta._value, self.d._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.theta._value, self.d._value, self.comment)
 
 
 class GromacsDummy3outParameterInfo(GromacsParameterInfo):
@@ -1136,7 +1136,7 @@ class GromacsDummy3outParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s %s %s %s  %d    %s %s %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.b, self.c._value, self.comment)
+        return '%s   %s   %s   %s       %d    %f    %f    %f ; %s\n'%(self.atomtype1, self.atomtype2, self.atomtype3, self.atomtype4, self.func, self.a, self.b, self.c._value, self.comment)
 
 
 # Restraint parameters
@@ -1165,7 +1165,7 @@ class GromacsPositionRestraintParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s  %d    %f %f %f ; %s\n'%(self.atomtype1, self.func, self.kx._value, self.ky._value, self.kz._value, self.comment)
+        return '%s       %d    %f    %f    %f ; %s\n'%(self.atomtype1, self.func, self.kx._value, self.ky._value, self.kz._value, self.comment)
 
 
 class GromacsDistanceRestraintParameterInfo(GromacsParameterInfo):

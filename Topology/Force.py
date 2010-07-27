@@ -564,7 +564,7 @@ class BondForce(Force):
     def addBond(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
-        *
+
         @param particle1 the index of the first particle connected by the bond
         @param particle2 the index of the second particle connected by the bond
         @param length    the equilibrium length of the bond
@@ -672,40 +672,624 @@ class BondForceBondInfo(object):
 #=============================================================================================
 
 class G96BondForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a G96BondForce.
+
+        """
+        # Initialize defaults.
+        self.bonds = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumBonds()):
+            args = src.getBondParameters(index)
+            dest.addBond(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.G96BondForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumBonds(self):
+        """
+        Get the number of bond stretch terms in the potential function
+
+        """
+        return len(self.bonds)
+
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
+    def addBond(self, particle1, particle2, length, k):
+        """
+        Add a bond term to the force field.
+
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param k         the harmonic force constant for the bond
+        @return          the index of the bond that was added
+
+        """
+        bond = G96BondForceBondInfo(particle1, particle2, length, k)
+        self.bonds.append(bond)
+        return
+
+    def getBondParameters(self, index):
+        """
+        Get the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to get parameters
+        @returns particle1 the index of the first particle connected by the bond
+        @returns particle2 the index of the second particle connected by the bond
+        @returns length    the equilibrium length of the bond
+        @returns k         the force constant for the bond
+
+        """
+        # TODO: Return deep copy?
+        bond = self.bonds[index]
+        return (bond.particle1, bond.particle2, bond.length, bond.k)
+
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
+    def setBondParameters(self, index, particle1, particle2, length, k):
+        """
+        Set the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to set parameters
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param k         the harmonic force constant for the bond
+        """
+
+        bond = G96BondForceBondInfo(particle1, particle2, length, k)
+        self.bonds[index] = bond
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nbonds(self):
+        return len(self.bonds)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show bonds.
+        if (self.nbonds > 0):
+            r += "G96 Bonds:\n"
+            r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "length", "k")
+            for (index, bond) in enumerate(self.bonds):
+                r += "%8d %10d %10d %24s %24s\n" % (index, bond.particle1, bond.particle2, str(bond.length), str(bond.k))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for bond in force.bonds:
+            bond.particle1 += offset
+            bond.particle2 += offset
+            self.bonds.append(bond)
+
+        return
 
 class G96BondForceBondInfo(object):
-    pass
+    """
+    Information about a G96 bond.
+    """
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
+    def __init__(self, particle1, particle2, length, k):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.length = length
+        self.k = k
+        return
 
 #=============================================================================================
 # MorseBondForce
 #=============================================================================================
 
 class MorseBondForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a MorseBondForce.
+
+        """
+        # Initialize defaults.
+        self.bonds = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumBonds()):
+            args = src.getBondParameters(index)
+            dest.addBond(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.MorseBondForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumBonds(self):
+        """
+        Get the number of bond stretch terms in the potential function
+
+        """
+        return len(self.bonds)
+
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
+    def addBond(self, particle1, particle2, length, D, beta):
+        """
+        Add a bond term to the force field.
+
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param D         the force constant for the bond
+        @param beta      the force constant for the bond
+        @return          the index of the bond that was added
+
+        """
+        bond = MorseBondForceBondInfo(particle1, particle2, length, D, beta)
+        self.bonds.append(bond)
+        return
+
+    def getBondParameters(self, index):
+        """
+        Get the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to get parameters
+        @returns particle1 the index of the first particle connected by the bond
+        @returns particle2 the index of the second particle connected by the bond
+        @returns length    the equilibrium length of the bond
+        @returns D         the force constant for the bond
+        @returns beta      the force constant for the bond
+
+        """
+        # TODO: Return deep copy?
+        bond = self.bonds[index]
+        return (bond.particle1, bond.particle2, bond.length, bond.D, bond.beta)
+
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
+    def setBondParameters(self, index, particle1, particle2, length, D, beta):
+        """
+        Set the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to set parameters
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param D         the force constant for the bond
+        @param beta      the force constant for the bond
+        """
+
+        bond = MorseBondForceBondInfo(particle1, particle2, length, D, beta)
+        self.bonds[index] = bond
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nbonds(self):
+        return len(self.bonds)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show bonds.
+        if (self.nbonds > 0):
+            r += "Morse Bonds:\n"
+            r += "%8s %10s %10s %24s %24s %24s\n" % ("index", "particle1", "particle2", "length", "D", "beta")
+            for (index, bond) in enumerate(self.bonds):
+                r += "%8d %10d %10d %24s %24s %24s\n" % (index, bond.particle1, bond.particle2, str(bond.length), str(bond.D), str(bond.beta))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for bond in force.bonds:
+            bond.particle1 += offset
+            bond.particle2 += offset
+            self.bonds.append(bond)
+
+        return
 
 class MorseBondForceBondInfo(object):
-    pass
+    """
+    Information about a Morse bond.
+    """
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
+    def __init__(self, particle1, particle2, length, D, beta):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.length = length
+        self.D = D
+        self.beta = beta
+        return
 
 #=============================================================================================
 # CubicBondForce
 #=============================================================================================
 
 class CubicBondForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a CubicBondForce.
+
+        """
+        # Initialize defaults.
+        self.bonds = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumBonds()):
+            args = src.getBondParameters(index)
+            dest.addBond(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.CubicBondForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumBonds(self):
+        """
+        Get the number of bond stretch terms in the potential function
+
+        """
+        return len(self.bonds)
+
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
+    def addBond(self, particle1, particle2, length, C2, C3):
+        """
+        Add a bond term to the force field.
+
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param C2        the force constant for the bond
+        @param C3        the force constant for the bond
+        @return          the index of the bond that was added
+
+        """
+        bond = CubicBondForceBondInfo(particle1, particle2, length, C2, C3)
+        self.bonds.append(bond)
+        return
+
+    def getBondParameters(self, index):
+        """
+        Get the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to get parameters
+        @returns particle1 the index of the first particle connected by the bond
+        @returns particle2 the index of the second particle connected by the bond
+        @returns length    the equilibrium length of the bond
+        @returns C2        the force constant for the bond
+        @returns C3        the force constant for the bond
+
+        """
+        # TODO: Return deep copy?
+        bond = self.bonds[index]
+        return (bond.particle1, bond.particle2, bond.length, bond.C2, bond.C3)
+
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
+    def setBondParameters(self, index, particle1, particle2, length, C2, C3):
+        """
+        Set the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to set parameters
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @param length    the equilibrium length of the bond
+        @param C2        the force constant for the bond
+        @param C3        the force constant for the bond
+        """
+
+        bond = CubicBondForceBondInfo(particle1, particle2, length, C2, C3)
+        self.bonds[index] = bond
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nbonds(self):
+        return len(self.bonds)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show bonds.
+        if (self.nbonds > 0):
+            r += "Cubic Bonds:\n"
+            r += "%8s %10s %10s %24s %24s %24s\n" % ("index", "particle1", "particle2", "length", "C2", "C3")
+            for (index, bond) in enumerate(self.bonds):
+                r += "%8d %10d %10d %24s %24s %24s\n" % (index, bond.particle1, bond.particle2, str(bond.length), str(bond.C2), str(bond.C3))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for bond in force.bonds:
+            bond.particle1 += offset
+            bond.particle2 += offset
+            self.bonds.append(bond)
+
+        return
 
 class CubicBondForceBondInfo(object):
-    pass
+    """
+    Information about a Cubic bond.
+    """
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
+    def __init__(self, particle1, particle2, length, C2, C3):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.length = length
+        self.C2 = C2
+        self.C3 = C3
+        return
 
 #=============================================================================================
 # ConnectionBondForce
 #=============================================================================================
 
 class ConnectionBondForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a ConnectionBondForce.
+
+        """
+        # Initialize defaults.
+        self.bonds = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumBonds()):
+            args = src.getBondParameters(index)
+            dest.addBond(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.ConnectionBondForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumBonds(self):
+        """
+        Get the number of bond stretch terms in the potential function
+
+        """
+        return len(self.bonds)
+
+    @accepts_compatible_units(None, None)
+    def addBond(self, particle1, particle2):
+        """
+        Add a bond term to the force field.
+
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        @return          the index of the bond that was added
+
+        """
+        bond = ConnectionBondForceBondInfo(particle1, particle2)
+        self.bonds.append(bond)
+        return
+
+    def getBondParameters(self, index):
+        """
+        Get the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to get parameters
+        @returns particle1 the index of the first particle connected by the bond
+        @returns particle2 the index of the second particle connected by the bond
+
+        """
+        # TODO: Return deep copy?
+        bond = self.bonds[index]
+        return (bond.particle1, bond.particle2)
+
+    @accepts_compatible_units(None, None, None)
+    def setBondParameters(self, index, particle1, particle2):
+        """
+        Set the force field parameters for a bond term.
+
+        @param index     the index of the bond for which to set parameters
+        @param particle1 the index of the first particle connected by the bond
+        @param particle2 the index of the second particle connected by the bond
+        """
+
+        bond = ConnectionBondForceBondInfo(particle1, particle2)
+        self.bonds[index] = bond
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nbonds(self):
+        return len(self.bonds)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show bonds.
+        if (self.nbonds > 0):
+            r += "Connection Bonds:\n"
+            r += "%8s %10s %10s\n" % ("index", "particle1", "particle2")
+            for (index, bond) in enumerate(self.bonds):
+                r += "%8d %10d %10d\n" % (index, bond.particle1, bond.particle2)
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for bond in force.bonds:
+            bond.particle1 += offset
+            bond.particle2 += offset
+            self.bonds.append(bond)
+
+        return
 
 class ConnectionBondForceBondInfo(object):
-    pass
+    """
+    Information about a Connection bond.
+    """
+    @accepts_compatible_units(None, None)
+    def __init__(self, particle1, particle2):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        return
 
 #=============================================================================================
 # HarmonicBondForce
@@ -782,7 +1366,7 @@ class HarmonicBondForce(Force):
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def addBond(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
@@ -813,7 +1397,7 @@ class HarmonicBondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.k)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def setBondParameters(self, index, particle1, particle2, length, k):
         """
         Set the force field parameters for a bond term.
@@ -847,7 +1431,7 @@ class HarmonicBondForce(Force):
 
         # Show bonds.
         if (self.nbonds > 0):
-            r += "Bonds:\n"
+            r += "Harmonic Bonds:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "length", "k")
             for (index, bond) in enumerate(self.bonds):
                 r += "%8d %10d %10d %24s %24s\n" % (index, bond.particle1, bond.particle2, str(bond.length), str(bond.k))
@@ -880,7 +1464,7 @@ class HarmonicBondForceBondInfo(object):
     """
     Information about a harmonic bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole / units.nanometers**2)
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
     def __init__(self, particle1, particle2, length, k):
         # Store data.
         self.particle1 = particle1
@@ -964,7 +1548,7 @@ class AngleForce(Force):
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole / units.radians**2)
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
     def addAngle(self, particle1, particle2, particle3, angle, k):
         """
         Add an angle term to the force field.
@@ -996,7 +1580,7 @@ class AngleForce(Force):
         angle = self.angles[index]
         return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k)
 
-    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole / units.radians**2)
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
     def setAngleParameters(self, index, particle1, particle2, particle3, angle, k):
         """
         Set the force field parameters for an angle term.
@@ -1065,7 +1649,7 @@ class AngleForceAngleInfo(object):
     """
     Information about a harmonic angle.
     """
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole / units.radians**2)
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
     def __init__(self, particle1, particle2, particle3, angle, k):
         # Store data.
         self.particle1 = particle1
@@ -1080,50 +1664,836 @@ class AngleForceAngleInfo(object):
 #=============================================================================================
 
 class G96AngleForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a G96AngleForce.
+
+        """
+        # Initialize defaults.
+        self.angles = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumAngles()):
+            args = src.getAngleParameters(index)
+            dest.addAngle(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.G96AngleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumAngles(self):
+        """
+        Get the number of harmonic angle stretch terms in the potential function
+
+        """
+        return len(self.angles)
+
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole)
+    def addAngle(self, particle1, particle2, particle3, angle, k):
+        """
+        Add an angle term to the force field.
+
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param k         the harmonic force constant for the angle
+        @return          the index of the angle that was added
+
+        """
+        angle = G96AngleForceAngleInfo(particle1, particle2, particle3, angle, k)
+        self.angles.append(angle)
+        return
+
+    def getAngleParameters(self, index):
+        """
+        Get the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to get parameters
+        @returns particle1 the index of the first particle forming the angle
+        @returns particle2 the index of the second particle forming the angle
+        @returns particle3 the index of the third particle forming the angle
+        @returns angle     the equilibrium angle
+        @returns k         the harmonic force constant for the angle
+
+        """
+        angle = self.angles[index]
+        return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k)
+
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole)
+    def setAngleParameters(self, index, particle1, particle2, particle3, angle, k):
+        """
+        Set the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to set parameters
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param k         the harmonic force constant for the angle
+        """
+
+        angle = G96AngleForceAngleInfo(particle1, particle2, particle3, angle, k)
+        self.angles[index] = angle
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nangles(self):
+        return len(self.angles)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show angles.
+        if (self.nangles > 0):
+            r += "G96 Angles:\n"
+            r += "%8s %10s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "length", "k")
+            for (index, angle) in enumerate(self.angles):
+                r += "%8d %10d %10d %10d %24s %24s\n" % (index, angle.particle1, angle.particle2, angle.particle3, str(angle.angle), str(angle.k))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for angle in force.angles:
+            angle.particle1 += offset
+            angle.particle2 += offset
+            angle.particle3 += offset
+            self.angles.append(angle)
+
+        return
 
 class G96AngleForceAngleInfo(object):
-    pass
+    """
+    Information about a G96 angle.
+    """
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole)
+    def __init__(self, particle1, particle2, particle3, angle, k):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.particle3 = particle3
+        self.angle = angle
+        self.k = k
+        return
 
 #=============================================================================================
 # CrossBondBondAngleForce
 #=============================================================================================
 
 class CrossBondBondAngleForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a CrossBondBondAngleForce.
+
+        """
+        # Initialize defaults.
+        self.angles = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumAngles()):
+            args = src.getAngleParameters(index)
+            dest.addAngle(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.CrossBondBondAngleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumAngles(self):
+        """
+        Get the number of harmonic angle stretch terms in the potential function
+
+        """
+        return len(self.angles)
+
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def addAngle(self, particle1, particle2, particle3, r1e, r2e, k):
+        """
+        Add an angle term to the force field.
+
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param r1e       the radius
+        @param r2e       the radius
+        @param k         the harmonic force constant for the angle
+        @return          the index of the angle that was added
+
+        """
+        angle = CrossBondBondAngleForceAngleInfo(particle1, particle2, particle3, r1e, r2e, k)
+        self.angles.append(angle)
+        return
+
+    def getAngleParameters(self, index):
+        """
+        Get the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to get parameters
+        @returns particle1 the index of the first particle forming the angle
+        @returns particle2 the index of the second particle forming the angle
+        @returns particle3 the index of the third particle forming the angle
+        @returns r1e       the radius
+        @returns r2e       the radius
+        @returns k         the harmonic force constant for the angle
+
+        """
+        angle = self.angles[index]
+        return (angle.particle1, angle.particle2, angle.particle3, angle.r1e, angle.r2e, angle.k)
+
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def setAngleParameters(self, index, particle1, particle2, particle3, r1e, r2e, k):
+        """
+        Set the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to set parameters
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param r1e       the radius
+        @param r2e       the radius
+        @param k         the harmonic force constant for the angle
+        """
+
+        angle = CrossBondBondAngleForceAngleInfo(particle1, particle2, particle3, r1e, r2e, k)
+        self.angles[index] = angle
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nangles(self):
+        return len(self.angles)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show angles.
+        if (self.nangles > 0):
+            r += "CrossBondBond Angles:\n"
+            r += "%8s %10s %10s %10s %24s %24s $24s\n" % ("index", "particle1", "particle2", "particle3", "r1e", "r1e", "k")
+            for (index, angle) in enumerate(self.angles):
+                r += "%8d %10d %10d %10d %24s %24s %24s\n" % (index, angle.particle1, angle.particle2, angle.particle3, str(angle.r1e), str(angle.r2e), str(angle.k))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for angle in force.angles:
+            angle.particle1 += offset
+            angle.particle2 += offset
+            angle.particle3 += offset
+            self.angles.append(angle)
+
+        return
 
 class CrossBondBondAngleForceAngleInfo(object):
-    pass
+    """
+    Information about a CrossBondBond angle.
+    """
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def __init__(self, particle1, particle2, particle3, r1e, r2e, k):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.particle3 = particle3
+        self.r1e = r1e
+        self.r2e = r2e
+        self.k = k
+        return
 
 #=============================================================================================
 # CrossBondAngleAngleForce
 #=============================================================================================
 
 class CrossBondAngleAngleForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a CrossBondAngleAngleForce.
+
+        """
+        # Initialize defaults.
+        self.angles = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumAngles()):
+            args = src.getAngleParameters(index)
+            dest.addAngle(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.CrossBondAngleAngleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumAngles(self):
+        """
+        Get the number of harmonic angle stretch terms in the potential function
+
+        """
+        return len(self.angles)
+
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def addAngle(self, particle1, particle2, particle3, r1e, r2e, r3e, k):
+        """
+        Add an angle term to the force field.
+
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param r1e       the radius
+        @param r2e       the radius
+        @param r3e       the radius
+        @param k         the harmonic force constant for the angle
+        @return          the index of the angle that was added
+
+        """
+        angle = CrossBondAngleAngleForceAngleInfo(particle1, particle2, particle3, r1e, r2e, r3e, k)
+        self.angles.append(angle)
+        return
+
+    def getAngleParameters(self, index):
+        """
+        Get the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to get parameters
+        @returns particle1 the index of the first particle forming the angle
+        @returns particle2 the index of the second particle forming the angle
+        @returns particle3 the index of the third particle forming the angle
+        @returns r1e       the radius
+        @returns r2e       the radius
+        @returns r3e       the radius
+        @returns k         the harmonic force constant for the angle
+
+        """
+        angle = self.angles[index]
+        return (angle.particle1, angle.particle2, angle.particle3, angle.r1e, angle.r2e, angle.r3e, angle.k)
+
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def setAngleParameters(self, index, particle1, particle2, particle3, r1e, r2e, r3e, k):
+        """
+        Set the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to set parameters
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param r1e       the radius
+        @param r2e       the radius
+        @param r3e       the radius
+        @param k         the harmonic force constant for the angle
+        """
+
+        angle = CrossBondAngleAngleForceAngleInfo(particle1, particle2, particle3, r1e, r2e, r3e, k)
+        self.angles[index] = angle
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nangles(self):
+        return len(self.angles)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show angles.
+        if (self.nangles > 0):
+            r += "CrossBondAngle Angles:\n"
+            r += "%8s %10s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "r1e", "r1e", "r3e", "k")
+            for (index, angle) in enumerate(self.angles):
+                r += "%8d %10d %10d %10d %24s %24s %24s %24s\n" % (index, angle.particle1, angle.particle2, angle.particle3, str(angle.r1e), str(angle.r2e), str(angle.k))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for angle in force.angles:
+            angle.particle1 += offset
+            angle.particle2 += offset
+            angle.particle3 += offset
+            self.angles.append(angle)
+
+        return
 
 class CrossBondAngleAngleForceAngleInfo(object):
-    pass
+    """
+    Information about a CrossBondAngle angle.
+    """
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    def __init__(self, particle1, particle2, particle3, r1e, r2e, r3e, k):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.particle3 = particle3
+        self.r1e = r1e
+        self.r2e = r2e
+        self.r3e = r3e
+        self.k = k
+        return
 
 #=============================================================================================
 # UreyBradleyAngleForce
 #=============================================================================================
 
 class UreyBradleyAngleForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a UreyBradleyAngleForce.
+
+        """
+        # Initialize defaults.
+        self.angles = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumAngles()):
+            args = src.getAngleParameters(index)
+            dest.addAngle(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.UreyBradleyAngleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumAngles(self):
+        """
+        Get the number of harmonic angle stretch terms in the potential function
+
+        """
+        return len(self.angles)
+
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole)
+    def addAngle(self, particle1, particle2, particle3, angle, k, r13, kUB):
+        """
+        Add an angle term to the force field.
+
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param k         the harmonic force constant for the angle
+        @param r13       radius
+        @param kUB       force constant
+        @return          the index of the angle that was added
+
+        """
+        angle = UreyBradleyAngleForceAngleInfo(particle1, particle2, particle3, angle, k, r13, kUB)
+        self.angles.append(angle)
+        return
+
+    def getAngleParameters(self, index):
+        """
+        Get the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to get parameters
+        @returns particle1 the index of the first particle forming the angle
+        @returns particle2 the index of the second particle forming the angle
+        @returns particle3 the index of the third particle forming the angle
+        @returns angle     the equilibrium angle
+        @returns k         the harmonic force constant for the angle
+        @returns r13       radius
+        @returns kUB       force constant
+
+        """
+        angle = self.angles[index]
+        return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k, angle.r13, angle.kUB)
+
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole)
+    def setAngleParameters(self, index, particle1, particle2, particle3, angle, k, r13, kUB):
+        """
+        Set the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to set parameters
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param k         the harmonic force constant for the angle
+        @param r13       radius
+        @param kUB       force constant
+        """
+
+        angle = UreyBradleyAngleForceAngleInfo(particle1, particle2, particle3, angle, k, r13, kUB)
+        self.angles[index] = angle
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nangles(self):
+        return len(self.angles)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show angles.
+        if (self.nangles > 0):
+            r += "Urey Bradley Angles:\n"
+            r += "%8s %10s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "length", "k", "r13", "kUB")
+            for (index, angle) in enumerate(self.angles):
+                r += "%8d %10d %10d %10d %24s %24s %24s %24s\n" % (index, angle.particle1, angle.particle2, angle.particle3, str(angle.angle), str(angle.k), str(angle.r13), str(angle.kUB))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for angle in force.angles:
+            angle.particle1 += offset
+            angle.particle2 += offset
+            angle.particle3 += offset
+            self.angles.append(angle)
+
+        return
 
 class UreyBradleyAngleForceAngleInfo(object):
-    pass
+    """
+    Information about a Urey Bradley angle.
+    """
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole)
+    def __init__(self, particle1, particle2, particle3, angle, k, r13, kUB):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.particle3 = particle3
+        self.angle = angle
+        self.k = k
+        self.r13 = r13
+        self.kUB = kUB
+        return
 
 #=============================================================================================
 # QuarticAngleForce
 #=============================================================================================
 
 class QuarticAngleForce(Force):
-    pass
+
+
+    def __init__(self, force=None):
+        """
+        Create a QuarticAngleForce.
+
+        """
+        # Initialize defaults.
+        self.angles = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumAngles()):
+            args = src.getAngleParameters(index)
+            dest.addAngle(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.QuarticAngleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumAngles(self):
+        """
+        Get the number of harmonic angle stretch terms in the potential function
+
+        """
+        return len(self.angles)
+
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
+    def addAngle(self, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
+        """
+        Add an angle term to the force field.
+
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param C0        the force constant
+        @param C1        the force constant
+        @param C2        the force constant
+        @param C3        the force constant
+        @param C4        the force constant
+        @return          the index of the angle that was added
+
+        """
+        angle = QuarticAngleForceAngleInfo(particle1, particle2, particle3, angle, C0, C1, C2, C3, C4)
+        self.angles.append(angle)
+        return
+
+    def getAngleParameters(self, index):
+        """
+        Get the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to get parameters
+        @returns particle1 the index of the first particle forming the angle
+        @returns particle2 the index of the second particle forming the angle
+        @returns particle3 the index of the third particle forming the angle
+        @returns angle     the harmonic angle
+        @returns C0        the force constant
+        @returns C1        the force constant
+        @returns C2        the force constant
+        @returns C3        the force constant
+        @returns C4        the force constant
+
+        """
+        angle = self.angles[index]
+        return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.C0, angle.C1, angle.C2, angle.C3, angle.C4)
+
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
+    def setAngleParameters(self, index, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
+        """
+        Set the force field parameters for an angle term.
+
+        @param index     the index of the angle for which to set parameters
+        @param particle1 the index of the first particle forming the angle
+        @param particle2 the index of the second particle forming the angle
+        @param particle3 the index of the third particle forming the angle
+        @param angle     the equilibrium angle
+        @param C0        the force constant
+        @param C1        the force constant
+        @param C2        the force constant
+        @param C3        the force constant
+        @param C4        the force constant
+        """
+
+        angle = QuarticAngleForceAngleInfo(particle1, particle2, particle3, angle, C0, C1, C2, C3, C4)
+        self.angles[index] = angle
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nangles(self):
+        return len(self.angles)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show angles.
+        if (self.nangles > 0):
+            r += "Quartic Angles:\n"
+            r += "%8s %10s %10s %10s %24s %24s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "angle", "C0", "C1", "C2", "C3", "C4")
+            for (index, angle) in enumerate(self.angles):
+                r += "%8d %10d %10d %10d %24s %24s %24s %24s %24s %24s\n" % (index, angle.particle1, angle.particle2, angle.particle3, str(angle.angle), str(angle.C0), str(angle.C1), str(angle.C2), str(angle.C3), str(angle.C4))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, force, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param force      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for angle in force.angles:
+            angle.particle1 += offset
+            angle.particle2 += offset
+            angle.particle3 += offset
+            self.angles.append(angle)
+
+        return
 
 class QuarticAngleForceAngleInfo(object):
-    pass
+    """
+    Information about a Quartic angle.
+    """
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
+    def __init__(self, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
+        # Store data.
+        self.particle1 = particle1
+        self.particle2 = particle2
+        self.particle3 = particle3
+        self.angle = angle
+        self.C0 = C0
+        self.C1 = C1
+        self.C2 = C2
+        self.C3 = C3
+        self.C4 = C4
+        return
 
 #=============================================================================================
 # LJ1Force
