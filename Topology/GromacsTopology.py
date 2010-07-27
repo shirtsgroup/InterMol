@@ -393,7 +393,8 @@ class GromacsTopology(object):
                 if "atoms" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-
+                        try: particle = int(fields[0])
+                        except: pdb.set_trace()
                         particle = int(fields[0])
                         atomtype = fields[1]
                         resnum = int(fields[2])
@@ -818,7 +819,6 @@ class GromacsTopology(object):
                 newGroParm = GromacsDefaultParameterInfo(func, cr, genpairs, fudgeLJ, fudgeQQ, comment)
 
             if "atomtypes" in parmDirective.getName():
-
                 i = 0
                 name = fields[i]
                 if len(fields) == 8:
@@ -1674,25 +1674,9 @@ class GromacsTopologyFile(object):
 
         processedLines = []
 
-        # Parse the #ifdef statements
-
-        includeThisLine = True
+        # Does this need to be modified?###########################################
         for line in self.lines:
-
-            if line[0:6] == '#ifdef':
-                fields = line.split()
-                if len(fields) > 1:
-                    defineString = fields[1]
-                    if self.defines.count(defineString) > 0:
-                        includeThisLine = True
-                    else:
-                        includeThisLine = False
-            elif line[0:6] == '#endif':
-                includeThisLine = True
-            else:
-                if includeThisLine:
-                    processedLines.append(line)
-
+            processedLines.append(line)
         # Concatenate any line continuations
         i = 0
         while i < len(processedLines)-1:
@@ -1758,23 +1742,8 @@ class GromacsTopologyFile(object):
                     else:
                         line = ''
                     self.directives.append( self.DefineDirective(name, line) )
-                    # Also, add the #define string to our list of defines
-                    self.addDefine(name)
                     # Go to the next line
                     index += 1
-
-                elif self.processedLines[index][0:6] == '#ifdef':
-                    fields = self.processedLines[index].split()
-                    if len(fields) > 1:
-                        defineString = fields[1]
-                        if self.defines.count(defineString) > 0:
-                            includeThisLine = True
-                        else:
-                            includeThisLine = False
-                    else:
-                        if includeThisLine:
-                            processedLines.append(line)
-
 
                 # Is the line a blank line?
                 elif self.processedLines[index].strip() == '':
@@ -1793,7 +1762,25 @@ class GromacsTopologyFile(object):
                     index += 1
                     # until we hit a blank line (or the end of the file) ...
                     while len(self.processedLines[index].strip()) > 0:
-                        # comments get concatenated to the header
+                        # Test for an ifdef
+                        if self.processedLines[index].count('#ifdef') > 0:
+                            fields = self.processedLines[index].split()
+                            if len(fields) > 1:
+                                if self.defines.count(fields[1]) > 0:
+                                    self.processedLines.pop(index)
+                                while self.processedLines[index].strip() != '#else':
+                                    self.processedLines.pop(index)
+                                if self.processedLines[index].strip() == '#else':
+                                    self.processedLines.pop(index)
+                                    if self.processedLines[index][0] == '[':
+                                        break
+                                    if self.defines.count(fields[1]) > 0: # need to be able to test for all defines, not just the last one
+                                        while self.processedLines[index].strip() != '#endif':
+                                            self.processedLines.pop(index)
+                        if self.processedLines[index].strip() == '#endif':
+                            self.processedLines.pop(index)
+                            index -= 1
+
                         if self.processedLines[index][0] == ';':
                             if debug: print '### line', index, ': Found a directive header:', self.processedLines[index].strip()
                             myDirective.header += self.processedLines[index]
@@ -1867,6 +1854,7 @@ class GromacsTopologyFile(object):
 
     def getAllDefines(self, defineList):
         """Get the complete list of defines by traversing all nexted IncludeDirectives.
+
         """
 
         for d in self.directives:

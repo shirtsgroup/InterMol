@@ -209,7 +209,7 @@ class Mapping(object):
             molnameList = list()
             # find every corresponding 'molecule'
             for molecule in structureMolecules:
-                if molecule.name == topology.name: ### needs "translation" for differing nomenclature
+                if molecule.name == topology.name:
                     atomMap = {}
                     # for every 'topAtom' in 'key'
                     for topAtom in topology.atoms:
@@ -222,7 +222,6 @@ class Mapping(object):
                     molnameList.append([str(molecule.atomList[0].resnum) + molecule.name, atomMap])
             if topology.name not in self.proteinMap:
                 self.proteinMap[topology.name] = molnameList
-
 
 
     def find_key(dic, val):
