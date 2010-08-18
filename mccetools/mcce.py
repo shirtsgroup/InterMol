@@ -5,7 +5,7 @@ import rename
 Calculation of residue pKa and likely protonation states using the MCCE (multiconformer continuum electrostatics) package.
 
 DESCRIPTION
-  This package contains various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imram Haque; D. Mobley edited in May 2007. Variously edited by John D. Chodera, Vincent Voelz, and Greg Bowman thereafter. Extended by Hideki Fujioka (Tulane/LONI) and D. Mobley (University of New Orleans), 2009.
+  This package contains various tools for using MCCE to predict protonation states and set up output pdb file using these protonation states (and Pande group GROMACS AMBER port naming conventions) for simulation. Originally written in Feb./Mar. 2007 by Imran Haque; D. Mobley edited in May 2007. Variously edited by John D. Chodera, Vincent Voelz, and Greg Bowman thereafter. Extended by Hideki Fujioka (Tulane/LONI) and D. Mobley (University of New Orleans), 2009.
 
 REQUIREMENTS
 - MCCE (available from http://www.sci.ccny.cuny.edu/~mcce)
