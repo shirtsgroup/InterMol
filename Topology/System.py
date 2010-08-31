@@ -46,7 +46,6 @@ import numpy
 from Force import *
 from Structure import *
 
-
 #=============================================================================================
 # System base class
 #=============================================================================================
@@ -55,29 +54,40 @@ class System(object):
     """
     This class represents a molecular system topology.
 
-    The System object is the outermost container, and stores a list of Topology objects along with a corresponding structure object
-    -- The Topology these do most of the heavy lifting.
+    The System object is the outermost container, and stores a list of Topology objects along with  corresponding structure objects
 
     """
 
-    def __init__(self, structureList=None, topologyList=None, inputFileType=None):
+    def __init__(self, name = None, structureList=None, topologyList=None, inputFileType=None):
         """
         Create a new System object.
 
         If a System object is specified, it will be queried to construct the class.
 
         """
-        self.name = "Untitled"
+
+        self.name = name
+        if self.name == None:
+            self.name = "Untitled"
+
+        self.structures = list()
         self.structureMolecules = list()
         self.topologyMolecules = list()
 
         self.loadStructure(structureList, inputFileType)
         self.loadTopology(topologyList, inputFileType)
 
+        self.setSystemParameters()
         self.mapping = Mapping(self.structureMolecules, self.topologyMolecules)
 
+
     def loadStructure(self, structureFiles, inputFileType):
-        if type(structureFiles) == str():
+        """
+        Load a structureFile into the system
+
+        """
+
+        if type(structureFiles).__name__ == 'str':
             temp = structureFiles
             structureFiles = list()
             structureFiles.append(temp)
@@ -92,12 +102,40 @@ class System(object):
                 s = Structure()
                 s.convertFromGromacsStructure(gs)
                 self.structureMolecules.extend(s.molecules)
+                self.structures.append(s)
 
-        if inputFileType == "Amber": pass
-        if inputFileType == "Desmond": pass
+        if inputFileType == "Amber":
+            # Import Amber stuff?
+            for structure in structureFiles:
+                # Create AmberStructure/readStructureFile
+                gs = AmberStructure(grofile=structure)
+                gs.readStructureFile(structure)
+                # Create generic Structure/convertFromGromacsStructure
+                s = Structure()
+                s.convertFromAmberStructure(gs)
+                self.structureMolecules.extend(s.molecules)
+                self.structures.append(s)
+
+        if inputFileType == "Desmond":
+            # Import Desmond
+            for structure in structureFiles:
+                # Create DesmondStructure/readStructureFile
+                gs = DesmondStructure(grofile=structure)
+                gs.readStructureFile(structure)
+                # Create generic Structure/convertFromGromacsStructure
+                s = Structure()
+                s.convertFromDesmondStructure(gs)
+                self.structureMolecules.extend(s.molecules)
+                self.structures.append(s)
+
 
     def loadTopology(self, topologyFiles, inputFileType):
-        if type(topologyFiles) == str():
+        """
+        Load a topologyFile into the system
+
+        """
+
+        if type(topologyFiles).__name__ == 'str':
             temp = topologyFiles
             topologyFiles = list()
             topologyFiles.append(temp)
@@ -110,8 +148,46 @@ class System(object):
                 g.readTopologyFile(topology)
                 self.topologyMolecules.extend(g.molecules)
 
-        if inputFileType == "Amber": pass
-        if inputFileType == "Desmond": pass
+        if inputFileType == "Amber":
+            # Import Amber
+            for topology in topologyFiles:
+                # Create object/readTopologyFile
+                g = AmberTopology(topfile=topology)
+                g.readTopologyFile(topology)
+                self.topologyMolecules.extend(g.molecules)
+
+        if inputFileType == "Desmond":
+            # Import Desmond
+            for topology in topologyFiles:
+                # Create object/readTopologyFile
+                g = DesmondTopology(topfile=topology)
+                g.readTopologyFile(topology)
+                self.topologyMolecules.extend(g.molecules)
+
+
+    def setSystemParameters(self):
+        if len(self.structures) == 1:
+            self.name = self.structures[0].title
+            self.boxvector = self.structures[0].boxvector
+        else:
+            # Need a method of determining which name and boxvector to use
+            self.name = ''
+            self.boxvector = ''
+        return
+
+
+    def deleteStructure(self, title):
+        for structure in self.structures:
+            if title == structure.title:
+                self.structures.remove(structure)
+        return
+
+
+    def deleteTopology(self, name):
+        for topology in topologyMolecules:
+            if name == topology.name:
+                self.topologyMolecules.remove(topology)
+        return
 
 
     def getName(self):
@@ -136,51 +212,83 @@ class System(object):
         Get the number of molecules in the System.
 
         """
-        return len(self.molecules)
+        return len(self.structureMolecules)
 
 
-    def addMolecule(self, molecule=None):
+    def writeToFiles(self, printFileType, topologyName='system.top', structureName='system.gro', molecules='All'):
         """
-        #Add a molecule (i.e. a Topology object) to the System object.
+        Write the system's contents out to useable files in the desired format.
 
         """
-        if molecule == None:
-            self.molecules.append( Topology() )
-        else:
-            self.molecules.append( Topology( system=molecule) )
+
+        # Change inputs to lists
+        # If list then go through a list like in writeStructureFile
+
+        if printFileType == "Gromacs":
+            from GromacsTopology import *
+
+            # Topology
+            if molecules == 'All':
+                gromacsTopology = GromacsTopology(self.topologyMolecules)
+            else:
+                # Function to connect input name to actual topology molecules
+                gromacsTopology = GromacsTopology(molecules)
+            gromacsTopology.writeTopologyFile(topologyName, ExpandIncludes=False, RebuildDirectives=True)
+
+            # Structure
+            if molecules == 'All':
+                gromacsStructure = GromacsStructure(self.structures)
+            else:
+                # Function to connect input name to actual structure molecules
+                gromacsStructure = GromacsStructure(molecules)
+            gromacsStructure.writeStructureFile(structureName, RebuildStructure=True)
+
+        if printFileType == "Amber":
+            pass
+
+        if printFileType == "Desmond":
+            pass
+
         return
 
 
-    def delMolecule(self, index):
-        """
-        #Delete a molecule from the Topology object at the specified index.
+    #def addMolecule(self, molecule=None):
+        #"""
+        ##Add a molecule (i.e. a Topology object) to the System object.
 
-        """
-        self.molecules.pop(index)
-        return
+        #"""
+        #if molecule == None:
+            #self.molecules.append( Topology() )
+        #else:
+            #self.molecules.append( Topology( system=molecule) )
+        #return
 
 
-    def insertMolecule(self, index, molecule=None):
-        """
-        #Insert a molecule into the Topology object at the specified index.
+    #def delMolecule(self, index):
+        #"""
+        ##Delete a molecule from the Topology object at the specified index.
 
-        """
-        if molecule == None:
-            self.molecules.insert( index, TopologySystem() )
-        else:
-            self.molecules.insert( index, TopologySystem( system=molecule) )
-        return
+        #"""
+        #self.molecules.pop(index)
+        #return
+
+
+    #def insertMolecule(self, index, molecule=None):
+        #"""
+        ##Insert a molecule into the Topology object at the specified index.
+
+        #"""
+        #if molecule == None:
+            #self.molecules.insert( index, TopologySystem() )
+        #else:
+            #self.molecules.insert( index, TopologySystem( system=molecule) )
+        #return
 
 
 class Mapping(object):
 
+
     def __init__(self, structureMolecules, topologyMolecules):
-        self.proteinMap = {}
-
-        # need to loop through File List first and pair up the files
-
-
-
         """
         Set up 'proteinMap' with the following form for each entry:
 
@@ -203,6 +311,8 @@ class Mapping(object):
                          strucAtom:topAtom               strucAtom:topAtom               strucAtom:topAtom
                             ...   :  ...  }                 ...   :  ...  }                 ...   :  ...  }
         """
+
+        self.proteinMap = {}
 
         # for every 'key'
         for topology in topologyMolecules:
@@ -315,14 +425,6 @@ class Topology(object):
 - reset arbitrary key pairs in the input information (i.e., we load in the information once from a template file, and then can edit it keyword by keyword as desired).
 - setting up A and B states -- that is, a gromacs topology that has a starting state (A) and an ending state (B). (Sort of implied by the relative free energy First: mention above)
 
-
-
-
-
-
-
-
-
     *** THINGS THAT WERE ALREADY IMPLEMENTED pyopenmm version***
 
     - merging (and splitting?) multiple topologies
@@ -374,10 +476,10 @@ class Topology(object):
            (charges, LJ sigma and epsilon) and metadata on how these nonbonded interactions are computed is separated
            from, say, a generalized Born section which also may have atomic parameters.  The reason for this is that
            the nonbonded parameters will also need associated with them a list of exclusions or exceptions for those
-           interactions where the pairwise combining rule needs to be overridden. -John Chodera 5/26/10 7:47 PM 
+           interactions where the pairwise combining rule needs to be overridden. -John Chodera 5/26/10 7:47 PM
 
-        VAV sez: For GB parameters, we can use the GB 'Force' objects provided in Force.py.  Otherwise, you can always add new 
-        attributes on the fly to the MetadataInfo() objects 
+        VAV sez: For GB parameters, we can use the GB 'Force' objects provided in Force.py.  Otherwise, you can always add new
+        attributes on the fly to the MetadataInfo() objects
 
 
         Lists of "molecules"?
@@ -392,7 +494,7 @@ class Topology(object):
 
         MRS sez:  another desired feature is to track nonbonded parameters for specific pairs of atoms to override the above
         JDC sez:  Agreed.  There needs to be the ability to exclude 1,2 and 1,3 pairs and attenuate 1,4 pairs, at the very least.
-                  The simplest way is to just include a list of 'exceptions' for nonbonded interactions. -John Chodera 5/26/10 7:49 PM 
+                  The simplest way is to just include a list of 'exceptions' for nonbonded interactions. -John Chodera 5/26/10 7:49 PM
         VAV:  This can be implemented via the Force.NonbondedForceExceptionInfo classes and associated methods.
 
 
@@ -403,7 +505,7 @@ class Topology(object):
      - Hand off the SMARTS string to open eye -- sdf/mol2 file
 
 
-    VAV:  These are NOT implemented yet:  They would require their own derived Topology classes (like GromacsTopology) 
+    VAV:  These are NOT implemented yet:  They would require their own derived Topology classes (like GromacsTopology)
     - reading in a topology from a hetgrpffgen file + pdb (Schrodinger OPLS-AA ?)  VAV: SchrodingerTopology.py ?
     - reading in a topology from Desmond templates(?)  VAV: DesmondTopology.py ?
     - reading in a topology from amber topology files (not necessary yet because of acpypi?) VAV: AmberTopology.py ?
@@ -413,7 +515,7 @@ class Topology(object):
     *** DISCUSSION - SHOULD THESE TO BE IMPLEMENTED? *** 
 
     -location: 3d coordinates: triplet of float (nm).
-    -velocities?: triplet of float 
+    -velocities?: triplet of float
 
     - includes the information necessary for the .gro and the .top in gromacs. ???
 
@@ -433,7 +535,7 @@ class Topology(object):
                 Should one topology object contain just a single topology, or should there be multiple sets
                 of parameters for part or all of the molecule?  I favor just having *one* set of parameters
                 defined, and using transformers that take one or two topology objects with identical ordering
-                to generate alchemical transformation input files for gromacs, YANK, etc." -John Chodera 5/27/10 6:14 PM 
+                to generate alchemical transformation input files for gromacs, YANK, etc." -John Chodera 5/27/10 6:14 PM
 
     Q: Should we potentially include the runfile information, perhaps as a series of string pairs?
        Translators between formats might come later.
@@ -449,7 +551,7 @@ class Topology(object):
 
     """
 
-    def __init__(self, system=None):
+    def __init__(self, Topology=None):
         """
         Create a new Topology.
 
@@ -458,13 +560,10 @@ class Topology(object):
 
         """
 
-        self.name = ''
-
-        # Set defaults.
-
-        self.atoms = list()
-        self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
+        self.name = '' # name of the system
+        self.atoms = list() # atoms[i] is the ith atom entry
         self.forces = list() # forces[i] is the ith force term
+        self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
 
         self.atomgroups = list() # atomgroups[i] is the ith AtomGroup object
 
@@ -473,10 +572,11 @@ class Topology(object):
         # TODO: Store periodicBoxVectors as units.Quantity(numpy.array([3,3], numpy.float64), units.nanometer)?
 
         # Populate the system from a provided system, if given.
-        if system is not None:
-            self._copyDataUsingInterface(self, system)
+        if Topology is not None:
+            self._copyDataUsingInterface(self, Topology)
 
         return
+
 
     def _copyDataUsingInterface(self, dest, src):
         """
@@ -484,9 +584,9 @@ class Topology(object):
 
         """
         #dest.__init__()
-        for index in range(src.getNumParticles()):
-            mass = src.getParticleMass(index)
-            dest.addParticle(mass)
+        for index in range(src.getNumAtoms()):
+            atoms = src.getAtomParameters(index)
+            dest.addAtom(mass)
         for index in range(src.getNumConstraints()):
             args = src.getConstraintParameters(index)
             dest.addConstraint(*args)
@@ -506,6 +606,7 @@ class Topology(object):
         """
         return self.name
 
+
     def setName(self, name):
         """
         Set the name of the Topology.
@@ -515,30 +616,23 @@ class Topology(object):
         return
 
 
-    def getNumParticles(self):
+    def getNumAtoms(self):
         """
-        Get the number of particles in this Topology.
+        Get the number of atoms
 
         """
-        return len(self.masses)
+        return len(self.atoms)
 
-    @accepts_compatible_units(units.amu)
-    def addParticle(self, mass):
+
+    def addAtom(self, index):
         """
         Add a particle to the Topology.
 
-        @param mass   the mass of the particle (in atomic mass units)
-        @return the index of the particle that was added
-
         """
+        return self.atoms[index]
 
-        self.masses.append(mass);
-        index = len(self.masses)-1
-        self.metadata.append(MetadataInfo(index));  # append a blank metadata descriptor to each particle 
 
-        return index;
-
-    def delParticle(self, index, renumber=True):
+    def delAtom(self, index, renumber=True):
         """
         Delete a particle from the Topology.
         Removes all references (forces, constraints, metadata), bonds) to this particle
@@ -548,7 +642,8 @@ class Topology(object):
         """
         pass
 
-    def insertParticle(self, index, mass, metadata):
+
+    def insertAtom(self, index):
         """
         Insert a particle into the Topology at the specifed insertion index
         Renumbers all references (forces, constraints, metadata), bonds) to this particle accordingly
@@ -559,48 +654,7 @@ class Topology(object):
         pass
 
 
-
-    def getParticleMass(self, index):
-        """
-        Get the mass (in atomic mass units) of a particle.
-
-        @param index the index of the particle for which to get the mass
-
-        """
-        return self.masses[index]
-
-
-    def getParticleMetadata(self, index):
-        """
-        Get the metadata of a particle.
-
-        @param index the index of the particle for which to get the mass
-
-        """
-        return self.metadata[index]
-
-
-
-    @accepts_compatible_units(None, units.amu)
-    def setParticleMass(self, index, mass):
-        """
-        Set the mass (in atomic mass units) of a particle.
-
-        @param index  the index of the particle for which to set the mass
-        @param mass   the mass of the particle
-
-        """
-        masses[index] = mass
-        return
-
-    def setParticleMetadata(self, index, atomname=None, atomtype=None, resname=None, resnum=None, \
-                                         atomnum=None, atomcharge=None, comment=None, FreeEnergyAtom=False):
-        """
-        Set the Metadata  of a particle.
-
-        @param index  the index of the particle for which to set the mass
-
-        """
+    def getAtomParameters(self, index):
         pass
 
 
@@ -610,6 +664,7 @@ class Topology(object):
 
         """
         return len(self.constraints)
+
 
     @accepts_compatible_units(None, None, units.nanometer)
     def addConstraint(self, particle1, particle2, distance):
@@ -631,6 +686,7 @@ class Topology(object):
 
         return
 
+
     def getConstraintParameters(self, index):
         """
         Get the parameters defining a distance constraint.
@@ -641,6 +697,7 @@ class Topology(object):
         """
         constraint = self.constraints[index]
         return (constraint.particle1, constraint.particle2, constraint.distance)
+
 
     @accepts_compatible_units(None, None, None, units.nanometer)
     def setConstraintParameters(self, index, particle1, particle2, distance):
@@ -662,6 +719,7 @@ class Topology(object):
 
         return
 
+
     def addForce(self, force):
         """
         Add a Force to the Topology.
@@ -677,12 +735,14 @@ class Topology(object):
         self.forces.append(force)
         return len(self.forces)-1
 
+
     def getNumForces(self):
         """
         Get the number of Force objects that have been added to the Topology.
 
         """
         return len(self.forces)
+
 
     def getForce(self, index):
         """
@@ -692,6 +752,7 @@ class Topology(object):
 
         """
         return self.forces[index]
+
 
     def getPeriodicBoxVectors(self):
         """
@@ -707,6 +768,7 @@ class Topology(object):
 
         """
         return self.periodicBoxVectors
+
 
     def setPeriodicBoxVectors(self, a, b, c):
         """

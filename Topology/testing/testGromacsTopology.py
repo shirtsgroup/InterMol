@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys, glob, pdb
+import pdb
 from mmtools.Topology.GromacsTopology import *
-
 
 # Tests of the Topology.GromacsTopology tools
 
@@ -17,8 +16,6 @@ print "Done."
 print "Write 'out-expanded.top' with all of the (nested) #include files expanded ...",
 g.writeTopologyFile('out-expanded.top', ExpandIncludes=True, RebuildDirectives=False)
 print "Done."
-
-
 
 print "Show all the directives defined in the GromacsTopologyFileObject:"
 all_directives = g.GromacsTopologyFileObject.getAllDirectives([])
@@ -55,8 +52,8 @@ print "Done."
     #for line in d:
         #print '\t', line.directiveString()
 
-#print "Write 'out-rebuild.top' from the contents of the GromacsTopology object ...",
-#g.writeTopologyFile('out-rebuild.top', ExpandIncludes=False, RebuildDirectives=True)
-#print "Done."
+print "Write 'out-rebuild.top' from the contents of the GromacsTopology object ...",
+g.writeTopologyFile('out-rebuild.top', ExpandIncludes=False, RebuildDirectives=True)
+print "Done."
 
 pdb.set_trace()

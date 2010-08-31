@@ -538,9 +538,9 @@ class BondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -553,15 +553,15 @@ class BondForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumBonds(self):
+    def getNumForces(self):
         """
         Get the number of bond stretch terms in the potential function
 
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def addBond(self, particle1, particle2, length, k):
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def addForce(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
 
@@ -576,7 +576,7 @@ class BondForce(Force):
         self.bonds.append(bond)
         return
 
-    def getBondParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a bond term.
 
@@ -591,8 +591,8 @@ class BondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.k)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def setBondParameters(self, index, particle1, particle2, length, k):
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def setForceParameters(self, index, particle1, particle2, length, k):
         """
         Set the force field parameters for a bond term.
 
@@ -612,7 +612,7 @@ class BondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -624,7 +624,7 @@ class BondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "Bonds:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "length", "k")
             for (index, bond) in enumerate(self.bonds):
@@ -658,7 +658,7 @@ class BondForceBondInfo(object):
     """
     Information about a bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def __init__(self, particle1, particle2, length, k):
         # Store data.
         self.particle1 = particle1
@@ -694,9 +694,9 @@ class G96BondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -709,15 +709,15 @@ class G96BondForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumBonds(self):
+    def getNumForces(self):
         """
         Get the number of bond stretch terms in the potential function
 
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
-    def addBond(self, particle1, particle2, length, k):
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-4))
+    def addForce(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
 
@@ -732,7 +732,7 @@ class G96BondForce(Force):
         self.bonds.append(bond)
         return
 
-    def getBondParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a bond term.
 
@@ -747,8 +747,8 @@ class G96BondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.k)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
-    def setBondParameters(self, index, particle1, particle2, length, k):
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-4))
+    def setForceParameters(self, index, particle1, particle2, length, k):
         """
         Set the force field parameters for a bond term.
 
@@ -768,7 +768,7 @@ class G96BondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -780,7 +780,7 @@ class G96BondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "G96 Bonds:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "length", "k")
             for (index, bond) in enumerate(self.bonds):
@@ -814,7 +814,7 @@ class G96BondForceBondInfo(object):
     """
     Information about a G96 bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-4))
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-4))
     def __init__(self, particle1, particle2, length, k):
         # Store data.
         self.particle1 = particle1
@@ -850,9 +850,9 @@ class MorseBondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -865,7 +865,7 @@ class MorseBondForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumBonds(self):
+    def getNumForces(self):
         """
         Get the number of bond stretch terms in the potential function
 
@@ -873,7 +873,7 @@ class MorseBondForce(Force):
         return len(self.bonds)
 
     @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
-    def addBond(self, particle1, particle2, length, D, beta):
+    def addForce(self, particle1, particle2, length, D, beta):
         """
         Add a bond term to the force field.
 
@@ -889,7 +889,7 @@ class MorseBondForce(Force):
         self.bonds.append(bond)
         return
 
-    def getBondParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a bond term.
 
@@ -906,7 +906,7 @@ class MorseBondForce(Force):
         return (bond.particle1, bond.particle2, bond.length, bond.D, bond.beta)
 
     @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
-    def setBondParameters(self, index, particle1, particle2, length, D, beta):
+    def setForceParameters(self, index, particle1, particle2, length, D, beta):
         """
         Set the force field parameters for a bond term.
 
@@ -927,7 +927,7 @@ class MorseBondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -939,7 +939,7 @@ class MorseBondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "Morse Bonds:\n"
             r += "%8s %10s %10s %24s %24s %24s\n" % ("index", "particle1", "particle2", "length", "D", "beta")
             for (index, bond) in enumerate(self.bonds):
@@ -1010,9 +1010,9 @@ class CubicBondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1025,15 +1025,15 @@ class CubicBondForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumBonds(self):
+    def getNumForces(self):
         """
         Get the number of bond stretch terms in the potential function
 
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
-    def addBond(self, particle1, particle2, length, C2, C3):
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2), units.kilojoules_per_mole * units.nanometers**(-3))
+    def addForce(self, particle1, particle2, length, C2, C3):
         """
         Add a bond term to the force field.
 
@@ -1049,7 +1049,7 @@ class CubicBondForce(Force):
         self.bonds.append(bond)
         return
 
-    def getBondParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a bond term.
 
@@ -1065,8 +1065,8 @@ class CubicBondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.C2, bond.C3)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
-    def setBondParameters(self, index, particle1, particle2, length, C2, C3):
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2), units.kilojoules_per_mole * units.nanometers**(-3))
+    def setForceParameters(self, index, particle1, particle2, length, C2, C3):
         """
         Set the force field parameters for a bond term.
 
@@ -1087,7 +1087,7 @@ class CubicBondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -1099,7 +1099,7 @@ class CubicBondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "Cubic Bonds:\n"
             r += "%8s %10s %10s %24s %24s %24s\n" % ("index", "particle1", "particle2", "length", "C2", "C3")
             for (index, bond) in enumerate(self.bonds):
@@ -1133,7 +1133,7 @@ class CubicBondForceBondInfo(object):
     """
     Information about a Cubic bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2), units.kilojoules_per_mole*units.nanometers**(-3))
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2), units.kilojoules_per_mole * units.nanometers**(-3))
     def __init__(self, particle1, particle2, length, C2, C3):
         # Store data.
         self.particle1 = particle1
@@ -1170,9 +1170,9 @@ class ConnectionBondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1185,7 +1185,7 @@ class ConnectionBondForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumBonds(self):
+    def getNumForces(self):
         """
         Get the number of bond stretch terms in the potential function
 
@@ -1193,7 +1193,7 @@ class ConnectionBondForce(Force):
         return len(self.bonds)
 
     @accepts_compatible_units(None, None)
-    def addBond(self, particle1, particle2):
+    def addForce(self, particle1, particle2):
         """
         Add a bond term to the force field.
 
@@ -1206,7 +1206,7 @@ class ConnectionBondForce(Force):
         self.bonds.append(bond)
         return
 
-    def getBondParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a bond term.
 
@@ -1220,7 +1220,7 @@ class ConnectionBondForce(Force):
         return (bond.particle1, bond.particle2)
 
     @accepts_compatible_units(None, None, None)
-    def setBondParameters(self, index, particle1, particle2):
+    def setForceParameters(self, index, particle1, particle2):
         """
         Set the force field parameters for a bond term.
 
@@ -1238,7 +1238,7 @@ class ConnectionBondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -1250,7 +1250,7 @@ class ConnectionBondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "Connection Bonds:\n"
             r += "%8s %10s %10s\n" % ("index", "particle1", "particle2")
             for (index, bond) in enumerate(self.bonds):
@@ -1298,17 +1298,17 @@ class ConnectionBondForceBondInfo(object):
 class HarmonicBondForce(Force):
     """
     This class implements an interaction between pairs of particles that varies harmonically with the distance
-    between them.  To use it, create a HarmonicBondForce object then call addBond() once for each bond.  After
-    a bond has been added, you can modify its force field parameters by calling setBondParameters().
+    between them.  To use it, create a HarmonicBondForce object then call addForce() once for each bond.  After
+    a bond has been added, you can modify its force field parameters by calling setForceParameters().
 
     EXAMPLE
 
     Create and populate a HarmonicBondForce object.
 
     >>> bondforce = HarmonicBondForce()
-    >>> bondforce.addBond(0, 1, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
-    >>> bondforce.addBond(0, 2, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
-    >>> bondforce.addBond(0, 3, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
+    >>> bondforce.addForce(0, 1, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
+    >>> bondforce.addForce(0, 2, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
+    >>> bondforce.addForce(0, 3, 1.0*units.angstrom, 1.0*units.kilocalories_per_mole/units.angstrom**2)
 
     Create a Swig object.
 
@@ -1344,9 +1344,9 @@ class HarmonicBondForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumBonds()):
-            args = src.getBondParameters(index)
-            dest.addBond(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1358,15 +1358,15 @@ class HarmonicBondForce(Force):
         force = openmm.HarmonicBondForce()
         self._copyDataUsingInterface(force, self)
         return force
- 
-    def getNumBonds(self):
+
+    def getNumForces(self):
         """
         Get the number of harmonic bond stretch terms in the potential function
 
         """
         return len(self.bonds)
 
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def addBond(self, particle1, particle2, length, k):
         """
         Add a bond term to the force field.
@@ -1397,7 +1397,7 @@ class HarmonicBondForce(Force):
         bond = self.bonds[index]
         return (bond.particle1, bond.particle2, bond.length, bond.k)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def setBondParameters(self, index, particle1, particle2, length, k):
         """
         Set the force field parameters for a bond term.
@@ -1418,7 +1418,7 @@ class HarmonicBondForce(Force):
     #==========================================================================
 
     @property
-    def nbonds(self):
+    def nforces(self):
         return len(self.bonds)
 
     def __str__(self):
@@ -1430,7 +1430,7 @@ class HarmonicBondForce(Force):
         r = ""
 
         # Show bonds.
-        if (self.nbonds > 0):
+        if (self.nforces > 0):
             r += "Harmonic Bonds:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "length", "k")
             for (index, bond) in enumerate(self.bonds):
@@ -1464,7 +1464,7 @@ class HarmonicBondForceBondInfo(object):
     """
     Information about a harmonic bond.
     """
-    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def __init__(self, particle1, particle2, length, k):
         # Store data.
         self.particle1 = particle1
@@ -1480,8 +1480,8 @@ class HarmonicBondForceBondInfo(object):
 class AngleForce(Force):
     """
     This class implements an interaction between groups of three particles that varies harmonically with the angle
-    between them.  To use it, create a AngleForce object then call addAngle() once for each angle.  After
-    an angle has been added, you can modify its force field parameters by calling setAngleParameters().
+    between them.  To use it, create a AngleForce object then call addForce() once for each angle.  After
+    an angle has been added, you can modify its force field parameters by calling setForceParameters().
 
     EXAMPLE
 
@@ -1490,7 +1490,7 @@ class AngleForce(Force):
     >>> angle = 120.0 * units.degree
     >>> k = 0.01 * units.kilocalories_per_mole / units.degree**2
     >>> angleforce = HarmonicAngleForce()
-    >>> angleforce.addAngle(0, 1, 2, angle, k)
+    >>> angleforce.addForce(0, 1, 2, angle, k)
 
     Create a Swig object.
 
@@ -1526,9 +1526,9 @@ class AngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1541,15 +1541,15 @@ class AngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
-    def addAngle(self, particle1, particle2, particle3, angle, k):
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole * units.radians**(-2))
+    def addForce(self, particle1, particle2, particle3, angle, k):
         """
         Add an angle term to the force field.
 
@@ -1565,7 +1565,7 @@ class AngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -1580,8 +1580,8 @@ class AngleForce(Force):
         angle = self.angles[index]
         return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k)
 
-    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
-    def setAngleParameters(self, index, particle1, particle2, particle3, angle, k):
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole * units.radians**(-2))
+    def setForceParameters(self, index, particle1, particle2, particle3, angle, k):
         """
         Set the force field parameters for an angle term.
 
@@ -1602,7 +1602,7 @@ class AngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -1614,7 +1614,7 @@ class AngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "length", "k")
             for (index, angle) in enumerate(self.angles):
@@ -1649,7 +1649,7 @@ class AngleForceAngleInfo(object):
     """
     Information about a harmonic angle.
     """
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole*units.radians**(-2))
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole * units.radians**(-2))
     def __init__(self, particle1, particle2, particle3, angle, k):
         # Store data.
         self.particle1 = particle1
@@ -1686,9 +1686,9 @@ class G96AngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1701,7 +1701,7 @@ class G96AngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
@@ -1709,7 +1709,7 @@ class G96AngleForce(Force):
         return len(self.angles)
 
     @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole)
-    def addAngle(self, particle1, particle2, particle3, angle, k):
+    def addForce(self, particle1, particle2, particle3, angle, k):
         """
         Add an angle term to the force field.
 
@@ -1725,7 +1725,7 @@ class G96AngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -1741,7 +1741,7 @@ class G96AngleForce(Force):
         return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k)
 
     @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole)
-    def setAngleParameters(self, index, particle1, particle2, particle3, angle, k):
+    def setForceParameters(self, index, particle1, particle2, particle3, angle, k):
         """
         Set the force field parameters for an angle term.
 
@@ -1762,7 +1762,7 @@ class G96AngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -1774,7 +1774,7 @@ class G96AngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "G96 Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "length", "k")
             for (index, angle) in enumerate(self.angles):
@@ -1846,9 +1846,9 @@ class CrossBondBondAngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -1861,15 +1861,15 @@ class CrossBondBondAngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def addAngle(self, particle1, particle2, particle3, r1e, r2e, k):
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def addForce(self, particle1, particle2, particle3, r1e, r2e, k):
         """
         Add an angle term to the force field.
 
@@ -1886,7 +1886,7 @@ class CrossBondBondAngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -1902,8 +1902,8 @@ class CrossBondBondAngleForce(Force):
         angle = self.angles[index]
         return (angle.particle1, angle.particle2, angle.particle3, angle.r1e, angle.r2e, angle.k)
 
-    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def setAngleParameters(self, index, particle1, particle2, particle3, r1e, r2e, k):
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def setForceParameters(self, index, particle1, particle2, particle3, r1e, r2e, k):
         """
         Set the force field parameters for an angle term.
 
@@ -1925,7 +1925,7 @@ class CrossBondBondAngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -1937,7 +1937,7 @@ class CrossBondBondAngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "CrossBondBond Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s $24s\n" % ("index", "particle1", "particle2", "particle3", "r1e", "r1e", "k")
             for (index, angle) in enumerate(self.angles):
@@ -1972,7 +1972,7 @@ class CrossBondBondAngleForceAngleInfo(object):
     """
     Information about a CrossBondBond angle.
     """
-    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def __init__(self, particle1, particle2, particle3, r1e, r2e, k):
         # Store data.
         self.particle1 = particle1
@@ -2010,9 +2010,9 @@ class CrossBondAngleAngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -2025,15 +2025,15 @@ class CrossBondAngleAngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def addAngle(self, particle1, particle2, particle3, r1e, r2e, r3e, k):
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def addForce(self, particle1, particle2, particle3, r1e, r2e, r3e, k):
         """
         Add an angle term to the force field.
 
@@ -2051,7 +2051,7 @@ class CrossBondAngleAngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -2068,8 +2068,8 @@ class CrossBondAngleAngleForce(Force):
         angle = self.angles[index]
         return (angle.particle1, angle.particle2, angle.particle3, angle.r1e, angle.r2e, angle.r3e, angle.k)
 
-    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
-    def setAngleParameters(self, index, particle1, particle2, particle3, r1e, r2e, r3e, k):
+    @accepts_compatible_units(None, None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
+    def setForceParameters(self, index, particle1, particle2, particle3, r1e, r2e, r3e, k):
         """
         Set the force field parameters for an angle term.
 
@@ -2092,7 +2092,7 @@ class CrossBondAngleAngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -2104,7 +2104,7 @@ class CrossBondAngleAngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "CrossBondAngle Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "r1e", "r1e", "r3e", "k")
             for (index, angle) in enumerate(self.angles):
@@ -2139,7 +2139,7 @@ class CrossBondAngleAngleForceAngleInfo(object):
     """
     Information about a CrossBondAngle angle.
     """
-    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole*units.nanometers**(-2))
+    @accepts_compatible_units(None, None, None, units.nanometers, units.nanometers, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2))
     def __init__(self, particle1, particle2, particle3, r1e, r2e, r3e, k):
         # Store data.
         self.particle1 = particle1
@@ -2178,9 +2178,9 @@ class UreyBradleyAngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -2193,7 +2193,7 @@ class UreyBradleyAngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
@@ -2201,7 +2201,7 @@ class UreyBradleyAngleForce(Force):
         return len(self.angles)
 
     @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole)
-    def addAngle(self, particle1, particle2, particle3, angle, k, r13, kUB):
+    def addForce(self, particle1, particle2, particle3, angle, k, r13, kUB):
         """
         Add an angle term to the force field.
 
@@ -2219,7 +2219,7 @@ class UreyBradleyAngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -2237,7 +2237,7 @@ class UreyBradleyAngleForce(Force):
         return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.k, angle.r13, angle.kUB)
 
     @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole, units.nanometers, units.kilojoules_per_mole)
-    def setAngleParameters(self, index, particle1, particle2, particle3, angle, k, r13, kUB):
+    def setForceParameters(self, index, particle1, particle2, particle3, angle, k, r13, kUB):
         """
         Set the force field parameters for an angle term.
 
@@ -2260,7 +2260,7 @@ class UreyBradleyAngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -2272,7 +2272,7 @@ class UreyBradleyAngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "Urey Bradley Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "length", "k", "r13", "kUB")
             for (index, angle) in enumerate(self.angles):
@@ -2346,9 +2346,9 @@ class QuarticAngleForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumAngles()):
-            args = src.getAngleParameters(index)
-            dest.addAngle(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -2361,15 +2361,15 @@ class QuarticAngleForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumAngles(self):
+    def getNumForces(self):
         """
         Get the number of harmonic angle stretch terms in the potential function
 
         """
         return len(self.angles)
 
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
-    def addAngle(self, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole * units.radians**(-1), units.kilojoules_per_mole * units.radians**(-2), units.kilojoules_per_mole * units.radians**(-3), units.kilojoules_per_mole * units.radians**(-4))
+    def addForce(self, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
         """
         Add an angle term to the force field.
 
@@ -2389,7 +2389,7 @@ class QuarticAngleForce(Force):
         self.angles.append(angle)
         return
 
-    def getAngleParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for an angle term.
 
@@ -2408,8 +2408,8 @@ class QuarticAngleForce(Force):
         angle = self.angles[index]
         return (angle.particle1, angle.particle2, angle.particle3, angle.angle, angle.C0, angle.C1, angle.C2, angle.C3, angle.C4)
 
-    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
-    def setAngleParameters(self, index, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
+    @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole * units.radians**(-1), units.kilojoules_per_mole * units.radians**(-2), units.kilojoules_per_mole * units.radians**(-3), units.kilojoules_per_mole * units.radians**(-4))
+    def setForceParameters(self, index, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
         """
         Set the force field parameters for an angle term.
 
@@ -2434,7 +2434,7 @@ class QuarticAngleForce(Force):
     #==========================================================================
 
     @property
-    def nangles(self):
+    def nforces(self):
         return len(self.angles)
 
     def __str__(self):
@@ -2446,7 +2446,7 @@ class QuarticAngleForce(Force):
         r = ""
 
         # Show angles.
-        if (self.nangles > 0):
+        if (self.nforces > 0):
             r += "Quartic Angles:\n"
             r += "%8s %10s %10s %10s %24s %24s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "angle", "C0", "C1", "C2", "C3", "C4")
             for (index, angle) in enumerate(self.angles):
@@ -2481,7 +2481,7 @@ class QuarticAngleForceAngleInfo(object):
     """
     Information about a Quartic angle.
     """
-    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole*units.radians**(-1), units.kilojoules_per_mole*units.radians**(-2), units.kilojoules_per_mole*units.radians**(-3), units.kilojoules_per_mole*units.radians**(-4))
+    @accepts_compatible_units(None, None, None, units.radians, units.kilojoules_per_mole, units.kilojoules_per_mole * units.radians**(-1), units.kilojoules_per_mole * units.radians**(-2), units.kilojoules_per_mole * units.radians**(-3), units.kilojoules_per_mole * units.radians**(-4))
     def __init__(self, particle1, particle2, particle3, angle, C0, C1, C2, C3, C4):
         # Store data.
         self.particle1 = particle1
@@ -2607,7 +2607,7 @@ class LJ1Force(Force):
 
         # Show forces.
         if (self.nforces > 0):
-            r += "Torsions:\n"
+            r += "LJ1 Forces:\n"
             r += "%8s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "V", "W")
             for (index, force) in enumerate(self.forces):
                 r += "%8d %10d %10d %24s %24s\n" % (index, force.particle1, force.particle2, str(force.V), str(force.W))
@@ -2679,9 +2679,9 @@ class LJ2Force(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -2694,7 +2694,7 @@ class LJ2Force(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of LJ2 pair terms in the potential function
 
@@ -2702,7 +2702,7 @@ class LJ2Force(Force):
         return len(self.forces)
 
     @accepts_compatible_units(None, None, None, units.elementary_charge, units.elementary_charge,  None, None)
-    def addTorsion(self, particle1, particle2, fudgeQQ, qi, qj, V, W):
+    def addForce(self, particle1, particle2, fudgeQQ, qi, qj, V, W):
         """
         Add a LJ2 pair term to the force field.
 
@@ -2720,7 +2720,7 @@ class LJ2Force(Force):
         self.forces.append(force) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a LJ2 pair term.
 
@@ -2739,7 +2739,7 @@ class LJ2Force(Force):
         return (force.particle1, force.particle2, force.fudgeQQ, force.qi, force.qj, force.V, force.W)
 
     @accepts_compatible_units(None, None, None, None, units.elementary_charge, units.elementary_charge, None, None)
-    def setTorsionParameters(self, index, particle1, particle2, fudgeQQ, qi, qj, V, W):
+    def setForceParameters(self, index, particle1, particle2, fudgeQQ, qi, qj, V, W):
         """
         Set the force field parameters for a LJ1 pair term.
 
@@ -2775,7 +2775,7 @@ class LJ2Force(Force):
 
         # Show forces.
         if (self.nforces > 0):
-            r += "Torsions:\n"
+            r += "LJ2 Forces:\n"
             r += "%8s %10s %10s %24s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "fudgeQQ", "qi", "qj", "V", "W")
             for (index, force) in enumerate(self.forces):
                 r += "%8d %10d %10d %24s %24s %24s %24s %24s\n" % (index, force.particle1, force.particle2, str(force.fudgeQQ), str(force.qi), str(force.qj), str(force.V), str(force.W))
@@ -2849,9 +2849,9 @@ class LJNBForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -2864,7 +2864,7 @@ class LJNBForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of LJNB pair terms in the potential function
 
@@ -2872,7 +2872,7 @@ class LJNBForce(Force):
         return len(self.forces)
 
     @accepts_compatible_units(None, None, units.elementary_charge, units.elementary_charge, None,  None)
-    def addTorsion(self, particle1, particle2, qi, qj, V, W):
+    def addForce(self, particle1, particle2, qi, qj, V, W):
         """
         Add a LJ2 pair term to the force field.
 
@@ -2889,7 +2889,7 @@ class LJNBForce(Force):
         self.forces.append(force) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a LJNB pair term.
 
@@ -2907,7 +2907,7 @@ class LJNBForce(Force):
         return (force.particle1, force.particle2, force.qi, force.qj, force.V, force.W)
 
     @accepts_compatible_units(None, None, None, units.elementary_charge, units.elementary_charge, None, None)
-    def setTorsionParameters(self, index, particle1, particle2, qi, qj, V, W):
+    def setForceParameters(self, index, particle1, particle2, qi, qj, V, W):
         """
         Set the force field parameters for a LJ1 pair term.
 
@@ -2942,7 +2942,7 @@ class LJNBForce(Force):
 
         # Show forces.
         if (self.nforces > 0):
-            r += "Torsions:\n"
+            r += "LJ NB Forces:\n"
             r += "%8s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "qi", "qj", "V", "W")
             for (index, force) in enumerate(self.forces):
                 r += "%8d %10d %10d %24s %24s %24s %24s\n" % (index, force.particle1, force.particle2, str(force.qi), str(force.qj), str(force.V), str(force.W))
@@ -2996,8 +2996,8 @@ class LJNBForceLJNBInfo(object):
 class PeriodicTorsionForce(Force):
     """
     This class implements an interaction between groups of four particles that varies periodically with the torsion angle
-    between them.  To use it, create a PeriodicTorsionForce object then call addTorsion() once for each torsion.  After
-    a torsion has been added, you can modify its force field parameters by calling setTorsionParameters().
+    between them.  To use it, create a PeriodicTorsionForce object then call addForce() once for each torsion.  After
+    a torsion has been added, you can modify its force field parameters by calling setForceParameters().
 
     EXAMPLE
 
@@ -3043,9 +3043,9 @@ class PeriodicTorsionForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -3058,7 +3058,7 @@ class PeriodicTorsionForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of periodic torsion terms in the potential function
 
@@ -3066,7 +3066,7 @@ class PeriodicTorsionForce(Force):
         return len(self.torsions)
 
     @accepts_compatible_units(None, None, None, None, None, units.radians, units.kilojoules_per_mole)
-    def addTorsion(self, particle1, particle2, particle3, particle4, periodicity, phase, k):
+    def addForce(self, particle1, particle2, particle3, particle4, periodicity, phase, k):
         """
         Add a periodic torsion term to the force field.
 
@@ -3084,7 +3084,7 @@ class PeriodicTorsionForce(Force):
         self.torsions.append(torsion) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a periodic torsion term.
 
@@ -3102,7 +3102,7 @@ class PeriodicTorsionForce(Force):
         return (torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, torsion.periodicity, torsion.phase, torsion.k)
 
     @accepts_compatible_units(None, None, None, None, None, None, units.radians, units.kilojoules_per_mole)
-    def setTorsionParameters(self, index, particle1, particle2, particle3, particle4, periodicity, phase, k):
+    def setForceParameters(self, index, particle1, particle2, particle3, particle4, periodicity, phase, k):
         """
         Set the force field parameters for a periodic torsion term.
 
@@ -3125,7 +3125,7 @@ class PeriodicTorsionForce(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
+    def nforces(self):
         return len(self.torsions)
 
     def __str__(self):
@@ -3137,8 +3137,8 @@ class PeriodicTorsionForce(Force):
         r = ""
 
         # Show torsions.
-        if (self.ntorsions > 0):
-            r += "Torsions:\n"
+        if (self.nforces > 0):
+            r += "Periodic Torsions:\n"
             r += "%8s %10s %10s %10s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "particle4", "periodicity", "phase", "k")
             for (index, torsion) in enumerate(self.torsions):
                 r += "%8d %10d %10d %10d %10d %10d %24s %24s\n" % (index, torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4,  torsion.periodicity, str(torsion.phase), str(torsion.k))
@@ -3212,9 +3212,9 @@ class NonPeriodicTorsionForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -3227,7 +3227,7 @@ class NonPeriodicTorsionForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of periodic torsion terms in the potential function
 
@@ -3235,7 +3235,7 @@ class NonPeriodicTorsionForce(Force):
         return len(self.torsions)
 
     @accepts_compatible_units(None, None, None, None, units.radians, units.kilojoules_per_mole)
-    def addTorsion(self, particle1, particle2, particle3, particle4, phase, k):
+    def addForce(self, particle1, particle2, particle3, particle4, phase, k):
         """
         Add a periodic torsion term to the force field.
 
@@ -3252,7 +3252,7 @@ class NonPeriodicTorsionForce(Force):
         self.torsions.append(torsion) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a periodic torsion term.
 
@@ -3269,7 +3269,7 @@ class NonPeriodicTorsionForce(Force):
         return (torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, torsion.phase, torsion.k)
 
     @accepts_compatible_units(None, None, None, None, None, units.radians, units.kilojoules_per_mole)
-    def setTorsionParameters(self, index, particle1, particle2, particle3, particle4, phase, k):
+    def setForceParameters(self, index, particle1, particle2, particle3, particle4, phase, k):
         """
         Set the force field parameters for a periodic torsion term.
 
@@ -3291,7 +3291,7 @@ class NonPeriodicTorsionForce(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
+    def nforces(self):
         return len(self.torsions)
 
     def __str__(self):
@@ -3303,8 +3303,8 @@ class NonPeriodicTorsionForce(Force):
         r = ""
 
         # Show torsions.
-        if (self.ntorsions > 0):
-            r += "Torsions:\n"
+        if (self.nforces > 0):
+            r += "NonPeriodic Torsions:\n"
             r += "%8s %10s %10s %10s %10s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "particle4", "phase", "k")
             for (index, torsion) in enumerate(self.torsions):
                 r += "%8d %10d %10d %10d %10d %24s %24s\n" % (index, torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, str(torsion.phase), str(torsion.k))
@@ -3377,9 +3377,9 @@ class RBTorsionForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -3392,7 +3392,7 @@ class RBTorsionForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of RB torsion terms in the potential function
 
@@ -3400,7 +3400,7 @@ class RBTorsionForce(Force):
         return len(self.torsions)
 
     @accepts_compatible_units(None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole)
-    def addTorsion(self, particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5):
+    def addForce(self, particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5):
         """
         Add a RB torsion term to the force field.
 
@@ -3421,7 +3421,7 @@ class RBTorsionForce(Force):
         self.torsions.append(torsion)
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a RB torsion term.
 
@@ -3442,7 +3442,7 @@ class RBTorsionForce(Force):
         return (torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, torsion.C0, torsion.C1, torsion.C2, torsion.C3, torsion.C4, torsion.C5)
 
     @accepts_compatible_units(None, None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole)
-    def setTorsionParameters(self, index, particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5):
+    def setForceParameters(self, index, particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5):
         """
         Set the force field parameters for a periodic torsion term.
 
@@ -3468,7 +3468,7 @@ class RBTorsionForce(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
+    def nforces(self):
         return len(self.torsions)
 
     def __str__(self):
@@ -3480,8 +3480,8 @@ class RBTorsionForce(Force):
         r = ""
 
         # Show torsions.
-        if (self.ntorsions > 0):
-            r += "Torsions:\n"
+        if (self.nforces > 0):
+            r += "RB Torsions:\n"
             r += "%8s %10s %10s %10s %10s %24s %24s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "particle4", "C0", "C1", "C2", "C3", "C4", "C5")
             for (index, torsion) in enumerate(self.torsions):
                 r += "%8d %10d %10d %10d %10d %24s %24s %24s %24s %24s\n" % (index, torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, str(torsion.C0), str(torsion.C1), str(torsion.C2), str(torsion.C3), str(torsion.C4), str(torsion.C5))
@@ -3558,9 +3558,9 @@ class FourierTorsionForce(Force):
 
         """
         dest.__init__()
-        for index in range(src.getNumTorsions()):
-            args = src.getTorsionParameters(index)
-            dest.addTorsion(*args)
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
 
         return
 
@@ -3573,7 +3573,7 @@ class FourierTorsionForce(Force):
         self._copyDataUsingInterface(force, self)
         return force
 
-    def getNumTorsions(self):
+    def getNumForces(self):
         """
         Get the number of Fourier torsion terms in the potential function
 
@@ -3581,7 +3581,7 @@ class FourierTorsionForce(Force):
         return len(self.torsions)
 
     @accepts_compatible_units(None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole)
-    def addTorsion(self, particle1, particle2, particle3, particle4, C1, C2, C3, C4):
+    def addForce(self, particle1, particle2, particle3, particle4, C1, C2, C3, C4):
         """
         Add a RB torsion term to the force field.
 
@@ -3600,7 +3600,7 @@ class FourierTorsionForce(Force):
         self.torsions.append(torsion) 
         return
 
-    def getTorsionParameters(self, index):
+    def getForceParameters(self, index):
         """
         Get the force field parameters for a fourier torsion term.
 
@@ -3619,7 +3619,7 @@ class FourierTorsionForce(Force):
         return (torsion.particle1, torsion.particle2, torsion.particle3, torsion.particle4, torsion.C1, torsion.C2, torsion.C3, torsion.C4)
 
     @accepts_compatible_units(None, None, None, None, None, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole, units.kilojoules_per_mole)
-    def setTorsionParameters(self, index, particle1, particle2, particle3, particle4, C1, C2, C3, C4):
+    def setForceParameters(self, index, particle1, particle2, particle3, particle4, C1, C2, C3, C4):
         """
         Set the force field parameters for a fourier torsion term.
 
@@ -3643,7 +3643,7 @@ class FourierTorsionForce(Force):
     #==========================================================================
 
     @property
-    def ntorsions(self):
+    def nforces(self):
         return len(self.torsions)
 
     def __str__(self):
@@ -3655,8 +3655,8 @@ class FourierTorsionForce(Force):
         r = ""
 
         # Show torsions.
-        if (self.ntorsions > 0):
-            r += "Torsions:\n"
+        if (self.nforces > 0):
+            r += "Fourier Torsions:\n"
             r += "%8s %10s %10s %10s %10s %24s %24s %24s %24s\n" % ("index", "particle1", "particle2", "particle3", "particle4", "C1", "C2", "C3", "C4")
             for (index, torsion) in enumerate(self.torsions):
                 r += "%8d %10d %10d %10d %10d %24s %24s %24s %24s\n" % (index, torsion.particle1, torsion.particle2, torsion.particle3, str(torsion.C1), str(torsion.C2), str(torsion.C3), str(torsion.C4))

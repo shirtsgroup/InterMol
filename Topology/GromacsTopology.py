@@ -91,10 +91,21 @@ class GromacsTopology(object):
             self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=topfile)
         else:
             self.GromacsTopologyFileObject = None
+
+        if (topology):
+            if type(topology).__name__ == 'list':
+                for top in topology:
+                    self.molecules.append(top)
+            else:
+                self.molecules.append(topology)
         return
 
     def setName(self, name):
         self.name = name
+        return
+
+    def addMolecule(self, molecule):
+        self.molecules.append(molecule)
         return
 
     def readTopologyFile(self, topfile):
@@ -119,12 +130,12 @@ class GromacsTopology(object):
 
         reallist = list()
         for i in range(len(self.index[0])):
-            subtemp = list()
+            walid = list()
             for j in range(i, len(self.index[0])):
                 if self.index[0][i] == self.index[0][j]:
                     parmInfo = self.parameters[j]
-                    subtemp.extend(parmInfo)
-            reallist.append(subtemp)
+                    walid.extend(parmInfo)
+            reallist.append(walid)
 
         self.index[0] = copy
         while len(reallist) > len(self.index[0]):
@@ -138,6 +149,10 @@ class GromacsTopology(object):
         return
 
     def grabMissingInfo(self, molecule, header, func, particle1, particle2, particle3 = None, particle4 = None):
+        """
+        Locates the indicies of the missing data from parameters to be plugged into molecule definitions.
+
+        """
 
         if "bonds" in header:
 
@@ -173,6 +188,8 @@ class GromacsTopology(object):
                     j = self.parameters[i].index(bondtype)
 
         if "pairs" in header:
+
+            # Find the location of pairtypes in the index matrix
             i = self.index[0].index('[ pairtypes ]')
 
             # Filter out the pairtypes with different func numbers
@@ -204,6 +221,7 @@ class GromacsTopology(object):
                     j = self.parameters[i].index(pairtype)
 
         if "angles" in header:
+
             # Find the location of angletypes in the index matrix
             i = self.index[0].index('[ angletypes ]')
 
@@ -240,6 +258,8 @@ class GromacsTopology(object):
                     j = self.parameters[i].index(angletype)
 
         if "dihedrals" in header:
+
+            # Find the location of dihedraltypes in the index matrix
             i = self.index[0].index('[ dihedraltypes ]')
 
             # Filter out the dihedraltypes with different func numbers
@@ -281,7 +301,37 @@ class GromacsTopology(object):
                     j = self.parameters[i].index(dihedraltype)
 
         if "constraints" in header:
+
+            # Find the location of constrainttypes in the index matrix
             i = self.index[0].index('[ constrainttypes ]')
+
+            # Filter out the constrainttypes with different func numbers
+            constrainttypes = list()
+            for constrainttype in self.parameters[i]:
+                if constrainttype.func == func:
+                    constrainttypes.append(constrainttype)
+
+            if len(constrainttypes) == 0:
+                raise "Did not find any constrainttypes"
+
+            # Convert each particle to an atomname in [ atoms ]
+            for atom in molecule.atoms:
+                if particle1 == int(atom.ID):
+                    atomname1 = atom.metadata.atomtype
+                if particle2 == int(atom.ID):
+                    atomname2 = atom.metadata.atomtype
+
+            # Convert each atomname to a bondtype
+            for atomtype in self.parameters[1]:
+                if atomname1 == atomtype.name:
+                    bondtype1 = atomtype.bondtype
+                if atomname2 == atomtype.name:
+                    bondtype2 = atomtype.bondtype
+
+            # Convert two bondtypes to a constraint parameter
+            for angletype in angletypes:
+                if (bondtype1 == angletype.atomtype1 and bondtype2 == angletype.atomtype2 and bondtype3 == angletype.atomtype3) or (bondtype1 == angletype.atomtype3 and bondtype2 == angletype.atomtype2 and bondtype3 == angletype.atomtype1):
+                    j = self.parameters[i].index(constrainttype)
 
         return i, j
 
@@ -301,7 +351,7 @@ class GromacsTopology(object):
 
         return fields, comment
 
-    def findMoleculeDirective(self, currentMoleculeDirective, molecule, forceType):
+    def findMoleculeDirective(self, currentMoleculeDirective, molecule):
         """
         Function to determine if a molecule directive has already been created
         if it has been created then it will just set the currentMoleculeDirective to the created one
@@ -316,39 +366,8 @@ class GromacsTopology(object):
                 if type(currentMoleculeDirective) == type(moleculeDirective):
                     index = molecule.forces.index(moleculeDirective)
                     currentMoleculeDirective = molecule.forces[index]
-            if forceType == "bonds":
-                if currentMoleculeDirective.getNumBonds() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-            if forceType == "pairs":
-                if currentMoleculeDirective.getNumForces() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-            if forceType == "pairs_nb":
-                if currentMoleculeDirective.getNumForces() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-            if forceType == "angles":
-                if currentMoleculeDirective.getNumAngles() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-            if forceType == "dihedrals":
-                if currentMoleculeDirective.getNumTorsions() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-            if forceType == "exclusions":
-                raise "Not Implemented Yet"
-                """
-                if currentMoleculeDirective.getNumForces() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-                """
-            if forceType == "constraints":
-                raise "Not Implemented Yet"
-                """
-                if currentMoleculeDirective.getNumForces() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-                """
-            if forceType == "settles":
-                raise "Not Implemented Yet"
-                """
-                if currentMoleculeDirective.getNumForces() == 0:
-                    molecule.forces.append(currentMoleculeDirective)
-                """
+            if currentMoleculeDirective.getNumForces() == 0:
+                molecule.forces.append(currentMoleculeDirective)
         return currentMoleculeDirective
 
     def ConvertMoleculeDirectivesToTopology(self, MoleculeDirectives):
@@ -381,7 +400,8 @@ class GromacsTopology(object):
         # molecule has name, atoms (list), forces (list), constraints (list), atomgroups (list)
         for directive in MoleculeDirectives:
             if len(directive.lines) > 0:
-                # Fill in MoleculeType
+
+                # Fill in moleculetype
                 if "moleculetype" in directive.name:
                     for line in directive.lines:
                         fields = line.split()
@@ -393,8 +413,6 @@ class GromacsTopology(object):
                 if "atoms" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        try: particle = int(fields[0])
-                        except: pdb.set_trace()
                         particle = int(fields[0])
                         atomtype = fields[1]
                         resnum = int(fields[2])
@@ -405,7 +423,7 @@ class GromacsTopology(object):
                         try:
                             mass = float(fields[7]) * units.amu
                         except:
-                            mass = 0.0000 * units.amu
+                            mass = 0.0000 * units.amu ####################### WHY DO WE HAVE THIS?
                         atomnum = particle
                         freeEnergyAtom = False
                         for atomtypenis in self.parameters[1]:
@@ -425,7 +443,7 @@ class GromacsTopology(object):
 
                         if func == 1:
                             newMoleculeDirective = BondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 length = float(fields[3]) * units.nanometers
                                 k = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**(-2)
@@ -433,11 +451,11 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 length = self.parameters[i][j].distance
                                 k = self.parameters[i][j].kspring
-                            currentMoleculeDirective.addBond(particle1, particle2, length, k)
+                            parameters = [particle1, particle2, length, k]
 
                         if func == 2:
                             newMoleculeDirective = G96BondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 length = float(fields[3]) * units.nanometers
                                 k = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**(-4)
@@ -445,11 +463,11 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 length = self.parameters[i][j].distance
                                 k = self.parameters[i][j].kspring
-                            currentMoleculeDirective.addBond(particle1, particle2, length, k)
+                            parameters = [particle1, particle2, length, k]
 
                         if func == 3:
                             newMoleculeDirective = MorseBondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 length = float(fields[3]) * units.nanometers
                                 D = float(fields[4]) * units.kilojoules_per_mole
@@ -458,11 +476,11 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 D = self.parameters[i][j].D
                                 beta = self.parameters[i][j].beta
-                            currentMoleculeDirective.addBond(particle1, particle2, length, D, beta)
+                            parameters = [particle1, particle2, length, D, beta]
 
                         if func == 4:
                             newMoleculeDirective = CubicBondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 length = float(fields[3]) * units.nanometers
                                 C2 = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**(-2)
@@ -471,16 +489,16 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 C2 = self.parameters[i][j].C2
                                 C3 = self.parameters[i][j].C3
-                            currentMoleculeDirective.addBond(particle1, particle2, length, C2, C3)
+                            parameters = [particle1, particle2, C2, C3]
 
                         if func == 5:
                             newMoleculeDirective = ConnectionBondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
-                            currentMoleculeDirective.addBond(particle1, particle2)
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
+                            parameters = [particle1, particle2]
 
                         if func == 6:
                             newMoleculeDirective = HarmonicBondForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "bonds")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 length = float(fields[3]) * units.nanometers
                                 k = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**(-2)
@@ -488,7 +506,7 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 length = self.parameters[i][j].distance
                                 k = self.parameters[i][j].kspring
-                            currentMoleculeDirective.addBond(particle1, particle2, length, k)
+                            parameters = [particle1, particle2, length, k]
 
                         if func == 7:
                             raise "Bond type not implemented"
@@ -499,16 +517,19 @@ class GromacsTopology(object):
                         if func == 9:
                             raise "Bond type not implemented"
 
+                        currentMoleculeDirective.addForce(*parameters)
+
                 # Fill in pairs
                 if "pairs" in directive.name:
+                    for line in directive.lines:
                         fields, comment = self.splitline(line)
                         atomtype1 = int(fields[0])
                         atomtype2 = int(fields[1])
                         func = int(fields[2])
 
                         if func == 1:
-                            newMoleculeDirective = LJ1Force() # depends on combination rule
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "pairs")
+                            newMoleculeDirective = LJ1Force()
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 if self.parameters[0][0].cr == 1:
                                     V = float(fields[3]) * units.kilojoules_per_mole * units.nanometers**6
@@ -521,13 +542,13 @@ class GromacsTopology(object):
                                 V = self.parameters[i][j].V
                                 W = self.parameters[i][j].W
                             else:
-                                V = None
-                                W = None
-                            currentMoleculeDirective.addForce(atomtype1, atomtype2, V, W) # Depends on combination rule
+                                V = None * units.dimensionless
+                                W = None * units.dimensionless
+                            parameters = [atomtype1, atomtype2, V, W]
 
                         if func == 2:
                             newMoleculeDirective = LJ2Force()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "pairs")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
                                 fudgeQQ = fields[3]
                                 qi = float(fields[4]) * units.elementary_charge
@@ -537,25 +558,47 @@ class GromacsTopology(object):
                                     W = float(fields[7]) * units.kilojoules_per_mole
                                 elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
                                     V = float(fields[6]) * units.kilojoules_per_mole * units.nanometers**6
-                                    W = float(fields[7]) * units.kilojoules_per_mole * units-nanometers**12
+                                    W = float(fields[7]) * units.kilojoules_per_mole * units.nanometers**12
                             elif "pairtypes" in self.index[0]:
                                 i, j = grabMissingInfo(molecule, directive.name, func, particle1, particle2)
                                 V = self.parameters[i][j].V
                                 W = self.parameters[i][j].W
                             else:
-                                V = None
-                                W = None
-                            currentMoleculeDirective.addForce(atomtype1, atomtype2, qi, qj, V, W)
+                                V = None * units.dimensionless
+                                W = None * units.dimensionless
+                            parameters = [atomtype1, atomtype2, qi, qj, V, W]
+
+                        currentMoleculeDirective.addForce(*parameters)
 
                 # Fill in nonbonded pairs
                 if "pairs_nb" in directive.name:
+                    for line in directive.lines:
                         fields, comment = self.splitline(line)
                         func = int(fields[2])
 
                         if func == 1:
                             newMoleculeDirective = LGNBForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "pairs_nb")
-                            # Need to finish
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
+                            if len(fields) > 3:
+                                qi = float(fields[3]) * units.elementary_charge
+                                qj = float(fields[4]) * units.elementary_charge
+                                if self.parameters[0][0].cr == 1:
+                                    V = float(fields[5]) * units.nanometers**6
+                                    W = float(fields[6]) * units.kilojoules_per_mole
+                                elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
+                                    V = float(fields[5]) * units.kilojoules_per_mole * units.nanometers**6
+                                    W = float(fields[6]) * units.kilojoules_per_mole * units.nanometers**12
+                            elif "pairtypes" in self.index[0]:
+                                i, j = grabMissingInfo(molecule, directive.name, func, particle1, particle2)
+                                V = self.parameters[i][j].V
+                                W = self.parameters[i][j].W
+                            else:
+                                V = None * units.dimensionless
+                                W = None * units.dimensionless
+                            parameters = [atomtype1, atomtype2, qi, qj, V, W]
+
+                        currentMoleculeDirective.addForce(*parameters)
+
 
                 # Fill in angles
                 if "angles" in directive.name:
@@ -568,7 +611,7 @@ class GromacsTopology(object):
 
                         if func == 1:
                             newMoleculeDirective = AngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 angle = float(fields[4]) * units.degrees
                                 k = float(fields[5]) * units.kilojoules_per_mole * units.radians**(-2)
@@ -576,11 +619,11 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2, particle3)
                                 angle = self.parameters[i][j].theta
                                 k = self.parameters[i][j].k
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k)
+                            parameters = [particle1, particle2, particle3, angle, k]
 
                         if func == 2:
                             newMoleculeDirective = G96AngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 angle = float(fields[4]) * units.degrees
                                 k = float(fields[5]) * units.kilojoules_per_mole
@@ -588,11 +631,11 @@ class GromacsTopology(object):
                                 i, j = grabMissingInfo(molecule, directive.name, func, particle1, particle2, particle3)
                                 angle = self.parameters[i][j].theta
                                 k = self.parameters[i][j].k
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k)
+                            parameters = [particle1, particle2, particle3, angle, k]
 
                         if func == 3:
                             newMoleculeDirective = CrossBondBondAngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 r1e = float(fields[4]) * units.nanometers
                                 r2e = float(fields[5]) * units.nanometers
@@ -602,11 +645,11 @@ class GromacsTopology(object):
                                 r1e = self.parameters[i][j].r1e
                                 r2e = self.parameters[i][j].r2e
                                 krr = self.parameters[i][j].krr
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, r1e, r2e, krr)
+                            parameters = [particle1, particle2, particle3, r1e, r2e, krr]
 
                         if func == 4:
                             newMoleculeDirective = CrossBondAngleAngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 r1e = float(fields[4]) * units.nanometers
                                 r2e = float(fields[5]) * units.nanometers
@@ -618,11 +661,11 @@ class GromacsTopology(object):
                                 r2e = self.parameters[i][j].r2e
                                 r3e = self.parameters[i][j].r3e
                                 kr = self.parameters[i][j].kr
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, r1e, r2e, r3e, kr)
+                            parameters = [particle1, particle2, particle3, r1e, r2e, r3e, kr]
 
                         if func == 5:
                             newMoleculeDirective = UreyBradleyAngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 angle = float(fields[4]) * units.degrees
                                 k = float(fields[5]) * units.kilojoules_per_mole
@@ -634,11 +677,11 @@ class GromacsTopology(object):
                                 k = self.parameters[i][j].k
                                 r13 = self.parameters[i][j].r13
                                 kUB = self.parameters[i][j].kUB
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, k, r13, kUB)
+                            parameters = [particle1, particle2, particle3, angle, k, r13, kUB]
 
                         if func == 6:
                             newMoleculeDirective = QuarticAngleForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "angles")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 4:
                                 angle = fields[4]
                                 C0 = float(fields[5]) * units.kilojoules_per_mole
@@ -653,10 +696,12 @@ class GromacsTopology(object):
                                 C2 = self.parameters[i][j].C2
                                 C3 = self.parameters[i][j].C3
                                 C4 = self.parameters[i][j].C4
-                            currentMoleculeDirective.addAngle(particle1, particle2, particle3, angle, C0, C1, C2, C3, C4)
+                            parameters = [particle1, particle2, particle3, angle, C0, C1, C2, C3, C4]
 
                         if func == 8:
                             raise "Angle type not implemented"
+
+                        currentMoleculeDirective.addForce(*parameters)
 
                 # Fill in dihedrals
                 if "dihedrals" in directive.name:
@@ -670,7 +715,7 @@ class GromacsTopology(object):
 
                         if func == 1:
                             newMoleculeDirective = PeriodicTorsionForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "dihedrals")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 5:
                                 phi = float(fields[5]) * units.degrees
                                 kphi = float(fields[6]) * units.kilojoules_per_mole
@@ -680,11 +725,11 @@ class GromacsTopology(object):
                                 phi = self.parameters[i][j].phi
                                 kphi = self.parameters[i][j].kphi
                                 multiplicity = self.parameters[i][j].multiplicity
-                            currentMoleculeDirective.addTorsion(particle1, particle2, particle3, particle4, multiplicity, phi, kphi)
+                            parameters = [particle1, particle2, particle3, particle4, multiplicity, phi, kphi]
 
                         if func == 2:
                             newMoleculeDirective = NonPeriodicTorsionForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "dihedrals")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 5:
                                 xi = float(fields[5]) * units.degrees
                                 kxi = float(fields[6]) * units.kilojoules_per_mole * units.radians**(-2)
@@ -692,11 +737,11 @@ class GromacsTopology(object):
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2, particle3, particle4)
                                 xi = self.parameters[i][j].xi
                                 kxi = self.parameters[i][j].kxi
-                            currentMoleculeDirective.addTorsion(particle1, particle2, particle3, particle4, xi, kxi)
+                            parameters = [particle1, particle2, particle3, particle4, xi, kxi]
 
                         if func == 3:
                             newMoleculeDirective = RBTorsionForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "dihedrals")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 5:
                                 C0 = float(fields[5]) * units.kilojoules_per_mole
                                 C1 = float(fields[6]) * units.kilojoules_per_mole
@@ -712,11 +757,11 @@ class GromacsTopology(object):
                                 C3 = self.parameters[i][j].C3
                                 C4 = self.parameters[i][j].C4
                                 C5 = self.parameters[i][j].C5
-                            currentMoleculeDirective.addTorsion(particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5)
+                            parameters = [particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5]
 
                         if func == 5:
                             newMoleculeDirective = FourierTorsionForce()
-                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule, "dihedrals")
+                            currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 5:
                                 C0 = float(fields[5]) * units.kilojoules_per_mole
                                 C1 = float(fields[6]) * units.kilojoules_per_mole
@@ -730,34 +775,47 @@ class GromacsTopology(object):
                                 C2 = self.parameters[i][j].C2
                                 C3 = self.parameters[i][j].C3
                                 C4 = self.parameters[i][j].C4
-                            currentMoleculeDirective.addTorsion(particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4)
+                            parameters = [particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4]
 
                         if func == 8:
                             raise "Dihedral type not implemented"
+
+                        currentMoleculeDirective.addForce(*parameters)
 
                 # Fill in exclusions
                 if "exclusions" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        # Need to finish
+                        newMoleculeDirective = ''# SOME TYPE FOR Force.py OBEJCT THAT CAN STORE EXCLUSIONS
+                        currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
+                        parameters = list()
+                        for particle in fields:
+                            parameters.append(int(particle))
+                        currentMoleculeDirective.addForce(*parameters)
 
                 # Fill in constraints
                 if "constraints" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        func = int(fields[4])
+                        particle1 = int(fields[0])
+                        particle2 = int(fields[1])
+                        func = int(fields[3])
 
                         if func == 1:
-                            raise "Constraint type not implemented"
+                            length = float(fields[4])
 
                         if func == 2:
-                            raise "Constraint type not implemented"
+                            lengthA = float(fields[4])
+                            lengthB = float(fields[5])
 
                 # Fill in settles
                 if "settles" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        # Need to finish
+                        particle1 = int(fields[0])
+                        func = int(fields[1])
+                        doh = float(fields[2])
+                        dhh = float(fields[3])
 
             molIndex.append(directive.getName())
         self.index.append(molIndex)
@@ -767,7 +825,9 @@ class GromacsTopology(object):
 
     def ConvertParameterDirectiveToGromacsParameter(self, parmDirective):
         """Takes a parmDirective (Directive object), and uses it
-        to create a GromacsParameter object to store the forcefield parameters."""
+        to create a GromacsParameter object to store the forcefield parameters.
+
+        """
 
         parmList = list()
         index = 0
@@ -856,8 +916,8 @@ class GromacsTopology(object):
 
                 if func == 1:
                     if self.parameters[0][0] == 1:
-                        V = float(fields[3]) * units.kilojoules_per_mole*units.nanometers**6
-                        W = float(fields[4]) * units.kilojoules_per_mole*units.nanometers**12
+                        V = float(fields[3]) * units.kilojoules_per_mole * units.nanometers**6
+                        W = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**12
                         newGroParm = GromacsPairTypes11ParameterInfo(atomtype1, atomtype2, func, V, W, comment)
                     elif self.parameters[0][0] == 2 or self.parameters[0][0].cr == 3:
                         V = float(fields[3]) * units.nanometers**6
@@ -873,10 +933,11 @@ class GromacsTopology(object):
                         W = float(fields[7]) * units.kilojoules_per_mole
                         newGroParm = GromacsPairTypes2ParameterInfo(atomtype1, atomtype2, func, fudgeQQ, qi, qj, V, W, comment)
                     elif self.parameters[0][0] == 2 or self.parameters[0][0].cr == 3:
-                        V = float(fields[6]) * units*kilojoules_per_mole*units.nanometers**6
-                        W = float(fields[7]) * units.kilojoules_per_mole*units.nanometers**12
+                        V = float(fields[6]) * units*kilojoules_per_mole * units.nanometers**6
+                        W = float(fields[7]) * units.kilojoules_per_mole * units.nanometers**12
                         newGroParm = GromacsPairTypes2ParameterInfo(atomtype1, atomtype2, func, fudgeQQ, qi, qj, V, W, comment)
 
+            # Possibly not needed?  It does not appear in grompp.h
             if "pairs_nb" in parmDirective.getName():
                 atomtype1 = fields[0]
                 atomtype2 = fields[1]
@@ -886,8 +947,8 @@ class GromacsTopology(object):
 
                 if func == 1:
                     if self.parameters[0][0] == 1 or self.parameters[0][0].cr == 3:
-                        V = float(fields[5]) * units.kilojoules_per_mole*units.nanometers**6
-                        W = float(fields[6]) * units.kilojoules_per_mole*units.nanometers**12
+                        V = float(fields[5]) * units.kilojoules_per_mole * units.nanometers**6
+                        W = float(fields[6]) * units.kilojoules_per_mole * units.nanometers**12
                         newGroParm = GromacsPairTypesNB13ParameterInfo(atomtype1, atomtype2, func, qi, qj, V, W, comment)
                     elif self.parameters [0] == 2:
                         V = float(fields[5]) * units.nanometers
@@ -920,7 +981,7 @@ class GromacsTopology(object):
                     r1e = float(fields[4]) * units.nanometers
                     r2e = float(fields[5]) * units.nanometers
                     r3e = float(fields[6]) * units.nanometers
-                    kr = float(fields[7]) * units.kilojoules_per_mole*units.nanometers**(-2)
+                    kr = float(fields[7]) * units.kilojoules_per_mole * units.nanometers**(-2)
                     newGroParm = GromacsCrossBondAngleAngleParameterInfo(atomtype1, atomtype2, atomtype3, func, r1e, r2e, r3e, kr, comment)
 
                 if func == 5:
@@ -954,7 +1015,7 @@ class GromacsTopology(object):
 
                 if func == 2:
                     xi = float(fields[5]) * units.degrees
-                    kxi = float(fields[6]) * units.kilojoules_per_mole*units.radians**(-2)
+                    kxi = float(fields[6]) * units.kilojoules_per_mole * units.radians**(-2)
                     multiplicity = int(fields[7])
                     newGroParm = GromacsImproperDihedralParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, xi, kxi, comment)
 
@@ -1006,7 +1067,7 @@ class GromacsTopology(object):
                     distanceHH = float(fields[5]) * units.nanometers
                     newGroParm = GromacsSettleParameterInfo(atomtype1, atomtype2, atomtype3, func, distanceOH, distanceHH, comment)
 
-            if "virtual_sites2" in parmDirective.getName():
+            if "vsites2" in parmDirective.getName():
                 atomtype1 = fields[0]
                 atomtype2 = fields[1]
                 atomtype3 = fields[2]
@@ -1016,7 +1077,7 @@ class GromacsTopology(object):
                     a = float(fields[4])
                     newGroParm = GromacsDummy2ParameterInfo(atomtype1, atomtype2, atomtype3, func, a, comment)
 
-            if "virtual_sites3" in parmDirective.getName():
+            if "vsites3" in parmDirective.getName():
                 atomtype1 = fields[0]
                 atomtype2 = fields[1]
                 atomtype3 = fields[2]
@@ -1044,14 +1105,45 @@ class GromacsTopology(object):
                     c = float(fields[7]) * units.nanometers**(-1)
                     newGroParm = GromacsDummy3outParameterInfo(atomtype1, atomtype2, atomtype3, atomtype4, func, a, b, c, comment)
 
+            if "vsites4" in parmDirective.getName():
+                atomtype1 = fields[0]
+                atomtype2 = fields[1]
+                atomtype3 = fields[2]
+                atomtype4 = fields[3]
+                atomtype5 = fields[4]
+                func = int(fields[5])
+
+                if func == 1:
+                    a = float(fields[6])
+                    b = float(fields[7])
+                    c = float(fields[8])
+                    # Gromacs parameter needs to be implemented
+
+
+            if "vsitesn" in parmDirective.getName():
+                atomtype1 = fields[0]
+                func = int(fields[1])
+
+                if func == 1:
+                    atomIndicies = int(fields[2]) # There can be more indicies
+                    # Gromacs parameter needs to be implemented
+
+                if func == 2:
+                    atomIndicies = int(fields[2]) # There can be more indicies
+                    # Gromacs parameter needs to be implemented
+
+                if func == 3:
+                    atomIndicies = int(fields[2]) # There can be more indicies
+                    # Gromacs parameter needs to be implemented
+
             if "position_restraints" in parmDirective.getName():
                 atomtype1 = fields[0]
                 func = int(fields[1])
 
                 if func == 1:
-                    kx = float(fields[1]) * units.kilojoules_per_mole*units.nanometers**(-2)
-                    ky = float(fields[2]) * units.kilojoules_per_mole*units.nanometers**(-2)
-                    kz = float(fields[3]) * units.kilojoules_per_mole*units.nanometers**(-2)
+                    kx = float(fields[1]) * units.kilojoules_per_mole * units.nanometers**(-2)
+                    ky = float(fields[2]) * units.kilojoules_per_mole * units.nanometers**(-2)
+                    kz = float(fields[3]) * units.kilojoules_per_mole * units.nanometers**(-2)
                     newGroParm = GromacsPositionRestraintParameterInfo(atomtype1, func, kx, ky, kz, comment)
 
             if "distance_restraints" in parmDirective.getName():
@@ -1113,8 +1205,8 @@ class GromacsTopology(object):
 
                 if func == 1:
                     if self.parameters == 1 or self.parameters[0][0].cr == 3:
-                        V = float(fields[3]) * units.kilojoules_per_mole*units.nanometers**6
-                        W = float(fields[4]) * units.kilojoules_per_mole*units.nanometers**12
+                        V = float(fields[3]) * units.kilojoules_per_mole * units.nanometers**6
+                        W = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**12
                         newGroParm = GromacsLJNonbondedParameterInfo(atomtype1, atomtype2, func, V, W, comment)
                     elif self.parameters == 2:
                         V = float(fields[3]) * units.nanometers
@@ -1124,7 +1216,7 @@ class GromacsTopology(object):
                 if func == 2:
                     a = float(fields[3]) * kilojoules_per_mole
                     b = float(fields[4]) * units.nanometers**(-1)
-                    c6 = float(fields[5]) * units.kilojoules_per_mole*units.nanometers**6
+                    c6 = float(fields[5]) * units.kilojoules_per_mole * units.nanometers**6
                     newGroParm = GromacsBuckinghamNonbondedParameterInfo(atomtype1, atomtype2, func, a, b, c6, comment)
 
             parmList.append(newGroParm)
@@ -1132,138 +1224,142 @@ class GromacsTopology(object):
         return parmList
 
 
-    def ConvertTopologyToMoleculeDirectives(self, Topology):
+    def ConvertTopologyToDirectives(self, Topology):
         """
-        Creating a list (by molecule) of lists (of Directives) for a single molecule
+        Creating a list (by molecule) of lists (of Directives) for a single molecule.
 
         """
 
-        myDirectiveList = list()
+        myDirectivesList = list()
 
         # Create [ moleculetype ] from the Topology
-        moleculeTypeDirectiveName = '[ moleculetype ]\n'
+        moleculeTypeDirectiveName = '[ moleculetype ]'
         header = '; molname      nrexcl\n'
         moleculeTypeDirective = self.GromacsTopologyFileObject.Directive(moleculeTypeDirectiveName, header)
         molname = Topology.name
         nrexcl = '' # Needs to come from the number of exclusions
         moleculeTypeDirective.lines.append('%s%9s\n'%(molname, nrexcl))
-        myDirectiveList.append(moleculeTypeDirective)
+        myDirectivesList.append(moleculeTypeDirective)
 
         # Create [ atoms ] directive from Topology.atoms
-        atomsDirectiveName = '[ atoms ]\n'
+        atomsDirectiveName = '[ atoms ]'
         header = ';  nr  type    resnr   residue  atom    cgnr   charge     mass  typeB    chargeB      massB\n'
         atomsDirective = self.GromacsTopologyFileObject.Directive(atomsDirectiveName, header)
         for atom in Topology.atoms:
             convertedTopAtom = '%5d%6s%8d%8s%8s%8d%11.5f%10.3f\n'%(atom.ID, atom.metadata.atomtype, atom.metadata.resnum, atom.metadata.resname, atom.atomname, atom.metadata.cgnr, atom.charge._value, atom.mass._value)
             atomsDirective.lines.append(convertedTopAtom)
-        myDirectiveList.append(atomsDirective)
+        myDirectivesList.append(atomsDirective)
 
         # Create the remaining directives from Topology.forces
         for force in Topology.forces:
             forceInteractionType = type(force).__name__
-            forceDirectiveType = ForceDirectionary[forceInteractionType]
-            forceDirectiveName = '[ %s ]\n'%(forceInteractionType)
+            forceDirectiveType = ForceDictionary[forceInteractionType]
+            forceDirectiveName = '[ %s ]'%(forceDirectiveType)
             forceDirective = self.GromacsTopologyFileObject.Directive(forceDirectiveName, header='')
 
-            if forceType == 'bonds':
+            if forceDirectiveType == 'bonds':
 
                 if forceInteractionType == 'BondForce':
-                    forceDirective.header = '; i    j  func       b0          kb'
+                    forceDirective.header = '; i    j  func       b0          kb\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 1
                         length = fields[2]._value
                         k = fields[3]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(length)f%(k)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s       %(func)d    %(length)f   %(k)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'G96BondForce':
-                    forceDirective.header = '; i    j  func       b0          kb'
+                    forceDirective.header = '; i    j  func       b0          kb\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 2
                         length = fields[2]._value
                         k = fields[3]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(length)f%(k)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(length)f   %(k)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'MorseBondForce':
-                    forceDirective.header = '; i    j  func       b0          D         beta'
+                    forceDirective.header = '; i    j  func       b0          D         beta\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 3
                         length = fields[2]._value
                         D = fields[3]._value
                         beta = fields[4]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(length)f%(D)f%(beta)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(length)f   %(D)f   %(beta)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'CubicBondForce':
-                    forceDirective.header = '; i    j  func       b0         C2         C3'
+                    forceDirective.header = '; i    j  func       b0         C2         C3\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 4
                         length = fields[2]._value
                         C2 = fields[3]._value
                         C3 = fields[4]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(length)f%(C2)f%(C3)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(length)f   %(C2)f   %(C3)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'ConnectionBondForce':
-                    forceDirective.header = '; i    j  func'
+                    forceDirective.header = '; i    j  func\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 5
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'HarmonicBondForce':
-                    forceDirective.header = '; i    j  func       b0          kb'
+                    forceDirective.header = '; i    j  func       b0          kb\n'
                     # Cycle through each bond
-                    for i in range(len(force.getNumBonds())):
-                        fields = force.getBondParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 6
                         length = fields[2]._value
                         k = fields[3]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(length)f%(k)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(length)f   %(k)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-            if forceType == 'pairs':
+            if forceDirectiveType == 'pairs':
 
                 if forceInteractionType == 'LJ1Force':
-                    forceDirective.header = '; i    j  func       sigma         epsilon'
+                    forceDirective.header = '; i    j  func       sigma         epsilon\n'
                     # Cycle through each pair
-                    for i in range(len(force.getNumForces())):
+                    for i in range(force.getNumForces()):
                         fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 1
-                        V = fields[2]._value
-                        W = fields[3]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(V)f%(W)f'%vars()
+                        try:
+                            V = str(fields[2]._value)
+                            W = str(fields[3]._value)
+                        except:
+                            V = ''
+                            W = ''
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(V)s   %(W)s\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'LJ2Force':
-                    forceDirective.header = '; i    j  func       fudgeQQ     qi       qj       sigma         epsilon'
+                    forceDirective.header = '; i    j  func       fudgeQQ     qi       qj       sigma         epsilon\n'
                     # Cycle through each pair
-                    for i in range(len(force.getNumForcess())):
+                    for i in range(force.getNumForces()):
                         fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
@@ -1271,63 +1367,71 @@ class GromacsTopology(object):
                         fudgeQQ = fields[2]._value
                         qi = fields[3]._value
                         qj = fields[4]._value
-                        V = fields[5]._value
-                        W = fields[6]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(fudgeQQ)f%(qi)f%(qj)f%(V)f%(W)f'%vars()
+                        try:
+                            V = str(fields[5]._value)
+                            W = str(fields[6]._value)
+                        except:
+                            V = ''
+                            W = ''
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(fudgeQQ)f   %(qi)f   %(qj)f   %(V)s   %(W)s\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-            if forceType == 'pairs_nb':
+            if forceDirectiveType == 'pairs_nb':
 
                 if forceInteractionType == 'LJNBForce':
-                    forceDirective.header = '; i    j  func         qi       qj       sigma         epsilon'
+                    forceDirective.header = '; i    j  func         qi       qj       sigma         epsilon\n'
                     # Cycle through each pair
-                    for i in range(len(force.getNumForcess())):
+                    for i in range(force.getNumForces()):
                         fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         func = 1
                         qi = fields[2]._value
                         qj = fields[3]._value
-                        V = fields[4]._value
-                        W = fields[5]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(func)d%(qi)f%(qj)f%(V)f%(W)f'%vars()
+                        try:
+                            V = str(fields[4]._value)
+                            W = str(fields[5]._value)
+                        except:
+                            V = ''
+                            W = ''
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(func)d    %(qi)f   %(qj)f   %(V)s   %(W)s\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-            if forceType == 'angles':
+            if forceDirectiveType == 'angles':
 
                 if forceInteractionType == 'AngleForce':
-                    forceDirective.header = ';  i    j    k  func       th0       cth'
+                    forceDirective.header = ';  i    j    k  func       th0       cth\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
                         func = 1
                         theta = fields[3]._value
                         k = fields[4]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(theta)f%(k)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(theta)f   %(k)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'G96AngleForce':
-                    forceDirective.header = ';  i    j    k  func       th0       cth'
+                    forceDirective.header = ';  i    j    k  func       th0       cth\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
                         func = 2
                         theta = fields[3]._value
                         k = fields[4]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(theta)f%(k)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(theta)f   %(k)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'CrossBondBondAngleForce':
-                    forceDirective.header = ';  i    j    k  func       r1e       r2e         cth'
+                    forceDirective.header = ';  i    j    k  func       r1e       r2e         cth\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1335,14 +1439,14 @@ class GromacsTopology(object):
                         r1e = fields[3]._value
                         r2e = fields[4]._value
                         krr = fields[5]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(r1e)f%(r2e)f%(krr)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(r1e)f   %(r2e)f   %(krr)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'CrossBondAngleAngleForce':
-                    forceDirective.header = ';  i    j    k  func       r1e       r2e         r3e        cth'
+                    forceDirective.header = ';  i    j    k  func       r1e       r2e         r3e        cth\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1351,14 +1455,14 @@ class GromacsTopology(object):
                         r2e = fields[4]._value
                         r3e = fields[5]._value
                         kr = fields[6]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(r1e)f%(r2e)f%(r3e)f%(kr)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(r1e)f   %(r2e)f   %(r3e)f   %(kr)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'UreyBradleyAngleForce':
-                    forceDirective.header = ';  i    j    k  func       th0       cth         r13        kUB'
+                    forceDirective.header = ';  i    j    k  func       th0       cth         r13        kUB\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1367,14 +1471,14 @@ class GromacsTopology(object):
                         k = fields[4]._value
                         r13 = fields[5]._value
                         kUB = fields[6]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(theta)f%(k)f%(r13)f%(kUB)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(theta)f   %(k)f   %(r13)f   %(kUB)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'QuarticAngleForce':
-                    forceDirective.header = ';  i    j    k  func       th0        c0         c1         c2         c3         c4'
+                    forceDirective.header = ';  i    j    k  func       th0        c0         c1         c2         c3         c4\n'
                     # Cycle through each angles
-                    for i in range(len(force.getNumAngless())):
-                        fields = force.getAngleParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1385,32 +1489,32 @@ class GromacsTopology(object):
                         C2 = fields[6]._value
                         C3 = fields[7]._value
                         C4 = fields[8]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(func)d%(theta)f%(C0)f%(C1)f%(C2)f%(C3)f%(C4)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(func)d    %(theta)f   %(C0)f   %(C1)f   %(C2)f   %(C3)f   %(C4)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-            if forceType == 'dihedrals':
+            if forceDirectiveType == 'dihedrals':
 
                 if forceInteractionType == 'PeriodicTorsionForce':
-                    forceDirective.header = ';  ai  aj      ak      al   funct     th0         kth0       mult'
+                    forceDirective.header = ';  ai  aj      ak      al   funct     th0         kth0       mult\n'
                     # Cycle through each torsion
-                    for i in range(len(force.getNumTorsions())):
-                        fields = force.getTorsionParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
                         particle4 = fields[3]
                         func = 1
-                        phi = fields[4]._value
-                        kphi = fields[5]._value
-                        multiplicity = fields[6]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(particle4)s%(func)d%(phi)f%(kphi)f%(multiplicity)d'%vars()
+                        phi = fields[5]._value
+                        kphi = fields[6]._value
+                        multiplicity = fields[4]
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(particle4)s   %(func)d    %(phi)f   %(kphi)f   %(multiplicity)d\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'NonPeriodicTorsionForce':
-                    forceDirective.header = ';  ai  aj      ak      al   funct     xi         kxi'
+                    forceDirective.header = ';  ai  aj      ak      al   funct     xi         kxi\n'
                     # Cycle through each torsion
-                    for i in range(len(force.getNumTorsions())):
-                        fields = force.getTorsionParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1418,14 +1522,14 @@ class GromacsTopology(object):
                         func = 2
                         xi = fields[4]._value
                         kxi = fields[5]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(particle4)s%(func)d%(xi)f%(kxi)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(particle4)s   %(func)d    %(xi)f   %(kxi)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-                if forceInteractionType == 'RBTorsionsForce':
-                    forceDirective.header = ';   ai    aj    ak    al funct       c0          c1          c2          c3          c4          c5'
+                if forceInteractionType == 'RBTorsionForce':
+                    forceDirective.header = ';   ai    aj    ak    al funct       c0          c1          c2          c3          c4          c5\n'
                     # Cycle through each torsion
-                    for i in range(len(force.getNumTorsions())):
-                        fields = force.getTorsionParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
@@ -1437,61 +1541,117 @@ class GromacsTopology(object):
                         C3 = fields[7]._value
                         C4 = fields[8]._value
                         C5 = fields[9]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(particle4)s%(func)d%(C0)f%(C1)f%(C2)f%(C3)f%(C4)f%(C5)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(particle4)s   %(func)d    %(C0)f   %(C1)f   %(C2)f   %(C3)f   %(C4)f   %(C5)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
                 if forceInteractionType == 'FourierTorsionForce':
-                    forceDirective.header = ';   ai    aj    ak    al funct       c0          c1          c2          c3          c4'
+                    forceDirective.header = ';   ai    aj    ak    al funct       c0          c1          c2          c3          c4\n'
                     # Cycle through each torsion
-                    for i in range(len(force.getNumTorsions())):
-                        fields = force.getTorsionParameters(i)
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
                         particle1 = fields[0]
                         particle2 = fields[1]
                         particle3 = fields[2]
                         particle4 = fields[3]
-                        func = 4
+                        func = 5
                         C1 = fields[4]._value
                         C2 = fields[5]._value
                         C3 = fields[6]._value
                         C4 = fields[7]._value
-                        gromacsForce = '%(particle1)s%(particle2)s%(particle3)s%(particle4)s%(func)d%(C1)f%(C2)f%(C3)f%(C4)f'%vars()
+                        gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(particle4)s   %(func)d    %(C1)f   %(C2)f   %(C3)f   %(C4)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
-            myDirectiveList.append(forceDirective)
+            myDirectivesList.append(forceDirective)
 
         return myDirectivesList
 
+    def CreateDefaultsDirective(self):
+        directiveName = '[ defaults ]'
+        directiveHeader = '; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n'
+        directive = self.GromacsTopologyFileObject.Directive(directiveName, directiveHeader)
+        ### Must be filled out ###
+        nbfunc = ''
+        combrule = ''
+        genpairs = 'yes'
+        fudgeLJ = ''
+        fudgeQQ = ''
+        ##########################
+        directive.lines.append('%16(nbfunc)d%16(combrule)d%16(genpairs)s%8(fudgeLJ)f%8(fudgeQQ)f'%vars())
 
-    def ConvertParametersToDirectives(self, GromacsParm):
+    def CreateAtomtypesDirective(self):
         """
-        Creates a Directive from a list of GromacsParameters
+        This function needs to be implimented in a way so that only a single atomtype is created for each atom
+
+        """
+        directiveName = '[ atomtypes ]'
+        directiveHeader = ';name  bond_type    mass    charge   ptype          sigma      epsilon\n'
+        directive = self.GromacsTopologyFileObject.Directive(directiveName, directiveHeader)
+        ### Need to fill out ###
+        name = ''
+        bondtype = ''
+        mass = ''
+        charge = ''
+        ptype = 'A'
+        sigma = ''
+        epsilon = ''
+        ########################
+        directive.lines.append('%(name)s%(bondtype)s%(mass)f%(charge)f%(ptype)s%(sigma)f%(epsilon)f'%vars())
+
+    def CreateSystemDirective(self, molecules):
+        """
 
         """
 
-        myDirectivename = '' # How will we do this part? Perhaps we can pull it from index (which must be filled out whenever a GromacsTopology is created?)
-        myDirective = self.GromacsTopologyFileObject.Directive(myDirectiveName, header='') # Does this need to be self.Directive?
-        for parm in GromacsParm:
-            myDirective.lines.append(parm.directiveString())
-        return myDirective
+        myDirectivesList = []
 
+        # Create [ system ]
+        systemDirectiveName = '[ system ]'
+        systemDirective = self.GromacsTopologyFileObject.Directive(systemDirectiveName, header='')
+        ### Needs to be fixed ###
+        systemName = 'system\n'
+        #########################
+        systemDirective.lines.append(systemName)
+        myDirectivesList.append(systemDirective)
+
+        # Create [ molecules ] section
+        moleculeDirectiveName = '[ molecules ]'
+        header = '; Compound        nmols\n'
+        moleculeDirective = self.GromacsTopologyFileObject.Directive(moleculeDirectiveName, header)
+        for molecule in molecules:
+            moleculeName = molecule.name
+            nmolecules = len(molecule.atoms)
+            moleculeLine = '%s %16d\n'%(moleculeName, nmolecules)
+            moleculeDirective.lines.append(moleculeLine)
+        myDirectivesList.append(moleculeDirective)
+
+        return myDirectivesList
 
     def writeTopologyFile(self, filename, ExpandIncludes=False, RebuildDirectives=False):
         """Write the Gromacs topology *.top file to file.
 
         """
 
+        # Process filename
+        if filename[-4:] != '.top':
+            filename += '.top'
+
         # Rebuild the Directives from the information in the Topology objects.
         if (RebuildDirectives):
 
             self.GromacsTopologyFileObject = GromacsTopologyFile()
 
-            # Translate all the GromacsParameter objects to parameter directives
-            #for parm in self.parameters:
-            #    self.GromacsTopologyFileObject.ParameterDirectives.append( self.ConvertGromacsParameterToParameterDirective(parm) )
+            # Create [ default ] and [ atomtypes ]
+            #self.GroamcsTopologyFileObject.directives.extend( self.CreateDefaultsDirective() )
+            #self.GroamcsTopologyFileObject.directives.extend( self.CreateAtomtypesDirective() )
 
             # Translate each set of Topology objects to molecule directives
             for mol in range(len(self.molecules)):
-                self.GromacsTopologyFileObject.MoleculeDefinitionDirectives.append( self.ConvertTopologyToMoleculeDirectives(self.molecules[mol] ) )
+                self.GromacsTopologyFileObject.directives.extend( self.ConvertTopologyToDirectives(self.molecules[mol] ) )
+
+            # Create System directives
+            self.GromacsTopologyFileObject.directives.extend( self.CreateSystemDirective(self.molecules) )
+
+            ExpandIncludes = False # Overwrites True in case user has put it in incorrectly
 
         self.GromacsTopologyFileObject.write(filename, ExpandIncludes=ExpandIncludes)
 

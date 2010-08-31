@@ -1142,7 +1142,7 @@ class GromacsDummy3outParameterInfo(GromacsParameterInfo):
 # Restraint parameters
 class GromacsPositionRestraintParameterInfo(GromacsParameterInfo):
     """
-    [ position_res ]
+    [ position_restraints ]
 
 
     """
@@ -1171,6 +1171,7 @@ class GromacsPositionRestraintParameterInfo(GromacsParameterInfo):
 class GromacsDistanceRestraintParameterInfo(GromacsParameterInfo):
     """
     [ distance_restraints ]
+
 
     """
 
@@ -1201,6 +1202,7 @@ class GromacsDistanceRestraintParameterInfo(GromacsParameterInfo):
 class GromacsOrientationRestraintParameterInfo(GromacsParameterInfo):
     """
     [ orientation_restraints ]
+
 
     """
 
@@ -1234,6 +1236,7 @@ class GromacsAngleRestraintParameterInfo(GromacsParameterInfo):
     """
     [ angle_restraints ]
 
+
     """
 
     @accepts_compatible_units(None, None, None, None, None, units.degrees, units.kilojoules_per_mole, None, None)
@@ -1263,6 +1266,7 @@ class GromacsAngleZRestraintParameterInfo(GromacsParameterInfo):
     """
     [ angle_restraints_z ]
 
+
     """
 
     @accepts_compatible_units(None, None, None, units.degrees, units.kilojoules_per_mole, None, None)
@@ -1291,6 +1295,7 @@ class GromacsExclusionParameterInfo(GromacsParameterInfo):
     """
     [ exclusions ]
     1        2        3  ;
+
     """
 
     def __init__(self, atomtype1, indices, comment=''):
