@@ -19,7 +19,7 @@ import commands, os, re
 #=============================================================================================
 
 gromacs_directory = '/usr/local/gromacs/bin'
-working_directory = './mmtools/relativetools/Examples'
+working_directory = '/home/mnz3v/mmtools/relativetools/Examples'
 
 # Target ligand group.
 #ligand_name_list = [ ('jnk.aff-%d' % index) for index in (8, 10, 11, 15, 22, 26, 32, 52) ]

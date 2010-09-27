@@ -23,10 +23,10 @@ from numpy import *
 #=============================================================================================
 
 # base path for all parameterized ligand files
-ligand_basepath = 'ligands-parameterized/' 
+ligand_basepath = 'ligands-parameterized/'
 
 # list of ligands to consider
-ligand_name_list = [ ('jnk.aff-%d' % index) for index in range(1,63) ]    
+ligand_name_list = [ ('jnk.aff-%d' % index) for index in range(1,63) ]
 
 #=============================================================================================
 # SUBROUTINES
@@ -43,11 +43,11 @@ nligands = len(ligand_name_list)
 for ligand1_index in range(len(ligand_name_list)):
     # get ligand name
     ligand1_name = ligand_name_list[ligand1_index]
-    
+
     # Load molecule with GAFF atom names and integer bondtypes.
     ligand1 = loadGAFFMolecule(ligand_basepath, ligand1_name)
-    if not ligand1: continue     
-    
+    if not ligand1: continue
+
     # Create an OEMCSSearch from this molecule.
     mcss = OEMCSSearch(ligand1, OEExprOpts_StringType, OEExprOpts_IntType)
     # ignore substructures smaller than 4 atoms
@@ -57,12 +57,12 @@ for ligand1_index in range(len(ligand_name_list)):
     for ligand2_index in range(len(ligand_name_list)):
         # skip self
         if ligand1_index == ligand2_index: continue
-        
+
         # get name
-        ligand2_name = ligand_name_list[ligand2_index]        
+        ligand2_name = ligand_name_list[ligand2_index]
 
         # Load the molecule
-        ligand2 = loadGAFFMolecule(ligand_basepath, ligand2_name)        
+        ligand2 = loadGAFFMolecule(ligand_basepath, ligand2_name)
         if not ligand2: continue
 
         # SHOW MATCH
@@ -75,7 +75,7 @@ for ligand1_index in range(len(ligand_name_list)):
 #            print "Match:", matchcount, "Size:", match.NumAtoms(), " atoms"
 #
 #            # determine mutated charges and atomtypes
-#            (mutated_charges_1, mutated_charges_2) = determineMutatedCharges(ligand1, ligand2, match)            
+#            (mutated_charges_1, mutated_charges_2) = determineMutatedCharges(ligand1, ligand2, match)
 #            (mutated_atomtypes_1, mutated_atomtypes_2) = determineMutatedAtomtypes(ligand1, ligand2, match)
 #
 #            # DEBUG
@@ -87,14 +87,13 @@ for ligand1_index in range(len(ligand_name_list)):
 #            print "ligand2: %s" % ligand2.GetTitle()
 #            for atom in ligand2.GetAtoms():
 #                atomname = atom.GetName()
-#                print "%6s : %16s %6.3f -> %16s %6.3f" % (atom.GetName(), atom.GetType(), atom.GetPartialCharge(), mutated_atomtypes_2[atomname], mutated_charges_2[atomname])                
-                
-            
+#                print "%6s : %16s %6.3f -> %16s %6.3f" % (atom.GetName(), atom.GetType(), atom.GetPartialCharge(), mutated_atomtypes_2[atomname], mutated_charges_2[atomname])
+
 #            print "%4s %6s        %4s %6s   %6s" % ('atom', 'charge', 'atom', 'charge', 'charge')
 #            index = 0
 #            for mp in match.GetAtoms():
 #                atom1 = mp.pattern
-#                atom2 = mp.target                        
+#                atom2 = mp.target
 #                print "%4s %6.3f <----> %4s %6.3f : %6.3f" % (atom1.GetName(), atom1.GetPartialCharge(), atom2.GetName(), atom2.GetPartialCharge(), common_charge[index])
 #                index += 1
 #            print

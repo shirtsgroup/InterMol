@@ -13,38 +13,38 @@ parser=OptionParser()
 
 
 def find_atom_nums(atom_locator_strings,g96file):
-	""" Takes a list of strings to recognize in the input file (representing atom locators)
-	    and returns the GROMACS atom number corresponding to them in a list in the same order.
-	    ONLY WORKS FOR G96 FILES RIGHT NOW"""
-	regexes = [re.compile(i) for i in atom_locator_strings]
-	atom_nums = [None for i in atom_locator_strings]
-	for line in g96file:
-		for i in range(0,len(regexes)):
-			if regexes[i].search(line):
-				atom_nums[i]=line.split()[3]
-	return atom_nums
+    """ Takes a list of strings to recognize in the input file (representing atom locators)
+        and returns the GROMACS atom number corresponding to them in a list in the same order.
+        ONLY WORKS FOR G96 FILES RIGHT NOW"""
+    regexes = [re.compile(i) for i in atom_locator_strings]
+    atom_nums = [None for i in atom_locator_strings]
+    for line in g96file:
+        for i in range(0,len(regexes)):
+            if regexes[i].search(line):
+                atom_nums[i]=line.split()[3]
+    return atom_nums
 
 def three_ligand_atoms(g96file):
-	""" Takes a g96 file and returns the atom indices of three atoms to use as restraint atoms.
-	    Currently uses three random atoms because it's easy to code....
-	    TODO: something not retarded."""
-	regex=re.compile("^ *[0-9]* MOL")
-	molatoms=[]
-	for line in g96file:
-		if regex.search(line):
-			molatoms.append(line.split()[3])
-	return random.sample(molatoms,3)
+    """ Takes a g96 file and returns the atom indices of three atoms to use as restraint atoms.
+        Currently uses three random atoms because it's easy to code....
+        TODO: something not retarded."""
+    regex=re.compile("^ *[0-9]* MOL")
+    molatoms=[]
+    for line in g96file:
+        if regex.search(line):
+            molatoms.append(line.split()[3])
+    return random.sample(molatoms,3)
 
 def three_ligand_atoms_from_topfile(topfile):
-	""" Takes a top file and returns the atom indices of three atoms to use as restraint atoms that are marked as "common" in comments.
-	    Currently uses three random atoms because it's easy to code....
-	    TODO: something not retarded."""
-	regex=re.compile("MOL.*common")	
-	molatoms=[]
-	for line in topfile:
-		if regex.search(line):
-			molatoms.append(line.split()[0])
-	return random.sample(molatoms,3)
+    """ Takes a top file and returns the atom indices of three atoms to use as restraint atoms that are marked as "common" in comments.
+        Currently uses three random atoms because it's easy to code....
+        TODO: something not retarded."""
+    regex=re.compile("MOL.*common")	
+    molatoms=[]
+    for line in topfile:
+        if regex.search(line):
+            molatoms.append(line.split()[0])
+    return random.sample(molatoms,3)
 
 #######
 #Read input

@@ -76,7 +76,7 @@ def parameterize_ligand(ligand_filename, ligand_name, work_path):
     ARGUMENTS
       ligand_filename (string) - name of mol2 file describing ligand
       work_path (string) - name of directory to place files in
-      
+
     """
 
     # get current directory
@@ -97,11 +97,11 @@ def parameterize_ligand(ligand_filename, ligand_name, work_path):
     # Set name
     print "ligand_name = %s" % ligand_name
     ligand.SetTitle(ligand_name)
-    
+
     # Get formal charge of ligand.
     ligand_charge = formalCharge(ligand)
     print "formal charge is %d" % ligand_charge
-    
+
     # Write molecule with explicit hydrogens to mol2 file.
     print "Writing ligand mol2 file..."
     ligand_mol2_filename = os.path.abspath(os.path.join(work_path, '%(ligand_name)s.openeye.mol2' % vars()))
@@ -118,7 +118,7 @@ def parameterize_ligand(ligand_filename, ligand_name, work_path):
     charge_model = 'bcc'
     command = 'antechamber -i %(ligand_mol2_filename)s -fi mol2 -o %(gaff_mol2_filename)s -fo mol2 -c %(charge_model)s -nc %(ligand_charge)d >& antechamber.out' % vars()
     print command
-    output = commands.getoutput(command)    
+    output = commands.getoutput(command)
     os.chdir(current_path)
 
     # skip if antechamber didn't work
@@ -138,7 +138,7 @@ def parameterize_ligand(ligand_filename, ligand_name, work_path):
     ligand_prmtop_filename = os.path.join(work_path,'%(ligand_name)s.prmtop' % vars())
     ligand_crd_filename = os.path.join(work_path,'%(ligand_name)s.crd' % vars())
     ligand_off_filename = os.path.join(work_path, '%(ligand_name)s.off' % vars())
-    
+
     tleap_input_filename = os.path.join(work_path, 'setup-ligand.leap.in')
     tleap_output_filename = os.path.join(work_path, 'setup-ligand.leap.out')
     contents = """
@@ -169,7 +169,7 @@ quit
     write_file(tleap_input_filename, contents)
     command = 'tleap -f %(tleap_input_filename)s > %(tleap_output_filename)s' % vars()
     output = commands.getoutput(command)
-    
+
     # extract total charge
     ligand_charge = commands.getoutput('grep "Total unperturbed charge" %(tleap_output_filename)s | cut -c 27-' % vars())
     ligand_charge = int(round(float(ligand_charge))) # round to nearest whole charge
@@ -190,7 +190,7 @@ for ligand in ligand_name_list:
 
     if not os.path.exists(ligand_filename):
         print "%s not found" % ligand_filename
-        continue                                                        
+        continue
 
     # parameterize ligand
     parameterize_ligand(ligand_filename, ligand, work_basepath)

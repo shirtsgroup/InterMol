@@ -14,21 +14,21 @@ def tail1(filename):
     f=open(filename,"rt")
     line=""
     for l in f:
-	    line = l
+        line = l
     return line
 
 def get_parms_from_gangle(prefix):
-	"""Gets the restraint parameters from the g_angle output files for the system, named
-	   [prefix]_avg_{phi_A,phi_B,phi_C,theta_A,theta_B,r_aA}.xvg
-	   Assumes only one line of data in the xvg file"""
-	retvals = []
-	for i in ["phi_A","phi_B","phi_C","theta_A","theta_B"]:
-		rv = tail1(prefix+"_avg_"+i+".xvg").split()[1]
-		retvals.append(rv)
-	# special-case the distance because the naming convention is different
-	rv = tail1(prefix+"_r_aA.xvg").split()[1]
-	retvals.append(rv)
-	return retvals
+    """Gets the restraint parameters from the g_angle output files for the system, named
+       [prefix]_avg_{phi_A,phi_B,phi_C,theta_A,theta_B,r_aA}.xvg
+       Assumes only one line of data in the xvg file"""
+    retvals = []
+    for i in ["phi_A","phi_B","phi_C","theta_A","theta_B"]:
+        rv = tail1(prefix+"_avg_"+i+".xvg").split()[1]
+        retvals.append(rv)
+    # special-case the distance because the naming convention is different
+    rv = tail1(prefix+"_r_aA.xvg").split()[1]
+    retvals.append(rv)
+    return retvals
 
 def dihedral_restraints(atomlists,phis,force_constants):
 	""" Return a list corresponding to the dihedral restraint section """
