@@ -1,0 +1,51 @@
+Relative binding free energies for various ligands to JNK3 kinase models.
+
+From CUP SAMPL I.
+
+WARNING: THIS DATA IS NOT FOR REDISTRIBUTION - ILLUSTRATIVE EXAMPLE ONLY ONLY
+
+PREREQUISITES
+
+* gromacs_dg or gromacs 4.0
+* AmberTools
+* mmtools
+* OEChem Toolkit with Python wrappers
+
+USAGE
+
+
+There are three phases to setting up a relative FEP calculation with gromacs_dg and the provided scripts:
+
+0. Parameterize the ligands with AnteChamber if you haven't done so already.
+
+# Edit the 'PARAMETERS' section at the top of the file to set the path to parameterized ligands and the list of ligands to parameterize.
+# Parameterize the ligands.
+python parameterize-ligands.py
+
+1. Look for pairwise common substructure overlap in your structures by using pairwise-common-substructures.py:
+
+# Edit the 'PARAMETERS' section at the top of the file to set the path to parameterized ligands and the list of ligands to analyze.
+# Search for pairwise common substructures.
+python pairwise-common-substructures.py
+
+2. Once you've picked a set of two or more ligands, look at the maximal common substructure.
+The common substructure is defined as the maximal set of atoms that all match the same GAFF atom types and share the same GAFF bond types between them.
+Note that the variable region SHOULD NOT include a ring breaking right now -- that would need to be handled by a special approach that allows all bonds but one to break
+in the alchemical intermediates in a "soft-core" way using Morse potentials.
+
+# Edit the 'PARAMETERS' section at the top of the file to specify which molecules you want to find a common substructure for.
+# Find the common substructure and write out a mol2 file.
+python extract-common-substructure.py
+
+3. Once you're happy that this intermediate is reasonable, we need to set up FEP calculations for mutating each ligand to this intermediate both in complex and solution.
+
+# Edit the 'PARAMETERS' section at the top of the file to specify which molecules you will use the common substructure for.
+# Set up the free energy calculations.
+python setup-replative-fep.py
+
+4. To check the energies of the relative states
+
+# Edit the 'PARAMETERS' section at the top of the file to specify which molecules you will check.
+# Check the energies of the relative states.
+python check-energies.py
+
