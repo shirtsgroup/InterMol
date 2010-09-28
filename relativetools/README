@@ -1,20 +1,22 @@
 Relative binding free energies for various ligands to JNK3 kinase models.
-
-From CUP SAMPL I.
-
 WARNING: THIS DATA IS NOT FOR REDISTRIBUTION - ILLUSTRATIVE EXAMPLE ONLY ONLY
+
+
+Written by John Chodera and Michael Zhu
+
+Originally used from CUP SAMPL I.
 
 PREREQUISITES
 
-* gromacs_dg or gromacs 4.0
+* gromacs 4.5 fep branch
 * AmberTools
 * mmtools
 * OEChem Toolkit with Python wrappers
 
 USAGE
 
-
-There are three phases to setting up a relative FEP calculation with gromacs_dg and the provided scripts:
+Setting up a relative FEP calculation with gromacs and the provided scripts:
+----------------------------------------------------------------------------
 
 0. Parameterize the ligands with AnteChamber if you haven't done so already.
 
@@ -37,13 +39,13 @@ in the alchemical intermediates in a "soft-core" way using Morse potentials.
 # Find the common substructure and write out a mol2 file.
 python extract-common-substructure.py
 
-3. Once you're happy that this intermediate is reasonable, we need to set up FEP calculations for mutating each ligand to this intermediate both in complex and solution.
+3. Once you're happy that this intermediate is reasonable, we need to set up FEP calculations for mutating each ligand to this intermediate both in complex and solution.  Note that this performs extractions; you don't need to run extract-common-substructure.py to get this to work.
 
 # Edit the 'PARAMETERS' section at the top of the file to specify which molecules you will use the common substructure for.
 # Set up the free energy calculations.
 python setup-replative-fep.py
 
-4. To check the energies of the relative states
+4. To check that the energies of the relative states correspond
 
 # Edit the 'PARAMETERS' section at the top of the file to specify which molecules you will check.
 # Check the energies of the relative states.
