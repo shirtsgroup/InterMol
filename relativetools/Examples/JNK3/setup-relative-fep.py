@@ -765,8 +765,6 @@ def setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename,
     # get ligand formal charge
     ligand_charge = formalCharge(ligand)
 
-    pdb.set_trace()
-
     # set up the system with tLEaP
     print "Solvating the ligand with tleap..."
     system_prmtop_filename = os.path.join(solvent_path,'system.prmtop')
