@@ -12,6 +12,7 @@
 from mmtools.moltools.ligandtools import *
 from mmtools.moltools.relativefeptools import *
 from mmtools.gromacstools.MdpFile import *
+import pdb
 import commands
 import os
 import os.path
@@ -23,10 +24,10 @@ import shutil
 
 # Path to receptor PDB file.
 # All heavy atoms must be modeled -- hydrogens are ignored. Residue names are translated.
-protein_pdb_filename = "receptor-models/1JNK.automodel.mcce_out.pdb" # pdb of the protein without solvent and ligand
+protein_pdb_filename = "/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/receptor-models/1JNK.automodel.mcce_out.pdb" # pdb of the protein without solvent and ligand
 
 # Path to parameterized ligands.
-ligand_basepath = 'ligands-parameterized'
+ligand_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands-parameterized'
 
 # Base path for various scripts needed.
 script_basepath = "../../"
@@ -73,8 +74,8 @@ fcstep                   = 0
 nstcgsteep               = 1000
 """
 
-# Construct minimizer block for gromacs 4.0
-mdpblock['minimization_4.0']= """
+# Construct minimizer block for gromacs 
+mdpblock['minimization']= """
 ; RUN CONTROL PARAMETERS
 integrator               = md;
 ; Start time and timestep in ps
@@ -96,7 +97,7 @@ comm-grps                =
 # dynamics control block
 mdpblock['dynamics'] = """
 ; RUN CONTROL PARAMETERS = 
-integrator               = vv
+integrator               = sd
 ; start time and timestep in ps = 
 tinit                    = 0
 dt                       = 0.002
@@ -134,7 +135,7 @@ mdpblock['constraints'] = """
 ; OPTIONS FOR BONDS     = 
 constraints              = hbonds ; constrain bonds to hydrogen
 ; Type of constraint algorithm = 
-constraint-algorithm     = shake
+constraint-algorithm     = lincs
 ; Do not constrain the start configuration = 
 unconstrained-start      = no
 ; Use successive overrelaxation to reduce the number of shake iterations = 
@@ -145,7 +146,7 @@ shake-tol                = 1e-12
 lincs-order              = 4
 ; Lincs will write a warning to the stderr if in one step a bond = 
 ; rotates over more degrees than = 
-lincs-warnangle          = 180
+lincs-warnangle          = 90
 ; Convert harmonic bonds to morse potentials = 
 morse                    = no
 """
@@ -271,66 +272,30 @@ rvdw                     = 23.0 ; to emulate no cutoff
 ; Apply long range dispersion corrections for Energy and Pressure = 
 DispCorr                 = no
 """
-
 # free energy block
 mdpblock['free-energy'] = """
-; OPTIONS FOR EXPANDED ENSEMBLE SIMULATIONS
+; OPTIONS FOR FIXED ENSEMBLE SIMULATIONS
 ; Free energy control stuff = 
-free-energy              = mutate ; annihilate electrostatics and Lennard-Jones
-nstfep                   = 20 ; 0.04 ps between weight updates (must be integer multiple of nstlist)
-nstdgdl                  = 20 ; 0.04 ps between writing energies (must be same as nstdgdl for analysis scripts)
-
-; weight update scheme
-; lambda-mc                = gibbs-wang-landau ; Wang-Landau with waste recycling
-lambda-mc                = barker-transition ; UBAR
-mc-wldelta               = 1.0 ; initial delta factor for Wang-Landau (in kT)
-mc-wlscale               = 0.5 ; scalar by which delta is scaled for Wang-Landau
-mc-nratio                = 0.8 ; flatness criterion -- histograms are reset after all states are sampled within mc-nratio factor of the mean
-
-; state transition probability
-move-mc                  = metropolized-gibbs ; Metropolized Gibbs for fastest mixing of states
-
-; starting and stopping
-mc-nstart                = 200 ; number of updates to perform per state for driving through each state
-mc-nequil                = 250000 ; number of steps before freezing weights (200 ps)
-
-init-lambda              = 1 ; initial state
-
+free-energy               = yes 
+couple-intramol           = yes ; annihilate intramolecular lectrostatics and Lennard-Jones 
+sc-power                  = 1
+sc-alpha                  = 0.5
+init-lambda-state         = 0
+lmc-stats                 = no
+lmc-mc-move               = no
+lmc-weights-equil         = no
+dhdl-print-energy         = yes
 ; schedule for switching off lambdas
 ; first, restraints are turned on as charges are switched off
 ; next, vdw and torsions are switched off
-fep-lambda               = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.00 0.0 0.00 0.0 0.00 0.0 0.0 ; for global scaling (don't need)
-coul-lambda              = 0.0 0.1 0.2 0.3 0.5 0.7 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.00 1.0 1.00 1.0 1.00 1.0 1.0 ; for scaling electrostatics
-restraint-lambda         = 0.0 0.1 0.2 0.3 0.5 0.7 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.00 1.0 1.00 1.0 1.00 1.0 1.0 ; for scaling restraints
-vdw-lambda               = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0 ; for scaling vdw interactions
-bonded-lambda            = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0 ; for scaling torsions
-
-sc-alpha                 = 0.5 ; soft-core factor
+fep-lambdas               = 0.0 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0 0.0 0.0  0.0 0.0  0.0 0.0  0.0 0.0
+coul-lambdas              = 0.0 0.1  0.25 0.4  0.6  1.0  1.0  1.0  1.0  1.0  1.0 1.0 1.0  1.0 1.0  1.0 1.0  1.0 1.0
+vdw-lambdas               = 0.0 0.0  0.0  0.0  0.0  0.0  0.1  0.2  0.3  0.4  0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0
+bonded-lambdas            = 0.0 0.0  0.0  0.0  0.0  0.0  0.1  0.2  0.3  0.4  0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0
+restraint-lambdas         = 0.0 0.1  0.2  0.3  0.5  0.7  1.0  1.0  1.0  1.0  1.0 1.0 1.0  1.0 1.0  1.0 1.0  1.0 1.0
+nstdhdl                   = 50
+nstfep                    = 50
 """ % vars()
-
-# free energy block for gromacs 4.0
-mdpblock['free-energy_4.0'] = """
-; Free energy control stuff
-free-energy              = no
-init-lambda              = 0
-init-fep-state           = 0
-delta-lambda             = 0
-fep-lambda               = 0
-mass-lambda              = 0
-coul-lambda              = 0
-vdw-lambda               = 0
-bonded-lambda            = 0
-restraint-lambda         = 0
-sc-alpha                 = 0
-sc-power                 = 0
-sc-sigma                 = 0.3
-sc-coul                  = no
-nstdhdl                  = 10
-couple-moltype           = 
-couple-lambda0           = vdw-q
-couple-lambda1           = vdw-q
-couple-intramol          = no
-"""
 
 def compose_blocks(blocknames):
     """Compose desired blocks into a mdp file.
@@ -393,7 +358,8 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
      The common_intermediate MUST have AMBER atom and bondtypes.
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
-
+     MRS: Moved to acpypi.py
+     
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
      Generalize this code to allow it to operate more generally on a specified moleculetype.
@@ -799,6 +765,8 @@ def setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename,
     # get ligand formal charge
     ligand_charge = formalCharge(ligand)
 
+    pdb.set_trace()
+
     # set up the system with tLEaP
     print "Solvating the ligand with tleap..."
     system_prmtop_filename = os.path.join(solvent_path,'system.prmtop')
@@ -847,12 +815,13 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+    #converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
     system_prefix = os.path.join(solvent_path, 'system')
     current_path = os.getcwd()
     os.chdir(solvent_path)    
-    #command = '%(amb2gmx)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(amb2gmx)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+    #command = '%(converter)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    command = '%(converter)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -867,8 +836,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
     print "Writing mdp files..."
 
     # Constrained Minimization
-    #mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'output'])) # Gromacs_dg
-    mdpfile = MdpFile(compose_blocks(['header', 'minimization_4.0', 'nonbonded-solvent', 'constraints', 'free-energy_4.0', 'output'])) # Gromacs 4.0
+    mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'output'])) # Gromacs 4.0
     mdpfile.write(os.path.join(solvent_path, 'minimize.mdp'))
 
     # Equilibration
@@ -994,12 +962,13 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+    #converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
     system_prefix = os.path.join(complex_path, 'system')
     current_path = os.getcwd()
     os.chdir(complex_path)
-    #command = '%(amb2gmx)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(amb2gmx)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+    #command = '%(converter)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    command = '%(converter)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -1014,8 +983,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
     print "Writing mdp files..."
 
     # Constrained Minimization
-    #mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'restraints', 'output'])) # Gromacs_dg
-    mdpfile = MdpFile(compose_blocks(['header', 'minimization_4.0', 'nonbonded-solvent', 'constraints', 'free-energy_4.0', 'restraints', 'output'])) # Gromacs 4.0
+    mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'restraints', 'output'])) # 
     mdpfile.write(os.path.join(complex_path, 'minimize.mdp'))
 
     # Equilibration
