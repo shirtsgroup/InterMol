@@ -49,3 +49,4 @@ python setup-replative-fep.py
 # Check the energies of the relative states.
 python check-energies.py
 
+Currently setup-relative-fep.py is set to prepare gromacs 4.0 mdp files but can be modified to create gromacs_dg mdp files in setup_solvent_simulation and setup_complex_simulation
