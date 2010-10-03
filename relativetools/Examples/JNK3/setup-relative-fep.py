@@ -39,6 +39,10 @@ ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ]
 # Base path to set up free energy calculations
 work_basepath = 'fep/'
 
+#gromacs_converter = 'amb2gmx.pl'
+#gromacs_converter = 'acpypi.py'
+gromacs_converter = 'acpype.py'
+   
 #=============================================================================================
 # GROMACS PARAMETERS - Edit these to change simulation protocol.
 #=============================================================================================
@@ -358,7 +362,7 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
      The common_intermediate MUST have AMBER atom and bondtypes.
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
-     MRS: Moved to acpypi.py
+     MRS: Moved to acpype.py
      
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
@@ -723,15 +727,17 @@ def rename_pdb_for_amber(protein_pdb_filename, protein_amberpdb_filename):
 
             # make residue name substitutions
             if resname == 'GYN ': resname = 'GUC '
-            if resname == 'GLY ': resname = 'GLU '
+            if resname == 'GLX ': resname = 'GLU '
             if resname == 'LYP ': resname = 'LYS '
             if resname == 'CYN ': resname = 'CYS '
             if resname == 'NSER': resname = 'SER '
             if (resname == 'CGLU') or (resname == 'CGLH'):
                 resname = 'GLU '
                 # rename terminal oxygens
-                if name == ' OC1' or ' OC ': name = ' OXT'
-                if name == ' OC2': name = ' O  '
+                if name == ' OC1' or name == ' OC ':
+                    name = ' OXT'
+                if name == ' OC2':
+                    name = ' O  '
 
             # renumber serial
             serial = '% 5d' % (len(outlines) + 1)
@@ -773,7 +779,7 @@ def setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename,
     tleap_output_filename = os.path.join(solvent_path, 'setup-system.leap.out')
     clearance = 10.0 # clearance in A
     contents = """
-source leaprc.ff03
+source leaprc.ff99SB
 source leaprc.gaff
 
 # load antechamber-generated additional parameters
@@ -813,13 +819,16 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    #converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
-    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
+
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', gromacs_converter)
     system_prefix = os.path.join(solvent_path, 'system')
     current_path = os.getcwd()
     os.chdir(solvent_path)    
-    #command = '%(converter)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(converter)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+
+    if gromacs_converter == 'amb2gmx.pl':
+        command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    if gromacs_converter == 'acpype.py':    
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -827,7 +836,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # set up perturbation
     print "Modifying topology file for perturbation..."
-    system_top_filename = os.path.join(solvent_path, 'system.top')
+    system_top_filename = os.path.join(solvent_path, 'system_GMX.top')
     perturbGromacsTopologyToIntermediate(system_top_filename, 'MOL', ligand, common_substructure, perturb_torsions = True)
 
     # set up mdp files
@@ -860,16 +869,16 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 source $GMXRC
 
 # constrained minimize
-grompp -f minimize.mdp -c system.g96 -p system.top -o minimize.tpr -maxwarn 10000 -n system.ndx
-mdrun -s minimize.tpr -x minimize.xtc -c minimize.g96 -e minimize.edr -g minimize.log
+grompp -f minimize.mdp -c system_GMX.gro -p system_GMX.top -o minimize.tpr -maxwarn 10000 -n system.ndx
+mdrun -s minimize.tpr -x minimize.xtc -o minimize.gro -e minimize.edr -g minimize.log
 
 # equilibration
-grompp -f equilibration.mdp -c minimize.g96 -p system.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
-mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.g96 -e equilibration.edr -g equilibration.log
+grompp -f equilibration.mdp -c minimize.gro -p system.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
+mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.gro -e equilibration.edr -g equilibration.log
 
 # production
-grompp -f production.mdp -c equilibration.g96 -p system.top -o production.tpr -maxwarn 10000 -n system.ndx
-mdrun -s production.tpr -o production.trr -x production.xtc -c production.g96 -e production.edr -g production.log
+grompp -f production.mdp -c equilibration.gro -p system.top -o production.tpr -maxwarn 10000 -n system.ndx
+mdrun -s production.tpr -o production.trr -x production.xtc -c production.gro -e production.edr -g production.log
 
 # signal completion
 mv run.sh run.sh.done
@@ -907,7 +916,7 @@ def setup_complex_simulation(complex_path, jobname, ligand, ligand_off_filename,
     tleap_output_filename = os.path.join(complex_path, 'setup-system.leap.out')
     clearance = 10.0 # clearance in A to add around protein
     contents = """
-source leaprc.ff03
+source leaprc.ff99SB
 source leaprc.gaff
 
 # load antechamber-generated additional parameters
@@ -960,13 +969,15 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    #converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
-    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
+
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', gromacs_converter)
     system_prefix = os.path.join(complex_path, 'system')
     current_path = os.getcwd()
     os.chdir(complex_path)
-    #command = '%(converter)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(converter)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+    if gromacs_converter == 'amb2gmx.pl':
+        command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    if gromacs_converter == 'acpype.py':    
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -974,7 +985,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # set up perturbation
     print "Modifying topology file for perturbation..."
-    system_top_filename = os.path.join(complex_path, 'system.top')
+    system_top_filename = os.path.join(complex_path, 'system_GMX.top')
     perturbGromacsTopologyToIntermediate(system_top_filename, 'MOL', ligand, common_substructure, perturb_torsions = True)
 
     # set up mdp files
@@ -1010,35 +1021,35 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 source $GMXRC
 
 # create a tpr file from which to create restraints
-grompp -f minimize.mdp -c system.g96 -p system.top -o minimize.tpr -maxwarn 10000 -n system.ndx
+grompp -f minimize.mdp -c system.gro -p system.top -o minimize.tpr -maxwarn 10000 -n system.ndx
 # Integrate restraints into pre-minimization topfile
-python compute_angles.py -f system.g96 -s minimize.tpr -d $RANSEED
+python compute_angles.py -f system.gro -s minimize.tpr -d $RANSEED
 python restraint_topology.py -n system -p .
 
 # constrained minimize with restraints
-grompp -f minimize.mdp -c system_restr.g96 -p system_restr.top -o minimize.tpr -maxwarn 10000 -n system.ndx
-mdrun -s minimize.tpr -x minimize.xtc -c minimize.g96 -e minimize.edr -g minimize.log
+grompp -f minimize.mdp -c system_restr.gro -p system_restr.top -o minimize.tpr -maxwarn 10000 -n system.ndx
+mdrun -s minimize.tpr -x minimize.xtc -c minimize.gro -e minimize.edr -g minimize.log
 
 # create a tpr file from which to create restraints
-grompp -f equilibration.mdp -c minimize.g96 -p system_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
+grompp -f equilibration.mdp -c minimize.gro -p system_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
 # Integrate restraints into pre-equilibration topfile
 cp system_restr.top minimize.top
-#python compute_angles.py -f minimize.g96 -s equilibration.tpr -d $RANSEED
+#python compute_angles.py -f minimize.gro -s equilibration.tpr -d $RANSEED
 python restraint_topology.py -n minimize -p .
 
 # equilibration with restraints
-grompp -f equilibration.mdp -c minimize_restr.g96 -p minimize_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
-mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.g96 -e equilibration.edr -g equilibration.log
+grompp -f equilibration.mdp -c minimize_restr.gro -p minimize_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
+mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.gro -e equilibration.edr -g equilibration.log
 
 # create a TPR file, integrate restraints
-grompp -f production.mdp -c equilibration.g96 -p minimize_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
+grompp -f production.mdp -c equilibration.gro -p minimize_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
 cp minimize_restr.top equilibration.top
-#python compute_angles.py -f equilibration.g96 -s production.tpr -d $RANSEED
+#python compute_angles.py -f equilibration.gro -s production.tpr -d $RANSEED
 python restraint_topology.py -n equilibration -p .
 
 # production with restraints
-grompp -f production.mdp -c equilibration_restr.g96 -p equilibration_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
-mdrun -s production.tpr -o production.trr -x production.xtc -c production.g96 -e production.edr -g production.log
+grompp -f production.mdp -c equilibration_restr.gro -p equilibration_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
+mdrun -s production.tpr -o production.trr -x production.xtc -c production.gro -e production.edr -g production.log
 
 # signal completion
 mv run.sh run.sh.done
@@ -1093,8 +1104,8 @@ def setup_system(protein_pdb_filename, ligand_path, ligand, common_substructure,
     tleap_input_filename = os.path.join(work_path, 'setup-protein.leap.in')
     tleap_output_filename = os.path.join(work_path, 'setup-protein.leap.out')
     contents = """
-# Load AMBER ff03 parameters.
-source leaprc.ff03
+# Load AMBER ff99SB parameters.
+source leaprc.ff99SB
 
 # Load PDB file with AMBER naming conventions, stripped of hydrogens.
 protein = loadpdb %(protein_amberpdb_filename)s
