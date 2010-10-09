@@ -111,16 +111,17 @@ class GromacsAtom1ParameterInfo(GromacsParameterInfo):
 
     """
 
-    @accepts_compatible_units(None, None, units.amu, units.elementary_charge, None, units.kilojoules_per_mole*units.nanometers**6, units.kilojoules_per_mole*units.nanometers**12, None)
-    def __init__(self, name, bondtype, mass, charge, ptype, sigma, epsilon, comment=''):
+    @accepts_compatible_units(None, units.amu, units.elementary_charge, None, units.kilojoules_per_mole*units.nanometers**6, units.kilojoules_per_mole*units.nanometers**12, None,  None, None)
+    def __init__(self, name, mass, charge, ptype, V, W, bondtype='', Z='', comment=''):
 
         self.name = name
         self.bondtype = bondtype
+        self.Z = Z
         self.mass = mass
         self.charge = charge
         self.ptype = ptype
-        self.sigma = sigma
-        self.epsilon = epsilon
+        self.V = V
+        self.W = W
         self.comment = comment
         return
 
@@ -130,7 +131,7 @@ class GromacsAtom1ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s%7s%11.4f%8.4f%3s%14e%13e; %s\n'%(self.name, self.bondtype, self.mass._value, self.charge._value, self.ptype, self.sigma._value, self.epsilon._value, self.comment)
+        return '%s%7s%4s%11.4f%8.4f%3s%14e%13e; %s\n'%(self.name, self.bondtype, self.Z, self.mass._value, self.charge._value, self.ptype, self.V._value, self.W._value, self.comment)
 
 class GromacsAtom23ParameterInfo(GromacsParameterInfo):
     """
@@ -140,16 +141,17 @@ class GromacsAtom23ParameterInfo(GromacsParameterInfo):
 
     """
 
-    @accepts_compatible_units(None, None, units.amu, units.elementary_charge, None, units.nanometers, units.kilojoules_per_mole, None)
-    def __init__(self, name, bondtype, mass, charge, ptype, sigma, epsilon, comment=''):
+    @accepts_compatible_units(None, units.amu, units.elementary_charge, None, units.nanometers, units.kilojoules_per_mole, None,  None, None)
+    def __init__(self, name, mass, charge, ptype, V, W, bondtype='', Z='',comment=''):
 
         self.name = name
         self.bondtype = bondtype
+        self.Z = Z
         self.mass = mass
         self.charge = charge
         self.ptype = ptype
-        self.sigma = sigma
-        self.epsilon = epsilon
+        self.V = V
+        self.W = W
         self.comment = comment
         return
 
@@ -159,7 +161,7 @@ class GromacsAtom23ParameterInfo(GromacsParameterInfo):
 
         """
 
-        return '%s%7s%11.4f%8.4f%3s%14e%13e; %s\n'%(self.name, self.bondtype, self.mass._value, self.charge._value, self.ptype, self.sigma._value, self.epsilon._value, self.comment)
+        return '%s%7s%4s%11.4f%8.4f%3s%14e%13e; %s\n'%(self.name, self.bondtype, self.Z, self.mass._value, self.charge._value, self.ptype, self.V._value, self.W._value, self.comment)
 
 
 # Bond parameters

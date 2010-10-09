@@ -34,7 +34,8 @@ ForceDictionary = {
 "PeriodicTorsionForce":"dihedrals",
 "NonPeriodicTorsionForce":"dihedrals",
 "RBTorsionForce":"dihedrals",
-"FourierTorsionForce":"dihedrals"
+"FourierTorsionForce":"dihedrals",
+"SettleForce":"settles"
 }
 
 # Classes
@@ -46,7 +47,7 @@ class GromacsTopology(object):
 
     A derived class of Topology.py but with:
 
-    1) extra attributes for gromacs topology parameters, #ifdefs, #defines  
+    1) extra attributes for gromacs topology parameters, #ifdefs, #defines
     2) extra methods for reading and writing to GROMACS *.top files
 
 
@@ -82,13 +83,15 @@ class GromacsTopology(object):
         if self.name == None:
             self.name = "Untitled"
 
+        self.defaults = list()
+
         self.parameters = list() # These are GromacsParameter[i] objects, akin to Force objects,
                                  # but holding Force parameters for various atomtype combinations 
         self.molecules = list()  # molecules[i] is the ith Topology object
         self.index = list()
 
         if (topfile):
-            self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=topfile)
+            self.readTopologyFile(topfile=topfile)
         else:
             self.GromacsTopologyFileObject = None
 
@@ -329,9 +332,14 @@ class GromacsTopology(object):
                     bondtype2 = atomtype.bondtype
 
             # Convert two bondtypes to a constraint parameter
-            for angletype in angletypes:
-                if (bondtype1 == angletype.atomtype1 and bondtype2 == angletype.atomtype2 and bondtype3 == angletype.atomtype3) or (bondtype1 == angletype.atomtype3 and bondtype2 == angletype.atomtype2 and bondtype3 == angletype.atomtype1):
+            for constrainttype in constrainttypes:
+                if (bondtype1 == constrainttype.atomtype1 and bondtype2 == constrainttype.atomtype2 and bondtype3 == constrainttype.atomtype3) or (bondtype1 == constrainttype.atomtype3 and bondtype2 == constrainttype.atomtype2 and bondtype3 == constrainttype.atomtype1):
                     j = self.parameters[i].index(constrainttype)
+
+        try:
+            j
+        except:
+            raise "%(header)s Type Not Found"%vars()
 
         return i, j
 
@@ -397,9 +405,23 @@ class GromacsTopology(object):
         molecule = Topology()
         molIndex = list()
 
+
+        # Fill in system default parameters
+        try:
+            nbfunc = self.parameters[0][0].func
+            cr = self.parameters[0][0].cr
+            genpairs = self.parameters[0][0].genpairs
+            fudgeLJ = self.parameters[0][0].fudgeLJ
+            fudgeQQ = self.parameters[0][0].fudgeQQ
+            defaults = [nbfunc, cr, genpairs, fudgeLJ, fudgeQQ]
+            molecule.defaults.extend(defaults)
+        except:
+            pass
+
         # molecule has name, atoms (list), forces (list), constraints (list), atomgroups (list)
         for directive in MoleculeDirectives:
             if len(directive.lines) > 0:
+
 
                 # Fill in moleculetype
                 if "moleculetype" in directive.name:
@@ -408,6 +430,7 @@ class GromacsTopology(object):
                         molname = fields[0]
                         nrexcl = fields[1]
                         molecule.name = molname
+                        molecule.nrexcl = nrexcl
 
                 # Fill in atoms
                 if "atoms" in directive.name:
@@ -425,12 +448,16 @@ class GromacsTopology(object):
                         except:
                             mass = 0.0000 * units.amu ####################### WHY DO WE HAVE THIS?
                         atomnum = particle
-                        freeEnergyAtom = False
                         for atomtypenis in self.parameters[1]:
+                            Z = atomtypenis.Z
                             if atomtype == atomtypenis.name:
-                                V = atomtypenis.sigma
-                                W = atomtypenis.epsilon
-                        atom = TopAtom(particle, atomtype, resnum, resname, atomname, cgnr, charge, mass, V, W, freeEnergyAtom)
+                                if self.parameters[0][0].cr == 1:
+                                    sigma = (atomtypenis.W / atomtypenis.V)**(1/6)
+                                    epsilon = atomtypenis.V / (4*sigma**6)
+                                elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
+                                    sigma = atomtypenis.V
+                                    epsilon = atomtypenis.W
+                        atom = TopAtom(particle, atomtype, resnum, resname, atomname, Z, cgnr, charge, mass, sigma, epsilon)
                         molecule.atoms.append(atom)
 
                 # Fill in bonds
@@ -535,7 +562,7 @@ class GromacsTopology(object):
                                     V = float(fields[3]) * units.kilojoules_per_mole * units.nanometers**6
                                     W = float(fields[4]) * units.kilojoules_per_mole * units.nanometers**12
                                 elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
-                                    V = float(fields[3]) * units.nanometers**6
+                                    V = float(fields[3]) * units.nanometers
                                     W = float(fields[4]) * units.kilojoules_per_mole
                             elif "pairtypes" in self.index[0]:
                                 i, j = self.grabMissingInfo(molecule, directive.name, func, particle1, particle2)
@@ -550,11 +577,11 @@ class GromacsTopology(object):
                             newMoleculeDirective = LJ2Force()
                             currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
                             if len(fields) > 3:
-                                fudgeQQ = fields[3]
+                                fudgeQQ = float(fields[3])
                                 qi = float(fields[4]) * units.elementary_charge
                                 qj = float(fields[5]) * units.elementary_charge
                                 if self.parameters[0][0].cr == 1:
-                                    V = float(fields[6]) * units.nanometers**6
+                                    V = float(fields[6]) * units.nanometers
                                     W = float(fields[7]) * units.kilojoules_per_mole
                                 elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
                                     V = float(fields[6]) * units.kilojoules_per_mole * units.nanometers**6
@@ -786,12 +813,13 @@ class GromacsTopology(object):
                 if "exclusions" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        newMoleculeDirective = ''# SOME TYPE FOR Force.py OBEJCT THAT CAN STORE EXCLUSIONS
-                        currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
-                        parameters = list()
-                        for particle in fields:
-                            parameters.append(int(particle))
-                        currentMoleculeDirective.addForce(*parameters)
+                        particle = int(fields.pop(0))
+                        exclusionList = list()
+                        for excludedParticle in fields:
+                            exclusionList.append(int(excludedParticle))
+                        for topAtom in molecule.atoms:
+                            if topAtom.ID == particle:
+                                topAtom.exclusionList = exclusionList
 
                 # Fill in constraints
                 if "constraints" in directive.name:
@@ -812,10 +840,14 @@ class GromacsTopology(object):
                 if "settles" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
-                        particle1 = int(fields[0])
+                        particle = int(fields[0])
                         func = int(fields[1])
-                        doh = float(fields[2])
-                        dhh = float(fields[3])
+                        doh = float(fields[2]) * units.nanometers
+                        dhh = float(fields[3]) * units.nanometers
+                        newMoleculeDirective = SettleForce()
+                        currentMoleculeDirective = self.findMoleculeDirective(newMoleculeDirective, molecule)
+                        parameters = [particle, doh, dhh]
+                        currentMoleculeDirective.addForce(*parameters)
 
             molIndex.append(directive.getName())
         self.index.append(molIndex)
@@ -847,32 +879,30 @@ class GromacsTopology(object):
             if "atomtypes" in parmDirective.getName():
                 i = 0
                 name = fields[i]
-                if len(fields) == 8:
-                    i += 2
-                    bondtype = fields[i-1]
-                    atomicmass = fields[i]
-                elif len(fields) == 7:
-                    try:
-                        int(fields[i+1])
-                        i += 1
-                        atomicmass = fields[i+1]
-                    except:
-                        i += 1
-                        bondtype = fields[i]
+                if len(fields)==8:
+                    i+=1
+                    bondtype = fields[i]
+                    i+=1
+                    Z = float(fields[i])
+                elif len(fields)==7:
+                    i+=1
+                    bondtype = fields[i]
+                    Z = ''
                 else:
                     bondtype = ''
-                    atomicmass = 0.0000
+                    Z = ''
                 mass = float(fields[i+1]) * units.amu
                 charge = float(fields[i+2]) * units.elementary_charge
                 ptype = fields[i+3]
                 if self.parameters[0][0].cr == 1:
-                    sigma = float(fields[i+4]) * units.kilojoules_per_mole*units.nanometers**6
-                    epsilon = float(fields[i+5]) * units.kilojoules_per_mole*units.nanometers**12
-                    newGroParm = GromacsAtom1ParameterInfo(name, bondtype, mass, charge, ptype, sigma, epsilon, comment)
+                    V = float(fields[i+4]) * units.kilojoules_per_mole*units.nanometers**6
+                    W = float(fields[i+5]) * units.kilojoules_per_mole*units.nanometers**12
+                    newGroParm = GromacsAtom1ParameterInfo(name, mass, charge, ptype, V, W, bondtype, Z,comment)
                 elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
-                    sigma = float(fields[i+4]) * units.nanometers
-                    epsilon = float(fields[i+5]) * units.kilojoules_per_mole
-                    newGroParm = GromacsAtom23ParameterInfo(name, bondtype, mass, charge, ptype, sigma, epsilon, comment)
+                    V = float(fields[i+4]) * units.nanometers
+                    W = float(fields[i+5]) * units.kilojoules_per_mole
+                    newGroParm = GromacsAtom23ParameterInfo(name, mass, charge, ptype, V, W, bondtype, Z, comment)
+
 
             if "bondtypes" in parmDirective.getName():
                 atomtype1 = fields[0]
@@ -1232,22 +1262,37 @@ class GromacsTopology(object):
 
         myDirectivesList = list()
 
+        # Create [ atoms ] directive from Topology.atoms
+        atomsDirectiveName = '[ atoms ]'
+        header = ';  nr  type    resnr   residue  atom    cgnr   charge     mass  typeB    chargeB      massB\n'
+        atomsDirective = self.GromacsTopologyFileObject.Directive(atomsDirectiveName, header)
+
+        exclusionDirectiveName = '[ exclusions ]'
+        exclusionDirective = self.GromacsTopologyFileObject.Directive(exclusionDirectiveName, header='')
+
+        for atom in Topology.atoms:
+            convertedTopAtom = '%5d%6s%8d%8s%8s%8d%11.5f%10.3f\n'%(atom.ID, atom.metadata.atomtype, atom.metadata.resnum, atom.metadata.resname, atom.atomname, atom.metadata.cgnr, atom.charge._value, atom.mass._value)
+            atomsDirective.lines.append(convertedTopAtom)
+
+            # Test for exclusions
+            if atom.exclusionList != list():
+                exclusion = str(atom.ID)
+                for excludedParticle in atom.exclusionList:
+                    exclusion += '\t' + str(excludedParticle)
+                exclusion += '\n'
+                exclusionDirective.lines.append(exclusion)
+
         # Create [ moleculetype ] from the Topology
         moleculeTypeDirectiveName = '[ moleculetype ]'
         header = '; molname      nrexcl\n'
         moleculeTypeDirective = self.GromacsTopologyFileObject.Directive(moleculeTypeDirectiveName, header)
         molname = Topology.name
-        nrexcl = '' # Needs to come from the number of exclusions
+        nrexcl = Topology.nrexcl
         moleculeTypeDirective.lines.append('%s%9s\n'%(molname, nrexcl))
         myDirectivesList.append(moleculeTypeDirective)
 
-        # Create [ atoms ] directive from Topology.atoms
-        atomsDirectiveName = '[ atoms ]'
-        header = ';  nr  type    resnr   residue  atom    cgnr   charge     mass  typeB    chargeB      massB\n'
-        atomsDirective = self.GromacsTopologyFileObject.Directive(atomsDirectiveName, header)
-        for atom in Topology.atoms:
-            convertedTopAtom = '%5d%6s%8d%8s%8s%8d%11.5f%10.3f\n'%(atom.ID, atom.metadata.atomtype, atom.metadata.resnum, atom.metadata.resname, atom.atomname, atom.metadata.cgnr, atom.charge._value, atom.mass._value)
-            atomsDirective.lines.append(convertedTopAtom)
+
+
         myDirectivesList.append(atomsDirective)
 
         # Create the remaining directives from Topology.forces
@@ -1561,7 +1606,22 @@ class GromacsTopology(object):
                         gromacsForce = '%(particle1)s   %(particle2)s   %(particle3)s   %(particle4)s   %(func)d    %(C1)f   %(C2)f   %(C3)f   %(C4)f\n'%vars()
                         forceDirective.lines.append(gromacsForce)
 
+            if forceDirectiveType == 'settles':
+                if forceInteractionType == 'SettleForce':
+                    forceDirective.header = '; i    funct   length1   length2'
+                    # Cycle through each settle bond
+                    for i in range(force.getNumForces()):
+                        fields = force.getForceParameters(i)
+                        particle = fields[0]
+                        func = 1
+                        length1 = fields[1]._value
+                        length2 = fields[2]._value
+                        gromacsForce = '%(particle)s   %(func)d   %(length1)f   %(length2)f'%vars()
+
             myDirectivesList.append(forceDirective)
+
+        if exclusionDirective.lines != []:
+            myDirectivesList.append(exclusionDirective)
 
         return myDirectivesList
 
@@ -1570,32 +1630,46 @@ class GromacsTopology(object):
         directiveHeader = '; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n'
         directive = self.GromacsTopologyFileObject.Directive(directiveName, directiveHeader)
         ### Must be filled out ###
-        nbfunc = ''
-        combrule = ''
-        genpairs = 'yes'
-        fudgeLJ = ''
-        fudgeQQ = ''
+        for mol in self.molecules:
+            try:
+                if len(mol.defaults) > 0:
+                    nbfunc = int(mol.defaults[0])
+                    combrule = int(mol.defaults[1])
+                    genpairs = 'yes'
+                    fudgeLJ = float(mol.defaults[3])
+                    fudgeQQ = float(mol.defaults[4])
+                    directive.lines.append('%(nbfunc)d %(combrule)d %(genpairs)s %(fudgeLJ)f %(fudgeQQ)f\n'%vars())
+		    #pdb.set_trace()
+		    return directive
+            except:
+                pass
         ##########################
-        directive.lines.append('%16(nbfunc)d%16(combrule)d%16(genpairs)s%8(fudgeLJ)f%8(fudgeQQ)f'%vars())
+        return "Error: No default parameters found" 
+
 
     def CreateAtomtypesDirective(self):
         """
-        This function needs to be implimented in a way so that only a single atomtype is created for each atom
 
         """
         directiveName = '[ atomtypes ]'
-        directiveHeader = ';name  bond_type    mass    charge   ptype          sigma      epsilon\n'
+        directiveHeader = ';name     mass    charge   ptype          sigma      epsilon\n'
         directive = self.GromacsTopologyFileObject.Directive(directiveName, directiveHeader)
-        ### Need to fill out ###
-        name = ''
-        bondtype = ''
-        mass = ''
-        charge = ''
-        ptype = 'A'
-        sigma = ''
-        epsilon = ''
-        ########################
-        directive.lines.append('%(name)s%(bondtype)s%(mass)f%(charge)f%(ptype)s%(sigma)f%(epsilon)f'%vars())
+
+        for mol in self.molecules:
+            for atom in mol.atoms:
+                name = atom.metadata.atomtype
+                mass = 0.0000
+                charge = 0.0000
+                ptype = 'A'
+                sigma = atom.sigma._value
+                epsilon = atom.epsilon._value
+                line = '%(name)s  %(mass)f   %(charge)f   %(ptype)s   %(sigma)f   %(epsilon)f\n'%vars()
+                if line not in directive.lines:
+                    directive.lines.append(line)
+        directive.lines.sort()
+        directiveList = list()
+        directiveList.append(directive)
+        return directiveList
 
     def CreateSystemDirective(self, molecules):
         """
@@ -1626,6 +1700,7 @@ class GromacsTopology(object):
 
         return myDirectivesList
 
+
     def writeTopologyFile(self, filename, ExpandIncludes=False, RebuildDirectives=False):
         """Write the Gromacs topology *.top file to file.
 
@@ -1641,8 +1716,9 @@ class GromacsTopology(object):
             self.GromacsTopologyFileObject = GromacsTopologyFile()
 
             # Create [ default ] and [ atomtypes ]
-            #self.GroamcsTopologyFileObject.directives.extend( self.CreateDefaultsDirective() )
-            #self.GroamcsTopologyFileObject.directives.extend( self.CreateAtomtypesDirective() )
+            #pdb.set_trace()
+            self.GromacsTopologyFileObject.directives.append( self.CreateDefaultsDirective() )
+            self.GromacsTopologyFileObject.directives.extend( self.CreateAtomtypesDirective() )
 
             # Translate each set of Topology objects to molecule directives
             for mol in range(len(self.molecules)):
@@ -2018,9 +2094,9 @@ class GromacsTopologyFile(object):
 
         fout = open(filename, 'w')
         for d in self.directives:
-            if d.classType == 'IncludeDirective':
+	    if d.classType == 'IncludeDirective':
                 if ExpandIncludes:
-                    fout.write( repr(d) )
+             	    fout.write( repr(d) )
                 else:
                     fout.write( d.name + '\n' ) # directives need trailing '\n' for padding
             else:

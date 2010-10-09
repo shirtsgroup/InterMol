@@ -30,27 +30,13 @@ class Force(object):
 
 class NonbondedForce(Force):
     """
-    This class implements nonbonded interactions between particles, including a Coulomb force to represent
-    electrostatics and a Lennard-Jones force to represent van der Waals interactions.  It optionally supports
-    periodic boundary conditions and cutoffs for long range interactions.  Lennard-Jones interactions are
-    calculated with the Lorentz-Bertelot combining rule: it uses the arithmetic mean of the sigmas and the
-    geometric mean of the epsilons for the two interacting particles.
+    This class implements nonbonded interactions between particles, including a Coulomb force to represent electrostatics and a Lennard-Jones force to represent van der Waals interactions.  It optionally supports periodic boundary conditions and cutoffs for long range interactions.  Lennard-Jones interactions are calculated with the Lorentz-Bertelot combining rule: it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles.
 
-    To use this class, create a NonbondedForce object, then call addParticle() once for each particle in the
-    System to define its parameters.  The number of particles for which you define nonbonded parameters must
-    be exactly equal to the number of particles in the System, or else an exception will be thrown when you
-    try to create a Context.  After a particle has been added, you can modify its force field parameters
-    by calling setParticleParameters().
+    To use this class, create a NonbondedForce object, then call addParticle() once for each particle in the System to define its parameters.  The number of particles for which you define nonbonded parameters must be exactly equal to the number of particles in the System, or else an exception will be thrown when you try to create a Context.  After a particle has been added, you can modify its force field parameters by calling setParticleParameters().
 
-    NonbondedForce also lets you specify "exceptions", particular pairs of particles whose interactions should be
-    computed based on different parameters than those defined for the individual particles.  This can be used to
-    completely exclude certain interactions from the force calculation, or to alter how they interact with each other.
+    NonbondedForce also lets you specify "exceptions", particular pairs of particles whose interactions should be computed based on different parameters than those defined for the individual particles.  This can be used to completely exclude certain interactions from the force calculation, or to alter how they interact with each other.
 
-    Many molecular force fields omit Coulomb and Lennard-Jones interactions between particles separated by one
-    or two bonds, while using modified parameters for those separated by three bonds (known as "1-4 interactions").
-    This class provides a convenience method for this case called createExceptionsFromBonds().  You pass to it
-    a list of bonds and the scale factors to use for 1-4 interactions.  It identifies all pairs of particles which
-    are separated by 1, 2, or 3 bonds, then automatically creates exceptions for them.
+    Many molecular force fields omit Coulomb and Lennard-Jones interactions between particles separated by one or two bonds, while using modified parameters for those separated by three bonds (known as "1-4 interactions"). This class provides a convenience method for this case called createExceptionsFromBonds().  You pass to it a list of bonds and the scale factors to use for 1-4 interactions.  It identifies all pairs of particles which are separated by 1, 2, or 3 bonds, then automatically creates exceptions for them.
 
     EXAMPLES
 
@@ -60,7 +46,7 @@ class NonbondedForce(Force):
 
     Add a particle.
 
-    >>> charge = 1.0 * units.elementary_charge 
+    >>> charge = 1.0 * units.elementary_charge
     >>> sigma = 1.0 * units.angstrom
     >>> epsilon = 0.001 * units.kilocalories_per_mole
     >>> force.addParticle(charge, sigma, epsilon)
@@ -208,10 +194,7 @@ class NonbondedForce(Force):
 
     def getEwaldErrorTolerance(self):
         """
-        Get the error tolerance for Ewald summation.  This corresponds to the fractional error in the forces
-        which is acceptable.  This value is used to select the reciprocal space cutoff and separation
-        parameter so that the average error level will be less than the tolerance.  There is not a
-        rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
+        Get the error tolerance for Ewald summation.  This corresponds to the fractional error in the forces which is acceptable.  This value is used to select the reciprocal space cutoff and separation parameter so that the average error level will be less than the tolerance.  There is not a rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
 
         """
         return self.ewaldErrorTol
@@ -219,10 +202,7 @@ class NonbondedForce(Force):
     @accepts(float)
     def setEwaldErrorTolerance(self, tol):
         """
-        Set the error tolerance for Ewald summation.  This corresponds to the fractional error in the forces
-        which is acceptable.  This value is used to select the reciprocal space cutoff and separation
-        parameter so that the average error level will be less than the tolerance.  There is not a
-        rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
+        Set the error tolerance for Ewald summation.  This corresponds to the fractional error in the forces which is acceptable.  This value is used to select the reciprocal space cutoff and separation parameter so that the average error level will be less than the tolerance.  There is not a rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
 
         """
         self.ewaldErrorTol = tol
@@ -231,11 +211,7 @@ class NonbondedForce(Force):
     @accepts_compatible_units(units.elementary_charge, units.nanometers, units.kilojoules_per_mole)
     def addParticle(self, charge, sigma, epsilon):
         """
-        Add the nonbonded force parameters for a particle.  This should be called once for each particle
-        in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
-        For calculating the Lennard-Jones interaction between two particles, the arithmetic mean of the sigmas
-        and the geometric mean of the epsilons for the two interacting particles is used (the Lorentz-Bertelot
-        combining rule).
+        Add the nonbonded force parameters for a particle.  This should be called once for each particle in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle. For calculating the Lennard-Jones interaction between two particles, the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles is used (the Lorentz-Bertelot combining rule).
 
         @param charge    the charge of the particle, measured in units of the proton charge
         @param sigma     the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
@@ -249,9 +225,7 @@ class NonbondedForce(Force):
 
     def getParticleParameters(self, index):
         """
-        Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles,
-        it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles
-        (the Lorentz-Bertelot combining rule).
+        Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles, it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles (the Lorentz-Bertelot combining rule).
 
         @param index     the index of the particle for which to set parameters
         @param charge    the charge of the particle, measured in units of the proton charge
@@ -265,9 +239,7 @@ class NonbondedForce(Force):
     @accepts_compatible_units(None, units.elementary_charge, units.nanometers, units.kilojoules_per_mole)
     def setParticleParameters(self, index, charge, sigma, epsilon):
         """
-        Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles,
-        it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles
-        (the Lorentz-Bertelot combining rule).
+        Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles, it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles (the Lorentz-Bertelot combining rule).
 
         @param index     the index of the particle for which to set parameters
         @param charge    the charge of the particle, measured in units of the proton charge
@@ -282,9 +254,7 @@ class NonbondedForce(Force):
     @accepts_compatible_units(None, None, units.elementary_charge**2, units.nanometers, units.kilojoules_per_mole, None)
     def addException(self, particle1, particle2, chargeProd, sigma, epsilon, replace=False):
         """
-        Add an interaction to the list of exceptions that should be calculated differently from other interactions.
-        If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from
-        force and energy calculations.
+        Add an interaction to the list of exceptions that should be calculated differently from other interactions. If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from force and energy calculations.
 
         In many cases, you can use createExceptionsFromBonds() rather than adding each exception explicitly.
 
@@ -346,8 +316,7 @@ class NonbondedForce(Force):
     def setExceptionParameters(self, index, particle1, particle2, chargeProd, sigma, epsilon):
         """
         Set the force field parameters for an interaction that should be calculated differently from others.
-        If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from
-        force and energy calculations.
+        If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from force and energy calculations.
 
         @param index      the index of the interaction for which to get parameters
         @param particle1  the index of the first particle involved in the interaction
@@ -369,16 +338,11 @@ class NonbondedForce(Force):
 
     def createExceptionsFromBonds(self, bonds, coulomb14Scale, lj14Scale):
         """
-        Identify exceptions based on the molecular topology.  Particles which are separated by one or two bonds are set
-        to not interact at all, while pairs of particles separated by three bonds (known as "1-4 interactions") have
-        their Coulomb and Lennard-Jones interactions reduced by a fixed factor.
+        Identify exceptions based on the molecular topology.  Particles which are separated by one or two bonds are set to not interact at all, while pairs of particles separated by three bonds (known as "1-4 interactions") have their Coulomb and Lennard-Jones interactions reduced by a fixed factor.
 
-        @param bonds           the set of bonds based on which to construct exceptions.  Each element specifies the indices of
-                               two particles that are bonded to each other.
-        @param coulomb14Scale  pairs of particles separated by three bonds will have the strength of their Coulomb interaction
-                               multiplied by this factor
-        @param lj14Scale       pairs of particles separated by three bonds will have the strength of their Lennard-Jones interaction
-                               multiplied by this factor
+        @param bonds           the set of bonds based on which to construct exceptions.  Each element specifies the indices of two particles that are bonded to each other.
+        @param coulomb14Scale  pairs of particles separated by three bonds will have the strength of their Coulomb interaction multiplied by this factor
+        @param lj14Scale       pairs of particles separated by three bonds will have the strength of their Lennard-Jones interaction multiplied by this factor
         """
 
         # Create a Swig object.
@@ -580,7 +544,7 @@ class BondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
         @returns length    the equilibrium length of the bond
@@ -736,7 +700,7 @@ class G96BondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
         @returns length    the equilibrium length of the bond
@@ -893,7 +857,7 @@ class MorseBondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
         @returns length    the equilibrium length of the bond
@@ -1053,7 +1017,7 @@ class CubicBondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
         @returns length    the equilibrium length of the bond
@@ -1210,7 +1174,7 @@ class ConnectionBondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
 
@@ -1386,7 +1350,7 @@ class HarmonicBondForce(Force):
         """
         Get the force field parameters for a bond term.
 
-        @param index     the index of the bond for which to get parameters
+        @param index       the index of the bond for which to get parameters
         @returns particle1 the index of the first particle connected by the bond
         @returns particle2 the index of the second particle connected by the bond
         @returns length    the equilibrium length of the bond
@@ -1569,7 +1533,7 @@ class AngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -1729,7 +1693,7 @@ class G96AngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -1890,7 +1854,7 @@ class CrossBondBondAngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -2055,7 +2019,7 @@ class CrossBondAngleAngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -2223,7 +2187,7 @@ class UreyBradleyAngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -2393,7 +2357,7 @@ class QuarticAngleForce(Force):
         """
         Get the force field parameters for an angle term.
 
-        @param index     the index of the angle for which to get parameters
+        @param index       the index of the angle for which to get parameters
         @returns particle1 the index of the first particle forming the angle
         @returns particle2 the index of the second particle forming the angle
         @returns particle3 the index of the third particle forming the angle
@@ -2563,7 +2527,7 @@ class LJ1Force(Force):
         """
         Get the force field parameters for a LJ1 pair term.
 
-        @param index        the index of the force for which to get parameters
+        @param index          the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns V
@@ -2669,7 +2633,7 @@ class LJ2Force(Force):
 
         # Populate data structures from swig object, if specified
         if force is not None:
-            self._copyDataUsingInterface(self, RBforce)
+            self._copyDataUsingInterface(self, force)
 
         return
 
@@ -2724,7 +2688,7 @@ class LJ2Force(Force):
         """
         Get the force field parameters for a LJ2 pair term.
 
-        @param index        the index of the force for which to get parameters
+        @param index          the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns fudgeQQ
@@ -2839,7 +2803,7 @@ class LJNBForce(Force):
 
         # Populate data structures from swig object, if specified
         if force is not None:
-            self._copyDataUsingInterface(self, RBforce)
+            self._copyDataUsingInterface(self, force)
 
         return
 
@@ -2893,7 +2857,7 @@ class LJNBForce(Force):
         """
         Get the force field parameters for a LJNB pair term.
 
-        @param index        the index of the force for which to get parameters
+        @param index          the index of the force for which to get parameters
         @returns particle1    the index of the first particle forming the pair
         @returns particle2    the index of the second particle forming the pair
         @returns qi
@@ -3077,7 +3041,7 @@ class PeriodicTorsionForce(Force):
         @param periodicity  the periodicity of the torsion
         @param phase        the phase offset of the torsion
         @param k            the force constant for the torsion
-        @return the index of the torsion that was added
+        @return             the index of the torsion that was added
 
         """
         torsion = PeriodicTorsionForcePeriodicTorsionInfo(particle1, particle2, particle3, particle4, periodicity, phase, k)
@@ -3088,7 +3052,7 @@ class PeriodicTorsionForce(Force):
         """
         Get the force field parameters for a periodic torsion term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index          the index of the torsion for which to get parameters
         @returns particle1    the index of the first particle forming the torsion
         @returns particle2    the index of the second particle forming the torsion
         @returns particle3    the index of the third particle forming the torsion
@@ -3242,10 +3206,10 @@ class NonPeriodicTorsionForce(Force):
         @param particle1    the index of the first particle forming the torsion
         @param particle2    the index of the second particle forming the torsion
         @param particle3    the index of the third particle forming the torsion
-        @param particle3    the index of the fourth particle forming the torsion
+        @param particle4    the index of the fourth particle forming the torsion
         @param phase        the phase offset of the torsion
         @param k            the force constant for the torsion
-        @return the index of the torsion that was added
+        @return             the index of the torsion that was added
 
         """
         torsion = NonPeriodicTorsionForceNonPeriodicTorsionInfo(particle1, particle2, particle3, particle4, phase, k)
@@ -3256,11 +3220,11 @@ class NonPeriodicTorsionForce(Force):
         """
         Get the force field parameters for a periodic torsion term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index          the index of the torsion for which to get parameters
         @returns particle1    the index of the first particle forming the torsion
         @returns particle2    the index of the second particle forming the torsion
         @returns particle3    the index of the third particle forming the torsion
-        @returns particle3    the index of the fourth particle forming the torsion
+        @returns particle4    the index of the fourth particle forming the torsion
         @returns phase        the phase offset of the torsion
         @returns k            the force constant for the torsion
 
@@ -3277,7 +3241,7 @@ class NonPeriodicTorsionForce(Force):
         @param particle1    the index of the first particle forming the torsion
         @param particle2    the index of the second particle forming the torsion
         @param particle3    the index of the third particle forming the torsion
-        @param particle3    the index of the fourth particle forming the torsion
+        @param particle4    the index of the fourth particle forming the torsion
         @param phase        the phase offset of the torsion
         @param k            the force constant for the torsion
 
@@ -3414,7 +3378,7 @@ class RBTorsionForce(Force):
         @param C3
         @param C4
         @param C5
-        @return the index of the torsion that was added
+        @return             the index of the torsion that was added
 
         """
         torsion = RBTorsionForceRBTorsionInfo(particle1, particle2, particle3, particle4, C0, C1, C2, C3, C4, C5)
@@ -3425,11 +3389,11 @@ class RBTorsionForce(Force):
         """
         Get the force field parameters for a RB torsion term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index          the index of the torsion for which to get parameters
         @returns particle1    the index of the first particle forming the torsion
         @returns particle2    the index of the second particle forming the torsion
         @returns particle3    the index of the third particle forming the torsion
-        @returns particle3    the index of the fourth particle forming the torsion
+        @returns particle4    the index of the fourth particle forming the torsion
         @returns C0
         @returns C1
         @returns C2
@@ -3450,7 +3414,7 @@ class RBTorsionForce(Force):
         @param particle1    the index of the first particle forming the torsion
         @param particle2    the index of the second particle forming the torsion
         @param particle3    the index of the third particle forming the torsion
-        @param particle3    the index of the fourth particle forming the torsion
+        @param particle4    the index of the fourth particle forming the torsion
         @param C0
         @param C1
         @param C2
@@ -3548,7 +3512,7 @@ class FourierTorsionForce(Force):
 
         # Populate data structures from swig object, if specified
         if force is not None:
-            self._copyDataUsingInterface(self, RBforce)
+            self._copyDataUsingInterface(self, force)
 
         return
 
@@ -3593,7 +3557,7 @@ class FourierTorsionForce(Force):
         @param C2
         @param C3
         @param C4
-        @return the index of the torsion that was added
+        @return             the index of the torsion that was added
 
         """
         torsion = FourierTorsionForceFourierTorsionInfo(particle1, particle2, particle3, particle4, C1, C2, C3, C4)
@@ -3604,14 +3568,14 @@ class FourierTorsionForce(Force):
         """
         Get the force field parameters for a fourier torsion term.
 
-        @param index        the index of the torsion for which to get parameters
+        @param index          the index of the torsion for which to get parameters
         @returns particle1    the index of the first particle forming the torsion
         @returns particle2    the index of the second particle forming the torsion
         @returns particle3    the index of the third particle forming the torsion
-        @returns particle3    the index of the fourth particle forming the torsion
+        @returns particle4    the index of the fourth particle forming the torsion
         @returns C1
         @returns C2
-        @returns C3RB
+        @returns C3
         @returns C4
 
         """
@@ -3627,7 +3591,7 @@ class FourierTorsionForce(Force):
         @param particle1    the index of the first particle forming the torsion
         @param particle2    the index of the second particle forming the torsion
         @param particle3    the index of the third particle forming the torsion
-        @param particle3    the index of the fourth particle forming the torsion
+        @param particle4    the index of the fourth particle forming the torsion
         @param C1
         @param C2
         @param C3
@@ -3704,6 +3668,157 @@ class FourierTorsionForceFourierTorsionInfo(object):
         self.C4 = C4
         return
 
+
+#=============================================================================================
+# SettleForce
+#=============================================================================================
+
+class SettleForce(Force):
+
+
+    def __init__(self, force=None):
+        """
+        Create a SettleForce.
+
+        """
+        # Initialize defaults.
+        self.forces = list()
+
+        # Populate data structures from swig object, if specified
+        if force is not None:
+            self._copyDataUsingInterface(self, force)
+
+        return
+
+    def _copyDataUsingInterface(self, dest, src):
+        """
+        Use the public interface to populate 'dest' from 'src'.
+
+        """
+        dest.__init__()
+        for index in range(src.getNumForces()):
+            args = src.getForceParameters(index)
+            dest.addForce(*args)
+
+        return
+
+    def asSwig(self):
+        """
+        Construct a Swig object.
+
+        """
+        force = openmm.SettleForce()
+        self._copyDataUsingInterface(force, self)
+        return force
+
+    def getNumForces(self):
+        """
+        Get the number of settle forces
+
+        """
+        return len(self.forces)
+
+    @accepts_compatible_units(None, units.nanometers, units.nanometers)
+    def addForce(self, particle, length1, length2):
+        """
+        Add a settle force term to the force field.
+
+        @param particle     the index of the first particle forming the torsion
+        @param length1      the length of the specified atom to the other atoms
+        @param length2      the length of the between the other atoms
+        @return             the index of the settle force that was added
+
+        """
+        force = SettleForceSettleInfo(particle, length1, length2)
+        self.forces.append(force)
+        return
+
+    def getForceParameters(self, index):
+        """
+        Get the force field parameters for a fourier torsion term.
+
+        @param index          the index of the torsion for which to get parameters
+        @returns particle     the index of the first particle forming the torsion
+        @param length1        the length of the specified atom to the other atoms
+        @param length2        the length of the between the other atoms
+
+        """
+        force = self.forces[index]
+        return (force.particle, force.length1, force.length2)
+
+    @accepts_compatible_units(None, None, units.nanometers, units.nanometers)
+    def setForceParameters(self, index, particle, length1, length2):
+        """
+        Set the force field parameters for a fourier torsion term.
+
+        @param index        the index of the torsion for which to set parameters
+        @param particle     the index of the first particle forming the torsion
+        @param length1      the length of the specified atom to the other atoms
+        @param length2      the length of the between the other atoms
+
+        """
+        force = SettleForceSettleInfo(particle, length1, length2)
+        self.forces[index] = force
+        return
+
+    #==========================================================================
+    # PYTHONIC EXTENSIONS
+    #==========================================================================
+
+    @property
+    def nforces(self):
+        return len(self.forces)
+
+    def __str__(self):
+        """
+        Return an 'informal' human-readable string representation of the System object.
+
+        """
+
+        r = ""
+
+        # Show torsions.
+        if (self.nforces > 0):
+            r += "Settle Forces:\n"
+            r += "%8s %10s %10s %24s\n" % ("index", "particle", "length1", "length2")
+            for (index, force) in enumerate(self.force):
+                r += "%8d %10d %24s %24s\n" % (index, force.particle, str(force.length1), str(force.length2))
+            r += "\n"
+            r += "\n"
+
+        return r
+
+    def _appendForce(self, inforce, offset):
+        """
+        Append atoms defined in another force of the same type.
+
+        @param inforce      the force to be appended
+        @param offset     integral offset for atom number
+
+        """
+        # Check to make sure both forces are compatible.
+        if type(self) != type(force):
+            raise ValueError("other force object must be of identical Force subclass")
+
+        # Combine systems.
+        for force in inforce.forces:
+            force.particle += offset
+            self.forces.append(force)
+
+        return
+
+class SettleForceSettleInfo(object):
+    """
+    Information about a settle force
+
+    """
+    @accepts_compatible_units(None, units.nanometers, units.nanometers)
+    def __init__(self, particle, length1, length2):
+        self.particle = particle
+        self.length1 = length1
+        self.length2 = length2
+        return
+
 #=============================================================================================
 # GBSAOBCForce
 #=============================================================================================
@@ -3712,11 +3827,7 @@ class GBSAOBCForce(Force):
     """
     This class implements an implicit solvation force using the GBSA-OBC model.
 
-    To use this class, create a GBSAOBCForce object, then call addParticle() once for each particle in the
-    System to define its parameters.  The number of particles for which you define GBSA parameters must
-    be exactly equal to the number of particles in the System, or else an exception will be thrown when you
-    try to create a Context.  After a particle has been added, you can modify its force field parameters
-    by calling setParticleParameters().
+    To use this class, create a GBSAOBCForce object, then call addParticle() once for each particle in the System to define its parameters.  The number of particles for which you define GBSA parameters must be exactly equal to the number of particles in the System, or else an exception will be thrown when you try to create a Context.  After a particle has been added, you can modify its force field parameters by calling setParticleParameters().
 
     EXAMPLE
 
@@ -3802,8 +3913,7 @@ class GBSAOBCForce(Force):
 
     def addParticle(self, charge, radius, scalingFactor, nonPolarScalingFactor = 1.0):
         """
-        Add the GBSA parameters for a particle.  This should be called once for each particle
-        in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
+        Add the GBSA parameters for a particle.  This should be called once for each particle in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
 
         @param charge         the charge of the particle
         @param radius         the GBSA radius of the particle
@@ -3901,8 +4011,7 @@ class GBSAOBCForce(Force):
     @accepts_compatible_units(units.nanometer)
     def setCutoffDistance(self, cutoffDistance):
         """
-        Set the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use
-        is NoCutoff, this value will have no effect.
+        Set the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use is NoCutoff, this value will have no effect.
 
         """
         self.cutoffDistance = cutoffDistance
@@ -4000,45 +4109,28 @@ class GBSAOBCForceParticleInfo(object):
 
 class CustomNonbondedForce(Force):
     """
-    This class implements nonbonded interactions between particles.  Unlike NonbondedForce, the functional form
-    of the interaction is completely customizable, and may involve arbitrary algebraic expressions and tabulated
-    functions.  It may depend on the distance between particles, as well as on arbitrary global and
-    per-particle parameters.  It also optionally supports periodic boundary conditions and cutoffs for long range interactions.
+    This class implements nonbonded interactions between particles.  Unlike NonbondedForce, the functional form of the interaction is completely customizable, and may involve arbitrary algebraic expressions and tabulated functions.  It may depend on the distance between particles, as well as on arbitrary global and per-particle parameters.  It also optionally supports periodic boundary conditions and cutoffs for long range interactions.
 
-    To use this class, create a CustomNonbondedForce object, passing an algebraic expression to the constructor
-    that defines the interaction energy between each pair of particles.  The expression may depend on r, the distance
-    between the particles, as well as on any parameters you choose.  Then call addPerParticleParameter() to define per-particle
-    parameters, and addGlobalParameter() to define global parameters.  The values of per-particle parameters are specified as
-    part of the system definition, while values of global parameters may be modified during a simulation by calling Context::setParameter().
+    To use this class, create a CustomNonbondedForce object, passing an algebraic expression to the constructor that defines the interaction energy between each pair of particles.  The expression may depend on r, the distance between the particles, as well as on any parameters you choose.  Then call addPerParticleParameter() to define per-particle parameters, and addGlobalParameter() to define global parameters.  The values of per-particle parameters are specified as part of the system definition, while values of global parameters may be modified during a simulation by calling Context::setParameter().
 
-    Next, call addParticle() once for each particle in the System to set the values of its per-particle parameters.
-    The number of particles for which you set parameters must be exactly equal to the number of particles in the
-    System, or else an exception will be thrown when you try to create a Context.  After a particle has been added,
-    you can modify its parameters by calling setParticleParameters().
+    Next, call addParticle() once for each particle in the System to set the values of its per-particle parameters. The number of particles for which you set parameters must be exactly equal to the number of particles in the System, or else an exception will be thrown when you try to create a Context.  After a particle has been added, you can modify its parameters by calling setParticleParameters().
 
-    CustomNonbondedForce also lets you specify 'exclusions', particular pairs of particles whose interactions should be
-    omitted from force and energy calculations.  This is most often used for particles that are bonded to each other.
+    CustomNonbondedForce also lets you specify 'exclusions', particular pairs of particles whose interactions should be omitted from force and energy calculations.  This is most often used for particles that are bonded to each other.
 
     As an example, the following code creates a CustomNonbondedForce that implements a 12-6 Lennard-Jones potential:
 
     >>> force = CustomNonbondedForce('4*epsilon*((sigma/r)^12-(sigma/r)^6); sigma=0.5*(sigma1*sigma2); epsilon=sqrt(epsilon1*epsilon2)')
 
-    This force depends on two parameters: sigma and epsilon.  The following code defines these parameters, and
-    specifies combining rules for them which correspond to the standard Lorentz-Bertelot combining rules:
+    This force depends on two parameters: sigma and epsilon.  The following code defines these parameters, and specifies combining rules for them which correspond to the standard Lorentz-Bertelot combining rules:
 
     >>> force.addPerParticleParameter('sigma')
     0
     >>> force.addPerParticleParameter('epsilon')
     1
 
-    Expressions may involve the operators + (add), - (subtract), * (multiply), / (divide), and ^ (power), and the following
-    functions: sqrt, exp, log, sin, cos, sec, csc, tan, cot, asin, acos, atan, sinh, cosh, tanh.  All trigonometric functions
-    are defined in radians, and log is the natural logarithm.  The names of per-particle parameters have the suffix '1' or '2'
-    appended to them to indicate the values for the two interacting particles.  As seen in the above example, the expression may
-    also involve intermediate quantities that are defined following the main expression, using ';' as a separator.
+    Expressions may involve the operators + (add), - (subtract), * (multiply), / (divide), and ^ (power), and the following functions: sqrt, exp, log, sin, cos, sec, csc, tan, cot, asin, acos, atan, sinh, cosh, tanh.  All trigonometric functions are defined in radians, and log is the natural logarithm.  The names of per-particle parameters have the suffix '1' or '2' appended to them to indicate the values for the two interacting particles.  As seen in the above example, the expression may also involve intermediate quantities that are defined following the main expression, using ';' as a separator.
 
-    In addition, you can call addFunction() to define a new function based on tabulated values.  You specify a vector of
-    values, and an interpolating or approximating spline is created from them.  That function can then appear in the expression.
+    In addition, you can call addFunction() to define a new function based on tabulated values.  You specify a vector of values, and an interpolating or approximating spline is created from them.  That function can then appear in the expression.
 
     EXAMPLES
 
@@ -4305,8 +4397,7 @@ class CustomNonbondedForce(Force):
 
     def addParticle(self, *parameters):
         """
-        Add the nonbonded force parameters for a particle.  This should be called once for each particle
-        in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
+        Add the nonbonded force parameters for a particle.  This should be called once for each particle in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
 
         @param parameters    the list of parameters for the new particle
         @return the index of the particle that was added
@@ -4575,20 +4666,11 @@ class CustomNonbondedForceFunctionInfo(object):
 
 class CustomExternalForce(Force):
     """
-    This class implements an 'external' force on particles.  The force may be applied to any subset of the particles
-    in the System.  The force on each particle is specified by an arbitrary algebraic expression, which may depend
-    on the current position of the particle as well as on arbitrary global and per-particle parameters.
+    This class implements an 'external' force on particles.  The force may be applied to any subset of the particles in the System.  The force on each particle is specified by an arbitrary algebraic expression, which may depend on the current position of the particle as well as on arbitrary global and per-particle parameters.
 
-    To use this class, create a CustomExternalForce object, passing an algebraic expression to the constructor
-    that defines the potential energy of each affected particle.  The expression may depend on the particle's x, y, and
-    z coordinates, as well as on any parameters you choose.  Then call addPerParticleParameter() to define per-particle
-    parameters, and addGlobalParameter() to define global parameters.  The values of per-particle parameters are specified as
-    part of the system definition, while values of global parameters may be modified during a simulation by calling Context::setParameter().
-    Finally, call addParticle() once for each particle that should be affected by the force.  After a particle has been added,
-    you can modify its parameters by calling setParticleParameters().
+    To use this class, create a CustomExternalForce object, passing an algebraic expression to the constructor that defines the potential energy of each affected particle.  The expression may depend on the particle's x, y, and z coordinates, as well as on any parameters you choose.  Then call addPerParticleParameter() to define per-particle parameters, and addGlobalParameter() to define global parameters.  The values of per-particle parameters are specified as part of the system definition, while values of global parameters may be modified during a simulation by calling Context::setParameter(). Finally, call addParticle() once for each particle that should be affected by the force.  After a particle has been added, you can modify its parameters by calling setParticleParameters().
 
-    As an example, the following code creates a CustomExternalForce that attracts each particle to a target position (x0, y0, z0)
-    via a harmonic potential:
+    As an example, the following code creates a CustomExternalForce that attracts each particle to a target position (x0, y0, z0) via a harmonic potential:
 
     >>> force = CustomExternalForce('k*((x-x0)^2+(y-y0)^2+(z-z0)^2')
 
@@ -4603,9 +4685,7 @@ class CustomExternalForce(Force):
     >>> force.addPerParticleParameter('z0')
     2
 
-    Expressions may involve the operators + (add), - (subtract), * (multiply), / (divide), and ^ (power), and the following
-    functions: sqrt, exp, log, sin, cos, sec, csc, tan, cot, asin, acos, atan, sinh, cosh, tanh, step.  All trigonometric functions
-    are defined in radians, and log is the natural logarithm.  step(x) = 0 if x is less than 0, 1 otherwise.
+    Expressions may involve the operators + (add), - (subtract), * (multiply), / (divide), and ^ (power), and the following functions: sqrt, exp, log, sin, cos, sec, csc, tan, cot, asin, acos, atan, sinh, cosh, tanh, step.  All trigonometric functions are defined in radians, and log is the natural logarithm.  step(x) = 0 if x is less than 0, 1 otherwise.
 
     """
     def __init__(self, energy):

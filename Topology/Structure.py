@@ -203,7 +203,7 @@ class GromacsStructure(Structure):
         self.boxvector = list()
 
         if (grofile):
-            self.GromacsStructureFileObject = GromacsStructureFile(grofile=grofile)
+            self.readStructureFile(grofile=grofile)
         else:
             self.GromacsStructureFileObject = None
 

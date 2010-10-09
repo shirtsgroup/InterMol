@@ -42,10 +42,6 @@ print "Show the SystemDirectives:"
 for d in g.GromacsTopologyFileObject.SystemDirectives:
     print '\t', d.name.strip()
 
-print "Read TopologyFile"
-g.readTopologyFile('LG2.top')
-print "Done."
-
 #print "Show parameter contents"
 #for d in g.parameters:
     #pdb.set_trace()

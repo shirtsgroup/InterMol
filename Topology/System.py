@@ -46,6 +46,15 @@ import numpy
 from Force import *
 from Structure import *
 
+defaultdictionary={
+"nbfunc":"NBFunc",
+"cr":"CombinationRule",
+"fudgeQQ":"CoulombCorrection",
+"fudgeLJ":"LJCorrection"
+}
+
+
+
 #=============================================================================================
 # System base class
 #=============================================================================================
@@ -145,7 +154,6 @@ class System(object):
             for topology in topologyFiles:
                 # Create object/readTopologyFile
                 g = GromacsTopology(topfile=topology)
-                g.readTopologyFile(topology)
                 self.topologyMolecules.extend(g.molecules)
 
         if inputFileType == "Amber":
@@ -153,7 +161,6 @@ class System(object):
             for topology in topologyFiles:
                 # Create object/readTopologyFile
                 g = AmberTopology(topfile=topology)
-                g.readTopologyFile(topology)
                 self.topologyMolecules.extend(g.molecules)
 
         if inputFileType == "Desmond":
@@ -161,11 +168,11 @@ class System(object):
             for topology in topologyFiles:
                 # Create object/readTopologyFile
                 g = DesmondTopology(topfile=topology)
-                g.readTopologyFile(topology)
                 self.topologyMolecules.extend(g.molecules)
 
 
     def setSystemParameters(self):
+        # From Structure
         if len(self.structures) == 1:
             self.name = self.structures[0].title
             self.boxvector = self.structures[0].boxvector
@@ -173,6 +180,15 @@ class System(object):
             # Need a method of determining which name and boxvector to use
             self.name = ''
             self.boxvector = ''
+
+        # From Topology
+        for topology in self.topologyMolecules:
+	    # Gromacs defaults
+		if len(topology.defaults) == 5:
+                	self.NBFunc = topology.defaults[0]
+                	self.CombinationRule = topology.defaults[1]
+               		self.LJCorrection = topology.defaults[3]
+                	self.CoulombCorrection = topology.defaults[4]
         return
 
 
@@ -283,6 +299,7 @@ class System(object):
         #else:
             #self.molecules.insert( index, TopologySystem( system=molecule) )
         #return
+
 
 
 class Mapping(object):
@@ -539,7 +556,7 @@ class Topology(object):
 
     Q: Should we potentially include the runfile information, perhaps as a series of string pairs?
        Translators between formats might come later.
-    A: I don't think we want runfile info mixed with the topology object. -David Mobley 5/25/10 5:29 PM 
+    A: I don't think we want runfile info mixed with the topology object. -David Mobley 5/25/10 5:29 PM
 
 
 
@@ -560,7 +577,9 @@ class Topology(object):
 
         """
 
-        self.name = '' # name of the system
+        self.name = '' # name of the topology
+        self.defaults = list()
+        self.nrexcl = ''
         self.atoms = list() # atoms[i] is the ith atom entry
         self.forces = list() # forces[i] is the ith force term
         self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
@@ -1043,7 +1062,6 @@ class Topology(object):
         pass
 
 
-
     # by atomgroup (index)
 
     def setAtomNameByAtomGroup(self):
@@ -1089,22 +1107,23 @@ class Topology(object):
         pass
 
 
-
 class TopAtom(object):
     """
     ;     nr type        resnr residue   atom   cgnr charge     mass       typeB chargeB massB
             1 amber99_39      1   NPRO      N      1 -0.202     14.01      ; qtot -0.202
 
     """
-
-    def __init__(self, ID, atomtype, resnum, resname, atomname, cgnr, charge, mass, V, W, freeEnergyAtom=False):
+    @accepts_compatible_units(None, None, None, None, None, None, None, units.elementary_charge, units.amu, units.nanometers, units.kilojoules_per_mole, None, None)
+    def __init__(self, ID, atomtype, resnum, resname, atomname, Z, cgnr, charge, mass, sigma, epsilon, exclusionList=list(), freeEnergyAtom=False):
         self.ID = ID
         self.atomname = atomname
+        self.Z = Z
         self.metadata = Metadata(atomtype, resnum, resname, cgnr)
         self.mass = mass
         self.charge = charge
-        self.V = V
-        self.W = W
+        self.sigma = sigma
+        self.epsilon = epsilon
+        self.exclusionList = exclusionList
         self.freeEnergyAtom = freeEnergyAtom
 
     def getID(self):
@@ -1164,14 +1183,6 @@ class Metadata(object):
         self.cgnr = cgnr
         return
 
-    #def getFreeEnergyAtom(self):
-    #    return self.freeEnergyAtom
-
-    #def setFreeEnergyAtom(self, freeEnergyAtom):
-    #    self.freeEnergyAtom = freeEnergyAtom
-    #    return
-
-
 
 class AtomGroup(object):
     """
@@ -1196,6 +1207,3 @@ class AtomGroup(object):
 
     def addIndex(self, index):
         self.indices.append(index)
-
-
-
