@@ -33,7 +33,7 @@ class GromacsTopologyParser:
 		"""
 		lineReg = re.compile(r"""
 		 [ ]*					# omit spaces
-		 (?P<directive>[ <>\[\]\"\'\.#\-\w]*) 	# search for directive section
+		 (?P<directive>[ <>\[\]\"\'\.#\+\-\w]*) 	# search for directive section
 		 [ ]*					# omit spaces
 		 (?P<ignore_newline>\\)?		# look for the \ for newline
 		 (?P<comment>;.*)?			# look for a comment
@@ -71,7 +71,7 @@ class GromacsTopologyParser:
 				if verbose:
 					print "=========================" 
 					print "Original line:", line
-				match = lineReg.search(line)	# ensure that the line matches what we expect!
+				match = lineReg.match(line)	# ensure that the line matches what we expect!
 				if match:
 					line = match.group('directive')
 					comment = match.group('comment')
@@ -83,7 +83,7 @@ class GromacsTopologyParser:
 							if verbose: print "Ignore newline found"
 							if lines:
 								temp = lines.popleft()
-								match = lineReg.search(temp)
+								match = lineReg.match(temp)
 								line += match.group('directive')
 							else:
 								print "WARNING: Previous line continues yet EOF encountered"
@@ -157,7 +157,10 @@ class GromacsTopologyParser:
 							if define in line:
 								line = line.replace(define, self.defines[define])
 						if comment:
-							line = "%s %s" % (line, comment)
+							if line == '':
+								line = comment
+							else:
+								line = "%s %s" % (line, comment)
 						if verbose:
 							print "Writing:", line
 						self.expanded.append(line)
