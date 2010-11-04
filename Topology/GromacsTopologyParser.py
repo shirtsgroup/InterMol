@@ -15,17 +15,20 @@ class GromacsTopologyParser:
 		self.includes = set()		# set storing includes
 		self.expanded = list()		# list of expanded lines
 		self.defines = dict()		# list of defines
+		# support for current GromacsTopology API
+                self.comments = list()		# list of comments
+                self.directives = list()        # list of directives
+                self.systems = list()           # list of system directives
+                self.molecules = list()         # list of molecule directives
+                self.parameters = list()        # list of parameter directives
+
 		if defines:
 			self.defines.union(defines)
 		self.defines["FLEX_SPC"] = None
 		self.defines["POSRE"] = None
 		if topfile:
-			self.preprocess(topfile)		
-		self.comments = list()
-		self.directives = list()	# list of directives				
-		self.systems = list() 		# list of system directives
-		self.molecules = list()		# list of molecule directives
-		self.parameters = list()	# list of parameter directives
+			self.preprocess(topfile)
+			self.read()
 	
 	def read(self, verbose = False):
 		"""reads information from a previously preprocessed topology file into
@@ -40,6 +43,8 @@ class GromacsTopologyParser:
 		  |
 		  (?P<parameter>defaults|.*types|nonbond_params)	# matches .*atomtypes
 		  |
+                  (?P<moleculetype>moleculetype)
+		  |
 		  (?P<molecule>[\w]+))		 			# everything else alphanumeric
 		  [ ]{1} \]
 		""", re.VERBOSE)
@@ -53,8 +58,10 @@ class GromacsTopologyParser:
 					self.systems.append(directive)
 				elif match.group('parameter'):
 					self.parameters.append(directive)
+				elif match.group('moleculetype'):
+					self.molecules.append([])
 				elif match.group('molecule'):
-					self.molecules.append(directive)	
+					self.molecules[len(self.molecules)-1].append(directive)	
 			else:
 				directive.lines.append(line)
 
@@ -231,8 +238,8 @@ class GromacsTopologyParser:
 	
 	def write(self, filename):
 		fout = open(filename, 'w')
-		for line in self.expanded:
-			fout.write(line)
+		for d in self.directives:
+			fout.write(repr(d))
 		fout.close()
 		return
 

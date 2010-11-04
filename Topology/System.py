@@ -261,7 +261,7 @@ class System(object):
             else:
                 # Function to connect input name to actual topology molecules
                 gromacsTopology = GromacsTopology(molecules)
-            gromacsTopology.writeTopologyFile(topologyName, ExpandIncludes=False, RebuildDirectives=True)
+            gromacsTopology.writeTopologyFile(topologyName)
 
             # Structure
             if molecules == 'All':

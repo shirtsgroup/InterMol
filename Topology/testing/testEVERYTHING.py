@@ -11,8 +11,8 @@ from mmtools.Topology.System import *
 
 # Test a simplified structure and topology
 print "Reading a structure and preprocessed topology ...",
-structureList = 'FullStructure.gro'
-topologyList = 'FullTopology.top'
+structureList = '2PPN.gro'
+topologyList = '2PPNprepro.top'
 sys = System("Test", structureList, topologyList, "Gromacs")
 print "Done."
 
