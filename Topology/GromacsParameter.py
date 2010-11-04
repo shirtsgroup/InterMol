@@ -101,6 +101,27 @@ class GromacsDefaultParameterInfo(GromacsParameterInfo):
 
         return '%d%16d%18s%16.1f%11.4f ; %s\n'%(self.func, self.cr, self.genpairs, self.fudgeLJ, self.fudgeQQ, self.comment)
 
+# Molecules 
+class GromacsMoleculesParameterInfo(GromacsParameterInfo):
+    """
+    [ molecules ]
+    ; Compound        #mols
+
+    """
+
+    @accepts_compatible_units(None, None, None)
+    def __init__(self, compound, molList, comment=''):
+        self.compound = compound
+        self.molList = molList
+	self.comment = comment
+        return
+
+    #def directiveString(self):
+        #"""Output a correctly-formatted string (with an ending newline) corresponding to a line as in a GromacsTopologyFile directive
+
+        #"""
+
+        #return '%d%16d%18s%16.1f%11.4f ; %s\n'%(self.func, self.cr, self.genpairs, self.fudgeLJ, self.fudgeQQ, self.comment)
 
 # Atom Parameters
 class GromacsAtom1ParameterInfo(GromacsParameterInfo):

@@ -20,7 +20,43 @@ class GromacsTopologyParser:
 		self.defines["FLEX_SPC"] = None
 		self.defines["POSRE"] = None
 		if topfile:
-			self.preprocess(topfile)						
+			self.preprocess(topfile)		
+		self.comments = list()
+		self.directives = list()	# list of directives				
+		self.systems = list() 		# list of system directives
+		self.molecules = list()		# list of molecule directives
+		self.parameters = list()	# list of parameter directives
+	
+	def read(self, verbose = False):
+		"""reads information from a previously preprocessed topology file into
+		a gromacstopologyfile object
+		
+		Args:
+			verbose: verbose output
+		"""
+		sysDirective = re.compile(r"""
+		  \[[ ]{1}
+		  ((?P<system>molecules|system)				# matches molecules or system 
+		  |
+		  (?P<parameter>defaults|.*types|nonbond_params)	# matches .*atomtypes
+		  |
+		  (?P<molecule>[\w]+))		 			# everything else alphanumeric
+		  [ ]{1} \]
+		""", re.VERBOSE)
+		for line in self.expanded:
+			match = sysDirective.match(line)
+			if match:
+				if verbose:
+					print match.groups()
+				directive = self.Directive(match.group(0), header='')
+				if match.group('system'):
+					self.systems.append(directive)
+				elif match.group('parameter'):
+					self.parameters.append(directive)
+				elif match.group('molecule'):
+					self.molecules.append(directive)	
+			else:
+				directive.lines.append(line)
 
 	def preprocess(self, filename, verbose = False):
 		"""preprocess a topology file
@@ -33,7 +69,7 @@ class GromacsTopologyParser:
 		"""
 		lineReg = re.compile(r"""
 		 [ ]*					# omit spaces
-		 (?P<directive>[ <>\[\]\"\'\.#\+\-\w]*) 	# search for directive section
+		 (?P<directive>[^\\;\n]*) 	# search for directive section
 		 [ ]*					# omit spaces
 		 (?P<ignore_newline>\\)?		# look for the \ for newline
 		 (?P<comment>;.*)?			# look for a comment
@@ -152,18 +188,16 @@ class GromacsTopologyParser:
 								undef = match.group('undef')
 								if undef in self.defines:
 									self.defines.pop(undef)		
-					elif write[condDepth] and (line != '' or comment):
-						for define in self.defines:
-							if define in line:
-								line = line.replace(define, self.defines[define])
+					elif write[condDepth]:
+						if line != '':
+							for define in self.defines:
+								if define in line:
+									line = line.replace(define, self.defines[define])
+							if verbose:
+								print "Writing:", line
+							self.expanded.append(line)
 						if comment:
-							if line == '':
-								line = comment
-							else:
-								line = "%s %s" % (line, comment)
-						if verbose:
-							print "Writing:", line
-						self.expanded.append(line)
+							self.comments.append(comment)
 				else:
 					print "ERROR: Unreadable line!"	
 	
@@ -195,6 +229,16 @@ class GromacsTopologyParser:
 			print "WARNING: File ", filename, " could not be found!"
 			return None
 	
+	def write(self, filename):
+		fout = open(filename, 'w')
+		for line in self.expanded:
+			fout.write(line)
+		fout.close()
+		return
+
+	def getComments(self):
+		return self.comments
+	
 	def getExpanded(self):
 		return self.expanded
 
@@ -203,3 +247,43 @@ class GromacsTopologyParser:
 	
 	def getDefines(self):
 		return self.defines
+	
+	#=============================================================================================
+	# Containers for *.top file DIRECTIVES, e.g.: [ defaults ], [ atomtypes ]
+	#=============================================================================================
+	class Directive(object):
+		"""A base class for for the Directive container"""
+
+		def __init__(self, name, header=None):
+       			self.classType = 'Directive'
+       		 	self.name = name        # Can be 'name', or be '[ name ]\n' (It will be fixed to be the latter).
+			self.header = header    # any "; <comment>\n" text between the name and data (can have multiple newlines).
+        		self.lines = []
+	
+                def fixName(self):
+                        """if name is 'name', convert it to '[ name ]' """
+                        self.name = '[ ' + self.name.replace('[','').replace(']','').strip() + ' ]\n'
+                        return
+
+                def getName(self):
+                        return self.name
+
+                def setName(self, name):
+                        self.name = name
+                        return
+
+                def getHeader(self):
+                        return self.header
+
+                def setHeader(self, header):
+                        self.header = header
+                        return
+
+                def __repr__(self):
+                        """Returns a string representation that can be printed or written to file."""
+
+                        outtxt = self.name + '\n' + self.header
+                        for line in self.lines:
+                                outtxt += line
+                        outtxt += '\n'  # each directive needs a trailing newline for coding
+                        return outtxt

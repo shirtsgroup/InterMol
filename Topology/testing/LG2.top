@@ -1,4 +1,6 @@
 #include "ffoplsaa.itp"
+#include "ffamber03.itp"
+#include "FKBP.itp"
 #include "LG2.itp"
 ; Include water topology
 #include "ffoplsaa_tip3p.itp"
@@ -8,5 +10,7 @@ p3863_fkbprelative_ligand
 
 [ molecules ]
 ; Compound        #mols
+FKBP		 1
 LG2              1
 SOL              892
+Cl-		 4

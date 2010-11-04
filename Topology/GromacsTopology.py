@@ -14,6 +14,7 @@ import sys, os, tempfile, string, copy, pdb
 from System import *
 from Decorators import *
 from GromacsParameter import *
+from GromacsTopologyParser import *
 
 ForceDictionary = {
 "BondForce":"bonds",
@@ -118,14 +119,22 @@ class GromacsTopology(object):
         """
 
         # Read in the *.top file, creating a new GromacsTopologyFile object
-        self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=topfile)
+        self.GromacsTopologyFileObject = GromacsTopologyParser(topfile=topfile)
 
         parmIndex = list()
         # Translate all the parameter directives to GromacsParameter objects
-        for parm in self.GromacsTopologyFileObject.ParameterDirectives:
+        for parm in self.GromacsTopologyFileObject.parameters:
             self.parameters.append(self.ConvertParameterDirectiveToGromacsParameter(parm))
             parmIndex.append(parm.getName())
         self.index.append(parmIndex)
+	
+	# Create Molecules Parameter
+	#for line in self.SystemDirectives[1].lines
+	#	fields, comment  = line.splitLine(line)
+	#	compounds.append(fields[0])
+	#	molList.append(fields[1])
+	#newGroParm = GromacsMoleculesParameterInfo(compound, molList, comment)
+		
 
         #incredibly sloppy function that combines the contents of duplicate parameter entries
         set = {}
@@ -146,8 +155,8 @@ class GromacsTopology(object):
         self.parameters = reallist
 
         # Translate each set of molecule directives to Topology objects
-        for mol in range(len(self.GromacsTopologyFileObject.MoleculeDefinitionDirectives)):
-            self.molecules.append( self.ConvertMoleculeDirectivesToTopology( self.GromacsTopologyFileObject.MoleculeDefinitionDirectives[mol] ) )
+        for mol in range(len(self.GromacsTopologyFileObject.molecules)):
+            self.molecules.append( self.ConvertMoleculeDirectivesToTopology( self.GromacsTopologyFileObject.molecules[mol] ) )
 
         return
 
@@ -321,7 +330,7 @@ class GromacsTopology(object):
             for atom in molecule.atoms:
                 if particle1 == int(atom.ID):
                     atomname1 = atom.metadata.atomtype
-                if particle2 == int(atom.ID):
+		if particle2 == int(atom.ID):
                     atomname2 = atom.metadata.atomtype
 
             # Convert each atomname to a bondtype
@@ -408,16 +417,13 @@ class GromacsTopology(object):
 
         # Fill in system default parameters
         try:
-            nbfunc = self.parameters[0][0].func
-            cr = self.parameters[0][0].cr
-            genpairs = self.parameters[0][0].genpairs
-            fudgeLJ = self.parameters[0][0].fudgeLJ
-            fudgeQQ = self.parameters[0][0].fudgeQQ
-            defaults = [nbfunc, cr, genpairs, fudgeLJ, fudgeQQ]
-            molecule.defaults.extend(defaults)
+            molecule.NBFunc = self.parameters[0][0].func
+            molecule.CombinationRule = self.parameters[0][0].cr
+            #genpairs = self.parameters[0][0].genpairs
+            molecule.LJCorrection = self.parameters[0][0].fudgeLJ
+            molecule.CoulombCorrection = self.parameters[0][0].fudgeQQ
         except:
             pass
-
         # molecule has name, atoms (list), forces (list), constraints (list), atomgroups (list)
         for directive in MoleculeDirectives:
             if len(directive.lines) > 0:
@@ -431,8 +437,8 @@ class GromacsTopology(object):
                         nrexcl = fields[1]
                         molecule.name = molname
                         molecule.nrexcl = nrexcl
-
-                # Fill in atoms
+               
+		# Fill in atoms
                 if "atoms" in directive.name:
                     for line in directive.lines:
                         fields, comment = self.splitline(line)
@@ -457,6 +463,20 @@ class GromacsTopology(object):
                                 elif self.parameters[0][0].cr == 2 or self.parameters[0][0].cr == 3:
                                     sigma = atomtypenis.V
                                     epsilon = atomtypenis.W
+			# B state parameters
+			try:
+				Bfields = comment.split()
+				Bname = Bfields[0]
+				Bcharge = float(Bfields[1]) * units.elementary_charge
+				if len(Bfields) == 3:
+					Bmass = float(Bfields[2]) * units.amu
+					Batom = TopAtom(particle, atomtype, resnum, resname, atomname, Z, cgnr, Bcharge, Bmass, sigma, epsilon)
+				else:
+					Batom = TopAtom(particle, atomtype, resnum, resname, atomname, Z, cgnr, Bcharge, mass, sigma, epsilon)
+
+				molecule.BAtoms.append(Batom)
+			except:
+				pass	
                         atom = TopAtom(particle, atomtype, resnum, resname, atomname, Z, cgnr, charge, mass, sigma, epsilon)
                         molecule.atoms.append(atom)
 
@@ -1629,21 +1649,19 @@ class GromacsTopology(object):
         directiveName = '[ defaults ]'
         directiveHeader = '; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n'
         directive = self.GromacsTopologyFileObject.Directive(directiveName, directiveHeader)
-        ### Must be filled out ###
+
         for mol in self.molecules:
             try:
-                if len(mol.defaults) > 0:
-                    nbfunc = int(mol.defaults[0])
-                    combrule = int(mol.defaults[1])
-                    genpairs = 'yes'
-                    fudgeLJ = float(mol.defaults[3])
-                    fudgeQQ = float(mol.defaults[4])
-                    directive.lines.append('%(nbfunc)d %(combrule)d %(genpairs)s %(fudgeLJ)f %(fudgeQQ)f\n'%vars())
-		    #pdb.set_trace()
-		    return directive
+                nbfunc = mol.NBFunc
+                combrule = mol.CombinationRule
+                genpairs = 'yes'
+                fudgeLJ = mol.LJCorrection
+                fudgeQQ = mol.CoulombCorrection
+                directive.lines.append('%(nbfunc)d      %(combrule)d      %(genpairs)s      %(fudgeLJ)f      %(fudgeQQ)f\n'%vars())
+		return directive
             except:
                 pass
-        ##########################
+
         return "Error: No default parameters found" 
 
 
@@ -1716,7 +1734,6 @@ class GromacsTopology(object):
             self.GromacsTopologyFileObject = GromacsTopologyFile()
 
             # Create [ default ] and [ atomtypes ]
-            #pdb.set_trace()
             self.GromacsTopologyFileObject.directives.append( self.CreateDefaultsDirective() )
             self.GromacsTopologyFileObject.directives.extend( self.CreateAtomtypesDirective() )
 
@@ -1733,477 +1750,3 @@ class GromacsTopology(object):
 
         return
 
-
-class GromacsTopologyFile(object):
-
-    def __init__(self, topfile=None, defines=None):
-        """A class to store and modify information in Gromacs *.top topology files.
-
-        A Gromacs *.top topology file stores not only the connectivity for each molecule in the system, but (usually as #includes),
-        all of the forcefield parameters for all possible (or at least all common) combinations of bonded atom types.
-
-        Some information about default #define parameters, from gmx 3.1.4 manual:
-
-        "You can use any defines to control options in your customized topology files. Options that are
-        already available by default are:
-
-        define = -DFLEX_SPC
-            Will tell grompp to include FLEX SPC in stead of SPC into your topology, this is necessary to make conjugate
-            gradient work and will allow steepest descent to minimize further.
-        define = -DPOSRE
-            Will tell grompp to include posre.itp into your topology, used for position restraints.
-        """
-
-        if (defines):
-            self.defines = defines
-        else:
-            self.defines = list()  # A list of strings that have been #define'd
-
-        # Add default #defines
-        self.addDefine('FLEX_SPC')
-        self.addDefine('POSRE')
-
-        # *.top file contents will be stored as lines
-        self.lines = []
-
-        # lines after preprocessing
-        self.processed_lines = []
-
-        # Store an ordered list of Directive objects, to be created after parsing the lines 
-        self.directives = []
-        self.defineDirectives = list()
-
-
-        self.ParameterDirectives = list()
-        self.MoleculeDefinitionDirectives = list()  # this is a list of lists (for multiple molecules)
-        self.SystemDirectives = list()
-
-        # Read in the contents of the topology file, if supplied
-        if not topfile == None:
-            self.read(topfile)
-
-        """
-        self.includes = []      # raw lines of text, i.e. '#include "ffamber03.itp"'
-        self.ifdefs = []        # list of list of raw lines of text for each #ifdef (#ifdef'ed  #includes are in here too)
-        self.molecules = []     # a list of TopologyFileMolecule object classes
-        self.systemTitle = ''   # a one-line title for the system
-        self.nmols = {}         # a dictionary of {molecule name: #mols}
-
-        self.nmolsOrder = []    # It's very important to preserve the *ordering* of the defined [ moleculetype ]
-                                # at the end of the *.top file.  This list specifies the ordering of the self.nmols.keys()
-
-        if not topfile == None:
-            [self.lines, self.includes, self.ifdefs, \
-             self.molecules, self.systemTitle, self.nmols, self.nmolsOrder] = self.read(topfile)
-        """
-
-
-    def addDefine(self, defineString):
-        """Add a #define string to the list of self.defines."""
-
-        if self.defines.count(defineString) == 0:
-            self.defines.append(defineString)
-        return 
-
-
-    def read(self, filename):
-        """
-        Read in the contents of a Gromacs topology file.
-
-        WHAT ARE WE PARSING?
-
-        The contents of a *.top file is formatted in blocks of Directives.  A Directive looks like this: [ my_directive ]
-        From the gmx 3.1.4 manual, here's the description of what to expect:
-
-            * semicolon (;) and newline surround comments
-            * on a line ending with \ the newline character is ignored.
-            * directives are surrounded by [ and ]
-            * the topology consists of three levels:
-              - the parameter level (see Table 5.3)
-              - the molecule level, which should contain one or more molecule definitions (see Table 5.4)
-              - the system level: [ system ], [ molecules ]
-
-
-        HOW DO WE PARSE THIS?
-
-        The basic strategy is straighforward:  For each Directive's block of text, we'll create an ordered list of
-        Directive() objects, which are private container classess.  The only wrinkles here are that Gromacs *.top topology
-        file have preprocesser statements:
-
-            #include "myfile.itp"
-
-                Inserts a file's contents at a specific position in the *.top file
-
-            #ifdef USE_THIS
-            <statements>
-            #endif
-
-                Only reads the statements if the variable USE_THIS is the defined (in the *.mdp, usually)
-
-        To deal with this, we do our *own* preprocessing when we read in the file, in two passes:
-
-            1) We parse all #ifdef statements according to our internal list in self.defines (these can be set by the user before reading the *.top file using methods addDefine() and delDefine()  )
-            2) We consider each #include as a special kind of Directive class called an IncludeDirective, which in turn stores it's own GromacsTopology object (!)  Arbitrary levels of include-nesting thus be read, and their parameters unpacked into the container classes ParameterInfo or MoleculeDefinitionInfo classes.  However, since the original structure of nested #includes (wel, at least the top level) is still intact, we can write a *.top to file using only the highest-level (i.e. original) top level.
-
-        There also is a convention for comments that we assume is in place:
-
-            1) Any free-floating "; <comment>" line gets its own Directive (CommentDirective)
-            2) Any "; <comment>"s betwewn a directive statement and directive data is considered to be the "header" for that directive
-
-        """
-
-        # Read in the *.top topology file lines
-        self.lines = self.readLines(filename)
-
-        # Perform pre-processing of the #ifdef and #endif lines
-        self.processedLines = self.preprocess()
-
-        # Parse the contents into a list of Directives
-        self.parseDirectives()
-
-        # Organize the Directives into Parameter, MoleculeDefinition, and System groups
-        self.organizeDirectives()
-
-    def readLines(self, filename):
-
-        fin = open(filename, 'r')
-        lines = fin.readlines()
-        fin.close()
-        return lines
-
-
-    def preprocess(self):
-
-        processedLines = []
-
-        # Does this need to be modified?###########################################
-        for line in self.lines:
-            processedLines.append(line)
-        # Concatenate any line continuations
-        i = 0
-        while i < len(processedLines)-1:
-            if len(processedLines[i].strip()) > 0:
-                if processedLines[i].strip()[-1] == '\\':
-                    processedLines[i] = processedLines[i].strip() + processedLines.pop(i+1)
-            i += 1
-        return processedLines
-
-
-    def parseDirectives(self, debug=False):
-        """Parse the lines of the topology file contents into an ordered list of Directive containers."""
-
-        self.directives = list()
-
-        index = 0
-
-        if debug:
-            print '*** Parsing the following lines: ***'
-            for line in self.processedLines:
-                print line.strip()
-
-        while index < len(self.processedLines):
-
-            if debug: print '### line',index, ':', self.processedLines[index].strip()
-
-            if len(self.processedLines[index]) > 0:
-
-                # Is the line an include?
-                if self.processedLines[index].count('#include') > 0 and self.processedLines[index][0] == '#':
-                    # Then create an IncludeDirective
-                    if debug: print '### line', index,': creating an IncludeDirective' 
-                    self.directives.append( self.IncludeDirective(self.processedLines[index]) )
-
-                    # Go to the next line
-                    index += 1
-
-                # Is the line a comment (or a set of comments)?
-                elif self.processedLines[index][0] == ';':
-                    if debug: print '### line', index,': found comment:', self.processedLines[index].strip()
-                    linetxt = ''
-                    while self.processedLines[index][0] == ';':
-                        if debug: print '### line', index,': found continued comments:', self.processedLines[index].strip()
-                        linetxt += self.processedLines[index]
-                        index += 1
-                        if not (index < len(self.processedLines)):
-                            break
-
-                    # Then create an CommentDirective
-                    if debug: print '### Adding comment:', linetxt
-                    self.directives.append( self.CommentDirective(linetxt) )
-
-                    # Go to the next line?   No - index is already incremented in the while loop.
-
-                # Is the line a define?
-                elif self.processedLines[index].count('#define') > 0:
-                    # Then create an DefineDirective
-                    if debug: print '### line', index,': creating DefineDirective'
-                    fields = self.processedLines[index][8:].split(' ', 1)
-                    name = fields[0].strip()
-                    if len(fields) > 1:
-                        line = fields[1]
-                    else:
-                        line = ''
-                    self.directives.append( self.DefineDirective(name, line) )
-                    # Go to the next line
-                    index += 1
-
-                # Is the line a blank line?
-                elif self.processedLines[index].strip() == '':
-                    # ignore it
-                    if debug: print '### line', index,': ignoring blank line'
-
-                    # Go to the next line
-                    index += 1
-
-                # Is the line the start of a directive?
-                elif self.processedLines[index][0] == '[' and self.processedLines[index].count(']') > 0:
-
-                    if debug: print '### line', index, ': Found a directive:', self.processedLines[index].strip()
-                    myDirectiveName = self.processedLines[index].strip()
-                    myDirective = self.Directive(myDirectiveName, header='')
-                    index += 1
-                    # until we hit a blank line (or the end of the file) ...
-                    while len(self.processedLines[index].strip()) > 0:
-                        # Test for an ifdef
-                        if self.processedLines[index].count('#ifdef') > 0:
-                            fields = self.processedLines[index].split()
-                            if len(fields) > 1:
-                                if self.defines.count(fields[1]) > 0:
-                                    self.processedLines.pop(index)
-                                while self.processedLines[index].strip() != '#else':
-                                    self.processedLines.pop(index)
-                                if self.processedLines[index].strip() == '#else':
-                                    self.processedLines.pop(index)
-                                    if self.processedLines[index][0] == '[':
-                                        break
-                                    if self.defines.count(fields[1]) > 0: # need to be able to test for all defines, not just the last one
-                                        while self.processedLines[index].strip() != '#endif':
-                                            self.processedLines.pop(index)
-                        if self.processedLines[index].strip() == '#endif':
-                            self.processedLines.pop(index)
-                            index -= 1
-
-                        if self.processedLines[index][0] == ';':
-                            if debug: print '### line', index, ': Found a directive header:', self.processedLines[index].strip()
-                            myDirective.header += self.processedLines[index]
-                        # ... and data lines get appended to Directive.lines.
-                        elif self.processedLines[index].count('#define') > 0:
-                            # Then create an DefineDirective
-                            if debug: print '### line', index,': creating DefineDirective'
-                            fields = self.processedLines[index][8:].split(' ', 1)
-                            name = fields[0].strip()
-                            if len(fields) > 1:
-                                line = fields[1]
-                            else:
-                                line = ''
-                            self.directives.append( self.DefineDirective(name, line) )
-                            # Also, add the #define string to our list of defines
-                            self.addDefine(name)
-                        else:
-                            if debug: print '### line', index, ': Found a directive line:', self.processedLines[index].strip()
-                            myDirective.lines.append( self.processedLines[index].replace('\t', '    ') )
-                        index += 1
-
-                        if not (index < len(self.processedLines)):
-                            break
-
-                    self.directives.append( myDirective )
-
-                    # Go to the next line -- no already incremented in the while loop above.
-
-
-                else:
-                    # Go to the next line
-                    index += 1
-
-
-    def organizeDirectives(self):
-        """Organize the Directives into Parameter, MoleculeDefinition, and System groups"""
-
-        # Make an expanded list of Directives from the nested IncludeDirectives, skipping CommentDirectives and DefineDirectives
-        defineList = self.getAllDefines([])
-        expandedDirectives = self.getAllDirectives([])
-
-        # group the System Directives first
-        index = 0
-        while index < len(expandedDirectives):
-            if expandedDirectives[index].name.count( '[ system ]' ) > 0:
-                self.SystemDirectives.append( expandedDirectives.pop(index) )
-            elif expandedDirectives[index].name.count( '[ molecules ]' ) > 0:
-                self.SystemDirectives.append( expandedDirectives.pop(index) )
-            else:
-                index += 1
-
-        # group the Parameter Directives next
-        index = 0
-        while index < len(expandedDirectives) and ( expandedDirectives[index].name.count( '[ moleculetype ]' ) == 0 ):
-            self.ParameterDirectives.append( expandedDirectives.pop(index) )
-
-        # finally group lists of lists of molecule directives
-        index = 0
-        while index < len(expandedDirectives):
-            if expandedDirectives[index].name.count( '[ moleculetype ]' ) > 0:
-                self.MoleculeDefinitionDirectives.append( [] )
-            for line in expandedDirectives[index].lines:
-                for define in defineList:
-                    if define.name in line:
-                        i = expandedDirectives[index].lines.index(line)
-                        expandedDirectives[index].lines.remove(line)
-                        line = line.replace(define.name, define.line)
-                        expandedDirectives[index].lines.insert(i, line)
-            self.MoleculeDefinitionDirectives[-1].append(expandedDirectives.pop(index))
-        return
-
-    def getAllDefines(self, defineList):
-        """Get the complete list of defines by traversing all nexted IncludeDirectives.
-
-        """
-
-        for d in self.directives:
-            if d.classType == 'DefineDirective':
-                defineList.append(d)
-            elif d.classType == 'IncludeDirective':
-                defineList = d.GromacsTopologyFileObject.getAllDefines(defineList)
-        return defineList
-
-    def getAllDirectives(self, appendToList, IgnoreComments=True, IgnoreDefines=True):
-        """Get the complete list of directives by traversing all nested IncludeDirectives.
-
-        """
-
-        for d in self.directives:
-            if d.classType == 'Directive':
-                appendToList.append(d)
-            elif d.classType == 'IncludeDirective':
-                appendToList = d.GromacsTopologyFileObject.getAllDirectives(appendToList)
-        return appendToList
-
-    def testDirectives(self):
-        """Print out all the Directives, in order.
-
-        """
-
-        for d in self.directives:
-            print '%%% Directive:', d.classType
-            print d
-
-    def write(self, filename, ExpandIncludes=False):
-        """Write the GromacsTopologyFile to file.
-
-        """
-
-        fout = open(filename, 'w')
-        for d in self.directives:
-	    if d.classType == 'IncludeDirective':
-                if ExpandIncludes:
-             	    fout.write( repr(d) )
-                else:
-                    fout.write( d.name + '\n' ) # directives need trailing '\n' for padding
-            else:
-                fout.write( repr(d) )
-        fout.close()
-
-        return
-
-    #=============================================================================================
-    # Containers for *.top file DIRECTIVES, e.g.: [ defaults ], [ atomtypes ]
-    #=============================================================================================
-
-    class Directive(object):
-        """A base class for for the Directive container"""
-
-        def __init__(self, name, header=None):
-
-            self.classType = 'Directive'
-            self.name = name        # Can be 'name', or be '[ name ]\n' (It will be fixed to be the latter).
-            self.header = header    # any "; <comment>\n" text between the name and data (can have multiple newlines).
-            self.lines = []
-            return
-
-        def fixName(self):
-            """if name is 'name', convert it to '[ name ]' """
-            self.name = '[ ' + self.name.replace('[','').replace(']','').strip() + ' ]\n'
-            return
-
-        def getName(self):
-            return self.name
-
-        def setName(self, name):
-            self.name = name
-            return
-
-        def getHeader(self):
-            return self.header
-
-        def setHeader(self, header):
-            self.header = header
-            return
-
-        def __repr__(self):
-            """Returns a string representation that can be printed or written to file."""
-
-            outtxt = self.name + '\n' + self.header
-            for line in self.lines:
-                outtxt += line
-            outtxt += '\n'  # each directive needs a trailing newline for coding
-            return outtxt
-
-
-
-    #=============================================================================================
-    # special DIRECTIVES
-
-    class CommentDirective(Directive):
-        """ any line that starts with a semicolon """
-
-        def __init__(self, comment):
-
-            self.classType = 'CommentDirective'
-            self.name = comment
-            return
-
-        def __repr__(self):
-            """Returns a string representation that can be printed or written to file."""
-            return self.name+'\n'  # each directive needs a trailing newline for coding
-
-    class DefineDirective(Directive):
-        """ any line that starts with '#define'  """
-
-        def __init__(self, name, line):
-
-            self.classType = 'DefineDirective'
-            self.name = name
-            self.line = line
-            return
-
-        def getName(self):
-            return self.name
-
-        def getLine(self):
-            return self.line
-
-        def __repr__(self):
-            """Returns a string representation that can be printed or written to file."""
-            return '#define ' + self.name+'\t'+self.line+'\n'  # each directive needs a trailing newline for coding
-
-
-    class IncludeDirective(Directive):
-        """A special Directive container that points to the filename of the #include file,
-        and has as an attribute a self.GromacsTopologyFileObject for that #include file. """
-
-        def __init__(self, includeString):
-            self.classType = 'IncludeDirective'
-            self.name  = includeString   # should be entire '#include\n'
-            self.includeFileName = self.name.replace('#include ','').replace('"','').strip()
-            if not os.path.exists(self.includeFileName):
-                self.includeFileName = os.path.join(os.environ['GMXLIB'], self.includeFileName)
-            self.GromacsTopologyFileObject = GromacsTopologyFile(topfile=self.includeFileName)
-            return
-
-        def __repr__(self):
-            """Returns a string representation that can be printed or written to file."""
-            outtxt = ''
-            for d in self.GromacsTopologyFileObject.directives:
-                outtxt += repr(d)
-            outtxt += '\n'  # each directive needs a trailing newline for coding
-            return outtxt

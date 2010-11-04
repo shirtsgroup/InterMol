@@ -46,7 +46,7 @@ import numpy
 from Force import *
 from Structure import *
 
-defaultdictionary={
+defaultsdictionary={
 "nbfunc":"NBFunc",
 "cr":"CombinationRule",
 "fudgeQQ":"CoulombCorrection",
@@ -183,12 +183,24 @@ class System(object):
 
         # From Topology
         for topology in self.topologyMolecules:
-	    # Gromacs defaults
-		if len(topology.defaults) == 5:
-                	self.NBFunc = topology.defaults[0]
-                	self.CombinationRule = topology.defaults[1]
-               		self.LJCorrection = topology.defaults[3]
-                	self.CoulombCorrection = topology.defaults[4]
+
+            try:
+                self.NBFunc = topology.NBFunc
+            except:
+                pass
+            try:
+                self.CombinationRule = topology.CombinationRule
+            except:
+                pass
+            try:
+                self.LJCorrection = topology.LJCorrection
+            except:
+                pass
+            try:
+                self.CoulombCorrection = topology.CoulombCorrection
+            except:
+                pass
+
         return
 
 
@@ -581,6 +593,7 @@ class Topology(object):
         self.defaults = list()
         self.nrexcl = ''
         self.atoms = list() # atoms[i] is the ith atom entry
+	self.BAtoms = list() # B state atom entries
         self.forces = list() # forces[i] is the ith force term
         self.constraints = list() # constraints[i] is the ith ConstraintInfo entry
 
