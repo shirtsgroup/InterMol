@@ -3,18 +3,18 @@ import pdb
 import profile
 from mmtools.Topology.System import *
 
-#print "Reading in a system ...",
-#structureList = ['LG2-0-eq.gro']
-#topologyList = ['LG2.top']
-#sys = System("Test", structureList, topologyList, "Gromacs")
-#print "Done."
+print "Reading in a system ...\n",
+structureList = ['LG2-0-eq.gro']
+topologyList = ['LG2.top']
+sys = System("Test", structureList, topologyList, "Gromacs")
+print "Done.\n"
 
 # Test a simplified structure and topology
-print "Reading a structure and preprocessed topology ...",
-structureList = '2PPN.gro'
-topologyList = '2PPNprepro.top'
-sys = System("Test", structureList, topologyList, "Gromacs")
-print "Done."
+#print "Reading a structure and preprocessed topology ...",
+#structureList = 'FullStructure.gro'
+#topologyList = 'FullTopology.top'
+#sys = System("Test", structureList, topologyList, "Gromacs")
+#print "Done."
 
 # Test, join, and split multiple structures and topologies
 #print "Adding multiple structures and topologies ...",
