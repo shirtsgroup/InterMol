@@ -19,6 +19,7 @@ AUTHORS
 
   Written by John D. Chodera <jchodera@stanford.edu>, Stanford, 10 Feb 2008.
 
+  Some edits and generalization by David L. Mobley, dmobley@gmail.com, University of New Orleans, 15 November 2010.
 """
 
 #=============================================================================================
@@ -108,7 +109,7 @@ def select_off_section(lines, label):
    # return these lines
    return lines[start_index:end_index]
 
-def loadGAFFMolecule(ligand_basepath, ligand_name):
+def loadGAFFMolecule(ligand_basepath, ligand_name, ligand_mol2_suffix = '.openeye'):
     """Load molecule from OpenEye mol2 file and AMBER LEaP .off file with GAFF atom typenames and integer bond types.
 
     ARGUMENTS
@@ -117,6 +118,10 @@ def loadGAFFMolecule(ligand_basepath, ligand_name):
 
     RETURNS
       ligand (OEMol) - the OEMol molecule with atom type names and integer bond types replaced by GAFF values read from LEaP .off file
+
+    OPTIONAL:
+        ligand_mol2_suffix: mol2 files may have an additional string before their extension, such as phenol.openeye.mol2 has the string '.openeye'. Default: '.openeye'. 
+
 
     NOTES
       Uses LEaP .off file to extract GAFF atom names, where entry for ligand is named 'ligand'.
@@ -127,11 +132,11 @@ def loadGAFFMolecule(ligand_basepath, ligand_name):
     """
 
     # construct filenames
-    ligand_mol2_filename = os.path.join(ligand_basepath, '%(ligand_name)s.openeye.mol2' % vars())
+    ligand_mol2_filename = os.path.join(ligand_basepath, '%(ligand_name)s%(ligand_mol2_suffix)s.mol2' % vars())
     ligand_off_filename = os.path.join(ligand_basepath, '%(ligand_name)s.off' % vars())    
 
     if not os.path.exists(ligand_mol2_filename) or not os.path.exists(ligand_off_filename):
-        #print "Ligand %(ligand_name)s incomplete." % vars()
+        print "Ligand %(ligand_name)s incomplete." % vars()
         return None
 
     # load file
@@ -498,3 +503,81 @@ def determineMinimumRMSCharges(common_substructure, ligands, debug = False, min_
     # return copy of common substructure with partial charges assigned
     return charged_common_substructure
 
+
+def pairwise_common_substructures( ligand_basepath, ligand_list, Debug = False ):
+    """Functionalized version of pairwise-common-substructures script written by J. Chodera; this version written by D. Mobley. Takes a list of ligands file names and returns (PRESENTLY NOTHING -- TEXT OUTPUT ONLY) 
+
+    ARGUMENTS:
+        ligand_basepath: Base directory where these ligands are found; will have names as given in ligand_list, and extensions are assumed to be .off, Amber .off format
+        ligand_list: List of ligand name prefixes (extensions assumed to be .off)
+
+    OPTIONAL ARGUMENTS:
+        Debug: If set to true, print extra debugging information. Default: False
+
+    """
+
+    nligands = len(ligand_list)
+
+    for ligand1_index in range(len(ligand_list)):
+        # get ligand name
+        ligand1_name = ligand_list[ligand1_index]
+
+        # Load molecule with GAFF atom names and integer bondtypes.
+        ligand1 = loadGAFFMolecule(ligand_basepath, ligand1_name)
+        if not ligand1: 
+            print "Error reading %s..." % ligand1_name
+            continue
+
+        # Create an OEMCSSearch from this molecule.
+        mcss = OEMCSSearch(ligand1, OEExprOpts_StringType, OEExprOpts_IntType)
+        # ignore substructures smaller than 4 atoms
+        mcss.SetMinAtoms(4)
+            
+        # Consider all other ligands.
+        for ligand2_index in range(len(ligand_list)):
+            # skip self
+            if ligand1_index == ligand2_index: continue
+
+            # get name
+            ligand2_name = ligand_list[ligand2_index]
+
+            # Load the molecule
+            ligand2 = loadGAFFMolecule(ligand_basepath, ligand2_name)
+            if not ligand2: 
+                print "Error reading %s..." % ligand2_name
+                continue
+
+
+            # Compare atomsets
+            matchcount = 0
+            maxmatch = 0
+            for match in mcss.Match(ligand2):
+                if Debug: #Print lots of extra debugging information if desired
+                    print "Match:", matchcount, "Size:", match.NumAtoms(), " atoms"
+                    # determine mutated charges and atomtypes
+                    (mutated_charges_1, mutated_charges_2) = determineMutatedCharges(ligand1, ligand2, match)
+                    (mutated_atomtypes_1, mutated_atomtypes_2) = determineMutatedAtomtypes(ligand1, ligand2, match)
+
+                    # DEBUG
+                    print "ligand1: %s" % ligand1.GetTitle()
+                    for atom in ligand1.GetAtoms():
+                        atomname = atom.GetName()
+                        print "%6s : %16s %6.3f -> %16s %6.3f" % (atom.GetName(), atom.GetType(), atom.GetPartialCharge(), mutated_atomtypes_1[atomname], mutated_charges_1[atomname])
+                    print "ligand2: %s" % ligand2.GetTitle()
+                    for atom in ligand2.GetAtoms():
+                        atomname = atom.GetName()
+                        print "%6s : %16s %6.3f -> %16s %6.3f" % (atom.GetName(), atom.GetType(), atom.GetPartialCharge(), mutated_atomtypes_2[atomname], mutated_charges_2[atomname])
+                    print "%4s %6s        %4s %6s   %6s" % ('atom', 'charge', 'atom', 'charge', 'charge')
+                    index = 0
+                    for mp in match.GetAtoms():
+                        atom1 = mp.pattern
+                        atom2 = mp.target
+                        print "%4s %6.3f <----> %4s %6.3f : %6.3f" % (atom1.GetName(), atom1.GetPartialCharge(), atom2.GetName(), atom2.GetPartialCharge(), common_charge[index])
+                        index +=1
+                    print
+                matchcount +=1
+                maxmatch = max(maxmatch, match.NumAtoms() )
+
+            print '%(ligand1_name)12s : %(ligand2_name)12s    %(maxmatch)8d atoms' % vars()
+
+    return #Presently returns nothing
