@@ -716,7 +716,7 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL', preserve_atomty
 
    return
 #=============================================================================================
-def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge = None):
+def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge = None, offfile = None):
    """Parameterize small molecule with GAFF and write AMBER coordinate/topology files.
 
    ARGUMENTS
@@ -732,6 +732,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
      verbose (boolean) - show all output from subprocesses (default: False)
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
      netcharge (integer) -- if set, pass this net charge to calculation in antechamber (with -nc (netcharge)), otherwise assumes zero.
+     offfile (string) - name of AMBER off file to be written, optionally. 
 
    REQUIREMENTS
      acpypi.py conversion script (must be in MMTOOLSPATH)
@@ -778,6 +779,10 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
    print commands.getoutput('parmchk -i %(gaff_mol2_filename)s -f mol2 -o %(frcmod_filename)s' % vars())
 
    # Create AMBER topology/coordinate files using LEaP.
+   if offfile:
+      offstring = 'saveOff molecule amber.off\n'
+   else:
+      offstring = ''
    leapscript = """\
 source leaprc.gaff 
 mods = loadAmberParams %(frcmod_filename)s
@@ -785,6 +790,7 @@ molecule = loadMol2 %(gaff_mol2_filename)s
 desc molecule
 check molecule
 saveAmberParm molecule amber.prmtop amber.crd
+%(offstring)s
 quit""" % vars()
    leapin_filename = os.path.join(working_directory, 'leap.in')
    outfile = open(leapin_filename, 'w')
@@ -808,6 +814,8 @@ quit""" % vars()
    # Copy gromacs topology/coordinates to desired output files.
    commands.getoutput('cp %s %s' % (os.path.join(working_directory, 'amber.crd'), coordinate_filename))
    commands.getoutput('cp %s %s' % (os.path.join(working_directory, 'amber.prmtop'), topology_filename))
+   if offfile:
+        commands.getoutput('cp %s %s' % (os.path.join(working_directory, 'amber.off'), offfile))
 
    # Clean up temporary files.
    os.chdir(old_directory)
