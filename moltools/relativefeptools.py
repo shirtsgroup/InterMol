@@ -258,7 +258,8 @@ def adjustCharges(q_n, target_net_charge):
 
     ARGUMENTS
       q_n (numpy float array of length N) - original charges
-      target_net_charge (integer or float) - the desired net charge
+        CHANGELOG:
+            11/15/10: DLM, switched exception handling from raising a string to using a class, as string exceptions are no longer supported in newer Python versions.target_net_charge (integer or float) - the desired net charge
 
     RETURNS
       qnew_n (numpy float array of length N) - adjusted charges
@@ -310,13 +311,15 @@ def determineCommonSubstructure(ligands, debug = False, min_atoms = 4):
     RETURN VALUES
       common_substructure (OEMol) - a molecule fragment representing the common substructure
     
+    CHANGELOG
+      11/15/10 - DLM: Removing the attempt to convert OEMols to OEMol with OEMol( as this raises an exception in my (newer) OEChem. 
     """
     # Determine number of ligands
     nligands = len(ligands)
 
     # First, initialize with first ligand.
-    common_substructure = OEMol(ligands[0])
-    
+    common_substructure = ligands[0].CreateCopy() #DLM modification 11/15/10 -- this is how copies should now be made
+
     # DEBUG: Show original atoms
     if debug:
         atom_index = 1
@@ -387,7 +390,10 @@ def determineMinimumRMSCharges(common_substructure, ligands, debug = False, min_
     REFERENCES
       [1] Betts JT. A compact algorithm for computing the stationary point of a quadratic function subject to linear constraints. ACM Trans Math Soft 6(3):391-397, 1980.
       
-    """
+    CHANGELOG:
+        11/15/10: DLM, switched exception handling from raising a string to using a class, as string exceptions are no longer supported in newer Python versions.
+
+"""
 
     if debug: print "Determining minimum RMS charges..."
 
@@ -398,10 +404,20 @@ def determineMinimumRMSCharges(common_substructure, ligands, debug = False, min_
     Q = totalIntegralPartialCharge(ligands[0])
     if debug: print "Q = %f" % Q
 
+
+    class ChargeError(Exception):
+        def __init__(self, msg, expr):
+            self.expr = expr
+            self.msg = msg
+            print msg
+            print "Exiting..."
+        
+
     # check to make sure all ligands have same net charge
     for ligand in ligands:
         if abs(totalPartialCharge(ligand) - Q) > CHARGE_DEVIATION_TOLERANCE:
-            raise "Ligand %s has charge (%f) different from target charge (Q = %f) - tolerance is %f." % (ligand.GetTitle(), totalPartialCharge(ligand), Q, CHARGE_DEVIATION_TOLERANCE)
+            #raise "Ligand %s has charge (%f) different from target charge (Q = %f) - tolerance is %f." % (ligand.GetTitle(), totalPartialCharge(ligand), Q, CHARGE_DEVIATION_TOLERANCE)
+            raise ChargeError( "Ligand %s has charge (%f) different from target charge (Q = %f) - tolerance is %f." % (ligand.GetTitle(), totalPartialCharge(ligand), Q, CHARGE_DEVIATION_TOLERANCE), 'abs(totalPartialCharge(ligand) - Q) > CHARGE_DEVIATION_TOLERANCE' )
 
     # determine number of ligands
     K = len(ligands)
