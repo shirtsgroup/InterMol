@@ -266,16 +266,27 @@ class MdpFile(object):
           return None
       return self.params[keyword]
         
+  def setTemperature(self,temperature):
+    """Set the temperature of the various options.
+
+    """
+
+    # Set the temperature parameters
+    self.setParameter('gen_temp', temperature)
+    self.setParameter('ref_t', temperature)
+    return
+
   def randomizeSeed(self):
     """Randomize the random seed, adding one if none exists.
 
     TODO
-      Uses range from 1 to 2**30 for now, but should figure out acceptable range for gromacs.
+    Uses range from 1 to 2**30 for now, but should figure out acceptable range for gromacs.
     """
 
     # choose a new random seed
     import random
     self.setParameter('gen_seed', str(random.randint(1, self.MAXSEED)))
+    self.sefParameter('mc_seed', str(random.randint(1, self.MAXSEED)))
 
     return
   
