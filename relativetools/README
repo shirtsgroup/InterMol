@@ -2,7 +2,7 @@ Relative binding free energies for various ligands to JNK3 kinase models.
 WARNING: THIS DATA IS NOT FOR REDISTRIBUTION - ILLUSTRATIVE EXAMPLE ONLY ONLY
 
 
-Written by John Chodera and Michael Zhu
+Written by John Chodera, Michael Zhu, and Michael Shirts
 
 Originally used from CUP SAMPL I.
 
@@ -11,7 +11,7 @@ PREREQUISITES
 * gromacs 4.5 fep branch
 * AmberTools
 * mmtools
-* OEChem Toolkit with Python wrappers
+* OEChem Toolkit with Python wrappers 
 
 USAGE
 
@@ -51,4 +51,6 @@ python setup-replative-fep.py
 # Check the energies of the relative states.
 python check-energies.py
 
-Currently setup-relative-fep.py is set to prepare gromacs 4.0 mdp files but can be modified to create gromacs_dg mdp files in setup_solvent_simulation and setup_complex_simulation
+Other notes:
+
+acepype.py requires python2.6! 
