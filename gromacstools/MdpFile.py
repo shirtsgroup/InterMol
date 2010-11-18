@@ -286,7 +286,7 @@ class MdpFile(object):
     # choose a new random seed
     import random
     self.setParameter('gen_seed', str(random.randint(1, self.MAXSEED)))
-    self.sefParameter('mc_seed', str(random.randint(1, self.MAXSEED)))
+    self.setParameter('mc_seed', str(random.randint(1, self.MAXSEED)))
 
     return
   
