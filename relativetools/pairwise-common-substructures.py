@@ -23,10 +23,10 @@ from numpy import *
 #=============================================================================================
 
 # base path for all parameterized ligand files
-ligand_basepath = 'ligands-parameterized/'
+ligand_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands-parameterized/'
 
 # list of ligands to consider
-ligand_name_list = [ ('jnk.aff-%d' % index) for index in range(1,63) ]
+ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ]
 
 #=============================================================================================
 # SUBROUTINES

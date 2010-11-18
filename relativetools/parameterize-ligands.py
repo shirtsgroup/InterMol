@@ -21,11 +21,10 @@ import shutil
 # PARAMETERS
 #=============================================================================================
 
-ligand_basepath = './ligands/' # base path for all modelsets
-work_basepath = './ligands-parameterized/' # base path to set up all calculations in
-
+ligand_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands/' # base path for all modelsets
+work_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands-parameterized/' # base path to set up all calculations in
 # list of ligands to consider
-ligand_name_list = [ ('jnk.aff-%d' % index) for index in range(1,63) ]
+ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16 ,53) ]
 extension = "sdf" # ligand filename extension (could change this to "mol2" if desired)
 
 #=============================================================================================

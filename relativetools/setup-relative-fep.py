@@ -12,6 +12,7 @@
 from mmtools.moltools.ligandtools import *
 from mmtools.moltools.relativefeptools import *
 from mmtools.gromacstools.MdpFile import *
+import pdb
 import commands
 import os
 import os.path
@@ -23,23 +24,36 @@ import shutil
 
 # Path to receptor PDB file.
 # All heavy atoms must be modeled -- hydrogens are ignored. Residue names are translated.
-protein_pdb_filename = "/home/mnz3v/checkFKBP/FKBP.protein.new.pdb" # pdb of the protein without solvent and ligand
+protein_pdb_filename = "/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/receptor-models/1JNK.automodel.mcce_out.pdb" # pdb of the protein without solvent and ligand
 
 # Path to parameterized ligands.
-ligand_basepath = 'ligands-parameterized'
+ligand_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands-parameterized'
 
 # Base path for various scripts needed.
-script_basepath = "/home/mnz3v/checkFKBP/scripts"
+script_basepath = "../../"
 
 # Target ligand group.
-ligand_name_list = [ ('LG%d-0-eq' % index) for index in (2, 3, 5, 6, 8, 9) ]
+#ligand_name_list = [ ('jnk.aff-%d' % index) for index in (8, 10, 11, 15, 22, 26, 32, 52) ]
+#ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ]
+ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16) ]
 
 # Base path to set up free energy calculations
 work_basepath = 'fep/'
 
+#gromacs_converter = 'amb2gmx.pl'
+#gromacs_converter = 'acpypi.py'
+gromacs_converter = 'acpype.py'
+   
 #=============================================================================================
 # GROMACS PARAMETERS - Edit these to change simulation protocol.
 #=============================================================================================
+
+# number of lambda states - should the the same as the # of cores.
+cores = 16
+
+# running expanded ensemble or Hamiltonian?
+#runtype = 'expanded'
+runtype = 'hamilton' 
 
 # Phases of free energy calculations to set up.
 phases = ['solvent', 'complex']
@@ -49,15 +63,13 @@ mdpblock = dict()
 
 mdpblock['header']  = """
 ; VARIOUS PREPROCESSING OPTIONS = 
-title                    = title
-cpp                      = /usr/bin/cpp
 define                   =
 """
 
 # Construct minimizer block.
 mdpblock['minimization'] = """
 ; RUN CONTROL PARAMETERS = 
-integrator               = steep
+integrator               = cg
 nsteps                   = 1000
 
 ; ENERGY MINIMIZATION OPTIONS = 
@@ -72,30 +84,10 @@ fcstep                   = 0
 nstcgsteep               = 1000
 """
 
-# Construct minimizer block for gromacs 4.0
-mdpblock['minimization_4.0']= """
-; RUN CONTROL PARAMETERS
-integrator               = md;
-; Start time and timestep in ps
-tinit                    = 0
-dt                       = 0.001
-nsteps                   = 0
-; For exact run continuation or redoing part of a run
-; Part index is updated automatically on checkpointing (keeps files separate)
-simulation_part          = 1
-init_step                = 0
-; mode for center of mass motion removal
-comm-mode                = Linear
-; number of steps for center of mass motion removal
-nstcomm                  = 1
-; group(s) for center of mass motion removal
-comm-grps                = 
-"""
-
 # dynamics control block
-mdpblock['dynamics'] = """
+mdpblock['dynamics-stochastic'] = """
 ; RUN CONTROL PARAMETERS = 
-integrator               = vv
+integrator               = sd
 ; start time and timestep in ps = 
 tinit                    = 0
 dt                       = 0.002
@@ -108,34 +100,48 @@ nstcomm                  = 500
 comm-grps                = 
 """
 
+# dynamics control block
+mdpblock['dynamics-verlet'] = """
+; RUN CONTROL PARAMETERS = 
+integrator               = md-vv
+; start time and timestep in ps = 
+tinit                    = 0
+dt                       = 0.002
+nsteps                   = 1000000 ; 2 ns
+; mode for center of mass motion removal = 
+comm-mode                = Linear
+; number of steps for center of mass motion removal = 
+nstcomm                  = 1
+; group(s) for center of mass motion removal = 
+comm-grps                = 
+"""
+
 # output control block
 mdpblock['output'] = """
 ; OUTPUT CONTROL OPTIONS = 
 ; Output frequency for coords (x), velocities (v) and forces (f) = 
-nstxout                  = 500 ; (must be integral multiple of nstdgdl for post-analysis)
+nstxout                  = 5000 ; (must be integral multiple of nstdgdl for post-analysis)
 nstvout                  = 0
 nstfout                  = 0
 ; Output frequency for energies to log file and energy file = 
-nstlog                   = 20 ; 
-nstenergy                = 20 ;
+nstlog                   = 500 ; 
+nstenergy                = 5000 ;
 ; Output frequency and precision for xtc file = 
-nstxtcout                = 50 ;
-xtc-precision            = 1000
+nstxtcout                = 100000 ;
+xtc-precision            = 10000
 ; This selects the subset of atoms for the xtc file. You can = 
 ; select multiple groups. By default all atoms will be written. = 
-xtc-grps                 = solute
+;xtc-grps                 = solute
 ; Selection of energy groups = 
 energygrps               = System
 """
 
 # constraints block
-mdpblock['constraints'] = """
+mdpblock['constraints-lincs'] = """
 ; OPTIONS FOR BONDS     = 
 constraints              = hbonds ; constrain bonds to hydrogen
 ; Type of constraint algorithm = 
-constraint-algorithm     = shake
-; Do not constrain the start configuration = 
-unconstrained-start      = no
+constraint-algorithm     = lincs
 ; Use successive overrelaxation to reduce the number of shake iterations = 
 Shake-SOR                = no
 ; Relative tolerance of shake = 
@@ -144,62 +150,97 @@ shake-tol                = 1e-12
 lincs-order              = 4
 ; Lincs will write a warning to the stderr if in one step a bond = 
 ; rotates over more degrees than = 
-lincs-warnangle          = 180
-; Convert harmonic bonds to morse potentials = 
-morse                    = no
+lincs-warnangle          = 90
+"""
+
+# constraints block
+mdpblock['constraints-shake'] = """
+; OPTIONS FOR BONDS     = 
+constraints              = hbonds ; constrain bonds to hydrogen
+; Type of constraint algorithm = 
+constraint-algorithm     = shake
+; Use successive overrelaxation to reduce the number of shake iterations =
+Shake-SOR                = no
+; Relative tolerance of shake =
+shake-tol                = 1e-12
+; Highest order in the expansion of the constraint coupling matrix =
 """
 
 mdpblock['restraints'] = """
 ;Enable dihedral and distance restraints
-dihre=simple
+dihre=yes
 dihre-fc=1
-nstdihreout=1000
-disre=simple
+disre=yes
 disre_fc=1
 """
 
 # thermal and pressure control block
-mdpblock['thermostat'] = """
+mdpblock['thermostat-nosehoover'] = """
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = yes
-gen_temp                 = 300.0 ; K
+gen_temp                 = 0; K - will be set later
 gen_seed                 = 12345
 
 ; OPTIONS FOR WEAK COUPLING ALGORITHMS = 
 
 ; Temperature coupling   = 
-Tcoupl                   = AndersenII
+Tcoupl                   = Nose-Hoover
 ; Groups to couple separately = 
 tc-grps                  = System
 ; Time constant (ps) and reference temperature (K) = 
+tau_t                    = 5.0
+ref_t                    = 300 ; K - will be set later
+"""
+
+# thermal and pressure control block
+mdpblock['thermostat-stochastic'] = """
+; GENERATE VELOCITIES FOR STARTUP RUN = 
+
+gen_vel                  = yes
+gen_temp                 = 300 ; K - will be set later
+gen_seed                 = 12345
+
+tc-grps                  = System
+; OPTIONS FOR WEAK COUPLING ALGORITHMS = 
+; Time constant (ps) and reference temperature (K) = 
 tau_t                    = 1.0
-ref_t                    = 300.0 ; K
+ref_t                    = 300 ; K - will be set later
 """
 
 # thermal and pressure control block
 mdpblock['thermostat-equilibration'] = """
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = yes
-gen_temp                 = 300.0 ; K
+gen_temp                 = 300 ; K - will be set later
 gen_seed                 = 12345
 
 ; OPTIONS FOR WEAK COUPLING ALGORITHMS = 
 
 ; Temperature coupling   = 
-Tcoupl                   = AndersenII
+Tcoupl                   = Berendsen
 ; Groups to couple separately = 
 tc-grps                  = System
 ; Time constant (ps) and reference temperature (K) = 
-tau_t                    = 1.0
-ref_t                    = 300.0 ; K
+tau_t                    = 0.2
+ref_t                    = 300 ; K - will be set later
 """
 
 mdpblock['barostat'] = """
 ; Pressure coupling      = 
-Pcoupl                   = Parrinello-Rahman
+Pcoupl                   = MTTK
 Pcoupltype               = isotropic
 ; Time constant (ps), compressibility (1/bar) and reference P (bar) = 
-tau_p                    = 1.67 ; ps
+tau_p                    = 5.0 ; ps
+compressibility          = 4.5e-5 ; 1/bar
+ref_p                    = 1.0 ; bar
+"""
+
+mdpblock['barostat-equilibration'] = """
+; Pressure coupling      = 
+Pcoupl                   = berendsen
+Pcoupltype               = isotropic
+; Time constant (ps), compressibility (1/bar) and reference P (bar) = 
+tau_p                    = 5.0 ; ps
 compressibility          = 4.5e-5 ; 1/bar
 ref_p                    = 1.0 ; bar
 """
@@ -213,21 +254,19 @@ ns_type                  = grid
 ; Periodic boundary conditions: xyz or no = 
 pbc                      = xyz
 ; nblist cut-off         = 
-rlist                    = 1.0
-domain-decomposition     = no
+rlist                    = 1.4
 
 ; OPTIONS FOR ELECTROSTATICS AND VDW = 
 ; Method for doing electrostatics = 
 coulombtype              = PME
-rcoulomb-switch          = 0
-rcoulomb                 = 0.9
+rcoulomb                 = 1.4
 ; Dielectric constant (DC) for cut-off or DC of reaction field = 
 epsilon-r                = 1
 ; Method for doing Van der Waals = 
 vdw-type                 = switch
 ; cut-off lengths        = 
-rvdw-switch              = 0.85
-rvdw                     = 0.9
+rvdw-switch              = 1.25
+rvdw                     = 1.3
 ; Apply long range dispersion corrections for Energy and Pressure = 
 DispCorr                 = AllEnerPres
 ; Spacing for the PME/PPPM FFT grid = 
@@ -269,76 +308,82 @@ vdw-type                 = cut-off
 rvdw                     = 23.0 ; to emulate no cutoff
 ; Apply long range dispersion corrections for Energy and Pressure = 
 DispCorr                 = no
-"""
+""" 
 
-# free energy block
-mdpblock['free-energy'] = """
-; OPTIONS FOR EXPANDED ENSEMBLE SIMULATIONS
+# free energy blocks
+mdpblock['free-energy-common-relative'] = """
+; OPTIONS FOR FIXED ENSEMBLE SIMULATIONS
 ; Free energy control stuff = 
-free-energy              = mutate ; annihilate electrostatics and Lennard-Jones
-nstfep                   = 20 ; 0.04 ps between weight updates (must be integer multiple of nstlist)
-nstdgdl                  = 20 ; 0.04 ps between writing energies (must be same as nstdgdl for analysis scripts)
+free-energy               = yes 
+sc-power                  = 1
+sc-alpha                  = 0.5
+fep-lambdas               = 0.0 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0 0.0 0.0  0.0 0.0  0.0  0.0 0.0
+coul-lambdas              = 0.0 0.13 0.25 0.5  1.0  1.0  1.0  1.0  1.0 1.0 1.0  1.0 1.0  1.0  1.0 1.0
+vdw-lambdas               = 0.0 0.0  0.0  0.0  0.0  0.2  0.3  0.4  0.5 0.6 0.65 0.7 0.75 0.8  0.9 1.0
+;bonded-lambdas            = 0.0 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0 0.0 0.0  0.0 0.0  0.0  0.0 0.0
+;restraint-lambdas         = 0.0 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0 0.0 0.0  0.0 0.0  0.0  0.0 0.0
+;init-lambda-weights       = 0.0 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0 0.0 0.0  0.0 0.0  0.0  0.0 0.0
+""" 
 
-; weight update scheme
-; lambda-mc                = gibbs-wang-landau ; Wang-Landau with waste recycling
-lambda-mc                = barker-transition ; UBAR
-mc-wldelta               = 1.0 ; initial delta factor for Wang-Landau (in kT)
-mc-wlscale               = 0.5 ; scalar by which delta is scaled for Wang-Landau
-mc-nratio                = 0.8 ; flatness criterion -- histograms are reset after all states are sampled within mc-nratio factor of the mean
+mdpblock['free-energy-fixed'] = """
+lmc-stats                 = no
+lmc-mc-move               = no
+lmc-weights-equil         = no
+dhdl-print-energy         = yes
+nstdhdl                   = 100
+nstfep                    = 20
+""" 
 
-; state transition probability
-move-mc                  = metropolized-gibbs ; Metropolized Gibbs for fastest mixing of states
+mdpblock['free-energy-expanded'] = """
+lmc-stats                 = wang-landau
+lmc-mc-move               = gibbs
+dhdl-print-energy         = yes
+init-wl-delta             = 0.25
+wl-scale                  = 0.85
+wl-ratio                  = 0.85
+lmc-weights-equil         = no
 
-; starting and stopping
-mc-nstart                = 200 ; number of updates to perform per state for driving through each state
-mc-nequil                = 250000 ; number of steps before freezing weights (200 ps)
+;lmc-weights-equil         = number-all-lambda
+;lmc-weights-equil         = number-samples
+;lmc-weights-equil         = number-steps
+;lmc-weights-equil         = count-ratio
+;lmc-weights-equil         = wl-delta
 
-init-lambda              = 1 ; initial state
+;weight-equil-number-all-lambda  =  50
+;weight-equil-number-samples     =  1000
+;weight-equil-number-steps       =  600
+;weight-equil-count-ratio        =  0.80
+;weight-equil-wl-delta           =  0.001
 
 ; schedule for switching off lambdas
 ; first, restraints are turned on as charges are switched off
 ; next, vdw and torsions are switched off
-fep-lambda               = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.00 0.0 0.00 0.0 0.00 0.0 0.0 ; for global scaling (don't need)
-coul-lambda              = 0.0 0.1 0.2 0.3 0.5 0.7 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.00 1.0 1.00 1.0 1.00 1.0 1.0 ; for scaling electrostatics
-restraint-lambda         = 0.0 0.1 0.2 0.3 0.5 0.7 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.00 1.0 1.00 1.0 1.00 1.0 1.0 ; for scaling restraints
-vdw-lambda               = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0 ; for scaling vdw interactions
-bonded-lambda            = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.65 0.7 0.75 0.8 0.85 0.9 1.0 ; for scaling torsions
+nstdhdl                   = 100
+nstfep                    = 20
+""" 
+# mutate is default
+mdpblock['mutate'] = """
 
-sc-alpha                 = 0.5 ; soft-core factor
-""" % vars()
-
-# free energy block for gromacs 4.0
-mdpblock['free-energy_4.0'] = """
-; Free energy control stuff
-free-energy              = no
-init-lambda              = 0
-init-fep-state           = 0
-delta-lambda             = 0
-fep-lambda               = 0
-mass-lambda              = 0
-coul-lambda              = 0
-vdw-lambda               = 0
-bonded-lambda            = 0
-restraint-lambda         = 0
-sc-alpha                 = 0
-sc-power                 = 0
-sc-sigma                 = 0.3
-sc-coul                  = no
-nstdhdl                  = 10
-couple-moltype           = 
-couple-lambda0           = vdw-q
-couple-lambda1           = vdw-q
-couple-intramol          = no
 """
 
+# free energy block for gromacs 4.5
+mdpblock['decouple'] = """
+couple-moltype           = MOL
+couple-lambda0           = vdw-q
+couple-lambda1           = no
+couple-intramol          = no
+""" % vars()
+
+#=============================================================================================
 def compose_blocks(blocknames):
-    """Compose desired blocks into a mdp file.
+
+    """Compose desired blocks into a list of strings
 
     ARGUMENTS
       blocknames (list of strings) - list of names of blocks to be concatenated
 
     RETURNS
-      mdplines (list of strings) - concatenated blocks forming the contents of a gromacs .mdp file
+      lines (list of strings) - concatenated blocks forming the contents of a gromacs .mdp file
     """
 
     contents = ""
@@ -346,9 +391,9 @@ def compose_blocks(blocknames):
     for blockname in blocknames:
         contents += mdpblock[blockname]
 
-    mdplines = contents.split('\n')
+    lines = contents.split('\n')
 
-    return mdplines
+    return lines
 
 #=============================================================================================
 # SUBROUTINES
@@ -392,7 +437,8 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
      The common_intermediate MUST have AMBER atom and bondtypes.
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
-
+     MRS: Moved to acpype.py
+     
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
      Generalize this code to allow it to operate more generally on a specified moleculetype.
@@ -756,15 +802,17 @@ def rename_pdb_for_amber(protein_pdb_filename, protein_amberpdb_filename):
 
             # make residue name substitutions
             if resname == 'GYN ': resname = 'GUC '
-            if resname == 'GLY ': resname = 'GLU '
+            if resname == 'GLX ': resname = 'GLU '
             if resname == 'LYP ': resname = 'LYS '
             if resname == 'CYN ': resname = 'CYS '
             if resname == 'NSER': resname = 'SER '
             if (resname == 'CGLU') or (resname == 'CGLH'):
                 resname = 'GLU '
                 # rename terminal oxygens
-                if name == ' OC1' or ' OC ': name = ' OXT'
-                if name == ' OC2': name = ' O  '
+                if name == ' OC1' or name == ' OC ':
+                    name = ' OXT'
+                if name == ' OC2':
+                    name = ' O  '
 
             # renumber serial
             serial = '% 5d' % (len(outlines) + 1)
@@ -776,14 +824,197 @@ def rename_pdb_for_amber(protein_pdb_filename, protein_amberpdb_filename):
     write_file(protein_amberpdb_filename, outlines)
 
     return
+
 #=============================================================================================
-def setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename, ligand_frcmod_filename, common_substructure):
+def writeBatchScript(path,jobname,runtype,cores,restraints):
+    """        
+    path (string) - absolute path for the script to be printed to
+    runtype (string) - 'expanded' or 'hamilton'
+    jobname (string) - jobname
+    restraints (bool) - True if we are writing restraints, false otherwise.  Should only be true for restraints?
+
+    """
+
+    import re
+
+    if (runtype == 'hamilton'):
+        binpath = '/h3/n1/shirtsgroup/gromacs_4.5plus/MPI/bin'
+    if (runtype == 'expanded'):    
+        binpath = '/h3/n1/shirtsgroup/gromacs_4.5plus/NOMPI/bin'
+
+    # write batch queue script
+    print "Writing batch queue script..."
+    path = os.path.abspath(path)
+
+    cores_per_node = 8
+    batchcommands = []
+    batchcommands.append('#!/bin/sh')
+    name = runtype[0:3] + jobname
+    maxlen = min(15,len(name))
+    name = name[0:maxlen]
+    batchcommands.append('#PBS -N ' + name)
+    batchcommands.append('#PBS -o ' + name + '.out')
+    batchcommands.append('#PBS -e ' + name + '.err')
+
+    if (runtype == 'hamilton'):
+        nodes = cores/cores_per_node+1
+    if (runtype == 'expanded'):
+        nodes = 1
+
+    batchcommands.append('#PBS -l select=' + str(nodes) + ':mpiprocs=' + str(cores_per_node) + ':ncpus=' + str(cores_per_node))
+
+    general_setup = """\
+#PBS -q shirtscluster
+#PBS -W group_list=shirtsgroup
+#PBS -r n                       
+#PBS -l walltime=1536:00:00
+source $GMXRC
+module load MODULE
+cat $PBS_NODEFILE
+set MPI_THREADS = `cat $PBS_NODEFILE | wc -l`
+echo $PBS_O_WORKDIR
+cd $PBS_O_WORKDIR
+
+NP=`wc -l < $PBS_NODEFILE`
+NN=`sort -u $PBS_NODEFILE | wc -l`
+echo Number of nodes is $NN
+echo Number of processors is $NP
+    """%vars()
+
+    if (runtype == 'hamilton'): 
+        general_setup = re.sub('MODULE ','mvapich2-intel',general_setup)
+    if (runtype == 'expanded'):
+        general_setup = re.sub('MODULE ','intel',general_setup)
+        
+    if (restraints):
+        commands = """\
+# create a tpr file from which to create restraints
+GROMPP -f minimize.mdp -c system_GMX.gro -p system_GMX.top -o minimize.tpr -maxwarn 100 
+# Integrate restraints into pre-minimization topfile
+python compute_angles.py -f system_GMX.gro -s minimize.tpr -d $RANSEED
+python restraint_topology.py -n system -p .
+
+# constrained minimize with restraints
+GROMPP -f minimize.mdp -c system_restr.gro -p system_restr.top -o minimize.tpr -maxwarn 100 
+MDRUN -s minimize.tpr -x minimize.xtc -c minimize.gro -e minimize.edr -g minimize.log
+
+# create a tpr file from which to create restraints
+GROMPP -f equilibration.mdp -c minimize.gro -p system_restr.top -o equilibration.tpr -maxwarn 100 
+# Integrate restraints into pre-equilibration topfile
+cp system_restr.top minimize.top
+#python compute_angles.py -f minimize.gro -s equilibration.tpr -d $RANSEED
+python restraint_topology.py -n minimize -p .
+
+# equilibration with restraints
+GROMPP -f equilibration.mdp -c minimize_restr.gro -p minimize_restr.top -o equilibration.tpr -maxwarn 100 
+MDRUN -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.gro -e equilibration.edr -g equilibration.log
+
+# create a TPR file, integrate restraints
+GROMPP -f production.mdp -c equilibration.gro -p minimize_restr.top -o production.tpr -maxwarn 100 
+cp minimize_restr.top equilibration.top
+#python compute_angles.py -f equilibration.gro -s production.tpr -d $RANSEED
+python restraint_topology.py -n equilibration -p .
+
+# production with restraints
+GROMPP -f production.mdp -c equilibration_restr.gro -p equilibration_restr.top -o production.tpr -maxwarn 100 
+MDRUN -s production.tpr -o production.trr -x production.xtc -c production.gro -e production.edr -g production.log
+
+# signal completion
+mv run.sh run.sh.done
+       """ %vars()
+    else:
+       commands = """\
+# constrained minimize
+GROMPP -f minimize.mdp -c system_GMX.gro -p system.top -o minimize.tpr -maxwarn 100 
+MDRUN -s minimize.tpr -x minimize.xtc -c minimize.gro -e minimize.edr -g minimize.log
+
+# equilibration
+GROMPP -f equilibration.mdp -c minimize.gro -p system_GMX.top -o equilibration.tpr -maxwarn 100 
+MDRUN -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.gro -e equilibration.edr -g equilibration.log
+
+# production
+GROMPP -f production.mdp -c equilibration.gro -p system_GMX.top -o production.tpr -maxwarn 100 
+    """ % vars()
+
+    if (runtype == 'hamilton'):
+        grompp = binpath + '/grompp_mpi_d '
+        mdrun = 'mpiexec -comm mpich2-pmi' + binpath + '/mdrun_mpi_d -np ' + str(cores_per_node)
+    if (runtype == 'expanded'):    
+        grompp = binpath + '/grompp_d '
+        mdrun = binpath + '/mdrun_d -nt ' + str(cores_per_node)
+
+    commands = re.sub('GROMPP',grompp,commands)
+    commands = re.sub('MDRUN',mdrun,commands)
+
+    batchcommands.append(general_setup)
+    batchcommands.append(commands)
+
+    if (runtype == 'hamilton'): 
+        for i in range(cores):
+            grompp_run = grompp + ' -f production.' + str(i) + '.mdp -c equilibration.gro -p system_GMX.top -o production.' + str(i) + '.tpr -maxwarn 1000'            
+            batchcommands.append(grompp_run)
+
+    elif (runtype == 'expanded'):
+        grompp_run = grompp + ' -f production.mdp -c equilibration.gro -p system_GMX.top -o production.tpr -maxwarn 100'
+        batchcommands.append(grompp_run)
+
+    if (runtype == 'hamilton'): 
+        # eventually, replace the 20 with a multiple of nstfep to avoid issues.
+        mdrun_run = mdrun + ' -multi ' + str(cores) + ' -replex 20 -s production..tpr -o production..trr -x production..xtc -c production..gro -e production..edr -g production..log -dhdl production.dhdl..xvg'
+
+    elif (runtype == 'expanded'):
+        mdrun_run = mdrun + ' -s production.tpr -o production.trr -x production.xtc -c production.gro -e production.edr -g production.log -dhdl production.dhdl.xvg'
+
+    batchcommands.append(mdrun_run)
+
+    write_file(os.path.join(path, 'run.sh'), batchcommands)
+
+#=============================================================================================
+def writeMdpFiles(path, runtype, cores, transform):
+    """
+    path (string) - file path for these mdpfiles
+    runtype (string) - either 'expanded' or 'hamiltonian'
+    cores (int) - number of cores that will be run on
+    transform (string,optional) - 'decouple' or 'mutate'
+
+    """
+
+    # Constrained Minimization
+    mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints-lincs', 'restraints', 'output'])) # 
+    mdpfile.write(os.path.join(path, 'minimize.mdp'))
+
+    # Equilibration
+    mdpfile = MdpFile(compose_blocks(['header', 'dynamics-stochastic', 'nonbonded-solvent', 'constraints-lincs', 'thermostat-stochastic', 'barostat-equilibration', 'output']))
+    mdpfile.setParameter('nsteps', '10000') # 20 ps equilibration
+    mdpfile.randomizeSeed() # randomize velocities
+    mdpfile.write(os.path.join(path, 'equilibration.mdp'))
+    
+    # Production
+    if (runtype == 'expanded'):
+        mdpfile = MdpFile(compose_blocks(['header', 'dynamics-stochastic', 'nonbonded-solvent', 'constraints-lincs', 'thermostat-stochastic', 'free-energy-common-relative', 'free-energy-expanded', transform, 'output']))
+        mdpfile.randomizeSeed() # randomize velocities
+        mdpfile.setTemperature(300);
+        mdpfile.setParameter('init-lambda-state',0)
+        mdpfile.write(os.path.join(path, 'production.mdp'))
+
+    if (runtype == 'hamiltonian'):
+        for lam in range(cores):  
+            mdpfile = MdpFile(compose_blocks(['header', 'dynamics-stochastic', 'nonbonded-solvent', 'constraints-lincs', 'thermostat-stochastic', 'free-energy-common-relative', 'free-energy-fixed', 'output']))
+            mdpfile.randomizeSeed() # randomize velocities
+            mdpfile.setTemperature(300);
+            mdpfile.setParameter('init-lambda-state',lam)
+            mdpfile.write(os.path.join(solvent_path, 'production.',lam,'.mdp'))
+
+#=============================================================================================
+def setup_solvent_simulation(solvent_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, common_substructure):
     """Set up a solvent simulation.
 
     ARGUMENTS
       solvent_path (string) - the pathname where the simulation is to be set up (created if doesn't exist).
       jobname (string) - job name to be used to form batch queue job name
+      runtype (string) - 'expanded' or 'hamilton'
       ligand (OEMol) - the ligand
+      cores (int) - # of cores to run on
       ligand_off_filename (string) - leap library for ligand
       ligand_frcmod_filename (string) - additional ligand parameters
       common_substructure (OEMol) - 
@@ -806,7 +1037,7 @@ def setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename,
     tleap_output_filename = os.path.join(solvent_path, 'setup-system.leap.out')
     clearance = 10.0 # clearance in A
     contents = """
-source leaprc.ff03
+source leaprc.ff99SB
 source leaprc.gaff
 
 # load antechamber-generated additional parameters
@@ -846,12 +1077,16 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', gromacs_converter)
     system_prefix = os.path.join(solvent_path, 'system')
     current_path = os.getcwd()
     os.chdir(solvent_path)    
-    #command = '%(amb2gmx)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(amb2gmx)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+
+    if gromacs_converter == 'amb2gmx.pl':
+        command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    if gromacs_converter == 'acpype.py':    
+        command = 'python2.6 %(converter)s -p system.prmtop -x system.crd -b system -o gmx' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -859,65 +1094,115 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # set up perturbation
     print "Modifying topology file for perturbation..."
-    system_top_filename = os.path.join(solvent_path, 'system.top')
+    system_top_filename = os.path.join(solvent_path, 'system_GMX.top')
     perturbGromacsTopologyToIntermediate(system_top_filename, 'MOL', ligand, common_substructure, perturb_torsions = True)
 
     # set up mdp files
     print "Writing mdp files..."
+    writeMdpFiles(solvent_path, runtype, cores,'mutate')
 
-    # Constrained Minimization
-    #mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'output'])) # Gromacs_dg
-    mdpfile = MdpFile(compose_blocks(['header', 'minimization_4.0', 'nonbonded-solvent', 'constraints', 'free-energy_4.0', 'output'])) # Gromacs 4.0
-    mdpfile.write(os.path.join(solvent_path, 'minimize.mdp'))
-
-    # Equilibration
-    mdpfile = MdpFile(compose_blocks(['header', 'dynamics', 'nonbonded-solvent', 'constraints', 'thermostat', 'barostat', 'output']))
-    mdpfile.setParameter('nsteps', '10000') # 20 ps equilibration
-    mdpfile.randomizeSeed() # randomize velocities
-    mdpfile.write(os.path.join(solvent_path, 'equilibration.mdp'))
-
-    # Production
-    mdpfile = MdpFile(compose_blocks(['header', 'dynamics', 'nonbonded-solvent', 'constraints', 'thermostat', 'barostat', 'free-energy', 'output']))
-    mdpfile.randomizeSeed() # randomize velocities
-    mdpfile.write(os.path.join(solvent_path, 'production.mdp'))
-
-    # write batch queue script
-    print "Writing batch queue script..."
-    solvent_path = os.path.abspath(solvent_path)
-    contents = """\
-#!/bin/tcsh
-#BSUB -J %(jobname)s_solvent
-#BSUB -n 1
-#BSUB -M 2000000
-
-source $GMXRC
-
-# constrained minimize
-grompp -f minimize.mdp -c system.g96 -p system.top -o minimize.tpr -maxwarn 10000 -n system.ndx
-mdrun -s minimize.tpr -x minimize.xtc -c minimize.g96 -e minimize.edr -g minimize.log
-
-# equilibration
-grompp -f equilibration.mdp -c minimize.g96 -p system.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
-mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.g96 -e equilibration.edr -g equilibration.log
-
-# production
-grompp -f production.mdp -c equilibration.g96 -p system.top -o production.tpr -maxwarn 10000 -n system.ndx
-mdrun -s production.tpr -o production.trr -x production.xtc -c production.g96 -e production.edr -g production.log
-
-# signal completion
-mv run.sh run.sh.done
-""" % vars()
-    write_file(os.path.join(solvent_path, 'run.sh'), contents)
+    # write batch scripts
+    print "Writing batch scripts..."
+    writeBatchScript(solvent_path,jobname,runtype,cores,restraints=False)
 
     return
 #=============================================================================================
-def setup_complex_simulation(complex_path, jobname, ligand, ligand_off_filename, ligand_frcmod_filename, protein_off_filename, protein_charge, common_substructure):
+def setup_vacuum_simulation(vacuum_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, common_substructure):
+    """Set up a vacuum simulation.
+
+    ARGUMENTS
+      vacuum_path (string) - the pathname where the simulation is to be set up (created if doesn't exist).
+      jobname (string) - job name to be used to form batch queue job name
+      runtype (string) - 'expanded' or 'hamilton'
+      ligand (OEMol) - the ligand
+      ligand_off_filename (string) - leap library for ligand
+      ligand_frcmod_filename (string) - additional ligand parameters
+      common_substructure (OEMol) - 
+    """
+
+    print "\nPREPARING LIGAND IN VACUUM"
+
+    # create directory if it doesn't exist
+    if not os.path.exists(vacuum_path):
+        os.makedirs(vacuum_path)
+
+    # get ligand formal charge
+    ligand_charge = formalCharge(ligand)
+
+    # set up the system with tLEaP
+    print "Solvating the ligand with tleap..."
+    system_prmtop_filename = os.path.join(solvent_path,'system.prmtop')
+    system_crd_filename = os.path.join(solvent_path,'system.crd')
+    tleap_input_filename = os.path.join(solvent_path, 'setup-system.leap.in')
+    tleap_output_filename = os.path.join(solvent_path, 'setup-system.leap.out')
+    clearance = 10.0 # clearance in A
+    contents = """
+source leaprc.ff99SB
+source leaprc.gaff
+
+# load antechamber-generated additional parameters
+mods = loadAmberParams %(ligand_frcmod_filename)s
+
+# Load ligand.
+loadOff %(ligand_off_filename)s
+
+# Create system.
+system = combine { ligand }
+""" % vars()
+
+    contents += """
+# Check the system
+check system
+
+# Write the system
+saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
+""" % vars()
+    write_file(tleap_input_filename, contents)
+    command = 'tleap -f %(tleap_input_filename)s > %(tleap_output_filename)s' % vars()
+    output = commands.getoutput(command)
+
+    # convert to gromacs
+    print "Converting to gromacs..."
+
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', gromacs_converter)
+    system_prefix = os.path.join(vacuum_path, 'system')
+    current_path = os.getcwd()
+    os.chdir(solvent_path)    
+
+    if gromacs_converter == 'amb2gmx.pl':
+        command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    if gromacs_converter == 'acpype.py':    
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
+    print command
+    output = commands.getoutput(command)
+    print output
+    os.chdir(current_path)
+
+    # set up perturbation
+    print "Modifying topology file for perturbation..."
+    system_top_filename = os.path.join(vacuum_path, 'system_GMX.top')
+    perturbGromacsTopologyToIntermediate(system_top_filename, 'MOL', ligand, common_substructure, perturb_torsions = True)
+
+    # set up mdp files
+    print "Writing mdp files..."
+    writeMdpFiles(vacuum_path, runtype, cores,'mutate')
+
+    # write batch scripts
+    print "Writing batch scripts..."
+    writeBatchScript(vacuum_path,jobname,runtype,cores,restraints=False)
+
+    return
+
+#=============================================================================================
+def setup_complex_simulation(complex_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, protein_off_filename, protein_charge, common_substructure):
     """Set up free energy calculation for ligand in complex.
 
     ARGUMENTS
       complex_path (string) - the pathname where the simulation is to be set up (created if doesn't exist).
       jobname (string) - job name to be used to form batch queue job name
+      runtype (string) - 'expanded' or 'hamilton' 
       ligand (OEMol) - the ligand
+      cores (int) - # of cores to run
       ligand_off_filename (string) - leap library for ligand
       ligand_frcmod_filename (string) - additional ligand parameters
       common_substructure (OEMol) - 
@@ -940,7 +1225,7 @@ def setup_complex_simulation(complex_path, jobname, ligand, ligand_off_filename,
     tleap_output_filename = os.path.join(complex_path, 'setup-system.leap.out')
     clearance = 10.0 # clearance in A to add around protein
     contents = """
-source leaprc.ff03
+source leaprc.ff99SB
 source leaprc.gaff
 
 # load antechamber-generated additional parameters
@@ -993,12 +1278,15 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # convert to gromacs
     print "Converting to gromacs..."
-    amb2gmx = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'amb2gmx.pl')
+
+    converter = os.path.join(os.getenv('MMTOOLSPATH'), 'converters', gromacs_converter)
     system_prefix = os.path.join(complex_path, 'system')
     current_path = os.getcwd()
     os.chdir(complex_path)
-    #command = '%(amb2gmx)s --prmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
-    command = '%(amb2gmx)s --prmtop system.prmtop --crd system.crd --outname system' % vars()
+    if gromacs_converter == 'amb2gmx.pl':
+        command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
+    if gromacs_converter == 'acpype.py':    
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -1006,81 +1294,29 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
 
     # set up perturbation
     print "Modifying topology file for perturbation..."
-    system_top_filename = os.path.join(complex_path, 'system.top')
+    system_top_filename = os.path.join(complex_path, 'system_GMX.top')
     perturbGromacsTopologyToIntermediate(system_top_filename, 'MOL', ligand, common_substructure, perturb_torsions = True)
 
     # set up mdp files
     print "Writing mdp files..."
+    writeMdpFiles(complex_path, runtype, cores,'mutate')
 
-    # Constrained Minimization
-    #mdpfile = MdpFile(compose_blocks(['header', 'minimization', 'nonbonded-solvent', 'constraints', 'restraints', 'output'])) # Gromacs_dg
-    mdpfile = MdpFile(compose_blocks(['header', 'minimization_4.0', 'nonbonded-solvent', 'constraints', 'free-energy_4.0', 'restraints', 'output'])) # Gromacs 4.0
-    mdpfile.write(os.path.join(complex_path, 'minimize.mdp'))
-
-    # Equilibration
-    mdpfile = MdpFile(compose_blocks(['header', 'dynamics', 'nonbonded-solvent', 'constraints', 'thermostat', 'barostat', 'output']))
-    mdpfile.setParameter('nsteps', '10000') # 20 ps equilibration
-    mdpfile.randomizeSeed() # randomize velocities
-    mdpfile.write(os.path.join(complex_path, 'equilibration.mdp'))
-
-    # Production
-    mdpfile = MdpFile(compose_blocks(['header', 'dynamics', 'nonbonded-solvent', 'constraints', 'restraints', 'thermostat', 'barostat', 'free-energy', 'output']))
-    mdpfile.randomizeSeed() # randomize velocities
-    mdpfile.write(os.path.join(complex_path, 'production.mdp'))    
-
+    # no restraints currently for relative calculations.
     # Copy restraint scripts to run directory
-    shutil.copy(os.path.join(script_basepath,'compute_angles.py'),complex_path)
-    shutil.copy(os.path.join(script_basepath,'restraint_topology.py'),complex_path)
+    #shutil.copy(os.path.join(script_basepath,'compute_angles.py'),complex_path)
+    #shutil.copy(os.path.join(script_basepath,'restraint_topology.py'),complex_path)
     # write batch queue script
-    print "Writing batch queue script..."
-    complex_path = os.path.abspath(complex_path)
-    contents = """\
-#!/bin/tcsh
-#BSUB -J %(jobname)s_complex
-#BSUB -n 1
-#BSUB -M 2000000
+    #print "Writing batch queue script..."
+    #complex_path = os.path.abspath(complex_path)
+    #contents = """\
 
-source $GMXRC
-
-# create a tpr file from which to create restraints
-grompp -f minimize.mdp -c system.g96 -p system.top -o minimize.tpr -maxwarn 10000 -n system.ndx
-# Integrate restraints into pre-minimization topfile
-python compute_angles.py -f system.g96 -s minimize.tpr -d $RANSEED
-python restraint_topology.py -n system -p .
-
-# constrained minimize with restraints
-grompp -f minimize.mdp -c system_restr.g96 -p system_restr.top -o minimize.tpr -maxwarn 10000 -n system.ndx
-mdrun -s minimize.tpr -x minimize.xtc -c minimize.g96 -e minimize.edr -g minimize.log
-
-# create a tpr file from which to create restraints
-grompp -f equilibration.mdp -c minimize.g96 -p system_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
-# Integrate restraints into pre-equilibration topfile
-cp system_restr.top minimize.top
-#python compute_angles.py -f minimize.g96 -s equilibration.tpr -d $RANSEED
-python restraint_topology.py -n minimize -p .
-
-# equilibration with restraints
-grompp -f equilibration.mdp -c minimize_restr.g96 -p minimize_restr.top -o equilibration.tpr -maxwarn 10000 -n system.ndx
-mdrun -s equilibration.tpr -o equilibration.trr -x equilibration.xtc -c equilibration.g96 -e equilibration.edr -g equilibration.log
-
-# create a TPR file, integrate restraints
-grompp -f production.mdp -c equilibration.g96 -p minimize_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
-cp minimize_restr.top equilibration.top
-#python compute_angles.py -f equilibration.g96 -s production.tpr -d $RANSEED
-python restraint_topology.py -n equilibration -p .
-
-# production with restraints
-grompp -f production.mdp -c equilibration_restr.g96 -p equilibration_restr.top -o production.tpr -maxwarn 10000 -n system.ndx
-mdrun -s production.tpr -o production.trr -x production.xtc -c production.g96 -e production.edr -g production.log
-
-# signal completion
-mv run.sh run.sh.done
-""" % vars()
-    write_file(os.path.join(complex_path, 'run.sh'), contents)
+    # write batch scripts
+    print "Writing batch scripts..."
+    writeBatchScript(complex_path,jobname,runtype,cores,restraints=False)
 
     return
 #=============================================================================================
-def setup_system(protein_pdb_filename, ligand_path, ligand, common_substructure, work_path, jobname, phases):
+def setup_system(protein_pdb_filename, ligand_path, ligand, common_substructure, work_path, jobname, runtype, phases):
     """Set up a system for alchemical free energy calculation in gromacs.
 
     ARGUMENTS
@@ -1126,8 +1362,8 @@ def setup_system(protein_pdb_filename, ligand_path, ligand, common_substructure,
     tleap_input_filename = os.path.join(work_path, 'setup-protein.leap.in')
     tleap_output_filename = os.path.join(work_path, 'setup-protein.leap.out')
     contents = """
-# Load AMBER ff03 parameters.
-source leaprc.ff03
+# Load AMBER ff99SB parameters.
+source leaprc.ff99SB
 
 # Load PDB file with AMBER naming conventions, stripped of hydrogens.
 protein = loadpdb %(protein_amberpdb_filename)s
@@ -1167,17 +1403,23 @@ quit
     if not os.path.exists(ligand_frcmod_filename):
         print "%(ligand_frcmod_filename)s not found, skipping..." % vars()
         return
-
+    
     # SET UP SIMULATIONS
     if 'solvent' in phases:
         # PREPARE SOLVATED LIGAND
         solvent_path = os.path.join(work_path, 'solvent')
-        setup_solvent_simulation(solvent_path, jobname, ligand, ligand_off_filename, ligand_frcmod_filename, common_substructure)
-
+        setup_solvent_simulation(solvent_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, common_substructure)
+        
     if 'complex' in phases:
         # PREPARE SOLVATED COMPLEX
         complex_path = os.path.join(work_path, 'complex')
-        setup_complex_simulation(complex_path, jobname, ligand, ligand_off_filename, ligand_frcmod_filename, protein_off_filename, protein_charge, common_substructure)
+        setup_complex_simulation(complex_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, protein_off_filename, protein_charge, common_substructure)
+
+    if 'vacuum' in phases:
+        # PREPARE vacuum simulation
+        # !!!!not yet set up!!!!
+        vacuum_path = os.path.join(work_path, 'vacuum')
+        setup_vacuum_simulation(vacuum_path, jobname, runtype, ligand, cores, ligand_off_filename, ligand_frcmod_filename, common_substructure)
 
     return
 
@@ -1259,7 +1501,7 @@ for ligand in ligands:
 
     # setup system
     jobname = '%(ligand_name)s' % vars()
-    setup_system(protein_pdb_filename, ligand_basepath, ligand, common_substructure, work_path, jobname, phases)
+    setup_system(protein_pdb_filename, ligand_basepath, ligand, common_substructure, work_path, jobname, runtype, phases)
 
     # update directories file
     write_file(directories_file, directories)

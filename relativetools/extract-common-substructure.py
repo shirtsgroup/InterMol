@@ -21,11 +21,11 @@ from numpy import *
 #=============================================================================================
 
 # base path for all parameterized ligand files
-ligand_basepath = 'ligands-parameterized/'
+ligand_basepath = '/home/mrs5pt/preptools/mmtools/relativetools/Examples/JNK3/ligands-parameterized/'
 
 # Target ligand group.
-ligand_name_list = [ ('jnk.aff-%d' % index) for index in (8, 10, 11, 15, 22, 26, 32, 38, 52) ] # group 1
-#ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ] # group 2
+#ligand_name_list = [ ('jnk.aff-%d' % index) for index in (8, 10, 11, 15, 22, 26, 32, 38, 52) ] # group 1
+ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ] # group 2
 
 
 # Filename of mol2 file for generated intermediate structure to write.
