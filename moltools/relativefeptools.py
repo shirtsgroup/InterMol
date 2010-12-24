@@ -109,7 +109,7 @@ def select_off_section(lines, label):
    # return these lines
    return lines[start_index:end_index]
 
-def loadGAFFMolecule(ligand_basepath, ligand_name, ligand_mol2_suffix = '.openeye'):
+def loadGAFFMolecule(ligand_basepath, ligand_name, ligand_mol2_suffix = '.openeye', debug = False):
     """Load molecule from OpenEye mol2 file and AMBER LEaP .off file with GAFF atom typenames and integer bond types.
 
     ARGUMENTS
@@ -134,6 +134,8 @@ def loadGAFFMolecule(ligand_basepath, ligand_name, ligand_mol2_suffix = '.openey
     # construct filenames
     ligand_mol2_filename = os.path.join(ligand_basepath, '%(ligand_name)s%(ligand_mol2_suffix)s.mol2' % vars())
     ligand_off_filename = os.path.join(ligand_basepath, '%(ligand_name)s.off' % vars())    
+
+    if debug: print "Attempting to read files %s and %s..." % (ligand_mol2_filename, ligand_off_filename)
 
     if not os.path.exists(ligand_mol2_filename) or not os.path.exists(ligand_off_filename):
         print "Ligand %(ligand_name)s incomplete." % vars()
