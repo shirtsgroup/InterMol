@@ -54,11 +54,11 @@ Various tools useful for the the setup and analysis of molecular simulations of 
 
 * ambertools
 
-Tools for interacting with programs from the AMBER molecular mechanics package, including Antechamber for the paramerterization of small molecules using GAFF.
+Tools for interacting with programs from the AMBER molecular mechanics package, including Antechamber for the parameterization of small molecules using GAFF.
 
 * converters
 
-Various converters for converting systems between molecular mechanics packages.
+Various converters for converting systems between molecular mechanics packages, especially acpypi (available from Google Code) and amb2gmx.pl (obsolete, replaced by acpypi)
 
 * gromacstools
 
@@ -76,10 +76,6 @@ Tools for modeling proteins from sequence and homologous structure.  Also useful
 
 Tools for dealing with small molecules.
 Requires the OEChem library from OpenEye.
-
-* tinkertools
-
-Tools for interacting with the Tinker molecular mechanics package.
 
 * utility
 

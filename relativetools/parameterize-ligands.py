@@ -4,6 +4,10 @@
 # Written by John D. Chodera <jchodera@gmail.com> 2008-02-01
 #=============================================================================================
 
+#NOTE:
+#THIS VERSION IS OBSOLETE AND REPLACED BY parameterize_ligands.py
+#PLEASE UPDATE YOUR SCRIPTS
+
 #=============================================================================================
 # Imports
 #=============================================================================================
@@ -75,7 +79,10 @@ def parameterize_ligand(ligand_filename, ligand_name, work_path):
     ARGUMENTS
       ligand_filename (string) - name of mol2 file describing ligand
       work_path (string) - name of directory to place files in
-
+      
+    USAGE NOTES:
+      Currently this always names the output object (in the off file) 'ligand'
+      ALSO NOTE: This functionality is duplicated by the more general parameterizeForAmber in moltools.
     """
 
     # get current directory

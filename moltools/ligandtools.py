@@ -716,7 +716,7 @@ def writeMolecule(molecule, filename, substructure_name = 'MOL', preserve_atomty
 
    return
 #=============================================================================================
-def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge = None, offfile = None):
+def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charge_model = False, judgetypes = None, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge = None, offfile = None, ligand_obj_name = 'molecule'):
    """Parameterize small molecule with GAFF and write AMBER coordinate/topology files.
 
    ARGUMENTS
@@ -733,6 +733,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
      netcharge (integer) -- if set, pass this net charge to calculation in antechamber (with -nc (netcharge)), otherwise assumes zero.
      offfile (string) - name of AMBER off file to be written, optionally. 
+     ligand_obj_name - name of object to store ligand as (in off file); default 'molecule'. 
 
    REQUIREMENTS
      acpypi.py conversion script (must be in MMTOOLSPATH)
@@ -780,16 +781,16 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
 
    # Create AMBER topology/coordinate files using LEaP.
    if offfile:
-      offstring = 'saveOff molecule amber.off\n'
+      offstring = 'saveOff %(ligand_obj_name)s amber.off\n' % vars()
    else:
       offstring = ''
    leapscript = """\
 source leaprc.gaff 
 mods = loadAmberParams %(frcmod_filename)s
-molecule = loadMol2 %(gaff_mol2_filename)s
-desc molecule
-check molecule
-saveAmberParm molecule amber.prmtop amber.crd
+%(ligand_obj_name)s = loadMol2 %(gaff_mol2_filename)s
+desc %(ligand_obj_name)s
+check %(ligand_obj_name)s
+saveAmberParm %(ligand_obj_name)s amber.prmtop amber.crd
 %(offstring)s
 quit""" % vars()
    leapin_filename = os.path.join(working_directory, 'leap.in')

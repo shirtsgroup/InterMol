@@ -139,7 +139,7 @@ def loadGAFFMolecule(ligand_basepath, ligand_name, ligand_mol2_suffix = '.openey
 
     if not os.path.exists(ligand_mol2_filename) or not os.path.exists(ligand_off_filename):
         print "Ligand %(ligand_name)s incomplete." % vars()
-        return None
+        return None  #NOTE: This should probably raise an exception instead, or at least optionally raise an exception -- clearly failing and just proceeding is generally bad form. 
 
     # load file
     ligand = readMolecule(ligand_mol2_filename, normalize = True)

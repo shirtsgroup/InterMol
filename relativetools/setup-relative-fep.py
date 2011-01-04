@@ -1017,7 +1017,11 @@ def setup_solvent_simulation(solvent_path, jobname, runtype, ligand, cores, liga
       cores (int) - # of cores to run on
       ligand_off_filename (string) - leap library for ligand
       ligand_frcmod_filename (string) - additional ligand parameters
-      common_substructure (OEMol) - 
+      common_substructure (OEMol) -
+
+
+    NOTES:
+        Currently assumes the ligand title in the off files is 'ligand' and not something else (i.e. 'molecule'); there should be an argument for this or it should be tested for. 
     """
 
     print "\nPREPARING SOLVATED LIGAND"
