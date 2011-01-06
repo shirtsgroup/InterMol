@@ -809,6 +809,7 @@ quit""" % vars()
          if tmp.find('WARNING')>-1: print line
          if tmp.find('ERROR')>-1: print line
 
+
    # Restore old directory.
    os.chdir(old_directory)   
 
