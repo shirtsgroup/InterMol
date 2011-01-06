@@ -1090,7 +1090,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
     if gromacs_converter == 'amb2gmx.pl':
         command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
     if gromacs_converter == 'acpype.py':    
-        command = 'python2.6 %(converter)s -p system.prmtop -x system.crd -b system -o gmx' % vars()
+        command = 'python2.6 %(converter)s -p system.prmtop -x system.crd -b system -o gmx -g' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -1176,7 +1176,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
     if gromacs_converter == 'amb2gmx.pl':
         command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
     if gromacs_converter == 'acpype.py':    
-        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx -g' % vars()
     print command
     output = commands.getoutput(command)
     print output
@@ -1290,7 +1290,7 @@ saveamberparm system %(system_prmtop_filename)s %(system_crd_filename)s
     if gromacs_converter == 'amb2gmx.pl':
         command = '%(converter)s --parmtop %(system_prmtop_filename)s --crd %(system_crd_filename)s --outname %(system_prefix)s' % vars()
     if gromacs_converter == 'acpype.py':    
-        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx' % vars()
+        command = 'python2.6 %(converter)s -r -p system.prmtop -x system.crd -b system -o gmx -g' % vars()
     print command
     output = commands.getoutput(command)
     print output
