@@ -46,14 +46,14 @@ from __future__ import print_function
 
     alanwilter _at_ gmail _dot_ com
 """
-svnId = '$Id: acpype.py 358 2011-01-06 12:52:30Z alanwilter $'
+svnId = '$Id: acpype.py 359 2011-01-20 09:59:03Z alanwilter $'
 try: svnRev, svnDate, svnTime = svnId.split()[2:5]
 except: svnRev, svnDate, svnTime = '0', '0', '0'
 tag = "%s %s Rev: %s" % (svnDate, svnTime, svnRev)
 
 lineHeader = \
 '''
-| ACPYPE: AnteChamber PYthon Parser interfacE v. %s (c) 2008-2009 AWSdS |
+| ACPYPE: AnteChamber PYthon Parser interfacE v. %s (c) 2011 AWSdS |
 ''' % tag
 frameLine = (len(lineHeader) - 2) * '='
 header = '%s%s%s' % (frameLine, lineHeader, frameLine)
@@ -1552,7 +1552,7 @@ a        """
             kPhi = uniqKpList[dihTypeId] # already divided by IDIVF
             period = int(uniqPeriodList[dihTypeId]) # integer
             phase = uniqPhaseList[dihTypeId]# angle given in rad in prmtop
-            if phase == kPhi == 0: period = 0
+            if phase == kPhi == 0: period = 0 # period is set to 0
             atoms = [atom1, atom2, atom3, atom4]
             dihedral = Dihedral(atoms, kPhi, period, phase)
             if idAtom4raw > 0:
@@ -2046,25 +2046,25 @@ a        """
 """
 [ dihedrals ] ; propers
 ; treated as RBs in GROMACS to use combine multiple AMBER torsions per quartet
-; i   j   k   l func   C0        C1        C2        C3        C4        C5
+;    i      j      k      l   func    C0         C1         C2         C3         C4         C5
 """
 
         headProDihAlphaGamma = """; treated as usual propers in GROMACS since Phase angle diff from 0 or 180 degrees
-; i   j   k   l func  phase     kd      pn
+;    i      j      k      l   func   phase     kd      pn
 """
 
         headProDihGmx45 = \
 """
 [ dihedrals ] ; propers
 ; for gromacs 4.5 or higher, using funct 9
-; i   j   k   l func  phase     kd      pn
+;    i      j      k      l   func   phase     kd      pn
 """
 
         headImpDih = \
 """
 [ dihedrals ] ; impropers
 ; treated as propers in GROMACS to use correct AMBER analytical function
-; i   j   k   l func  phase     kd      pn
+;    i      j      k      l   func   phase     kd      pn
 """
         _headTopWaterTip3p = \
 """
@@ -2429,11 +2429,11 @@ a        """
                 oat4 = id2oplsATDict[id4]
                 c0, c1, c2, c3, c4, c5 = dih[1]
                 line = \
-                "%3i %3i %3i %3i %3i %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
+                "%6i %6i %6i %6i %6i %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
                 (id1, id2, id3, id4, 3, c0, c1, c2, c3, c4, c5) \
                 + " ; %6s-%6s-%6s-%6s\n" % (a1, a2, a3, a4)
                 oline = \
-                "%3i %3i %3i %3i %3i ; %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
+                "%6i %6i %6i %6i %6i ; %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
                 (id1, id2, id3, id4, 3, c0, c1, c2, c3, c4, c5) \
                 + " ; %6s-%6s-%6s-%6s    %4s-%4s-%4s-%4s\n" % (a1, a2, a3, a4, oat1, oat2, oat3, oat4)
                 temp.append(line)
@@ -2464,9 +2464,9 @@ a        """
                 ph = dih[1] # phase already in degree
                 kd = dih[2] * cal #kPhi PK
                 pn = dih[3] #.period
-                line = "%3i %3i %3i %3i %3i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+                line = "%6i %6i %6i %6i %6i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                                 (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
-                oline = "%3i %3i %3i %3i %3i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+                oline = "%6i %6i %6i %6i %6i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                                 (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
                 temp.append(line)
                 otemp.append(oline)
@@ -2499,9 +2499,9 @@ a        """
             ph = dih[1] # phase already in degree
             kd = dih[2] * cal #kPhi PK
             pn = dih[3] #.period
-            line = "%3i %3i %3i %3i %3i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+            line = "%6i %6i %6i %6i %6i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                             (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
-            oline = "%3i %3i %3i %3i %3i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+            oline = "%6i %6i %6i %6i %6i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                             (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
             temp.append(line)
             otemp.append(oline)
@@ -2533,9 +2533,9 @@ a        """
             kd = dih.kPhi * cal
             pn = dih.period
             ph = dih.phase * radPi
-            line = "%3i %3i %3i %3i %3i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+            line = "%6i %6i %6i %6i %6i %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                             (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
-            oline = "%3i %3i %3i %3i %3i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
+            oline = "%6i %6i %6i %6i %6i ; %8.2f %9.5f %3i ; %6s-%6s-%6s-%6s\n" % \
                             (id1, id2, id3, id4, funct, ph, kd, pn, a1, a2, a3, a4)
             temp.append(line)
             otemp.append(oline)
