@@ -1,7 +1,14 @@
+#!/usr/bin/env python
+
 # Check ligand energies
-#
+
 # Written by Michael Zhu <mnz3v@virginia.edu> 2009-10-26
 #=============================================================================================
+
+"""
+    Requirements:   Python 2.4 or higher
+                    Gromacs 4.0 or higher
+"""
 
 #=============================================================================================
 # IMPORTS
@@ -10,29 +17,15 @@
 from mmtools.moltools.relativefeptools import *
 from mmtools.gromacstools.GromacsData import *
 from mmtools.gromacstools.MdpFile import *
-from math import sqrt
 from numpy import *
-import commands, os, re
+import commands, os, re, pdb
 
 #=============================================================================================
 # PARAMETERS
 #=============================================================================================
 
-gromacs_directory = '/usr/local/gromacs/bin'
-working_directory = '/home/mnz3v/mmtools/relativetools/Examples'
-
-# Target ligand group.
-#ligand_name_list = [ ('jnk.aff-%d' % index) for index in (8, 10, 11, 15, 22, 26, 32, 52) ]
-ligand_name_list = [ ('jnk.aff-%d' % index) for index in (13, 16, 53) ]
-
-# Path to parameterized ligands.
-ligand_basepath = 'ligands-parameterized'
-
-# complex/solvent
-ligand_type = 'solvent'
-
 # Desired values to input to g_energy
-xvg_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+xvg_values = '1 2 3 4 5 6 7 8 9 10 11'
 
 #=============================================================================================
 # SUBROUTINES
@@ -58,7 +51,33 @@ def readFile(filename):
 
     return lines
 
-def determineMatchArray(first_ligand_name, second_ligand_name, min_atoms = 4):
+def readMci(mci_file):
+    """Reads the mci file and returns the contents in an array.
+
+    ARGUMENTS
+        mci_file (string) - the name of file to be read
+
+    RETURNS
+        new_mci (list of integers) - the values of the mci file
+    """
+
+    new_mci = []
+
+    # Reads in mciFile
+    old_mci = readFile(mci_file)
+
+    # Places values into a list
+    for i in range(len(old_mci)):
+        new_mci.append(old_mci[i].split())
+
+    # Increases all values by 1 to match Gromacs numbering
+    for i in range(len(new_mci)):
+        for j in range(len(new_mci[0])):
+            new_mci[i][j] = int(new_mci[i][j])+ 1
+
+    return new_mci
+
+def determineMatchArray(ligand_basepath, first_ligand_name, second_ligand_name, min_atoms = 4):
     """Find a list of the common substructure elements shared by both ligands.
 
     The atom type name strings and integer bond types are used to obtain an exact match.
@@ -75,8 +94,8 @@ def determineMatchArray(first_ligand_name, second_ligand_name, min_atoms = 4):
     """
 
     # First initialize ligands.
-    first_ligand = OEMol(loadGAFFMolecule('%s/%s'%(working_directory,ligand_basepath), first_ligand_name))
-    second_ligand = OEMol(loadGAFFMolecule('%s/%s'%(working_directory,ligand_basepath), second_ligand_name))
+    first_ligand = OEMol(loadGAFFMolecule(ligand_basepath, first_ligand_name))
+    second_ligand = OEMol(loadGAFFMolecule(ligand_basepath, second_ligand_name))
 
     # Set second ligand to be searched
     mcss = OEMCSSearch(second_ligand, OEExprOpts_StringType, OEExprOpts_IntType)
@@ -137,7 +156,7 @@ def findDistance(atomi, atomj):
         distance - the cartesian distance between atom i and atom j
     """
 
-    distance = math.sqrt((atomi.x - atomj.x)**2 + (atomi.y - atomj.y)**2 + (atomi.z - atomj.z)**2)
+    distance = sqrt((atomi.x - atomj.x)**2 + (atomi.y - atomj.y)**2 + (atomi.z - atomj.z)**2)
 
     return distance
 
@@ -146,7 +165,7 @@ def calculateAtomPosition(i, position, moved_atoms, initial_GroStructure, target
 
     ARGUMENTS
         i (integer) - the number of the atom being moved
-        moved_atoms (list) - a list of atoms and their coordinates that have already been moved 
+        moved_atoms (list) - a list of atoms and their coordinates that have already been moved
         initial_GroStructure (gromacs structure) - the gromacs structure containing the positions of the atoms in the correct spatial arrangement
         target_GroStructure (gromacs structure) - the gromacs structure containing the atoms to be moved
 
@@ -192,7 +211,7 @@ def calculatePositionArray(initial_GroStructure, target_GroStructure, location_a
     # Finds the position of the atoms specified by the location array
     for i in range(length + 1):
         n = searchArray(location_array, i + 1)
-        if n <> False:
+        if n != False:
             position[i, 0] = initial_GroStructure.atoms[n - 1].x
             position[i, 1] = initial_GroStructure.atoms[n - 1].y
             position[i, 2] = initial_GroStructure.atoms[n - 1].z
@@ -203,10 +222,10 @@ def calculatePositionArray(initial_GroStructure, target_GroStructure, location_a
             unmoved_atoms.remove(i)
 
     # Takes the atoms in the unmoved atoms list and finds the closest atom using calculateAtomPosition
-    while unmoved_atoms <> []:
+    while unmoved_atoms != []:
         for i in unmoved_atoms:
             position = calculateAtomPosition(i, position, moved_atoms, initial_GroStructure, target_GroStructure)
-            if position[i, 0] <> 0:
+            if position[i, 0] != 0:
                 moved_atoms.append(i)
                 unmoved_atoms.remove(i)
 
@@ -286,12 +305,14 @@ def runGmx(cmd):
         print '*********************************************************'
         print cmd
         print '*********************************************************'
+        print os.getcwd()
+        print '*********************************************************'
         print 'Exiting...'
         sys.exit(1)
 
     pass
 
-def findEnergy(gromacs_directory, mdp_file, gro_file, top_file, ndx_file, xvg_values):
+def findEnergy(grompp, mdrun, g_energy, mdp_file, gro_file, top_file, xvg_values):
     """Runs gromacs energy calculations given an mdp, gro, and top file.
 
     ARGUMENTS
@@ -299,35 +320,27 @@ def findEnergy(gromacs_directory, mdp_file, gro_file, top_file, ndx_file, xvg_va
         mdp_file (string) - the name of the mdp file
         gro_file (string) - the name of the gro file
         top_file (string) - the name of the top file
-        xvg_values (list of integers) - the values to be intputted to g_energy
+        xvg_values (string) - the values to be intputted to g_energy
 
     RETURNS
         energy (array) - array containing xvg values
     """
 
     # Executes grompp_d
-    grompp_d = '%s/grompp_d -f %s -c %s -p %s -o minimize.tpr -maxwarn 10000 -n %s'%(gromacs_directory, mdp_file, gro_file, top_file, ndx_file)
-    runGmx(grompp_d)
+    cmd = '%s -f %s -c %s -p %s -o minimize.tpr -maxwarn 10000'%(grompp, mdp_file, gro_file, top_file)
+    runGmx(cmd)
 
     # Executes mdrun_d
-    mdrun_d = '%s/mdrun_d -s minimize.tpr -x minimize.xtc -c %s -e minimize.edr -g minimize.log'%(gromacs_directory, gro_file)
-    runGmx(mdrun_d)
+    cmd = '%s -s minimize.tpr -x minimize.xtc -c %s -e minimize.edr -g minimize.log'%(mdrun, gro_file)
+    runGmx(cmd)
 
     # Executes g_energy_d
-    xvg = ''
-    for i in range(len(xvg_values)):
-        xvg = '%s %s'%(xvg, str(xvg_values[i]))
-    g_energy_d = '/bin/echo%s 0 | %s/g_energy_d -f minimize.edr -o energy.xvg'%(xvg, gromacs_directory)
-    runGmx(g_energy_d)
+    cmd = '/bin/echo %s 0 | %s -f minimize.edr -o energy.xvg'%(xvg_values, g_energy)
+    runGmx(cmd)
 
-    # Places xvg values into a n array
-    f = open('energy.xvg', 'r')
-    lastline = []
+    lines = readFile('energy.xvg')
+    line = lines[-1]
 
-    for line in f.readlines()[-1:]:
-        lastline.append(line)
-    f.close()
-    line = line.strip()
     energy = array(re.split(' *', line)).astype(float)
 
     return energy
@@ -344,7 +357,7 @@ def modifySolventInTopFile(initial_top_file, modified_top_file, new_top_name):
     initial_top = open(initial_top_file, 'r')
     lastline = []
 
-    # Obtains the number of solvent molecules and stores 
+    # Obtains the number of solvent molecules and stores
     for line in initial_top.readlines()[-1:]:
         lastline.append(line)
     initial_top.close()
@@ -364,280 +377,6 @@ def modifySolventInTopFile(initial_top_file, modified_top_file, new_top_name):
 
     pass
 
-def modifyTop(top_file, new_system_nmols, new_water_nmols):
-
-    top = open(top_file, 'r')
-    top_lines = top.readlines()
-    top.close()
-
-    lines = top_lines[:]
-    i = 0
-    nmols = []
-    while i < len(lines):
-        if len(lines[i]) >= len('[ molecules ]'):
-            if lines[i][0:len('[ molecules ]')] == '[ molecules ]':
-                lines.pop(i)
-                while lines[i][0] == ';':
-                    lines.pop(i)
-                fields = lines.pop(i).split()
-                while len(fields) >= 2:
-                    nmols.append([fields[0], fields[1]])
-                    if i < len(lines):
-                        fields = lines.pop(i).split()
-                    else:
-                        fields = []
-        i = i + 1
-
-    lines = top_lines[:]
-    i = 0
-    systemtitle = ''
-    while i < len(lines):
-        if len(lines[i]) >= len('[ system ]'):
-            if lines[i][0:len('[ system ]')] == '[ system ]':
-                lines.pop(i)
-                while lines[i][0] == ';':
-                    lines.pop(i)
-                systemtitle = lines.pop(i)
-            else:
-                i=i+1
-        else:
-            i=i+1
-
-    for i in range(len(top_lines)):
-        if top_lines[i].endswith('%s\n'%(nmols[1][1])) == True:
-            top_lines[i] = top_lines[i].replace(nmols[1][1], str(new_water_nmols))
-        if top_lines[i].startswith(systemtitle.split()[0]) == True:
-            top_lines[i] = top_lines[i].replace(systemtitle.split()[0], str(new_system_nmols))
-
-    top = open(top_file, 'w')
-    top.writelines(top_lines)
-    top.close()
-
-    return
-
-def removeIndexFromNdx(ndx_file, max_index):
-    f = open(ndx_file, 'r')
-    lines = f.readlines()
-    f.close()
-    final = []
-    iset = 0
-
-    for line in lines:
-        if line == '\n':
-            continue
-        elif line.strip()[0] == '[':
-            setname = '%s%s' %('final',iset)
-            final.append(setname)
-            final[iset] = []
-            final[iset].append(line)
-            iset += 1
-        else:
-            elements = line.split(' ')
-            if elements[-1] == '\n':
-                elements.pop(-1)
-            final[iset-1].append(elements)
-
-    top = []
-    for i in range(len(final)):
-        top.append(final[i][0])
-        for j in range(1,len(final[i])):
-            top.append(final[i][j])
-            if int(final[i][j][0]) > max_index:
-                top.pop()
-            for k in range(len(final[i][j])-1):
-                if int(final[i][j][k]) == max_index+1:
-                    top.pop(j)
-                    top.append(final[i][j][0:k])
-
-    finaltop = []
-    for i in range(len(top)):
-        if top[i][0].strip()[0] != '[':
-            top[i].append('\n')
-            line = ' '.join(top[i])
-        else:
-            line = top[i]
-        finaltop.append(line)
-    f = open(ndx_file,'w')
-    f.writelines(finaltop)
-    f.close()
-
-    return
-
-def findLigandEnergy(working_directory, gromacs_directory, ligand_name_list, ligand_basepath, ligand_type, xvg_values, state):
-    """Runs findEnergy on all of the ligands
-
-    ARGUMENTS
-        working_directory (string) - the current working directory
-        gromacs_directory (string) - the directory containing gromacs
-        ligand_name_list (array of ) - the list of ligands to be analyzed
-        ligand_basepath (string) - the directory containing the files to be analyzed
-        ligand_type (array of strings) - the type(s) of ligands to be analyzed
-        xvg_values (array of integers) - the array containing the desired xvg_values
-        state (string) - initial/mutatedInitial/mutatedFinal
-
-    RETURNS
-        ligand (array) - returns the array containing all of the energy terms for all of the comparisons for a single state
-    """
-
-    os.chdir(working_directory)
-    n = len(xvg_values) + 1
-    ligand = array([])
-
-    # Initial state calculation
-    if state == 'initial':
-
-        print 'Minimizing Initial'
-
-        # Runs findEnergy and appends values to array
-        for i in range(len(ligand_name_list)):
-
-            print 'Minimizing %s'%(ligand_name_list[i])
-
-            new_working_directory = '%s/fep/%s/%s'%(working_directory, ligand_name_list[i], ligand_type)
-            commands.getoutput('mkdir %s/temp'%(new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'minimize.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'equilibration.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.g96', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.gro', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.ndx', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.top', new_working_directory))
-            os.chdir('%s/temp'%(new_working_directory))
-
-            # Sets initial state parameters
-            mdp = MdpFile('minimize.mdp')
-            mdp.setParameter('free-energy', 'no')
-            # Settings for Gromacs, not Gromacs_dg
-            mdp.setParameter('rlist', mdp.getParameter('rcoulomb'))
-            mdp.setParameter('constraint-algorithm', 'lincs')
-            # End of Gromacs settings
-            mdp.write('minimize.mdp')
-
-            line = findEnergy(gromacs_directory, 'minimize.mdp', 'system.gro', 'system.top', 'system.ndx', xvg_values)
-            ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n), axis=0)
-            os.chdir(new_working_directory)
-            os.system('rm -rf temp')
-
-    # Mutated Initial calculation
-    elif state == 'mutatedInitial':
-
-        print 'Minimizing Initial Mutation'
-
-        # Runs findEnergy and appends values to array
-        for i in range(len(ligand_name_list)):
-
-            print 'Minimizing %s'%(ligand_name_list[i])
-
-            new_working_directory = '%s/fep/%s/%s'%(working_directory, ligand_name_list[i], ligand_type)
-            commands.getoutput('mkdir %s/temp'%(new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'minimize.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'equilibration.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.g96', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.gro', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.ndx', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.top', new_working_directory))
-            os.chdir('%s/temp'%(new_working_directory))
-
-            # Sets mutated initial state parameters
-            mdp = MdpFile('minimize.mdp')
-            mdp.setParameter('free-energy', 'yes')
-            mdp.setParameter('init-lambda', '0')
-            # Settings for Gromacs, not Gromacs_dg
-            mdp.setParameter('rlist', mdp.getParameter('rcoulomb'))
-            mdp.setParameter('constraint-algorithm', 'lincs')
-            mdp.setParameter('coulombtype','PME')
-            mdp.setParameter('ewald-rtol','1e-07')
-            # End of Gromacs settings
-            mdp.write('minimize.mdp')
-
-            line = findEnergy(gromacs_directory, 'minimize.mdp', 'system.gro', 'system.top', 'system.ndx', xvg_values)
-            ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n), axis=0)
-            os.chdir(new_working_directory)
-            os.system('rm -rf temp')
-
-    # Mutated Final calculation
-    elif state == 'mutatedFinal':
-
-        print 'Minimizing Final Mutation'
-
-        for i in range(len(ligand_name_list)):
-
-            new_working_directory = '%s/fep/%s/%s'%(working_directory, ligand_name_list[i], ligand_type)
-            commands.getoutput('mkdir %s/temp'%(new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'minimize.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'equilibration.mdp', new_working_directory))
-            #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.g96', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.gro', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.ndx', new_working_directory))
-            commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.top', new_working_directory))
-            os.chdir('%s/temp'%(new_working_directory))
-
-            # Sets mutated final state parameters
-            mdp = MdpFile('minimize.mdp')
-            mdp.setParameter('free-energy', 'yes')
-            mdp.setParameter('init-lambda', '1')
-            # Settings for Gromacs, not Gromacs_dg
-            mdp.setParameter('rlist', mdp.getParameter('rcoulomb'))
-            mdp.setParameter('constraint-algorithm', 'lincs')
-            mdp.setParameter('coulombtype','PME')
-            mdp.setParameter('ewald-rtol','1e-07')
-            # End of Gromacs settings
-            mdp.write('minimize.mdp')
-
-            # Runs findEnergy and appends values to array
-            line = findEnergy(gromacs_directory, 'minimize.mdp', 'system.gro', 'system.top', 'system.ndx', xvg_values)
-            ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n ), axis=0)
-            os.chdir(new_working_directory)
-            os.system('rm -rf temp')
-
-            for j in range(i+1, len(ligand_name_list)):
-
-                print 'Minimizing %s  %s'%(ligand_name_list[i], ligand_name_list[j])
-
-                new_working_directory = '%s/fep/%s/%s'%(working_directory, ligand_name_list[j], ligand_type)
-                commands.getoutput('mkdir %s/temp'%(new_working_directory))
-                commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'minimize.mdp', new_working_directory))
-                #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'equilibration.mdp', new_working_directory))
-                commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.gro', new_working_directory))
-                #commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.gro', new_working_directory))
-                commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.ndx', new_working_directory))
-                commands.getoutput('cp %s/%s %s/temp'%(new_working_directory, 'system.top', new_working_directory))
-                os.chdir('%s/temp'%(new_working_directory))
-
-                # Sets mutated final state parameters
-                mdp = MdpFile('minimize.mdp')
-                mdp.setParameter('free-energy', 'yes')
-                mdp.setParameter('init-lambda', '1')
-                # Settings for Gromacs, not Gromacs_dg
-                mdp.setParameter('rlist', mdp.getParameter('rcoulomb'))
-                mdp.setParameter('constraint-algorithm', 'lincs')
-                mdp.setParameter('coulombtype','PME')
-                mdp.setParameter('ewald-rtol','1e-07')
-                # End of Gromacs settings
-                mdp.write('minimize.mdp')
-
-                matchArray = determineMatchArray(ligand_name_list[i], ligand_name_list[j])
-                groPair1 = '%s/fep/%s/%s/%s'%(working_directory, ligand_name_list[i], ligand_type, 'system.gro')
-                groPair2 = '%s/fep/%s/%s/%s'%(working_directory, ligand_name_list[j], ligand_type, 'system.gro')
-                mutatedGroStructure = GromacsStructure()
-                mutatedGroStructure = mutateGroFile(groPair1, groPair2, matchArray)
-                mutatedGroStructure.write('system_mut')
-                top1 = '%s/fep/%s/%s/%s'%(working_directory, ligand_name_list[i], ligand_type, 'system.top')
-                top2 = '%s/fep/%s/%s/%s'%(working_directory, ligand_name_list[j], ligand_type, 'system.top')
-                modifySolventInTopFile(top1, top2, 'system_mut.top')
-                new_system_nmols = mutatedGroStructure.natoms
-                new_water_nmols = (new_system_nmols-findNumberOfAtoms(mutatedGroStructure))/3
-                modifyTop('system_mut.top', new_system_nmols, new_water_nmols)
-                commands.getoutput('cp system.ndx system_mut.ndx')
-                removeIndexFromNdx('system_mut.ndx', new_system_nmols)
-
-                # Runs findEnergy and appends values to array
-                line = findEnergy(gromacs_directory, 'minimize.mdp', 'system_mut.gro', 'system_mut.top', 'system_mut.ndx', xvg_values)
-                ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n ), axis=0)
-                os.chdir(new_working_directory)
-                os.system('rm -rf temp')
-
-    return ligand
-
 def createLegend(xvg_values):
     """Creates a legend based on the chosen xvg values
 
@@ -652,8 +391,8 @@ def createLegend(xvg_values):
 
     legend = ['Time']
 
-    for i in xvg_values:
-        legend.append(g_energy_legend[i])
+    for i in xvg_values.split():
+        legend.append(g_energy_legend[int(i)])
 
     return legend
 
@@ -771,16 +510,224 @@ def compareMutatedLigands(mutated_ligand, legend, ligand_name_list):
             print 'No Difference'
     pass
 
-#=============================================================================================
-# MAIN
-#=============================================================================================
+class checkrelativestates:
 
-# Finds array containing ligand values
-LG0 = findLigandEnergy(working_directory, gromacs_directory, ligand_name_list, ligand_basepath, ligand_type, xvg_values, 'initial')
-LGM0 = findLigandEnergy(working_directory, gromacs_directory, ligand_name_list, ligand_basepath, ligand_type, xvg_values, 'mutatedInitial')
-LGM1 = findLigandEnergy(working_directory, gromacs_directory, ligand_name_list, ligand_basepath, ligand_type, xvg_values, 'mutatedFinal')
+    def __init__(self, grompp, mdrun, g_energy, ligand_name_list, mdp, gros, originaltops, relativetops, originalitps = None, relativeitps = None, matches = None, ligand_basepath = None, debug = False):
+        """Base class for checking relative states
 
-# Checks to see which ligands do not give the same energy
-legend = createLegend(xvg_values)
-compareInitialLigands(LG0, LGM0, legend, ligand_name_list)
-compareMutatedLigands(LGM1, legend, ligand_name_list)
+        ARGUMENTS
+            grompp (string) - full binary for grompp
+            mdrum (string) - full binary for mdrun
+            g_energy (string) - full binary for g_energy
+            ligand_name_list (array) - filenames of the ligands
+            mdp (string) - path to desired mdp
+            gros (array) - paths specifying gro files
+            originaltops (array) - paths specifying non-mutated top files
+            relaivetops (array) - paths specifying relative  top files
+            originalitps (array) - paths specifying non-mutated itp (optional)
+            relativeitps (array) - paths specifying relative itp files (optional)
+            matches (array) - paths specifying .mci files used for matching mutating atoms
+            ligand_basepath (string) - path specifying location of ligands
+            debug (boolean) - setting True keeps intermediate gromacs files
+        """
+
+        self.grompp = grompp
+        self.mdrun = mdrun
+        self.g_energy = g_energy
+        self.ligand_name_list = ligand_name_list
+        self.mdp = mdp
+        self.gros = gros
+        self.originaltops = originaltops
+        self.relativetops = relativetops
+        self.originalitps = originalitps
+        self.relativeitps = relativeitps
+        self.matches = matches
+        self.ligand_basepath = ligand_basepath
+        self.xvg_values = xvg_values
+        self.debug = debug
+        self.calculateEnergies()
+        return
+
+    def calculateEnergies(self):
+        """Creates the directories for the ligand checking and calculates the energies of each ligand The comparisons are between the original state to relative state with no lambda and between two mutated states to a common substructure
+        """
+
+        base_directory = os.getcwd()
+        commands.getoutput('mkdir intermediatefiles')
+        os.chdir('intermediatefiles')
+        working_directory = os.getcwd()
+
+        # Finds array containing ligand values
+        standard = self.findLigandEnergy(working_directory, 'initial')
+        relativelambda0 = self.findLigandEnergy(working_directory, 'mutatedInitial')
+        relativelambda1 = self.findLigandEnergy(working_directory, 'mutatedFinal')
+
+        # Checks to see which ligands do not give the same energy and outputs the differences
+        legend = createLegend(self.xvg_values)
+        compareInitialLigands(standard, relativelambda0, legend, self.ligand_name_list)
+        compareMutatedLigands(relativelambda1, legend, self.ligand_name_list)
+
+        if self.debug == False:
+            os.chdir(base_directory)
+            commands.getoutput('rm -r intermediatefiles')
+
+        return
+
+    def findLigandEnergy(self, working_directory, state):
+        """Runs findEnergy on all of the ligands
+
+        ARGUMENTS
+            working_directory (string) - the current working directory
+            gromacs_directory (string) - the directory containing gromacs
+            ligand_name_list (array of ) - the list of ligands to be analyzed
+            xvg_values (array of integers) - the array containing the desired xvg_values
+            state (string) - initial/mutatedInitial/mutatedFinal
+
+        RETURNS
+            ligand (array) - returns the array containing all of the energy terms for all of the comparisons for a single state
+        """
+
+        os.chdir(working_directory)
+        n = len(self.xvg_values.split()) + 1
+        ligand = array([])
+
+        # Initial state calculation
+        if state == 'initial':
+
+            print 'Minimizing Initial'
+            working_directory = os.path.join(working_directory, 'initial')
+            if not os.path.exists(working_directory):
+                commands.getoutput('mkdir %s'%(working_directory))
+
+            # Runs findEnergy and appends values to array
+            for i in range(len(self.ligand_name_list)):
+
+                print 'Minimizing %s'%(self.ligand_name_list[i])
+
+                new_working_directory = os.path.join(working_directory, self.ligand_name_list[i])
+                if not os.path.exists(new_working_directory):
+                    commands.getoutput('mkdir %s'%(new_working_directory))
+                commands.getoutput('cp %s %s/minimize.mdp'%(self.mdp, new_working_directory))
+                commands.getoutput('cp %s %s/system.gro'%(self.gros[i], new_working_directory))
+                commands.getoutput('cp %s %s/system.top'%(self.originaltops[i], new_working_directory))
+                if self.originalitps != None:
+                    commands.getoutput('cp %s %s'%(self.originalitps[i], new_working_directory))
+                os.chdir(new_working_directory)
+
+                # Sets initial state parameters
+                mdp = MdpFile('minimize.mdp')
+                mdp.setParameter('free-energy', 'no')
+                mdp.setParameter('nsteps', '0')
+                mdp.write('minimize.mdp')
+
+                line = findEnergy(self.grompp, self.mdrun, self.g_energy, 'minimize.mdp', 'system.gro', 'system.top', self.xvg_values)
+                ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n), axis=0)
+
+        # Mutated Initial calculation
+        elif state == 'mutatedInitial':
+
+            print 'Minimizing Initial Mutation'
+            working_directory = os.path.join(working_directory,'initialmutation')
+            if not os.path.exists(working_directory):
+                commands.getoutput('mkdir %s'%(working_directory))
+
+            expanded_ligand_list = list()
+            expanded_gros_list = list()
+
+            for i in range(len(self.ligand_name_list)):
+                for j in range(i+1, len(self.ligand_name_list)):
+                    expanded_ligand_list.append(self.ligand_name_list[i])
+                    expanded_ligand_list.append(self.ligand_name_list[j])
+                    expanded_gros_list.append(self.gros[i])
+                    expanded_gros_list.append(self.gros[j])
+
+            # Runs findEnergy and appends values to array
+            for i in range(len(expanded_ligand_list)):
+
+                if i%2 == 0:
+                    comparison = '%s-%s'%(expanded_ligand_list[i], expanded_ligand_list[i+1])
+                    working_directory = os.path.join(working_directory, comparison)
+                    commands.getoutput('mkdir %s'%(working_directory))
+
+                print 'Minimizing %s in pair %s'%(expanded_ligand_list[i], comparison)
+
+                new_working_directory = os.path.join(working_directory, expanded_ligand_list[i])
+                if not os.path.exists(new_working_directory):
+                    commands.getoutput('mkdir %s'%(new_working_directory))
+                commands.getoutput('cp %s %s/minimize.mdp'%(self.mdp, new_working_directory))
+                commands.getoutput('cp %s %s/system.gro'%(expanded_gros_list[i], new_working_directory))
+                commands.getoutput('cp %s %s/system.top'%(self.relativetops[i], new_working_directory))
+                if self.relativeitps != None:
+                    commands.getoutput('cp %s %s'%(self.relativeitps[i], new_working_directory))
+                os.chdir(new_working_directory)
+
+                # Sets mutated initial state parameters
+                mdp = MdpFile('minimize.mdp')
+                mdp.setParameter('free-energy', 'yes')
+                mdp.setParameter('init-lambda', '0')
+                mdp.setParameter('nsteps','0')
+                mdp.write('minimize.mdp')
+
+                line = findEnergy(self.grompp, self.mdrun, self.g_energy, 'minimize.mdp', 'system.gro', 'system.top', self.xvg_values)
+                ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n), axis=0)
+
+        # Mutated Final calculation
+        elif state == 'mutatedFinal':
+
+            print 'Minimizing Final Mutation'
+            working_directory = os.path.join(working_directory,'finalmutation')
+            if not os.path.exists(working_directory):
+                commands.getoutput('mkdir %s'%(working_directory))
+
+            expanded_ligand_list = list()
+            expanded_gros_list = list()
+
+            for i in range(len(self.ligand_name_list)):
+                for j in range(i+1, len(self.ligand_name_list)):
+                    expanded_ligand_list.append(self.ligand_name_list[i])
+                    expanded_ligand_list.append(self.ligand_name_list[j])
+                    expanded_gros_list.append(self.gros[i])
+                    expanded_gros_list.append(self.gros[j])
+
+            for i in range(len(expanded_ligand_list)):
+
+                if i%2 == 0:
+                    comparison = '%s-%s'%(expanded_ligand_list[i], expanded_ligand_list[i+1])
+                    commands.getoutput('mkdir %s'%(os.path.join(working_directory, comparison)))
+
+                print 'Minimizing %s in pair %s'%(expanded_ligand_list[i], comparison)
+
+                new_working_directory = os.path.join(working_directory,comparison, expanded_ligand_list[i])
+                if not os.path.exists(new_working_directory):
+                    commands.getoutput('mkdir %s'%(new_working_directory))
+                commands.getoutput('cp %s %s/minimize.mdp'%(self.mdp, new_working_directory))
+                commands.getoutput('cp %s %s/system.gro'%(expanded_gros_list[i], new_working_directory))
+                commands.getoutput('cp %s %s/system.top'%(self.relativetops[i], new_working_directory))
+                if self.relativeitps != None:
+                    commands.getoutput('cp %s %s'%(self.relativeitps[i], new_working_directory))
+                os.chdir(new_working_directory)
+
+                # Sets mutated final state parameters
+                mdp = MdpFile('minimize.mdp')
+                mdp.setParameter('free-energy', 'yes')
+                mdp.setParameter('init-lambda', '1')
+                mdp.setParameter('nsteps','0')
+                mdp.write('minimize.mdp')
+
+                if i%2 == 1:
+                    if self.matches != None:
+                        matchArray = readMci(self.matches[(i-1)/2])
+                    else:
+                        matchArray = determineMatchArray(self.ligand_basepath, expanded_ligand_list[i-1], expanded_ligand_list[i])
+                    mutatedGroStructure = GromacsStructure()
+                    mutatedGroStructure = mutateGroFile(expanded_gros_list[i-1], expanded_gros_list[i], matchArray)
+                    mutatedGroStructure.write('system.gro')
+                    modifySolventInTopFile(self.relativetops[i-1], self.relativetops[i], 'system.top')
+
+                # Runs findEnergy and appends values to array
+                line = findEnergy(self.grompp, self.mdrun, self.g_energy, 'minimize.mdp', 'system.gro', 'system.top', self.xvg_values)
+                ligand = append(ligand.reshape(len(ligand), n), line.reshape(1, n ), axis=0)
+
+        return ligand
+
+
