@@ -46,10 +46,10 @@ python extract-common-substructure.py
 python setup-replative-fep.py
 
 4. To check that the energies of the relative states correspond
+Check template in Examples/checkrelativestates/testcheckrelativestates.py
 
-# Edit the 'PARAMETERS' section at the top of the file to specify which molecules you will check.
-# Check the energies of the relative states.
-python check-energies.py
+# Compare relative states
+python testcheckrelativestates.py
 
 Other notes:
 
