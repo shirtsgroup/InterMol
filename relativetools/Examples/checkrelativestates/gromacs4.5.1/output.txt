@@ -1,0 +1,234 @@
+Minimizing Initial
+Minimizing LG2
+Minimizing LG3
+Minimizing LG5
+Minimizing LG6
+Minimizing LG8
+Minimizing LG9
+Minimizing Initial Mutation
+Minimizing LG2 in pair LG2-LG3
+Minimizing LG3 in pair LG2-LG3
+Minimizing LG2 in pair LG2-LG5
+Minimizing LG5 in pair LG2-LG5
+Minimizing LG2 in pair LG2-LG6
+Minimizing LG6 in pair LG2-LG6
+Minimizing LG2 in pair LG2-LG8
+Minimizing LG8 in pair LG2-LG8
+Minimizing LG2 in pair LG2-LG9
+Minimizing LG9 in pair LG2-LG9
+Minimizing LG3 in pair LG3-LG5
+Minimizing LG5 in pair LG3-LG5
+Minimizing LG3 in pair LG3-LG6
+Minimizing LG6 in pair LG3-LG6
+Minimizing LG3 in pair LG3-LG8
+Minimizing LG8 in pair LG3-LG8
+Minimizing LG3 in pair LG3-LG9
+Minimizing LG9 in pair LG3-LG9
+Minimizing LG5 in pair LG5-LG6
+Minimizing LG6 in pair LG5-LG6
+Minimizing LG5 in pair LG5-LG8
+Minimizing LG8 in pair LG5-LG8
+Minimizing LG5 in pair LG5-LG9
+Minimizing LG9 in pair LG5-LG9
+Minimizing LG6 in pair LG6-LG8
+Minimizing LG8 in pair LG6-LG8
+Minimizing LG6 in pair LG6-LG9
+Minimizing LG9 in pair LG6-LG9
+Minimizing LG8 in pair LG8-LG9
+Minimizing LG9 in pair LG8-LG9
+Minimizing Final Mutation
+Minimizing LG2 in pair LG2-LG3
+Minimizing LG3 in pair LG2-LG3
+Minimizing LG2 in pair LG2-LG5
+Minimizing LG5 in pair LG2-LG5
+Minimizing LG2 in pair LG2-LG6
+Minimizing LG6 in pair LG2-LG6
+Minimizing LG2 in pair LG2-LG8
+Minimizing LG8 in pair LG2-LG8
+Minimizing LG2 in pair LG2-LG9
+Minimizing LG9 in pair LG2-LG9
+Minimizing LG3 in pair LG3-LG5
+Minimizing LG5 in pair LG3-LG5
+Minimizing LG3 in pair LG3-LG6
+Minimizing LG6 in pair LG3-LG6
+Minimizing LG3 in pair LG3-LG8
+Minimizing LG8 in pair LG3-LG8
+Minimizing LG3 in pair LG3-LG9
+Minimizing LG9 in pair LG3-LG9
+Minimizing LG5 in pair LG5-LG6
+Minimizing LG6 in pair LG5-LG6
+Minimizing LG5 in pair LG5-LG8
+Minimizing LG8 in pair LG5-LG8
+Minimizing LG5 in pair LG5-LG9
+Minimizing LG9 in pair LG5-LG9
+Minimizing LG6 in pair LG6-LG8
+Minimizing LG8 in pair LG6-LG8
+Minimizing LG6 in pair LG6-LG9
+Minimizing LG9 in pair LG6-LG9
+Minimizing LG8 in pair LG8-LG9
+Minimizing LG9 in pair LG8-LG9
+
+
+Differences When Comparing Energies With and Without Free Energy
+
+LG2
+No Difference
+
+LG3
+No Difference
+
+LG2
+No Difference
+
+LG5
+No Difference
+
+LG2
+No Difference
+
+LG6
+No Difference
+
+LG2
+No Difference
+
+LG8
+No Difference
+
+LG2
+No Difference
+
+LG9
+No Difference
+
+LG3
+No Difference
+
+LG5
+No Difference
+
+LG3
+No Difference
+
+LG6
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.000299        -0.002990        -0.001236        -0.004526 
+
+LG3
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.002438        -0.000901        -0.000027        -0.003366 
+
+LG8
+No Difference
+
+LG3
+Mismatched Params.            Angle       Coulomb-14          LJ-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.000001         0.001944        -0.000001         0.000093        -0.001688         0.000348 
+
+LG9
+No Difference
+
+LG5
+No Difference
+
+LG6
+No Difference
+
+LG5
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.000004        -0.000136        -0.359044         0.000829        -0.000030         0.000259        -0.000310        -0.000079         0.000416        -0.358099 
+
+LG8
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.003337         0.004083         0.010147         0.010893 
+
+LG5
+No Difference
+
+LG9
+Mismatched Params.       Coulomb-14          LJ-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.008788         0.000001        -0.000904        -0.004050         0.003834 
+
+LG6
+No Difference
+
+LG8
+No Difference
+
+LG6
+No Difference
+
+LG9
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.001995         0.000715         0.004587         0.003307 
+
+LG8
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.009099        -0.010009        -0.022327        -0.023237 
+
+LG9
+Mismatched Params.       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.005035         0.004277         0.004205         0.013518 
+
+
+Differences When Comparing the Mutated Forms
+
+Comparing LG2 to LG3
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.045482      -941.150792         0.005745        -0.004091        -0.014240        -0.002421        -0.045912        -0.003413        -0.068307        -0.004836      -941.242784 
+
+Comparing LG2 to LG5
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.000026         0.000603         0.000239         0.147166         0.322635        -5.123362        -2.376829        -0.300721         5.292367         7.001520         4.963592 
+
+Comparing LG2 to LG6
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.009873     -1993.278648        -0.672975         0.151661         0.305721        -5.128714        -2.512868        -0.297572         5.108352         6.993790     -1989.341125 
+
+Comparing LG2 to LG8
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.000025         0.000567         0.000233         0.147169         0.322632        -5.777657        -2.376829        -0.300721         5.359463         7.247613         4.622446 
+
+Comparing LG2 to LG9
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.090902     -1408.527119        -0.672509         0.145770         0.375632        -5.783952        -2.491265        -0.294998         5.189088         7.239281     -1404.910975 
+
+Comparing LG3 to LG5
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.045508       941.151395        -0.005506         0.151257         0.336875        -5.120941        -2.330917        -0.297308         5.360674         7.006356       946.206376 
+
+Comparing LG3 to LG6
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.055355     -1052.127856        -0.678720         0.155752         0.319961        -5.126293        -2.466956        -0.294159         5.176659         6.998626     -1048.098341 
+
+Comparing LG3 to LG8
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.045507       941.151359        -0.005512         0.151260         0.336872        -5.775236        -2.330917        -0.297308         5.427770         7.252449       945.865230 
+
+Comparing LG3 to LG9
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.136384      -467.376327        -0.678254         0.149861         0.389872        -5.781531        -2.445353        -0.291585         5.257395         7.244117      -463.668191 
+
+Comparing LG5 to LG6
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.009847     -1993.279251        -0.673214         0.004495        -0.016914        -0.005352        -0.136039         0.003149        -0.184015        -0.007730     -1994.304717 
+
+Comparing LG5 to LG8
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.000001        -0.000036        -0.000006         0.000003        -0.000003        -0.654295         0.067096         0.246093        -0.341146 
+
+Comparing LG5 to LG9
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.090876     -1408.527722        -0.672748        -0.001396         0.052997        -0.660590        -0.114436         0.005723        -0.103279         0.237761     -1409.874567 
+
+Comparing LG6 to LG8
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                 0.009848      1993.279215         0.673208        -0.004492         0.016911        -0.648943         0.136039        -0.003149         0.251111         0.253823      1993.963571 
+
+Comparing LG6 to LG9
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.081029       584.751529         0.000466        -0.005891         0.069911        -0.655238         0.021603         0.002574         0.080736         0.245491       584.430150 
+
+Comparing LG8 to LG9
+Mismatched Params.             Bond            Angle      Proper-Dih.   Ryckaert-Bell.            LG-14       Coulomb-14          LJ-(SR)     Coulomb-(SR)        Potential      Kinetic-En.     Total-Energy 
+Difference                -0.090877     -1408.527686        -0.672742        -0.001399         0.053000        -0.006295        -0.114436         0.005723        -0.170375        -0.008332     -1409.533421 

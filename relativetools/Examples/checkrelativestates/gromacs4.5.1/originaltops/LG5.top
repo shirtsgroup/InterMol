@@ -1,0 +1,12 @@
+#include "oplsaa.ff/forcefield.itp"
+#include "LG5.itp"
+; Include water topology
+#include "oplsaa.ff/tip3p.itp"
+
+[ system ]
+p3863_fkbprelative_ligand
+
+[ molecules ]
+; Compound        #mols
+LG5              1
+SOL              882

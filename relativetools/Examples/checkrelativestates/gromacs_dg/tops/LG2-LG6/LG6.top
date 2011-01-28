@@ -1,0 +1,12 @@
+#include "ffoplsaa.itp"
+#include "LG6.mut.itp"
+; Include water topology
+#include "ffoplsaa_tip3p.itp"
+
+[ system ]
+p3863_fkbprelative_ligand
+
+[ molecules ]
+; Compound        #mols
+LG6              1
+SOL              879
