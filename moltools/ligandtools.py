@@ -55,6 +55,7 @@ CHANGELOG
   10/28/2009: DLM fixing bug in perturbGromacsTopology wherein A & B state charges were nonzero for transformations involving turning off vdw interactions; made some other minor modifications there to make it easier to avoid this problem.
   2/1/2010: DLM minor bugfix to add_ligand_to_gro concerning formatting of residue naming, per G. Rocklin.
   2/6/2010: GJR Small modifications to perturbGromacsTopology to implement the 'reverse' option for dual-topology relative free energy calculations, as well as modifications to add_ligand_to_top to merge the atom_types and nonbond_params sections in the event multiple ligands have been inserted into the same topology file using this scheme
+  2/3/2011: DLM Modifications to add splitMolFileToFiles -- general tool which splits a multi-conformer/multi-molecule input molecule file into output files based on molecule title/conformation. 
 """
 
 #=============================================================================================
@@ -888,6 +889,88 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
       print "Work done in %s..." % working_directory
 
    return
+
+#=============================================================================================
+# METHODS FOR WORKING WITH MOLECULAR FILE FORMATS AND MODIFYING THEM
+#=============================================================================================
+def splitMolFileToFiles( infile, outprefix, outformat='.mol2', SeparateConformers = False, UseTitles = True ):
+    """Read a specified (OE readable) input molecular file and write it out to the specified output file(s), splitting out separate molecules into separate files. Optionally, separate CONFORMATIONS may also be written to separate files. Output format may be different from input format. 
+
+    Example use cases: Pass this output from a docking run, where the file contains multiple conformations of multiple molecules. Use it to split the output into separate files for different molecules, or separate files for each conformer of each molecule.
+
+    ARGUMENTS:
+        - infile: Input (OE readable) molecular file
+        - outprefix: Prefix of output names; may be empty if molecule's title is going to be used
+    OPTIONAL ARGUMENTS:
+        - outformat: '.mol2', '.oeb.gz', other file formats that OE is capable of handling. Default '.mol2'
+        - SeparateConformers: Boolean; if True, individual conformers of a molecule will each be written to their own file. If False (default), only individual molecules will be written (with, if applicable, multiple conformers per molecule file). 
+        - UseTitles: Boolean (default True). If True, existing titles of molecules (with spaces replaced by '_') will be used in constructing molecule output names, as: outprefix+title+outformat.
+
+        TO DO: Currently the code for handling of multiple conformers is less than ideal as I (D. Mobley) haven't yet been able to figure out how to append to existing molecular files. Mostly, this is not a problem, but sometimes when an input file has multiple conformers of the same molecule (interspersed by other molecules) these are not recognized as such. Hence, in the case where conformations are separated, these can get written to the same file (the title, plus '_1' for the first instance, and then that happens again when we next get to the same molecule). In the case where conformations are not separated, this just results in conformations being lost. As a temporary work-around, I keep a list of which files have already been used, and if I attempt to write the same file more than once, I read it in first and then just add to it (in the multi-conformer case) or increment the conformer counter (in the multi-conformer case). A better algorithm should be come up with at some point.
+        """
+
+    #Set up input molecule stream
+    istream = oemolistream( infile )
+    istream.SetConfTest( OEIsomericConfTest() )#Identify multi-conformer molecules
+    
+    #Set up output stream
+    ostream = oemolostream()
+
+    #Loop over molecules
+    used_filenames = [] #Track filenames which have been used to avoid accidentally overwriting the same file in some multi-conformer cases
+    conformer_num = {} #Track last used conformer number by molecule title to avoid overwriting the same file in some multi-conformer cases
+
+    for mol in istream.GetOEMols(): #Loop over molecules (not conformations -- these are looped seperately) in input stream
+        if UseTitles:
+            title = mol.GetTitle()
+            title = title.replace(' ','_')
+            #Construct first part of output name
+            outprefix_t = outprefix+title
+        else: outprefix_t = outprefix
+
+        #Loop over conformers
+        #If we are not splitting by conformer, everything goes to one output file
+        if not SeparateConformers:
+            #Construct filename
+            ofile = outprefix_t + outformat
+            if ofile in used_filenames: #If we have already used this output file, that means we've got a glitch (see note above) with the multi-conformer handling, and we need to basically append these molecule(s) to it
+                tempistream = oemolistream( ofile )
+                tempmols = []
+                #Read in existing molecules from that file
+                for tmpmol in tempistream.GetOEMols():
+                    tempmols.append(OEMol(tmpmol))
+                tempistream.close()
+                #Write out existing molecules to that file
+                ostream.open( ofile )
+                for tmpmol in tempmols:
+                    OEWriteConstMolecule( ostream, tmpmol)
+            else:
+                ostream.open( ofile )
+        #Proceed to loop over conformers in this system
+        for conformer in mol.GetConfs(): 
+            #If we ARE splitting, open output file for each conformer
+            if SeparateConformers:
+                #Build target file name
+                if not conformer_num.has_key( title ): #If we haven't already used this title, just start at 1
+                    conformer_num[ title ] = 1
+                else: conformer_num[title] += 1 #If we have used it, increment conformer counter
+
+                ofile = outprefix_t + '_%s' % conformer_num[ title ] + outformat
+       
+                ostream.open( ofile )
+            #Write molecule to output
+            OEWriteConstMolecule( ostream, conformer )
+
+            #If we ARE splitting, close output stream
+            if SeparateConformers:
+                ostream.close()
+                used_filenames.append(ofile)
+        if not SeparateConformers:
+            ostream.close()
+            used_filenames.append(ofile)
+
+    istream.close()
+
 #=============================================================================================
 # METHODS FOR MANIPULATING GROMACS TOPOLOGY AND COORDINATE FILES
 #=============================================================================================
