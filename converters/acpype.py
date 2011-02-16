@@ -46,7 +46,7 @@ from __future__ import print_function
 
     alanwilter _at_ gmail _dot_ com
 """
-svnId = '$Id: acpype.py 359 2011-01-20 09:59:03Z alanwilter $'
+svnId = '$Id: acpype.py 363 2011-02-14 15:37:58Z alanwilter $'
 try: svnRev, svnDate, svnTime = svnId.split()[2:5]
 except: svnRev, svnDate, svnTime = '0', '0', '0'
 tag = "%s %s Rev: %s" % (svnDate, svnTime, svnRev)
@@ -70,7 +70,7 @@ from shutil import rmtree
 import traceback
 import signal
 import time
-import getopt
+import optparse
 import math
 import os
 #import cPickle as pickle
@@ -255,31 +255,13 @@ head = "%s created by acpype (Rev: " + svnRev + ") on %s\n"
 
 date = datetime.now().ctime()
 
-USAGE = \
+usage = \
 """
     acpype -i _file_ [-c _string_] [-n _int_] [-m _int_] [-a _string_] [-f] etc. or
-    acpype -p _prmtop_ -x _inpcrd_ [-d]
-    -i    input file name with either extension '.pdb', '.mdl' or '.mol2' (mandatory if -p and -x not set)
-    -p    amber prmtop file name (always used with -x)
-    -x    amber inpcrd file name (always used with -p)
-    -c    charge method: gas, bcc (default), user (user's charges in mol2 file)
-    -n    net molecular charge (int), for gas default is 0
-    -m    multiplicity (2S+1), default is 1
-    -a    atom type, can be gaff or amber (AMBER99+SB+bsc0), default is gaff
-    -q    am1-bcc flag, sqm (default), divcon, mopac
-    -k    mopac or sqm keyword, inside quotes
-    -f    force topologies recalculation anew
-    -d    for debugging purposes, keep any temporary file created
-    -o    output topologies: all (default), gmx, cns or charmm
-    -r    write GMX dihedrals for GMX 4.5
-    -t    write CNS topology with allhdg-like parameters (experimental)
-    -e    engine: tleap (default) or sleap (not fully matured)
-    -b    a basename for the project (folder and output files)
-    -s    max time (in sec) tolerance for sqm/mopac, default is 10 hours
-    -y    start ipython interpreter
-    -w    print nothing
-    -g    disambiguate lower and uppercase atomtypes in GMX top file
-    -h    this help
+    acpype -p _prmtop_ -x _inpcrd_ [-d]"""
+
+epilog = \
+"""
 
     output: assuming 'root' is the basename of either the top input file,
             the 3-letter residue name or user defined (-b option)
@@ -299,8 +281,7 @@ USAGE = \
     root_CNS.inp      :  run parameters file for CNS/XPLOR
     root_CHARMM.rtf   :  topology file for CHARMM
     root_CHARMM.prm   :  parameter file for CHARMM
-    root_CHARMM.inp   :  run parameters file for CHARMM
-"""
+    root_CHARMM.inp   :  run parameters file for CHARMM"""
 
 SLEAP_TEMPLATE = \
 """
@@ -328,9 +309,7 @@ saveoff %(res)s %(acBase)s.lib
 quit
 """
 
-def invalidArgs(text = None, usage = True):
-
-    if usage: print(USAGE)
+def invalidArgs(text = None):
     if text:
         print('ERROR: ' + text)
     sys.exit(1)
@@ -340,96 +319,12 @@ verNum = sys.version.split()[0]
 version = verNum.split('.') #string.split(verNum, ".")
 verList = list(map(int, version))
 if verList < [2, 6, 0]:
-    invalidArgs(text = "Python version %s\n       Sorry, you need python 2.6 or higher" % verNum, usage = False)
+    invalidArgs(text = "Python version %s\n       Sorry, you need python 2.6 or higher" % verNum)
 
 try:
     set()
 except NameError:
     from sets import Set as set
-
-def parseArgs(args):
-
-    for _i in range(args.count('')):
-        args.remove('')
-
-    amb2gmx = False
-
-    options = 'hyfgwtrdi:c:n:m:o:a:q:e:k:x:p:b:s:'
-
-    ctList = ['gas', 'bcc', 'user']
-    atList = ['gaff', 'amber'] #, 'bcc', 'sybyl']
-    tpList = ['all'] + outTopols
-    enList = ['sleap', 'tleap']
-    qList = ['mopac', 'sqm', 'divcon']
-
-    try:
-        opt_list, args = getopt.getopt(args, options) #, long_options)
-    except Exception as msg:  #Python 2.6 or higher
-        invalidArgs("FAILED: %s" % msg)
-
-    d = {}
-
-    for key, value in opt_list:
-        if key in d:
-            invalidArgs("duplicated parameters: %s" % key)
-
-        if value == '':
-            value = None
-
-        d[key] = value
-
-    if '-d' in list(d.keys()):
-        text = "Python Version %s" % verNum
-        print('DEBUG: %s' % text)
-
-    if not d and not args:
-        invalidArgs("missing parameters")
-
-    if '-h' in list(d.keys()):
-        invalidArgs()
-
-    if '-c' in list(d.keys()):
-        if d['-c'] not in ctList:
-            invalidArgs("'%s' not valid, has to be one of %s" % (d['-c'], str(ctList)))
-
-    if '-a' in list(d.keys()):
-        if d['-a'] not in atList:
-            invalidArgs("'%s' not valid, has to be one of %s" % (d['-a'], str(atList)))
-
-    if '-o' in list(d.keys()):
-        if d['-o'] not in tpList:
-            invalidArgs("'%s' not valid, has to be one of %s" % (d['-o'], str(tpList)))
-
-    if '-e' in list(d.keys()):
-        if d['-e'] not in enList:
-            invalidArgs("'%s' not valid, has to be one of %s" % (d['-e'], str(enList)))
-
-    if '-q' in list(d.keys()):
-        if d['-q'] not in qList:
-            invalidArgs("'%s' not valid, has to be one of %s" % (d['-q'], str(qList)))
-
-    if not '-i' in list(d.keys()):
-        amb2gmx = True
-        if not '-p' in list(d.keys()) or not '-x' in list(d.keys()):
-            invalidArgs("missing input files")
-
-    if '-i' in list(d.keys()) and '-p' in list(d.keys()):
-        invalidArgs("either '-i' or ('-p', '-x'), but not both")
-    elif '-i' in list(d.keys()) and '-x' in list(d.keys()):
-        invalidArgs("either '-i' or ('-p', '-x'), but not both")
-
-    if amb2gmx:
-        if not os.path.exists(d['-p']) or not os.path.exists(d['-x']):
-            invalidArgs("input file prmtop and/or inpcrd don't exist")
-    elif not os.path.exists(d['-i']):
-        invalidArgs("input file '%s' doesn't exist" % d['-i'])
-
-    if args:
-        invalidArgs("argument not recognised: %s" % str(args))
-
-    d['amb2gmx'] = amb2gmx
-
-    return d
 
 def elapsedTime(seconds, suffixes = ['y', 'w', 'd', 'h', 'm', 's'], add_s = False, separator = ' '):
     """
@@ -1274,7 +1169,8 @@ a        """
         """
         self.topFileData = open(self.acTopFileName, 'r').readlines()
         self.molTopol = MolTopol(self, verbose = self.verbose, debug = self.debug,
-                                 gmx45 = self.gmx45, disam = self.disam)
+                                 gmx45 = self.gmx45, disam = self.disam, direct = self.direct,
+                                 sorted = self.sorted)
         if self.outTopols:
             if 'cns' in self.outTopols:
                 self.molTopol.writeCnsTopolFiles()
@@ -1576,6 +1472,68 @@ a        """
         self.condensedProperDihedrals = condProperDih # [[],[],...]
         self.atomPairs = atomPairs # set((atom1, atom2), ...)
         self.printDebug("getDihedrals done")
+
+    def sortAtomsForGromacs(self):
+        """
+            Re-sort atoms for gromacs, which expects all hydrogens to immediately
+            follow the heavy atom they are bonded to and belong to the same charge
+            group.
+
+            Currently, atom mass < 1.2 is taken to denote a proton.  This behavior
+            may be changed by modifying the 'is_hydrogen' function within.
+
+            JDC 2011-02-03
+        """
+
+        # Build dictionary of bonded atoms.
+        bonded_atoms = dict()
+        for atom in self.atoms:
+            bonded_atoms[atom] = list()
+        for bond in self.bonds:
+            [atom1, atom2] = bond.atoms
+            bonded_atoms[atom1].append(atom2)
+            bonded_atoms[atom2].append(atom1)
+
+        # Define hydrogen and heavy atom classes.
+        def is_hydrogen(atom):
+            return (atom.mass < 1.2)
+
+        def is_heavy(atom):
+            return not is_hydrogen(atom)
+
+        # Build list of sorted atoms, assigning charge groups by heavy atom.
+        sorted_atoms = list()
+        cgnr = 1 # charge group number: each heavy atoms is assigned its own charge group
+        # First pass: add heavy atoms, followed by the hydrogens bonded to them.
+        for atom in self.atoms:
+            if is_heavy(atom):
+                # Append heavy atom.
+                atom.cgnr = cgnr
+                sorted_atoms.append(atom)
+                # Append all hydrogens.
+                for bonded_atom in bonded_atoms[atom]:
+                    if is_hydrogen(bonded_atom) and not (bonded_atom in sorted_atoms):
+                        # Append bonded hydrogen.
+                        bonded_atom.cgnr = cgnr
+                        sorted_atoms.append(bonded_atom)
+                cgnr += 1
+
+        # Second pass: Add any remaining atoms.
+        if len(sorted_atoms) < len(self.atoms):
+            for atom in self.atoms:
+                if not (atom in sorted_atoms):
+                    atom.cgnr = cgnr
+                    sorted_atoms.append(atom)
+                    cgnr += 1
+
+        # Replace current list of atoms with sorted list.
+        self.atoms = sorted_atoms
+
+        # Renumber atoms in sorted list, starting from 1.
+        for (index, atom) in enumerate(self.atoms):
+            atom.id = index + 1
+
+        return
 
     def setAtomPairs(self):
         """
@@ -1914,6 +1872,7 @@ a        """
            E.g.: CA and ca -> CA and ca_
         """
         if self.disam:
+            self.printMess("Disambiguating lower and uppercase atomtypes in GMX top file.\n")
             self.atomTypesGromacs = self.atomTypes
             self.atomsGromacs = self.atoms
             return
@@ -1951,10 +1910,12 @@ a        """
             if atName in delAtomTypes:
                 atom = Atom(a.atomName, dictAtomTypes[atName.upper()], a.id, \
                             a.resid, a.mass, a.charge, a.coords)
+                atom.cgnr = a.cgnr
                 atomsGromacs.append(atom)
             elif atName in modAtomTypes:
                 atom = Atom(a.atomName, dictAtomTypes[atName + '_'], a.id, \
                             a.resid, a.mass, a.charge, a.coords)
+                atom.cgnr = a.cgnr
                 atomsGromacs.append(atom)
             else:
                 atomsGromacs.append(a)
@@ -2187,6 +2148,9 @@ a        """
 3   1   2
 #endif
 """
+        if self.direct and amb2gmx:
+            self.printMess("Converting directly from AMBER to GROMACS.\n")
+
         # Dict of ions dealt by acpype emulating amb2gmx
         ionsDict = {'Na+':headNa, 'Cl-':headCl, 'K+':headK}
         ionsSorted = []
@@ -2281,8 +2245,9 @@ a        """
         for atom in self.atomsGromacs:
             resid = atom.resid
             resname = self.residueLabel[resid]
-            if resname in list(ionsDict.keys()) + ['WAT' ]:
-                break
+            if not self.direct:
+                if resname in list(ionsDict.keys()) + ['WAT' ]:
+                    break
             aName = atom.atomName
             aType = atom.atomType.atomTypeName
             oItem = d2opls.get(aType, ['x', 0])
@@ -2290,15 +2255,18 @@ a        """
             id = atom.id
             id2oplsATDict[id] = oplsAtName
             oaCode = 'opls_' + oItem[0]
+            cgnr = id
+            if self.sorted:
+                cgnr = atom.cgnr # JDC
             charge = atom.charge
             mass = atom.mass
             omass = float(oItem[-1])
             qtot += charge
             resnr = resid + 1
             line = "%6d %4s %5d %5s %5s %4d %12.6f %12.5f ; qtot %1.3f\n" % \
-            (count, aType, resnr, resname, aName, count, charge, mass, qtot)
+            (id, aType, resnr, resname, aName, cgnr, charge, mass, qtot) # JDC
             oline = "%6d %4s %5d %5s %5s %4d %12.6f %12.5f ; qtot % 3.3f  %-4s\n" % \
-            (count, oaCode, resnr, resname, aName, count, charge, omass, qtot, oplsAtName)
+            (id, oaCode, resnr, resname, aName, cgnr, charge, omass, qtot, oplsAtName) # JDC
             count += 1
             temp.append(line)
             otemp.append(oline)
@@ -2325,8 +2293,8 @@ a        """
             a2Name = bond.atoms[1].atomName
             id1 = bond.atoms[0].id
             id2 = bond.atoms[1].id
-            oat1 = id2oplsATDict[id1]
-            oat2 = id2oplsATDict[id2]
+            oat1 = id2oplsATDict.get(id1)
+            oat2 = id2oplsATDict.get(id2)
             line = "%6i %6i %3i %13.4e %13.4e ; %6s - %-6s\n" % (id1, id2, 1,
                    bond.rEq * 0.1, bond.kBond * 200 * cal, a1Name, a2Name)
             oline = "%6i %6i %3i ; %13.4e %13.4e ; %6s - %-6s %6s - %-6s\n" % \
@@ -2384,9 +2352,9 @@ a        """
             id1 = angle.atoms[0].id
             id2 = angle.atoms[1].id
             id3 = angle.atoms[2].id
-            oat1 = id2oplsATDict[id1]
-            oat2 = id2oplsATDict[id2]
-            oat3 = id2oplsATDict[id3]
+            oat1 = id2oplsATDict.get(id1)
+            oat2 = id2oplsATDict.get(id2)
+            oat3 = id2oplsATDict.get(id3)
             line = "%6i %6i %6i %6i %13.4e %13.4e ; %6s - %-6s - %-6s\n" % (id1, id2,
             id3, 1, angle.thetaEq * radPi, 2 * cal * angle.kTheta, a1, a2, a3)
             oline = "%6i %6i %6i %6i ; %13.4e %13.4e ; %6s - %-4s - %-6s %4s - %+4s - %-4s\n" % \
@@ -2423,10 +2391,10 @@ a        """
                 id2 = dih[0][1].id
                 id3 = dih[0][2].id
                 id4 = dih[0][3].id
-                oat1 = id2oplsATDict[id1]
-                oat2 = id2oplsATDict[id2]
-                oat3 = id2oplsATDict[id3]
-                oat4 = id2oplsATDict[id4]
+                oat1 = id2oplsATDict.get(id1)
+                oat2 = id2oplsATDict.get(id2)
+                oat3 = id2oplsATDict.get(id3)
+                oat4 = id2oplsATDict.get(id4)
                 c0, c1, c2, c3, c4, c5 = dih[1]
                 line = \
                 "%6i %6i %6i %6i %6i %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
@@ -2451,6 +2419,7 @@ a        """
                     oitpText += otemp
             self.printDebug("GMX proper dihedrals done")
         else:
+            self.printMess("Writing GMX dihedrals for GMX 4.5.\n")
             funct = 9 #9
             for dih in self.properDihedralsGmx45:
                 a1 = dih[0][0].atomName
@@ -2552,11 +2521,12 @@ a        """
                 oitpText += otemp
         self.printDebug("GMX improper dihedrals done")
 
-        for ion in ionsSorted:
-            topText.append(ionsDict[ion[2]])
+        if not self.direct:
+            for ion in ionsSorted:
+                topText.append(ionsDict[ion[2]])
 
-        if nWat:
-            topText.append(headWater)
+            if nWat:
+                topText.append(headWater)
 
         topText.append(headSystem % (self.baseName))
         topText.append(headMols)
@@ -2567,11 +2537,12 @@ a        """
             topText.append(" %-16s %-6i\n" % (self.baseName, nSolute))
             otopText.append(" %-16s %-6i\n" % (self.baseName, nSolute))
 
-        for ion in ionsSorted:
-            topText.append(" %-16s %-6i\n" % (ion[2].upper(), ion[1]))
+        if not self.direct:
+            for ion in ionsSorted:
+                topText.append(" %-16s %-6i\n" % (ion[2].upper(), ion[1]))
 
-        if nWat:
-            topText.append(" %-16s %-6i\n" % ('WAT', nWat))
+            if nWat:
+                topText.append(" %-16s %-6i\n" % ('WAT', nWat))
 
         gmxDir = os.path.abspath('.')
         topFileName = os.path.join(gmxDir, top)
@@ -2979,12 +2950,14 @@ class ACTopol(AbstractTopol):
             multiplicity = '1', atomType = 'gaff', force = False, basename = None,
             debug = False, outTopol = 'all', engine = 'tleap', allhdg = False,
             timeTol = 36000, qprog = 'sqm', ekFlag = None, verbose = True,
-            gmx45 = False, disam = False):
+            gmx45 = False, disam = False, direct = False, sorted = False):
 
         self.debug = debug
         self.verbose = verbose
         self.gmx45 = gmx45
         self.disam = disam
+        self.direct = direct
+        self.sorted = sorted
         self.inputFile = os.path.basename(inputFile)
         self.rootDir = os.path.abspath('.')
         self.absInputFile = os.path.abspath(inputFile)
@@ -3093,12 +3066,14 @@ class MolTopol(ACTopol):
     """
     def __init__(self, acTopolObj = None, acFileXyz = None, acFileTop = None,
                  debug = False, basename = None, verbose = True, gmx45 = False,
-                 disam = False):
+                 disam = False, direct = False, sorted = False):
 
         self.allhdg = False
         self.debug = debug
         self.gmx45 = gmx45
         self.disam = disam
+        self.direct = direct
+        self.sorted = sorted
         self.verbose = verbose
         self.inputFile = acFileTop
         if acTopolObj:
@@ -3147,6 +3122,11 @@ class MolTopol(ACTopol):
 #                  'ANGLE_FORCE_CONSTANT', 'ANGLE_EQUIL_VALUE',
 #                  'DIHEDRAL_FORCE_CONSTANT', 'DIHEDRAL_PERIODICITY',
 #                  'DIHEDRAL_PHASE', 'AMBER_ATOM_TYPE' )
+
+        # Sort atoms for gromacs output. # JDC
+        if self.sorted:
+            self.printMess("Sorting atoms for gromacs ordering.\n")
+            self.sortAtomsForGromacs()
 
 class Atom(object):
     """
@@ -3214,52 +3194,161 @@ class Dihedral(object):
 if __name__ == '__main__':
     t0 = time.time()
     print(header)
-    argsDict = parseArgs(sys.argv[1:])
-    iF = argsDict.get('-i', None)
-    bn = argsDict.get('-b', None)
-    to = int(argsDict.get('-s', 36000))
-    cT = argsDict.get('-c', 'bcc')
-    cV = argsDict.get('-n', None)
-    mt = argsDict.get('-m', '1')
-    at = argsDict.get('-a', 'gaff')
-    ot = argsDict.get('-o', 'all')
-    en = argsDict.get('-e', 'tleap')
-    qq = argsDict.get('-q', 'sqm')
-    ek = argsDict.get('-k', None)
-    amb2gmx = argsDict.get('amb2gmx')
-    prmtop = argsDict.get('-p', None)
-    inpcrd = argsDict.get('-x', None)
-    fs = False
-    dg = False
-    tt = False
-    ip = False
-    vb = True
-    gmx45 = False
-    gg = False
-    if '-f' in list(argsDict.keys()): fs = True
-    if '-d' in list(argsDict.keys()): dg = True
-    if '-t' in list(argsDict.keys()): tt = True
-    if '-y' in list(argsDict.keys()): ip = True
-    if '-w' in list(argsDict.keys()): vb = False
-    if '-r' in list(argsDict.keys()): gmx45 = True
-    if '-g' in list(argsDict.keys()): gg = True
+
+    parser = optparse.OptionParser(usage = usage + epilog)
+    parser.add_option('-i', '--input',
+                      action = "store",
+                      dest = 'input',
+                      help = "input file name with either extension '.pdb', '.mdl' or '.mol2' (mandatory if -p and -x not set)",)
+    parser.add_option('-b', '--basename',
+                      action = "store",
+                      dest = 'basename',
+                      help = 'a basename for the project (folder and output files)',)
+    parser.add_option('-x', '--inpcrd',
+                      action = "store",
+                      dest = 'inpcrd',
+                      help = "amber inpcrd file name (always used with -p)",)
+    parser.add_option('-p', '--prmtop',
+                      action = "store",
+                      dest = 'prmtop',
+                      help = "amber prmtop file name (always used with -x)",)
+    parser.add_option('-c', '--charge_method',
+                      type = 'choice',
+                      choices = ['gas', 'bcc', 'user'],
+                      action = "store",
+                      default = 'bcc',
+                      dest = 'charge_method',
+                      help = "charge method: gas, bcc (default), user (user's charges in mol2 file)",)
+    parser.add_option('-n', '--net_charge',
+                      action = "store",
+                      type = 'int',
+                      default = 0,
+                      dest = 'net_charge',
+                      help = "net molecular charge (int), for gas default is 0",)
+    parser.add_option('-m', '--multiplicity',
+                      action = "store",
+                      type = 'int',
+                      default = 1,
+                      dest = 'multiplicity',
+                      help = "multiplicity (2S+1), default is 1",)
+    parser.add_option('-a', '--atom_type',
+                      type = 'choice',
+                      choices = ['gaff', 'amber'], #, 'bcc', 'sybyl']
+                      action = "store",
+                      default = 'gaff',
+                      dest = 'atom_type',
+                      help = "atom type, can be gaff or amber (AMBER99+SB+bsc0), default is gaff",)
+    parser.add_option('-q', '--qprog',
+                      type = 'choice',
+                      choices = ['mopac', 'sqm', 'divcon'],
+                      action = "store",
+                      default = 'sqm',
+                      dest = 'qprog',
+                      help = "am1-bcc flag, sqm (default), divcon, mopac",)
+    parser.add_option('-k', '--keyword',
+                      action = "store",
+                      dest = 'keyword',
+                      help = "mopac or sqm keyword, inside quotes",)
+    parser.add_option('-f', '--force',
+                      action = "store_true",
+                      dest = 'force',
+                      help = 'force topologies recalculation anew',)
+    parser.add_option('-d', '--debug',
+                      action = "store_true",
+                      dest = 'debug',
+                      help = 'for debugging purposes, keep any temporary file created',)
+    parser.add_option('-o', '--outtop',
+                      type = 'choice',
+                      choices = ['all'] + outTopols,
+                      action = "store",
+                      default = 'all',
+                      dest = 'outtop',
+                      help = "output topologies: all (default), gmx, cns or charmm",)
+    parser.add_option('-r', '--gmx45',
+                      action = "store_true",
+                      dest = 'gmx45',
+                      help = 'write GMX dihedrals for GMX 4.5',)
+    parser.add_option('-t', '--cnstop',
+                      action = "store_true",
+                      dest = 'cnstop',
+                      help = 'write CNS topology with allhdg-like parameters (experimental)',)
+    parser.add_option('-e', '--engine',
+                      type = 'choice',
+                      choices = ['tleap', 'sleap'],
+                      action = "store",
+                      default = 'tleap',
+                      dest = 'engine',
+                      help = "engine: tleap (default) or sleap (not fully matured)",)
+    parser.add_option('-s', '--max_time',
+                      action = "store",
+                      type = 'int',
+                      default = 36000,
+                      dest = 'max_time',
+                      help = "max time (in sec) tolerance for sqm/mopac, default is 10 hours",)
+    parser.add_option('-y', '--ipython',
+                      action = "store_true",
+                      dest = 'ipython',
+                      help = 'start iPython interpreter',)
+    parser.add_option('-w', '--verboseless',
+                      action = "store_false",
+                      default = True,
+                      dest = 'verboseless',
+                      help = 'print nothing',)
+    parser.add_option('-g', '--disambiguate',
+                      action = "store_true",
+                      dest = 'disambiguate',
+                      help = 'disambiguate lower and uppercase atomtypes in GMX top file',)
+    parser.add_option('-u', '--direct',
+                      action = "store_true",
+                      dest = 'direct',
+                      help = "for 'amb2gmx' mode, does a direct conversion, for any solvent",)
+    parser.add_option('-l', '--sorted',
+                      action = "store_true",
+                      dest = 'sorted',
+                      help = "sort atoms for GMX ordering",)
+
+    options, remainder = parser.parse_args()
+
+    amb2gmx = False
+
+    if not options.input:
+        amb2gmx = True
+        if not options.inpcrd or not options.prmtop:
+            parser.error("missing input files")
+    elif options.inpcrd or options.prmtop:
+        parser.error("either '-i' or ('-p', '-x'), but not both")
+
+    if options.debug:
+        text = "Python Version %s" % verNum
+        print('DEBUG: %s' % text)
+
+    if options.direct and not amb2gmx:
+        parser.error("option -u is only meaningful in 'amb2gmx' mode")
 
     try:
         if amb2gmx:
             print("Converting Amber input files to Gromacs ...")
-            system = MolTopol(acFileXyz = inpcrd, acFileTop = prmtop, debug = dg,
-                              basename = bn, verbose = vb, gmx45 = gmx45, disam = gg)
+            system = MolTopol(acFileXyz = options.inpcrd, acFileTop = options.prmtop,
+                              debug = options.debug, basename = options.basename,
+                              verbose = options.verboseless, gmx45 = options.gmx45,
+                              disam = options.disambiguate, direct = options.direct,
+                              sorted = options.sorted)
             system.printDebug("prmtop and inpcrd files parsed")
             system.writeGromacsTopolFiles(amb2gmx = True)
         else:
-            molecule = ACTopol(iF, chargeType = cT, chargeVal = cV, debug = dg,
-                               multiplicity = mt, atomType = at, force = fs,
-                               outTopol = ot, engine = en, allhdg = tt, basename = bn,
-                               timeTol = to, qprog = qq, ekFlag = '''"%s"''' % ek,
-                               verbose = vb, gmx45 = gmx45, disam = gg)
+            molecule = ACTopol(options.input, chargeType = options.charge_method,
+                               chargeVal = options.net_charge, debug = options.debug,
+                               multiplicity = options.multiplicity, atomType = options.atom_type,
+                               force = options.force, outTopol = options.outtop,
+                               engine = options.engine, allhdg = options.cnstop,
+                               basename = options.basename, timeTol = options.max_time,
+                               qprog = options.qprog, ekFlag = '''"%s"''' % options.keyword,
+                               verbose = options.verboseless, gmx45 = options.gmx45,
+                               disam = options.disambiguate, direct = options.direct,
+                               sorted = options.sorted)
 
             if not molecule.acExe:
-                molecule.printError("no 'antechamber' executable... aborting!")
+                molecule.printError("no 'antechamber' executable... aborting ! ")
                 hint1 = "HINT1: is 'AMBERHOME' or 'ACHOME' environment variable set?"
                 hint2 = "HINT2: is 'antechamber' in your $PATH?\n    What 'which antechamber' in your terminal says?\n    'alias' doesn't work for ACPYPE."
                 molecule.printMess(hint1)
@@ -3272,7 +3361,7 @@ if __name__ == '__main__':
     except:
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
         print("ACPYPE FAILED: %s" % exceptionValue)
-        if dg:
+        if options.debug:
             traceback.print_tb(exceptionTraceback, file = sys.stdout)
         acpypeFailed = True
 
@@ -3283,9 +3372,9 @@ if __name__ == '__main__':
         msg = elapsedTime(execTime)
     print("Total time of execution: %s" % msg)
 
-    if ip:
+    if options.ipython:
         from IPython.Shell import IPShellEmbed
-        ipshell = IPShellEmbed(['-prompt_in1', 'ACPYPE \#> '],
+        ipshell = IPShellEmbed([' - prompt_in1', 'ACPYPE \#> '],
                                 banner = '--------Dropping to IPython--------',
                                 exit_msg = '--------Leaving IPython--------'
                               )
