@@ -20,11 +20,11 @@ class AtomCR1Type(AbstractAtomType):
             sigma, 
             epsilon):
         AbstractAtomType.__init__(self, 
-            atomtype, 
-            Z, 
-            mass, 
-            charge, 
-            ptype)
+               atomtype, 
+               Z, 
+               mass, 
+               charge, 
+               ptype)
         self.sigma = sigma
         self.epsilon = epsilon
 

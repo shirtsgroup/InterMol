@@ -4,10 +4,10 @@ class AbstractAtomType(object):
 
     def __init__(self, 
             atomtype, 
-            Z=-1, 
-            mass=-1, 
-            charge=None, 
-            ptype=None):
+            Z =  None, 
+            mass = None, 
+            charge = None, 
+            ptype = None):
         self.atomtype = atomtype
         self.Z = Z
         self.mass = mass

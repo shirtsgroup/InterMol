@@ -112,22 +112,29 @@ class GromacsTopologyParser(object):
 
                         if len(split) == 7:
                             if self.sys.combinationRule == 1:
-                                newAtomType = AtomCR1Type(split[0],
-                                        round(float(split[2])/2),
-                                        float(split[2]) * units.amu,
-                                        float(split[3]) * units.elementary_charge,
-                                        split[4],
-                                        float(split[5]) * units.kilojoules_per_mole * units.nanometers**(6),
-                                        float(split[6]) * units.kilojoules_per_mole * units.nanometers**(12))
+                                
+                                # TODO: double check the following equations
+                                sigma = (float(split[6])/float(split[5]))**(1/6)
+                                epsilon = float(split[5])/(4*sigma**6)
+
+                                newAtomType = AtomCR1Type(split[0],                 # atomtype or name
+                                        round(split[1]),                            # bondtype
+                                        None,                                       # Z
+                                        float(split[2]) * units.amu,                # mass
+                                        float(split[3]) * units.elementary_charge,  # charge
+                                        split[4],                                   # ptype
+                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),    # sigma
+                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
 
                             elif self.sys.combinationRule == (2 or 3):
-                                newAtomType = AtomCR23Type(split[0],
-                                        round(float(split[2])/2),
-                                        float(split[2]) * units.amu,
-                                        float(split[3]) * units.elementary_charge,
-                                        split[4],
-                                        float(split[5]) * units.nanometers ,
-                                        float(split[6]) * units.kilojoules_per_mole)
+                                newAtomType = AtomCR23Type(split[0],                # atomtype or name
+                                        round(split[1]),                            # bondtype
+                                        None,                                       # Z    
+                                        float(split[2]) * units.amu,                # mass
+                                        float(split[3]) * units.elementary_charge,  # charge
+                                        split[4],                                   # ptype
+                                        float(split[5]) * units.nanometers ,        # sigma
+                                        float(split[6]) * units.kilojoules_per_mole)# epsilon
 
                         self.atomtypes.add(newAtomType)
 
