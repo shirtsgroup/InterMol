@@ -4,7 +4,7 @@ __all__ = ["Atom",
     "MoleculeSet",
     "System",
     "Force",
-    "GromacsTools",
+    "GromacsExt",
     "CaptureObj",
     "OrderedSet"]
 from Atom import Atom
