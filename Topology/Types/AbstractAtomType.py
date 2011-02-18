@@ -2,11 +2,16 @@ from cctools.Decorators import *
 
 class AbstractAtomType(object):
 
-    def __init__(self, atomtype, Z=-1, m=-1, q=None, ptype=None):
+    def __init__(self, 
+            atomtype, 
+            Z=-1, 
+            mass=-1, 
+            charge=None, 
+            ptype=None):
         self.atomtype = atomtype
         self.Z = Z
-        self.m = m
-        self.q = q
+        self.mass = mass
+        self.charge = charge
         self.ptype = ptype
 
     def __eq__(self, object):
