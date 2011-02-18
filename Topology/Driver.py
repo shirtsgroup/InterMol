@@ -7,7 +7,7 @@ GroTopParser = None
 def initSystem(name):
     global sys, GroTopParser
     sys = System(name)
-    GroTopParser = GromacsTools.GromacsTopologyParser(sys)
+    GroTopParser = GromacsExt.GromacsTopologyParser(sys)
 
     print "System initialized\n"
 
@@ -23,7 +23,7 @@ def loadStructure(*files):
        
         if extension.lower() == 'gro':
             print 'Reading in Gromacs structure "%s"...' %(filename)
-            value = GromacsTools.readStructure(filename)
+            value = GromacsExt.readStructure(filename)
             sys.name = value[0]
             v1x = value[1]
             v2x = value[2]
@@ -83,7 +83,7 @@ def writeStructure(*files):
 
         if extension.lower() == 'gro':
             print "Writing Gromacs structure file..."
-            GromacsTools.writeStructure(sys, filename)
+            GromacsExt.writeStructure(sys, filename)
         
         elif extension.lower() == 'pdb':
             print "Writing PDB structure file..."
