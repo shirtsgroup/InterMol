@@ -4,12 +4,11 @@ import os
 import string
 import re
 from collections import deque
-from cctools.Atom import *
-from cctools.Molecule import *
-from cctools.Types import *
-from cctools.Force import *
-from cctools.CaptureObj import *
-from cctools.HashMap import *
+from Topology.Atom import *
+from Topology.Molecule import *
+from Topology.Types import *
+from Topology.Force import *
+from Topology.HashMap import *
 
 class GromacsTopologyParser(object):
     """
@@ -31,7 +30,6 @@ class GromacsTopologyParser(object):
         self.defines = dict()       # list of defines
         self.comments = list()      # list of comments
 
-        self.atomtypes = HashMap()
         self.bondtypes = HashMap()
         self.pairtypes = HashMap()
         self.angletypes = HashMap()
@@ -117,26 +115,26 @@ class GromacsTopologyParser(object):
                                 sigma = (float(split[6])/float(split[5]))**(1/6)
                                 epsilon = float(split[5])/(4*sigma**6)
 
-                                newAtomType = AtomCR1Type(split[0],                 # atomtype or name
-                                        round(split[1]),                            # bondtype
-                                        None,                                       # Z
+                                newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
+                                        split[1].strip(),                           # bondtype
+                                        -1,                                         # Z
                                         float(split[2]) * units.amu,                # mass
                                         float(split[3]) * units.elementary_charge,  # charge
                                         split[4],                                   # ptype
-                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),    # sigma
+                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # sigma
                                         epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
 
                             elif self.sys.combinationRule == (2 or 3):
-                                newAtomType = AtomCR23Type(split[0],                # atomtype or name
-                                        round(split[1]),                            # bondtype
-                                        None,                                       # Z    
+                                newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
+                                        split[1].strip(),                           # bondtype
+                                        -1,                                         # Z    
                                         float(split[2]) * units.amu,                # mass
                                         float(split[3]) * units.elementary_charge,  # charge
                                         split[4],                                   # ptype
                                         float(split[5]) * units.nanometers ,        # sigma
                                         float(split[6]) * units.kilojoules_per_mole)# epsilon
 
-                        self.atomtypes.add(newAtomType)
+                        self.sys.atomtypes.add(newAtomType)
 
                 elif match.group('bondtypes'):
                     if verbose:
@@ -266,6 +264,7 @@ class GromacsTopologyParser(object):
                                         float(split[7]) * units.kilojoules_per_mole)
 
                         else:
+                            # TODO: need better error handling 
                             print "could not find pair type"
 
                         if newPairType:
@@ -446,7 +445,7 @@ class GromacsTopologyParser(object):
 
                     moleculeName = split[0]
                     self.sys.molecules[self.systemMembers[moleculeName]].setNrexcl(int(split[1]))
- 
+                    currentMoleculeType = self.sys.molecules[self.systemMembers[moleculeName]] 
                     expanded.pop(i)
 
                 elif match.group('atoms'):
@@ -458,29 +457,53 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         
                         for molecule in self.sys.molecules[self.systemMembers[moleculeName]].moleculeSet:
+                            atomFound = False
                             for atom in molecule.atoms:
-                                if atom.atomtype == split[1]:
+                                if (atom.atomName.upper() + atom.resName.upper()) == (split[4].upper().strip() + split[3].upper().strip()):    # Only write if atomNums are the same
+                                    atomFound = True
+                                    atom.atomtype = split[1].strip()
+                                    atom.resNum = int(split[2])
+                                    atom.resname = split[3].strip()
+                                    # Ignoring atomName. It is read in from .gro structure file and we're not sure if its robust or not
+                                    atom.cgnr = int(split[5])
+                                    atom.charge = float(split[6]) * units.elementary_charge
+                                    atom.mass = float(split[7]) * units.amu
+                                    """
+                                    # B state
+                                    if len(split) > 8:
+                                        atom.atomtypeB = split[8].strip()
+                                        atom.massB = float(split[9]) * units.elementary_charge
+                                        atom.chargeB = float(split[10]) * units.amu
+                                    """ 
                                     tempType = AbstractAtomType(split[1])
-                                
-                                    atomType = self.atomtypes.get(tempType)
-                                    if not atom.Z:
-                                        atom.Z = atomType.Z
-                                    if atomType.m == 0:
-                                        atom.Z = round(float(split[2])/2)
-                                    atom.mass = atomType.m
-                                    atom.charge = atomType.q
-                                    atom.ptype = atomType.ptype
-                                    atom.sigma = atomType.V
-                                    atom.epsilon = atomType.W
                                     
+                                    atomType = self.sys.atomtypes.get(tempType)
+                                    #TODO go through and add ._values 
+                                    if atomType:
+                                        atom.Z = atomType.Z
+                                        if not atom.bondtype:
+                                            if atomType.bondtype:
+                                                atom.bondtype = atomType.bondtype
+                                            else:
+                                                sys.stderr.write("Warning: A suspicious parameter was found in atom/atomtypes. Visually inspect before using.\n")
+                                        if atom.mass._value < 0:
+                                            if atomType.mass._value >= 0:
+                                                atom.mass = atomType.mass
+                                            else:
+                                                sys.stderr.write("Warning: A suspicious parameter was found in atom/atomtypes. Visually inspect before using.\n")
+                                        # Assuming ptype = A          
+                                        #atom.ptype = atomType.ptype
+                                   
+                                        atom.sigma = atomType.sigma
+                                        atom.epsilon = atomType.epsilon
+                                    else:
+                                        sys.stderr.write("Warning: A corresponding AtomType was not found. Insert missing values yourself.\n")
+                            
+                            if not atomFound:
+                                sys.stderr.write("ERROR (parseTopology): Corresponding structure atom was not found.\n")
+                                sys.exit()
+                                                
                                 
-                        """
-                        TODO
-                        if not atomtype:
-                            print 'cannot find atomtype'
-                        else:
-                            pass   
-                        """
                 elif match.group('bonds'):
                     if verbose:
                         print "Parsing [ bonds ]..."
@@ -489,15 +512,99 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newBondForce = None
+                            
+                        if len(split) == 3:
+                            tempType = AbstractBondType(split[0], split[1], split[2])
+                            bondType = self.sys.bondtypes.get(tempType)
+                            
+                            if isinstance(bondType, BondType):
+                                split.append(length)
+                                split.append(k)
 
-                        if int(split[2]) == 1:
-                            if len(split) == 5:
+                            if isinstance(bondType, G96BondType):
+                                split.append(length)
+                                split.append(k)
+
+                            if isinstance(bondType, CubicBondType):
+                                split.append(length)
+                                split.append(C2)
+                                split.append(C3)
+
+                            if isinstance(bondType, MorseBondType):
+                                split.append(length)
+                                split.append(D)
+                                split.append(beta)
+
+                            if isinstance(bondType, HarmonicBondType):
+                                split.append(length)
+                                split.append(k)
+
+                        if int(split[2]) == 1: 
+                            try:
                                 newBondForce = Bond(int(split[0]),
                                         int(split[1]),
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
+                            except:
+                                newBondForce = Bond(int(split[0]),
+                                        int(split[1]),
+                                        split[3],
+                                        split[4])
 
-                        self.sys.molecules[self.systemMembers[moleculeName]].bondForceSet.add(newBondForce)
+                        if int(split[2]) == 2:
+                            try:
+                                newBondForce = G96Bond(int(split[0]),
+                                        int(split[1]),
+                                        float(split[3]) * units.nanometers,
+                                        float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-4))
+                            except:
+                                newBondForce = G96Bond(int(split[0]),
+                                        int(split[1]),
+                                        split[3],
+                                        split[4])
+
+                        if int(split[2]) == 3:
+                            try:
+                                newBondForce = MorseBond(int(split[0]),
+                                        int(split[1]),
+                                        float(split[3]) * units.nanometers,
+                                        float(split[4]) * units.kilojoules_per_mole,
+                                        float(split[5]) * units.nanometers**(-1))
+                            except:
+                                newBondForce = MorseBond(int(split[0]),
+                                        int(split[1]),
+                                        split[3],
+                                        split[4],
+                                        split[5])
+
+                        if int(split[2]) == 4:
+                            try:
+                                newBondForce = CubicBond(int(split[0]),
+                                        int(split[1]),
+                                        float(split[3]) * units.nanometers,
+                                        float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2),
+                                        float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-3))
+                            except:
+                                newBondForce = CubicBond(int(split[0]),
+                                        int(split[1]),
+                                        split[3],
+                                        split[4], 
+                                        split[5])
+
+                        if int(split[2]) == 5:
+                            try:
+                                newBondForce = HarmonicBond(int(split[0]),
+                                        int(split[1]),
+                                        float(split[3]) * units.nanometers,
+                                        float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
+                            except:
+                                newBondForce = HarmonicBond(int(split[0]),
+                                        int(split[1]),
+                                        split[3],
+                                        split[4])
+                            
+
+                        currentMoleculeType.bondForceSet.add(newBondForce)
                         self.sys.forces.add(newBondForce)
 
                 elif match.group('pairs'):
@@ -515,7 +622,7 @@ class GromacsTopologyParser(object):
                                 newPairForce = AbstractPair(split[0], split[1])
 
                         self.sys.forces.add(newPairForce)
-                                
+                                    
 
                 elif match.group('angles'):
                     if verbose:
@@ -526,16 +633,156 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         newAngleForce = None
 
+                        if len(split) == 4:
+                            tempType = AbstractAngleType(split[0], split[1], split[2], split[3])
+                            angleType = self.sys.angletypes.get(tempType)
+                     
+                            if isinstance(angleType, AngleType):
+                                split.append(theta)
+                                split.append(k)
+
+                            if isinstance(angleType, G96BondType):
+                                split.append(theta)
+                                split.append(k)
+
+                            if isinstance(angleType, CrossBondBondAngleType):
+                                split.append(r1)
+                                split.append(r2)
+                                split.append(k)
+
+                            if isinstance(angleType, CrossBondAngleAngleType):
+                                split.append(r1)
+                                split.append(r2)
+                                split.append(r3)
+                                split.append(k)
+
+                            if isinstance(angleType, UreyBradleyAngleType):
+                                split.append(theta)
+                                split.append(k)
+                                split.append(r)
+                                split.append(kUB)
+
+                            if isinstance(angleType, QuarticAngleType):
+                                split.append(theta)
+                                split.append(C0)
+                                split.append(C1)
+                                split.append(C2)
+                                split.append(C3)
+                                split.append(C4)
+
+
+                        # Angle 
                         if int(split[3]) == 1:
-                            if len(split) == 6:
-                                newAngleForce = Angle(split[0],
-                                        split[1],
-                                        split[2],
-                                        split[4] * units.degrees,
-                                        split[5] * units.kilojoules_per_mole * units.radians**(-2))
-                        self.sys.molecules[self.systemMembers[moleculeName]].angleForceSet.add(newAngleForce)
+                            try:
+                                newAngleForce = Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.degrees,
+                                        float(split[5]) * units.kilojoules_per_mole * units.radians**(-2))
+                            except:
+                                newAngleForce = Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5])
+                        
+                        # G96Angle
+                        elif int(split[3]) == 2:
+                            try:
+                                newAngleForce = G96Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.degrees,
+                                        float(split[5]) * units.kilojoules_per_mole)
+                            except:
+                                newAngleForce = G96Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5])
+
+                        # Cross Bond-Bond
+                        elif int(split[3]) == 3:
+                            try:
+                                newAngleForce = CrossBondBondAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.nanometers,
+                                        float(split[5]) * units.nanometers,
+                                        float(split[6]) * units.kilojoules_per_mole * units.nanometers**(-2))
+                            except:
+                                newAngleForce = CrossBondBondAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5],
+                                        split[6])
+
+                        # Cross Bond-Angle
+                        elif int(split[3]) == 4:
+                            try:
+                                newAngleForce = CrossBondAngleAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.nanometers,
+                                        float(split[5]) * units.nanometers,
+                                        float(split[6]) * units.nanometers,
+                                        float(split[7]) * units.kilojoules_per_mole * units.nanometers**(-2))
+                            except:
+                                newAngleForce = CrossBondAngleAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5],
+                                        split[6],
+                                        split[7])
+
+
+                        # Urey-Bradley
+                        elif int(split[3]) == 5:
+                            try:
+                                newAngleForce = UreyBradleyAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.degrees,
+                                        float(split[5]) * units.kilojoules_per_mole,
+                                        float(split[6]) * units.nanometers,
+                                        float(split[7]) * units.kilojoules_per_mole)
+                            except:
+                                newAngleForce = UreyBradleyAngle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5],
+                                        split[6],
+                                        split[7])
+                        
+                        # Quartic
+                        elif int(split[3]) == 6:
+                            try:
+                                newAngleForce = Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        float(split[4]) * units.degrees,
+                                        float(split[5]) * units.kilojoules_per_mole,
+                                        float(split[6]) * units.kilojoules_per_mole * units.radians**(-1),
+                                        float(split[7]) * units.kilojoules_per_mole * units.radians**(-2),
+                                        float(split[8]) * units.kilojoules_per_mole * units.radians**(-3),
+                                        float(split[9]) * units.kilojoules_per_mole * units.radians**(-4))
+                            except:
+                                newAngleForce = Angle(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        split[4],
+                                        split[5],
+                                        split[6],
+                                        split[7],
+                                        split[8],
+                                        split[9])
+
+                        currentMoleculeType.angleForceSet.add(newAngleForce)
                         self.sys.forces.add(newAngleForce)
-                            
+                                
                             
 
                 elif match.group('dihedrals'):
@@ -547,46 +794,139 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         newDihedralForce = None
 
+                        if len(split) == 5:
+                            tempType = AbstractDihedralType(split[0], split[1], split[2], split[3], split[4])
+                            dihedralType = self.sys.dihedraltypes.get(tempType)
+
+                            if isinstance(dihedralType, ProperDihedral1Type):
+                                split.append(phi)
+                                split.append(k)
+                                split.append(multiplicity)
+
+                            if isinstance(dihedralype, ProperDihedral9Type):
+                                split.append(phi)
+                                split.append(k)
+                                split.append(multicplicity)
+
+                            if isinstance(dihedralType, ImproperDihedral2Type):
+                                split.append(xi)
+                                split.append(k)
+
+                            if isinstance(dihedralType, RBDihedralType):
+                                split.append(C0)
+                                split.append(C1)
+                                split.append(C2)
+                                split.append(C3)
+                                split.append(C4)
+                                split.append(C5)
+
+                            if isinstance(dihedralType, ImproperDihedral4Type):
+                                split.append(phi)
+                                split.append(k)
+                                split.append(multiplicity)
+
+
+                        # Proper Dihedral 1
                         if int(split[4]) == 1:
-                            newDihedralForce = ProperDihedral1(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[5] * units.degrees,
-                                    split[6] * units.kilojoules_per_mole,
-                                    split[7])
+                            try:
+                                newDihedralForce = ProperDihedral1(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.degrees,
+                                        float(split[6]) * units.kilojoules_per_mole,
+                                        int(split[7]))
+                            except:
+                                newDihedralFroce = ProperDihedral1(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6],
+                                        split[7])
 
+                        # Improper Dihedral 2 
+                        elif int(split[4]) == 2:
+                            try:
+                                newDihedralForce = ImproperDihedral2(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.degrees,
+                                        float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
+                            except:
+                                newDihedralFroce = ImproperDihedral2(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6])
+
+                        # RBDihedral
                         elif int(split[4]) == 3:
-                            newDihedralForce = RBDihedral(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[5] * units.kilojoules_per_mole,
-                                    split[6] * units.kilojoules_per_mole,
-                                    split[7] * units.kilojoules_per_mole,
-                                    split[8] * units.kilojoules_per_mole,
-                                    split[9] * units.kilojoules_per_mole,
-                                    split[10] * units.kilojoules_per_mole)
-                    
-                        elif int(split[4]) == 4:
-                            newDihedralForce = ImproperDihedral4(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[5] * units.degrees,
-                                    split[6] * units.kilojoules_per_mole,
-                                    split[7])
+                            try:
+                                newDihedralForce = RBDihedral(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.kilojoules_per_mole,
+                                        float(split[6]) * units.kilojoules_per_mole,
+                                        float(split[7]) * units.kilojoules_per_mole,
+                                        float(split[8]) * units.kilojoules_per_mole,
+                                        float(split[9]) * units.kilojoules_per_mole,
+                                        float(split[10]) * units.kilojoules_per_mole)
+                            except:
+                                newDihedralFroce = RBDihedral(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6],
+                                        split[7],
+                                        split[8],
+                                        split[9],
+                                        split[10])
 
+                        # Improper Dihedral 4
+                        elif int(split[4]) == 4:
+                            try:
+                                newDihedralForce = ImproperDihedral4(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.degrees,
+                                        float(split[6]) * units.kilojoules_per_mole,
+                                        int(split[7]))
+                            except:
+                                newDihedralFroce = ImproperDihedral4(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6],
+                                        split[7])
+
+                        # Proper Dihedral 9
                         elif int(split[4]) == 9:
-                            newDihedralForce = ProperDihedral9(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[5] * units.degrees,
-                                    split[6] * units.kilojoules_per_mole,
-                                    split[7])
+                            try:
+                                newDihedralForce = ProperDihedral9(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.degrees,
+                                        float(split[6]) * units.kilojoules_per_mole,
+                                        int(split[7]))
+                            except:
+                                newDihedralFroce = ProperDihedral9(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6],
+                                        split[7])
+
                         
-                        self.sys.molecules[self.systemMembers[moleculeName]].dihedralForceSet.add(newDihedralForce)
+                        currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                         self.sys.forces.add(newDihedralForce)
 
                 elif match.group('constraints'):
@@ -607,10 +947,11 @@ class GromacsTopologyParser(object):
                         newSettlesForce = None
             
                         if len(split) == 4:
-                            newSettlesForce = Settles(split[0],
-                                    split[2] * units.nanometers,
-                                    split[3] * units.nanometers)
+                            newSettlesForce = Settles(int(split[0]),
+                                    float(split[2]) * units.nanometers,
+                                    float(split[3]) * units.nanometers)
 
+                        currentMoleculeType.settles = newSettlesForce
                         self.sys.forces.add(newSettlesForce)
 
 
@@ -622,6 +963,7 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         newExclusion = Exclusions(expanded.pop(i).split())
                         
+                        currentMoleculeType.exclusions.add(newExclusion)
                         self.sys.forces.add(newExclusion)   
  
                 else:
@@ -688,7 +1030,7 @@ class GromacsTopologyParser(object):
                     if verbose:
                         print "Directive:", line
                         print "Comment:", comment
-                    while True:     # expande the lines
+                    while True:     # expand the lines
                         if match.group('ignore_newline'):
                             if verbose: print "Ignore newline found"
                             if lines:
@@ -829,128 +1171,173 @@ class GromacsTopologyParser(object):
               self.sys.genpairs, self.sys.ljCorrection, self.sys.coulombCorrection))
         lines.append('\n')
 
+
+        # [ atomtypes ]
+        lines.append('[ atomtypes ]\n')
+        lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
+        for atomtype in self.sys.atomtypes.itervalues():
+            lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'%(atomtype.atomtype, atomtype.bondtype, atomtype.Z, atomtype.mass._value, atomtype.charge._value, atomtype.ptype, atomtype.sigma._value, atomtype.epsilon._value)) 
+        lines.append('\n')
+ 
+        # [ moleculetype]
+        for moleculeType in self.sys.molecules.itervalues(): 
+            lines.append('[ moleculetype ]\n')
+            lines.append('%s%10d\n\n'%(moleculeType.name, moleculeType.nrexcl))
+                
+            # [ atoms ]
+            lines.append('[ atoms ]\n')
+            lines.append(';num, type, resnum, resname, atomname, cgnr, q, m\n')
+            molecule = moleculeType.moleculeSet[0]
+            count = 1
+            for atom in molecule.atoms:
+                lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'%(count, atom.atomtype, atom.resNum, atom.resName, atom.atomName, atom.cgnr, atom.charge._value, atom.mass._value))
+
+                count +=1
+            lines.append('\n')
+
+            if moleculeType.bondForceSet:
+                # [ bonds ]
+                lines.append('[ bonds ]\n')
+                lines.append(';   ai     aj funct  r               k\n')
+                for bond in moleculeType.bondForceSet.itervalues():
+    
+                    if isinstance(bond, Bond):
+                        type = 1
+                        lines.append('%6d%7d%4d%18.8e%18.8e\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
+                    elif isinstance(bond, G96Bond):
+                        type = 2
+                        lines.append('%6d%7d%4d%5.8f%5.8f\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
+                    else:
+                        print "ERROR (writeTopology): found unsupported bond type"
+                lines.append('\n')       
+        
+            if moleculeType.angleForceSet:
+                # [ angles ]
+                lines.append('[ angles ]\n')
+                lines.append(';   ai     aj     ak    funct   theta         cth\n')
+                for angle in moleculeType.angleForceSet.itervalues():
+                    if isinstance(angle, Angle):
+                        type = 1
+                        lines.append('%6d%7d%7d%7d%18.8e%18.8e\n'%(angle.atom1, angle.atom2, angle.atom3, type, angle.theta._value, angle.k._value))
+                    else:
+                        print "ERROR (writeTopology): found unsupported angle type"                    
+                lines.append('\n')
+   
+            """ 
+            # [ pairs]
+            lines.append('[ pairs ]\n')
+            lines.append(';   ai     aj    funct')
+            
+            for pair  in moleculeType.pairForceSet.itervalues():
+                if isinstance(pair, LJ1PairCR1) or isinstance(pair, LJ1PairCR23)
+                    type = 1
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value)
+
+                elif isinstance(pair, LJ2PairCR1) or isinstance(pair, LJ2PairCR23):
+                    type = 2
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value)) 
+                
+                elif isinstance(pair, LJNBCR1) or isinstance( pair, LJNBCR23):
+                    type = 1
+                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi._value, pair.qj._value, pair.V._value, pair.W._value))    
+                else:
+                    print "Could not identify pair!"
+            """
+  
+            if moleculeType.dihedralForceSet:          
+                # [ dihedrals ]
+                lines.append('[ dihedrals ]\n')
+                lines.append(';    i      j      k      l   func\n')
+                    
+                for dihedral in moleculeType.dihedralForceSet.itervalues():
+                    if isinstance(dihedral, ProperDihedral1):
+                        type = 1
+                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
+                                %(dihedral.atom1, 
+                                dihedral.atom2, 
+                                dihedral.atom3, 
+                                dihedral.atom4, 
+                                type, 
+                                dihedral.phi._value, 
+                                dihedral.k._value, 
+                                dihedral.multiplicity))
+    
+                    elif isinstance(dihedral, ImproperDihedral2):
+                        type = 2
+                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f\n'
+                                %(dihedral.atom1, 
+                                dihedral.atom2, 
+                                dihedral.atom3, 
+                                dihedral.atom4, 
+                                type, 
+                                dihedral.xi._value, 
+                                dihedral.k._value))
+        
+                    elif isinstance(dihedral, RBDihedral):
+                        type = 3
+                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
+                                %(dihedral.atom1, 
+                                dihedral.atom2,
+                                dihedral.atom3,     
+                                dihedral.atom4, 
+                                type, 
+                                dihedral.C0._value, 
+                                dihedral.C1._value, 
+                                dihedral.C2._value, 
+                                dihedral.C3._value, 
+                                dihedral.C4._value, 
+                                dihedral.C5._value))
+    
+                    elif isinstance(dihedral, ImproperDihedral4):
+                        type = 4
+                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
+                                %(dihedral.atom1, 
+                                dihedral.atom2, 
+                                dihedral.atom3, 
+                                dihedral.atom4, 
+                                type, 
+                                dihedral.phi._value, 
+                                dihedral.k._value, 
+                                dihedral.multiplicity))
+    
+                    elif isinstance(dihedral, ProperDihedral9):
+                        type = 9
+                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
+                                %(dihedral.atom1, 
+                                dihedral.atom2, 
+                                dihedral.atom3, 
+                                dihedral.atom4, 
+                                type, 
+                                dihedral.phi._value, 
+                                dihedral.k._value, 
+                                dihedral.multiplicity))
+       
+                    else:
+                        print "ERROR (writeTopology): found unsupported  dihedral type"
+                lines.append('\n')
+        
+        if moleculeType.settles:
+            settles = moleculeType.settles
+            # [ settles ]
+            lines.append('[ settles ]\n')
+            lines.append('; i  funct   dOH  dHH\n')
+            type = 1 
+            lines.append('%6d%6d%18.8f%18.8f\n'%(settles.atom1, type, settles.dOH._value, settles.dHH._value))
+            lines.append('\n')
+
+        if moleculeType.exclusions:
+            # [ exclusions ]
+            lines.append('[ exclusions ]\n')
+            for exclusion in moleculeType.exclusions.itervalues():
+                lines.append('%6s%6s%6s\n'%(exclusion.exclusions[0], exclusion.exclusions[1], exclusion.exclusions[2]))
+            lines.append('\n') 
+
         # [ system ]
         lines.append('[ system ]\n')
         lines.append('%s\n'%(self.sys.name))
         lines.append('\n')
 
-        # [ moleculetype]
-        for moleculeType in self.sys.molecules.itervalues(): 
-            lines.append('[ moleculetype ]\n')
-            lines.append('%s%10d\n'%(moleculeType.name, moleculeType.nrexcl))
 
-            # [ atoms ]
-            lines.append('[ atoms ]\n')
-
-            for molecule in moleculeType.moleculeSet:
-                for atom in molecule.atoms:
-                    lines.append('%6d%18s%6d%8s%8s%6d%8.3f%12.5f\n'%(atom.atomNum, atom.atomtype, atom.resNum, atom.resName, atom.atomName, atom.Z, atom.charge._value, atom.mass._value))
-                        
-
-            # [ bonds ]
-            lines.append('[ bonds ]\n')
-            lines.append(';   ai     aj funct  r               k\n')
-            for bond in moleculeType.bondForceSet:
-
-                if isinstance(bond, Bond):
-                    type = 1
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
-                elif isinstance(bond, G96Bond):
-                    type = 2
-                    lines.append('%6d%7d%4d%5.8f%5.8f\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
-                else:
-                    print "ERROR (writeTopology): found unsupported bond type"
-       
-        """ 
-        # [ pairs ]
-        lines.append('[ pairs ]\n')
-        lines.append(';   ai     aj funct'\n)
-        for pair in forceList.something.something:
-
-            if type(pair) == (LJ1PairCR1 or LJ1PairCR23):
-                type = 1
-                atom1, atom2, V, W = pair.getForceParameters()
-                lines.append('%6d%7d%4d%5.8f%5.8f\n'%(atom1, atom2, type, V, W))
-
-            elif type(pair) == (LJ2PairCR1 or LJ2PairCR23):
-                type = 2
-                atom1, atom2, fudgeQQ, qi, qj, V, W = pair.getForceParameters()
-                lines.append('%6d%7d%4d%5.8f%5.8f%5.8f%5.8f%5.8f\n'%(atom1, atom2, type, fudgeQQ, qi, qj, V, W))
-
-            elif type(pair) == (LJNBPairCR1 or LJNBPairCR23):
-                type = 1
-                atom1, atom2, qi, qj, V, W = pair.getForceParameters()
-                lines.append('%6d%7d%4d%5.8f%5.8f%5.8f%5.8f\n'%(atom1, atom2, type, qi, qj, V, W))
-            else:
-                print "ERROR (writeTopology): found unsupported pair type"
-
-        # [ angles ]
-        lines.append('[ angles ]\n')
-        lines.append('; i j   k   funct'\n)
-        for angle in forceList.something.something:
-
-            if type(angle) == Angle:
-                type = 1
-                atom1, atom2, atom3, theta, k = pair.getForceParameters()
-                lines.append('%6d%7d%7d%4d%5.8f%5.8f\n'%(atom1, atom2, atom3, type, theta, k))
-            else:
-                print "ERROR (writeTopology): found unsupported  angle type"
-
-        # [ dihedrals ]
-        lines.append('[ dihedrals ]\n')
-        lines.append(';    i      j      k      l   func '\n)
-        for dihedral in forceList.something.something:
-
-            if type(dihedral) == ProperDihedral1:
-                type = 1
-                atom1, atom2, atom3, atom4, phi, k, multiplicity = pair.getForceParameters()
-                lines.append('%6d%7d%7d%7d%4d%5.8f%5.8f%4d\n'%(atom1, atom2, atom3,atom4, type, phi, k, multiplicity))
-
-            elif type(dihedral) == ImproperDihedral2:
-                type = 2
-                atom1, atom2, atom3, atom4, xi, k = pair.getForceParameters()
-                lines.append('%6d%7d%7d%7d%4d%5.8f%5.8f\n'%(atom1, atom2, atom3,atom4, type, xi, k))
-
-            elif type(dihedral) == RBDihedral:
-                type = 3
-                atom1, atom2, atom3, atom4, C0, C1, C2, C3, C4, C5 = pair.getForceParameters()
-                lines.append('%6d%7d%7d%7d%4d%5.8f%5.8f%5.8f%5.8f%5.8f%5.8f\n'%(atom1, atom2, atom3,atom4, type, C0, C1, C2, C3, C4, C5))
-
-            if type(dihedral) == ImproperDihedral4:
-                type = 4
-                atom1, atom2, atom3, atom4, phi, k, multiplicity = pair.getForceParameters()
-                lines.append('%6d%7d%7d%7d%4d%5.8f%5.8f%4d\n'%(atom1, atom2, atom3,atom4, type, phi, k, multiplicity))
-
-            if type(dihedral) == ProperDihedral9:
-                type = 9
-                atom1, atom2, atom3, atom4, phi, k, multiplicity = pair.getForceParameters()
-                lines.append('%6d%7d%7d%7d%4d%5.8f%5.8f%4d\n'%(atom1, atom2, atom3,atom4, type, phi, k, multiplicity))
-
-            else:
-                print "ERROR (writeTopology): found unsupported  dihedral type"
-
-        try:
-            # [ settles ]
-            lines.append('[ settles ]\n')
-            lines.append('; i  funct   dOH  dHH\n')
-            type = 1
-            atom1, dOH, dHH = forceList.something.something.getForceParameters()
-            lines.append('%6d%4d%5.8f%5.8f\n'%(atom1, type, dOH, dHH))
-        except:
-            pass
-
-        try:
-            # [ exclusions ]
-            lines.append('[ exclusions ]\n')
-            atom1, atom2, atom3 = forceList.something.something.getForceParameters()
-            lines.append('%6d%6d%6d\n'%(atom1, atom2, atom3))
-        except:
-            pass
-        """
-
-
-
-        
         # [ molecules ]
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')

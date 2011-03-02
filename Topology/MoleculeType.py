@@ -1,17 +1,15 @@
-from cctools.CaptureObj import *
-from cctools.OrderedSet import OrderedSet
-
+from Topology.OrderedSet import OrderedSet
+from Topology.HashMap import HashMap
 class MoleculeType(object):
     def __init__(self, name):
         self.name = name 
         self.moleculeSet = OrderedSet()
-
-        self.bondForceSet = set()
-        self.pairForceSet = set()
-        self.angleForceSet = set()
-        self.dihedralForceSet = set()
-        self.constraints = set()
-        self.exclusions = set()
+        self.bondForceSet = HashMap()
+        self.pairForceSet = HashMap()
+        self.angleForceSet = HashMap()
+        self.dihedralForceSet = HashMap()
+        self.constraints = HashMap()
+        self.exclusions = HashMap()
         self.settles = None
         self.nrexcl = None
     

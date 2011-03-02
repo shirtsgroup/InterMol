@@ -1,4 +1,4 @@
-from cctools.Decorators import *
+from Topology.Decorators import *
 
 class Atom(object):
     @accepts_compatible_units(None, 
@@ -39,13 +39,19 @@ class Atom(object):
         
         # These will be added after the Topology is read in and come from [ atomtypes ]
         self.atomtype = None
+        self.atomtypeB = None
+        self.bondtype = None
         self.Z = None
+        self.cgnr = None
         self.mass = None
+        self.massB = None
         self.charge = None
+        self.chargeB = None
         self.ptype = "A"
         self.sigma = None
+        self.sigmaB = None
         self.epsilon = None
-        self.potentials = set()  
+        self.epsilonB = None
 
     @accepts_compatible_units(
         units.nanometers,
@@ -135,10 +141,10 @@ class Atom(object):
         return str(self.atomNum) + " " +  self.atomName
 
     def __cmp__(self, other):
-        return self.atomNum - other.atomNum
+        return (self.atomName + self.resName).cmp(other.atomName + other.resName)
     
     def __eq__(self, other):
-        return self.atomNum == other.atomNum
-
+        return (self.atomName + self.resName) == (other.atomName + other.resName)
+    #TODO need to update hash
     def __hash__(self):
-        return hash(self.atomNum)
+        return hash(self.atomName + self.resName)

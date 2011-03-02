@@ -4,41 +4,9 @@ import os
 import string
 import re
 from collections import deque
-from cctools.Atom import *
-from cctools.Molecule import *
+from Topology.Atom import *
+from Topology.Molecule import *
 
-tlc2olc = {
-"ALA" : "A" ,
-"CYS" : "C" ,
-"CYN" : "C" ,
-"CYX" : "C" ,
-"ASP" : "D" ,
-"GLU" : "E" ,
-"PHE" : "F" ,
-"CPHE" : "F" ,
-"GLY" : "G" ,
-"HIS" : "H" ,
-"HID" : "H" ,
-"HIE" : "H" ,
-"HIP" : "H" ,
-"ILE" : "I" ,
-"NLE" : "J" ,
-"LYS" : "K" ,
-"LYN" : "K" ,
-"LYP" : "K" ,
-"LEU" : "L" ,
-"NLEU" : "L" ,
-"MET" : "M" ,
-"ASN" : "N" ,
-"PRO" : "P" ,
-"GLN" : "Q" ,
-"ARG" : "R" ,
-"SER" : "S" ,
-"THR" : "T" ,
-"VAL" : "V" ,
-"TRP" : "W" ,
-"TYR" : "Y"
-}
 
 
 def readStructure(filename):
@@ -92,25 +60,51 @@ def readStructure(filename):
                 vx=0.0
                 vy=0.0
                 vz=0.0
-            atom=Atom(atomNum, resNum, resName, atomName, x * units.nanometers, y * units.nanometers, z * units.nanometers, vx * units.nanometers * units.picoseconds**(-1), vy * units.nanometers * units.picoseconds**(-1), vz * units.nanometers * units.picoseconds**(-1))
+            atom=Atom(atomNum, 
+                    resNum, 
+                    resName, 
+                    atomName, 
+                    x * units.nanometers, 
+                    y * units.nanometers,
+                    z * units.nanometers, 
+                    vx * units.nanometers * units.picoseconds**(-1), 
+                    vy * units.nanometers * units.picoseconds**(-1), 
+                    vz * units.nanometers * units.picoseconds**(-1))
             atomList.append(atom)
             tempList.append(atom)
 
         # Extract protein
         residuetypes = os.path.join(os.environ['GMXLIB'], 'residuetypes.dat')
         if os.path.exists(residuetypes):
-            proteinList = list()
+            proteinList = set()
             fin = open(residuetypes, 'r')
             for line in fin.readlines():
-                proteinList.append(line.replace('\n','').strip())
+                line = line.split()
+                res = line[0].strip()
+                if line[1].strip() == 'Protein':
+                    proteinList.add(res)
         else:
             # sys.stderr.write()
             print "ERROR: 'residuetypes.dat' not found in "+os.getenv('GMXLIB')
         currentMolecule = Molecule('Protein')
+       
+        i = 0
+        while i < len(tempList):           
+            if tempList[i].resName.strip() in proteinList:
+                if tempList[i].atomNum == 129:
+                    pdb.set_trace()
+                x = tempList.pop(i)
+                currentMolecule.atoms.add(x)
+                print currentMolecule.atoms
+            else:
+                i=i+1
         
+        if currentMolecule.atoms:
+            moleculeList.append(currentMolecule)
+        """
         for atom in tempList:
             resName = atom.resName
-            if resName in proteinList: 
+            if resName in proteinList:
                 currentMolecule.atoms.add(atom)
         if currentMolecule.atoms:
             moleculeList.append(currentMolecule)
@@ -118,7 +112,7 @@ def readStructure(filename):
         for atom in currentMolecule.atoms:
             if atom in tempList:
                 tempList.remove(atom)
-
+        """
         # Extract non-protein molecules
         if len(tempList) > 0:
             oldResNum = tempList[0].resNum
@@ -133,7 +127,7 @@ def readStructure(filename):
                 currentMolecule.name = resName
                 oldResNum = resNum
             else:
-                currentMolecule.atoms.add(atom)
+                    currentMolecule.atoms.add(atom)
 
         if currentMolecule not in moleculeList:
             moleculeList.append(currentMolecule)
