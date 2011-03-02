@@ -1,4 +1,5 @@
-__all__ = ["AbstractPair",
+__all__ = ["AbstractAngle",
+    "AbstractPair",
     "AbstractBond",
     "AbstractDihedral",
     "Angle",
@@ -37,6 +38,7 @@ __all__ = ["AbstractPair",
     "VSite3out",
     "VSite3",
     "VSite4fdn"]
+from AbstractAngle import AbstractAngle
 from AbstractPair import AbstractPair
 from AbstractBond import AbstractBond
 from AbstractDihedral import AbstractDihedral
