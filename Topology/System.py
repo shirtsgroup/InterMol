@@ -2,6 +2,7 @@ from Decorators import *
 from MoleculeType import MoleculeType
 from OrderedSet import OrderedSet
 from OrderedDict import OrderedDict
+from HashMap import HashMap
 
 class System(object):
     def __init__(self, name = None):
@@ -30,6 +31,7 @@ class System(object):
         self.coulombCorrection = 0  
         self.molecules = OrderedDict()
         self.atoms = list()
+        self.atomtypes = HashMap()
         self.forces = OrderedSet()
 
 
@@ -61,24 +63,6 @@ class System(object):
         self.v1z = v1z
         self.v2z = v2z
         self.v3z = v3z
-
-    def getNBFunc(self):
-        return self.nbFunc
-
-    def setNBFunc(self, nbFunc):
-        self.nbFunc = nbFunc
-    
-    def getCombinationRule(self):
-        return self.combinationRule
-    
-    def setCombinationRule(self, combinationRule):
-        self.combinationRule = combinationRule
-
-    def getLJCorrection(self):
-        return self.ljCorrection
-    
-    def setLJCorrection(self, ljCorrection):
-        self.ljCorrection = ljCorrection 
 
     def __repr__(self):
         return self.name

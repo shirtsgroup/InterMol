@@ -1,4 +1,4 @@
-import Driver
+import Topology.Driver as Driver
 import pdb
 
 Driver.initSystem("Solvated 2PPN")

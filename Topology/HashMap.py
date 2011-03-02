@@ -22,6 +22,9 @@ class HashMap(object):
         else:
             return False
 
+    def itervalues(self):
+        return self.map.values()        
+
     def __repr__(self):
         return repr(self.map)
 

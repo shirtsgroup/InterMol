@@ -33,15 +33,6 @@ class OrderedSet(object):
         else:
             return False
      
-    """
-    def removeForUpdate(self, key):
-        if key in self.map:
-            return self.map.pop(key)
-        
-    def update(self, key):
-        self.map[key] = key   
-    """
-
     def pop(self, last=True):
         if not self:
             raise KeyError('Set is empty')

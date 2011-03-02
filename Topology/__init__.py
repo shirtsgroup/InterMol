@@ -1,16 +1,14 @@
 __all__ = ["Atom",
     "Decorators",
     "Molecule",
-    "MoleculeSet",
+    "MoleculeType",
     "System",
     "Force",
     "GromacsExt",
-    "CaptureObj",
     "OrderedSet"]
 from Atom import Atom
 from Molecule import Molecule
-from MoleculeSet import MoleculeSet
+from MoleculeType import MoleculeType
 from System import System
 from OrderedSet import OrderedSet
-from CaptureObj import *
 from Decorators import *

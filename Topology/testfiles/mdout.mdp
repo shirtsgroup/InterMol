@@ -1,13 +1,13 @@
 ;
 ;	File 'mdout.mdp' was generated
-;	By user: ctl4f (510)
-;	On host: helium.che.virginia.edu
-;	At date: Sat Jan 29 16:50:53 2011
+;	By user: onbekend (0)
+;	On host: onbekend
+;	At date: Fri Feb 25 13:27:55 2011
 ;
 
 ; VARIOUS PREPROCESSING OPTIONS
 ; Preprocessor information: use cpp syntax.
-; e.g.: -I/home/joe/doe -I/home/mary/hoe
+; e.g.: -I/home/joe/doe -I/home/mary/roe
 include                  = 
 ; e.g.: -DI_Want_Cookies -DMe_Too
 define                   = 
@@ -19,9 +19,9 @@ tinit                    = 0
 dt                       = 0.001
 nsteps                   = 0
 ; For exact run continuation or redoing part of a run
+init_step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)
 simulation_part          = 1
-init_step                = 0
 ; mode for center of mass motion removal
 comm-mode                = Linear
 ; number of steps for center of mass motion removal
@@ -56,6 +56,7 @@ nstvout                  = 100
 nstfout                  = 0
 ; Output frequency for energies to log file and energy file
 nstlog                   = 100
+nstcalcenergy            = -1
 nstenergy                = 100
 ; Output frequency and precision for xtc file
 nstxtcout                = 0
@@ -76,6 +77,8 @@ pbc                      = xyz
 periodic_molecules       = no
 ; nblist cut-off        
 rlist                    = 1
+; long-range cut-off for switched potentials
+rlistlong                = -1
 
 ; OPTIONS FOR ELECTROSTATICS AND VDW
 ; Method for doing electrostatics
@@ -128,13 +131,17 @@ gb_saltconc              = 0
 gb_obc_alpha             = 1
 gb_obc_beta              = 0.8
 gb_obc_gamma             = 4.85
+gb_dielectric_offset     = 0.009
+sa_algorithm             = Ace-approximation
 ; Surface tension (kJ/mol/nm^2) for the SA (nonpolar surface) part of GBSA
-; The default value (2.092) corresponds to 0.005 kcal/mol/Angstrom^2.
+; The value -1 will set default value for Still/HCT/OBC GB-models.
 sa_surface_tension       = 2.092
 
 ; OPTIONS FOR WEAK COUPLING ALGORITHMS
 ; Temperature coupling  
 Tcoupl                   = no
+nsttcouple               = -1
+nh-chain-length          = 10
 ; Groups to couple separately
 tc-grps                  = 
 ; Time constant (ps) and reference temperature (K)
@@ -143,6 +150,7 @@ ref-t                    =
 ; Pressure coupling     
 Pcoupl                   = no
 Pcoupltype               = Isotropic
+nstpcouple               = -1
 ; Time constant (ps), compressibility (1/bar) and reference P (bar)
 tau-p                    = 1
 compressibility          = 
@@ -261,9 +269,15 @@ dihre-fc                 = 1000
 free-energy              = no
 init-lambda              = 0
 delta-lambda             = 0
+foreign_lambda           = 
 sc-alpha                 = 0
 sc-power                 = 0
 sc-sigma                 = 0.3
+nstdhdl                  = 10
+separate-dhdl-file       = yes
+dhdl-derivatives         = yes
+dh_hist_size             = 0
+dh_hist_spacing          = 0.1
 couple-moltype           = 
 couple-lambda0           = vdw-q
 couple-lambda1           = vdw-q
