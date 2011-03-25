@@ -46,7 +46,7 @@ from __future__ import print_function
 
     alanwilter _at_ gmail _dot_ com
 """
-svnId = '$Id: acpype.py 363 2011-02-14 15:37:58Z alanwilter $'
+svnId = '$Id: acpype.py 364 2011-03-01 15:03:57Z alanwilter $'
 try: svnRev, svnDate, svnTime = svnId.split()[2:5]
 except: svnRev, svnDate, svnTime = '0', '0', '0'
 tag = "%s %s Rev: %s" % (svnDate, svnTime, svnRev)
@@ -891,7 +891,7 @@ a        """
             self.printQuoted(self.acLog)
             return True
 
-    def signal_handler(self, signum, frame):#, pid = 0):
+    def signal_handler(self, _signum, _frame):#, pid = 0):
         global pid
         pids = self.job_pids_family(pid)
         self.printDebug("PID: %s, PIDS: %s" % (pid, pids))
@@ -1658,35 +1658,38 @@ a        """
                 phase = int(phaseRaw) # in degree
                 if phase in [0, 180]:
                     properDihedralsGmx45.append([item[0].atoms, phaseRaw, kPhi, period])
-                    if kPhi > 0: V[period] = 2 * kPhi * cal
-                    if period == 1:
-                        C[0] += 0.5 * V[period]
-                        if phase == 0:
-                            C[1] -= 0.5 * V[period]
-                        else:
-                            C[1] += 0.5 * V[period]
-                    elif period == 2:
-                        if phase == 180:
-                            C[0] += V[period]
-                            C[2] -= V[period]
-                        else:
-                            C[2] += V[period]
-                    elif period == 3:
-                        C[0] += 0.5 * V[period]
-                        if phase == 0:
-                            C[1] += 1.5 * V[period]
-                            C[3] -= 2 * V[period]
-                        else:
-                            C[1] -= 1.5 * V[period]
-                            C[3] += 2 * V[period]
-                    elif period == 4:
-                        if phase == 180:
-                            C[2] += 4 * V[period]
-                            C[4] -= 4 * V[period]
-                        else:
-                            C[0] += V[period]
-                            C[2] -= 4 * V[period]
-                            C[4] += 4 * V[period]
+                    #DLM modification
+                    if not self.gmx45: #Only do this if we're not doing GMX45, as gmx45 uses propers instead of RB (or at least, for us it does)
+                        if kPhi > 0: V[period] = 2 * kPhi * cal
+                        self.printDebug( "Done..." )
+                        if period == 1:
+                            C[0] += 0.5 * V[period]
+                            if phase == 0:
+                                C[1] -= 0.5 * V[period]
+                            else:
+                                C[1] += 0.5 * V[period]
+                        elif period == 2:
+                            if phase == 180:
+                                C[0] += V[period]
+                                C[2] -= V[period]
+                            else:
+                                C[2] += V[period]
+                        elif period == 3:
+                            C[0] += 0.5 * V[period]
+                            if phase == 0:
+                                C[1] += 1.5 * V[period]
+                                C[3] -= 2 * V[period]
+                            else:
+                                C[1] -= 1.5 * V[period]
+                                C[3] += 2 * V[period]
+                        elif period == 4:
+                            if phase == 180:
+                                C[2] += 4 * V[period]
+                                C[4] -= 4 * V[period]
+                            else:
+                                C[0] += V[period]
+                                C[2] -= 4 * V[period]
+                                C[4] += 4 * V[period]
                 else:
                     properDihedralsAlphaGamma.append([item[0].atoms, phaseRaw, kPhi, period])
                     #print phaseRaw, kPhi, period
@@ -1859,11 +1862,8 @@ a        """
         self.printMess("Writing GROMACS files\n")
 
         self.setAtomType4Gromacs()
-
         self.writeGroFile()
-
         self.writeGromacsTop(amb2gmx = amb2gmx)
-
         self.writeMdpFiles()
 
     def setAtomType4Gromacs(self):
@@ -3332,7 +3332,7 @@ if __name__ == '__main__':
                               debug = options.debug, basename = options.basename,
                               verbose = options.verboseless, gmx45 = options.gmx45,
                               disam = options.disambiguate, direct = options.direct,
-                              sorted = options.sorted)
+                              sorted = options.sorted )
             system.printDebug("prmtop and inpcrd files parsed")
             system.writeGromacsTopolFiles(amb2gmx = True)
         else:
