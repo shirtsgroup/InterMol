@@ -438,10 +438,13 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
      MRS: Moved to acpype.py
+     NOTE that perturbation of atom type is currently NOT DONE since the mcss is assumed to have the same atom types as the ligand. Consequently, pay attention to the following warning....
+     WARNING: Because mcss searches are typically done with Sybyl atom types or OE internal representations, it is actually possible to run into cases where the MCSS has one set of atom types but a ligand has a different set of GAFF atom types (but equivalent Sybyl/OE atom types). Since this tool does not perturb atom types, this will result in incorrect atom types in the end state. For example, D. Mobley found this problem perturbing benzamidine to p-NH2 -- the ring atom types are different (but OE equivalent) for p-NH2, so p-NH2 is never actually perturbed to the common substructure. 
      
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
      Generalize this code to allow it to operate more generally on a specified moleculetype.
+     Fix the code to allow perturbation of atom type as well.
 
    """
 
