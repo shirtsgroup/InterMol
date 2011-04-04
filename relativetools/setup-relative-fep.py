@@ -437,10 +437,11 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
      The common_intermediate MUST have AMBER atom and bondtypes.
      This code currently only handles the special format gromacs topology files produced by amb2gmx.pl -- there are allowed variations in format that are not treated here.
      Note that this code also only handles the first section of each kind found in a gromacs .top file.
-     MRS: Moved to acpype.py
-     NOTE that perturbation of atom type is currently NOT DONE since the mcss is assumed to have the same atom types as the ligand. Consequently, pay attention to the following warning....
-     WARNING: Because mcss searches are typically done with Sybyl atom types or OE internal representations, it is actually possible to run into cases where the MCSS has one set of atom types but a ligand has a different set of GAFF atom types (but equivalent Sybyl/OE atom types). Since this tool does not perturb atom types, this will result in incorrect atom types in the end state. For example, D. Mobley found this problem perturbing benzamidine to p-NH2 -- the ring atom types are different (but OE equivalent) for p-NH2, so p-NH2 is never actually perturbed to the common substructure. 
      
+   CHANGELOG:
+     - MRS: Moved to acpype.py
+     - DLM 4/5/2011 modified to handle perturbation of atom types. This will usually be useful when there are smlal changes in atom type, i.e. within a ring, that do not affect the mcss search. Prior to this change, the end state could be incorrect in some cases, such as for mutation of p-NH2 to its shared scaffold with benzamidine, since there are some inconsequential changes in the gaff ring atom types.
+
    TODO
      Perhaps this method should be combined with 'parameterizeForGromacs' as an optional second step, ensuring that the correct 'molecule' is used.
      Generalize this code to allow it to operate more generally on a specified moleculetype.
@@ -524,6 +525,7 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
 
    # store atomname -> charge and atomtype -> typename correspondence when atoms are present in substructure
    mutated_charges = dict() # map of charges
+   mutated_types = dict() #Map of mutated atom types
    retained_atoms = list() # list of which atoms are not turned into dummies
    perturbed_atomtypes = list() # list of perturbed atom types
 
@@ -540,6 +542,7 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
            charge = matchpair.pattern.GetPartialCharge() # charge on common substructure
            atomtype = matchpair.pattern.GetType() # GAFF atom type
            mutated_charges[atomname] = charge
+           mutated_types[ atomname ] = matchpair.pattern.GetType() #Type on common substructure
            retained_atoms.append(atomname)
            #perturbed_atomtypes.append(atomtype)--MZ
        break
@@ -622,9 +625,13 @@ def perturbGromacsTopologyToIntermediate(topology_filename, perturbed_resname, l
       atomname = atom['atom']
       # atom type
       if atomname in retained_atoms:
-          atom['typeB'] = atom['type'] # atom type is retained
+          atom['typeB'] = mutated_types[ atomname ] #Perturb atom type to what it is in the final structure
           atom['chargeB'] = mutated_charges[atomname] # common substructure charge is used
-          atom['comment'] = 'common substructure'
+          if atom['type'] <> mutated_types[ atomname]:
+            atom['comment'] = 'common substructure; perturbed type'
+          else:
+            atom['comment'] = 'common substructure'
+
       else:
           atom['typeB'] = atom['type'] + "_dummy" # atom is turned into a dummy
           atom['chargeB'] = 0.0 # atom is discharged
