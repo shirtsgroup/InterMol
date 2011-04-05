@@ -805,11 +805,17 @@ quit""" % vars()
    tleapout = tleapout.split('\n')
    # Shop any warnings.
    if show_warnings:
-      print "Any LEaP warnings follow:"    # TODO: Only print this if there are any warnings to be printed.
+      fnd = False
       for line in tleapout:
          tmp = line.upper()
-         if tmp.find('WARNING')>-1: print line
-         if tmp.find('ERROR')>-1: print line
+         if tmp.find('WARNING')>-1: 
+            print line
+            fnd = True
+         if tmp.find('ERROR')>-1: 
+            print line
+            fnd = True
+      if fnd:
+         print "Any LEaP warnings/errors are above."
 
 
    # Restore old directory.
