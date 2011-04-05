@@ -46,7 +46,7 @@ from __future__ import print_function
 
     alanwilter _at_ gmail _dot_ com
 """
-svnId = '$Id: acpype.py 364 2011-03-01 15:03:57Z alanwilter $'
+svnId = '$Id: acpype.py 365 2011-03-31 14:17:10Z alanwilter $'
 try: svnRev, svnDate, svnTime = svnId.split()[2:5]
 except: svnRev, svnDate, svnTime = '0', '0', '0'
 tag = "%s %s Rev: %s" % (svnDate, svnTime, svnRev)
@@ -1656,12 +1656,13 @@ a        """
                 kPhi = dih.kPhi # in rad
                 phaseRaw = dih.phase * radPi # in degree
                 phase = int(phaseRaw) # in degree
+                if period > 4 and not self.gmx45:
+                    self.printError("Likely trying to convert ILDN to RB, use option '-r' for GMX45")
+                    sys.exit(1)
                 if phase in [0, 180]:
                     properDihedralsGmx45.append([item[0].atoms, phaseRaw, kPhi, period])
-                    #DLM modification
-                    if not self.gmx45: #Only do this if we're not doing GMX45, as gmx45 uses propers instead of RB (or at least, for us it does)
+                    if not self.gmx45:
                         if kPhi > 0: V[period] = 2 * kPhi * cal
-                        self.printDebug( "Done..." )
                         if period == 1:
                             C[0] += 0.5 * V[period]
                             if phase == 0:
@@ -3147,6 +3148,7 @@ class Atom(object):
         self.atomName = atomName
         self.atomType = atomType
         self.id = id
+        self.cgnr = id
         self.resid = resid
         self.mass = mass
         self.charge = charge #/ qConv
