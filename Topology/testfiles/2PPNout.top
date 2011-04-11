@@ -1,0 +1,11 @@
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+1               3               yes             0.5     0.5
+
+[ system ]
+FK506-BINDING PROTEIN 1A
+
+[ molecules ]
+; Compound        nmols
+Protein               1
+SOL                3588
