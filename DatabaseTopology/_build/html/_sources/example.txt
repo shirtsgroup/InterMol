@@ -1,0 +1,5 @@
+Example
+=======
+
+.. autoclass:: Topology.testfiles.testGMX
+    :members:

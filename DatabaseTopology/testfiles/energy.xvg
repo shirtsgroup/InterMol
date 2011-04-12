@@ -1,0 +1,26 @@
+# This file was created Wed Mar 23 15:19:46 2011
+# by the following command:
+# /usr/local/gromacs4.5.3/bin/g_energy -f ener.edr 
+#
+# g_energy is part of G R O M A C S:
+#
+# GROup of MAchos and Cynical Suckers
+#
+@    title "Gromacs Energies"
+@    xaxis  label "Time (ps)"
+@    yaxis  label "(kJ/mol)"
+@TYPE xy
+@ view 0.15, 0.15, 0.75, 0.85
+@ legend on
+@ legend box on
+@ legend loctype view
+@ legend 0.78, 0.8
+@ legend length 2
+@ s0 legend "Bond"
+@ s1 legend "Angle"
+@ s2 legend "Proper Dih."
+@ s3 legend "Improper Dih."
+@ s4 legend "LJ-14"
+@ s5 legend "Coulomb-14"
+@ s6 legend "LJ (SR)"
+    0.000000  2231.468018  4766.283691  8585.208984  631.586609  4981.958008  47431.035156  514912.406250
