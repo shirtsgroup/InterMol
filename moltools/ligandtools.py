@@ -779,7 +779,7 @@ def parameterizeForAmber(molecule, topology_filename, coordinate_filename, charg
    
    # Generate frcmod file for additional GAFF parameters.
    frcmod_filename_tmp = os.path.join(working_directory, 'gaff.frcmod')
-   print commands.getoutput('parmchk -i %(gaff_mol2_filename)s -f mol2 -o %(frcmod_filename_tmp)s' % vars())
+   commands.getoutput('parmchk -i %(gaff_mol2_filename)s -f mol2 -o %(frcmod_filename_tmp)s' % vars())
 
    # Create AMBER topology/coordinate files using LEaP.
    if offfile:
@@ -935,7 +935,9 @@ def splitMolFileToFiles( infile, outprefix, outformat='.mol2', SeparateConformer
             title = title.replace(' ','_')
             #Construct first part of output name
             outprefix_t = outprefix+title
-        else: outprefix_t = outprefix
+        else: 
+            outprefix_t = outprefix
+            title = mol.GetTitle()
 
         #Loop over conformers
         #If we are not splitting by conformer, everything goes to one output file
