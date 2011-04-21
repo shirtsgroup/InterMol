@@ -2,6 +2,7 @@ from Topology.Decorators import *
 
 class Atom(object):
     @accepts_compatible_units(None, 
+                None,
                 None, 
                 None,
                 None,
@@ -17,6 +18,7 @@ class Atom(object):
 
     def __init__(self, 
                 atomNum,
+                molID= -1,
                 resNum = -1, 
                 resName = None,
                 atomName = None,
@@ -30,6 +32,7 @@ class Atom(object):
                 fy = 0.0,
                 fz = 0.0):
         self.atomNum = atomNum
+        self.molID = molID
         self.resNum = resNum
         self.resName = resName
         self.atomName = atomName
@@ -47,6 +50,9 @@ class Atom(object):
         self.ptype = "A"
         self.sigma = list() 
         self.epsilon = list()
+
+        
+
 
     @accepts_compatible_units(
         units.nanometers,

@@ -1,14 +1,14 @@
 import pdb
-from  Topology import *
+import MySQLdb
+from Topology import *
+from Topology.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+from Topology.System import System
+from Topology.DBClass import DBClass
 
-sys = None
-GroTopParser = None 
-
-def initSystem(name):
-    global sys, GroTopParser
-    sys = System(name)
-    GroTopParser = GromacsExt.GromacsTopologyParser(sys)
-
+def initSystem(name, host, password):
+    DBClass._db = MySQLdb.connect(host=host, user='cs4750pmc8p', passwd=password, db='cs4750pmc8p')
+    System._sys = System(name)
+    GromacsTopologyParser._GroTopParser = GromacsExt.GromacsTopologyParser()
     print "System initialized\n"
 
 def loadStructure(*files):
@@ -23,7 +23,7 @@ def loadStructure(*files):
        
         if extension.lower() == 'gro':
             print 'Reading in Gromacs structure "%s"...' %(filename)
-            GromacsExt.readStructure(filename, sys)
+            GromacsExt.readStructure(filename, sys, db)
         
         elif extension.lower() == '':
             pass
@@ -47,7 +47,7 @@ def loadTopology(*files):
         if extension.lower() == 'top':
             print 'Reading in Gromacs topology "%s"...' %(filename)
             global GroTopParser
-            GroTopParser.parseTopology(filename)
+            GromacsTopologyParser._GroTopParser.parseTopology(filename)
         elif extension.lower() == '':
             pass
 
@@ -100,3 +100,4 @@ def writeTopology(*files):
             sys.stderr.write(" Error: '%s' is not a supported topology file format\n" %(extension.lower()))
 
         print 'Finished writing "%s"\n' %(filename)
+ 
