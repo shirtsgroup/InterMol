@@ -838,7 +838,7 @@ quit""" % vars()
 
    return
 #=============================================================================================
-def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, charge_model = False, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge=None):
+def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, charge_model = False, cleanup = True, show_warnings = True, verbose = False, resname = None, netcharge=None, judgetypes = None):
    """Parameterize small molecule with GAFF and write gromacs coordinate/topology files.
 
    ARGUMENTS
@@ -853,6 +853,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
      verbose (boolean) - show complete output of tools (default: False)
      resname (string) - if set, residue name to use for parameterized molecule (default: None)
      netcharge (integer) - if set, pass this net charge to calculation in antechamber (with -nc (netcharge)), otherwise assume zero.
+     judgetypes (integer) -- default None. If set, pass this to parameterizeForAmber
 
    REQUIREMENTS
      antechamber (must be in PATH)
@@ -878,7 +879,7 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    # Create AMBER coordinate/topology files.
    amber_topology_filename = os.path.join(working_directory, 'amber.prmtop')
    amber_coordinate_filename = os.path.join(working_directory, 'amber.crd')
-   parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname, netcharge = netcharge)
+   parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname, netcharge = netcharge, judgetypes = judgetypes)
    
    # Use acpypi to convert from AMBER to gromacs topology/coordinates.
    acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpype.py')
