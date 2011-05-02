@@ -864,6 +864,9 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
      # parameterize it for gromacs, using antechamber to assign AM1-BCC charges
      parameterizeForGromacs(molecule, topology_filename = 'phenol.top', coordinate_filename = 'phenol.gro', charge_model = 'bcc')
 
+    NOTES:
+      DLM 5/2/2011 switched to using acpype.py rather than acpypi.py with the gmx45 and sorted options, by default.
+
    """
 
    # Create temporary directory.
@@ -878,8 +881,8 @@ def parameterizeForGromacs(molecule, topology_filename, coordinate_filename, cha
    parameterizeForAmber(molecule, amber_topology_filename, amber_coordinate_filename, charge_model=charge_model, cleanup=cleanup, show_warnings=show_warnings, verbose=verbose, resname=resname, netcharge = netcharge)
    
    # Use acpypi to convert from AMBER to gromacs topology/coordinates.
-   acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpypi.py')
-   command = '%(acpypi)s -p %(amber_topology_filename)s -x %(amber_coordinate_filename)s -b OUT' % vars()
+   acpypi =  os.path.join(os.getenv('MMTOOLSPATH'), 'converters', 'acpype.py')
+   command = '%(acpypi)s -p %(amber_topology_filename)s -x %(amber_coordinate_filename)s -b OUT --sorted --gmx45' % vars()
    if verbose: print command
    acpypi_output = commands.getoutput(command)
    if verbose: print acpypi_output
