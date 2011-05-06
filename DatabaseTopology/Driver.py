@@ -5,8 +5,8 @@ from Topology.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
 from Topology.System import System
 from Topology.DBClass import DBClass
 
-def initSystem(name, host, password):
-    DBClass._db = MySQLdb.connect(host=host, user='cs4750pmc8p', passwd=password, db='cs4750pmc8p')
+def initSystem(name, host, username,password):
+    DBClass._db = MySQLdb.connect(host=host, user=username, passwd=password, db='cs4750pmc8p')
     System._sys = System(name)
     GromacsTopologyParser._GroTopParser = GromacsExt.GromacsTopologyParser()
     print "System initialized\n"
@@ -93,8 +93,8 @@ def writeTopology(*files):
             print "Writing Gromacs topology file..."
             GroTopParser.writeTopology(filename)
 
-        elif extension.lower() == '':
-            pass
+        elif extension.lower() == 'array':
+            System._sys.writeXML(filename)
 
         else:
             sys.stderr.write(" Error: '%s' is not a supported topology file format\n" %(extension.lower()))

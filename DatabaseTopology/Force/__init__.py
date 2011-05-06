@@ -9,6 +9,7 @@ __all__ = ["AbstractAngle",
     "CrossBondAngleAngle",
     "CrossBondBondAngle",
     "CubicBond",
+    "Dihedral",
     "DihedralRestraint",
     "DistanceRestraint",
     "Exclusions",
@@ -25,6 +26,7 @@ __all__ = ["AbstractAngle",
     "LJNBPairCR23",
     "Morse",
     "OrientationRestraint",
+    "Pair",
     "PositionRestraint",
     "ProperDihedral1",
     "ProperDihedral9",
@@ -50,6 +52,7 @@ from Constraint import Constraint
 from CrossBondAngleAngle import CrossBondAngleAngle
 from CrossBondBondAngle import CrossBondBondAngle
 from CubicBond import CubicBond
+from Dihedral import Dihedral
 from DihedralRestraint import DihedralRestraint
 from DistanceRestraint import DistanceRestraint
 from Exclusions import Exclusions
@@ -66,6 +69,7 @@ from LJNBPairCR1 import LJNBPairCR1
 from LJNBPairCR23 import LJNBPairCR23
 from Morse import Morse
 from OrientationRestraint import OrientationRestraint
+from Pair import Pair
 from PositionRestraint import PositionRestraint
 from ProperDihedral9 import ProperDihedral9
 from ProperDihedral1 import ProperDihedral1

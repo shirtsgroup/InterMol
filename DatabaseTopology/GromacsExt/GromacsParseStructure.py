@@ -3,6 +3,7 @@ import sys
 import os
 import string
 import re
+import Topology.System as System
 from collections import deque
 from Topology.Atom import *
 from Topology.Molecule import *
