@@ -1,8 +1,6 @@
-import pdb
 import sys
 import os
 import string
-import re
 from collections import deque
 from ctools.Atom import *
 from ctools.Molecule import *

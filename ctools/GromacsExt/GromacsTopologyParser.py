@@ -15,18 +15,16 @@ class GromacsTopologyParser(object):
     """
     A class containing methods required to read in a Gromacs(4.5.3) Topology File   
     """
-    def __init__(self, sys = None, defines=None):
+    def __init__(self, defines=None):
         """
         Initializes a GromacsTopologyParse object which serves to read in a Gromacs
         topology into the abstract representation.
     
         Args:
-            sys: Global system passed by reference so values can be stored globally
             defines: Sets of default defines to use while parsing.
         """
-        self.sys = sys 
         self.includes = set()       # set storing includes
-        self.defines = dict()       # list of defines
+        self.defines = set()       # list of defines
         self.comments = list()      # list of comments
 
         self.atomtypes = HashMap()
@@ -94,11 +92,11 @@ class GromacsTopologyParser(object):
                     expanded.pop(i)
                     
                     fields = expanded[i].split()
-                    self.sys.nbFunc = int(fields[0])
-                    self.sys.combinationRule = int(fields[1])
-                    self.sys.genpairs = fields[2]
-                    self.sys.ljCorrection = float(fields[3])
-                    self.sys.coulombCorrection = float(fields[4])
+                    System._sys.nbFunc = int(fields[0])
+                    System._sys.combinationRule = int(fields[1])
+                    System._sys.genpairs = fields[2]
+                    System._sys.ljCorrection = float(fields[3])
+                    System._sys.coulombCorrection = float(fields[4])
                     
                     expanded.pop(i)
 

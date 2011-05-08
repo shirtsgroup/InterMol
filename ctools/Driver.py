@@ -1,13 +1,13 @@
-import pdb
+import sys
 from ctools import *
-
-sys = None
-GroTopParser = None 
+from ctools.System import System
+from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+from ctools.GromacsExt.GromacsStructureParser import *
 
 def initSystem(name):
-    global sys, GroTopParser
-    sys = System(name)
-    GroTopParser = GromacsExt.GromacsTopologyParser(sys)
+    import warnings
+    System._sys = System(name)
+    GromacsTopologyParser._GroTopParser = GromacsExt.GromacsTopologyParser(sys)
 
     print "System initialized\n"
 
@@ -47,7 +47,7 @@ def loadTopology(*files):
         if extension.lower() == 'top':
             print 'Reading in Gromacs topology "%s"...' %(filename)
             global GroTopParser
-            GroTopParser.parseTopology(filename)
+            GromacsTopologyParser._GroTopParser.parseTopology(filename)
         elif extension.lower() == '':
             pass
 

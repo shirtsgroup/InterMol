@@ -1,5 +1,5 @@
-__all__ = ["GromacsParseStructure",
-"GromacsTopologyParser"]
+__all__ = ["GromacsStructureParser",
+        "GromacsTopologyParser"]
 
-from GromacsParseStructure import * 
+from GromacsStructureParser import *
 from GromacsTopologyParser import GromacsTopologyParser
