@@ -2,10 +2,10 @@
 .. module:: System
     :platform: UNIX
 """
+from collections import OrderedDict
 from ctools.Converter import *
 from ctools.MoleculeType import MoleculeType
 from ctools.OrderedSet import OrderedSet
-from ctools.OrderedDict import OrderedDict
 from ctools.HashMap import HashMap
 
 class System(object):
@@ -19,9 +19,9 @@ class System(object):
         >>> print __init__(name='sysname')
         """
         if name:
-            self.name = name
+            self._name = name
         else:
-            self.name = "Untitled"
+            self._name = "Untitled"
         
         self._v1x = 0.0
         self._v2x = 0.0

@@ -1,14 +1,13 @@
 import sys
-from ctools import *
 from ctools.System import System
-from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
-from ctools.GromacsExt.GromacsStructureParser import *
 
 def initSystem(name):
-    import warnings
+    """Initialize the System. This must be called prior to reading in anything
+    
+    Args:
+        name (str): name of the system
+    """
     System._sys = System(name)
-    GromacsTopologyParser._GroTopParser = GromacsExt.GromacsTopologyParser(sys)
-
     print "System initialized\n"
 
 def loadStructure(*files):
@@ -22,8 +21,9 @@ def loadStructure(*files):
         extension = file.split(".")[-1]
        
         if extension.lower() == 'gro':
+            import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
             print 'Reading in Gromacs structure "%s"...' %(filename)
-            GromacsExt.readStructure(filename, sys)
+            GromacsStructureParser.readStructure(filename)
         
         elif extension.lower() == '':
             pass
@@ -34,7 +34,7 @@ def loadStructure(*files):
         print "Structure loaded\n"
         
 def loadTopology(*files):
-    
+     
     for file in files:
         try:
             filename = str(file)
@@ -45,8 +45,10 @@ def loadTopology(*files):
 
 
         if extension.lower() == 'top':
+            from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print 'Reading in Gromacs topology "%s"...' %(filename)
-            global GroTopParser
+            if not GromacsTopologyParser._GroTopParser:
+                GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
             GromacsTopologyParser._GroTopParser.parseTopology(filename)
         elif extension.lower() == '':
             pass
@@ -67,8 +69,9 @@ def writeStructure(*files):
         extension = file.split(".")[-1]
 
         if extension.lower() == 'gro':
+            import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
             print "Writing Gromacs structure file..."
-            GromacsExt.writeStructure(sys, filename)
+            GromacsStructureParser.writeStructure(filename)
         
         elif extension.lower() == 'pdb':
             print "Writing PDB structure file..."
@@ -90,8 +93,9 @@ def writeTopology(*files):
         extension = file.split(".")[-1]
 
         if extension.lower() == 'top':
+            from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print "Writing Gromacs topology file..."
-            GroTopParser.writeTopology(filename)
+            GromacsTopologyParser._GroTopParser.writeTopology(filename)
 
         elif extension.lower() == '':
             pass

@@ -14,6 +14,9 @@ class Molecule(object):
     """
     def __init__(self, name = None):
         """Initialize the molecule
+        
+        Args:
+            name (str): name of the molecule
         """
         if name != None:
             self.name = name
@@ -23,12 +26,24 @@ class Molecule(object):
         self._atoms = OrderedSet()
         
     def addAtom(self, atom): 
+        """Add and atom 
+        
+        Args:
+            atom (atom): the atom to add into the molecule
+        """
         self._atoms.add(atom)   
 
     def removeAtom(self, atom):
+        """Remove Atom
+        
+        Args:
+            atom (atom): the atom to remove from the molecule
+        """
         self._atoms.remove(atom)
 
     def getAtoms(self):
+        """Return an orderedset of atoms
+        """
         return self._atoms    
 
     def __repr__(self):

@@ -1,8 +1,9 @@
 System
 ======
 
+.. module:: ctools.System
 
-.. autoclass:: ctools.System
+.. autoclass:: System
    :show-inheritance:
    :members:
    :undoc-members:

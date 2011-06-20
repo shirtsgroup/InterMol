@@ -1,5 +1,10 @@
 Molecule
 ========
 
-.. autoclass:: ctools.Molecule
-    :members:
+.. module:: ctools.Molecule
+
+.. autoclass:: Molecule
+   :show-inheritance:
+   :members:
+   :undoc-members:
+

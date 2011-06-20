@@ -22,10 +22,10 @@ class Atom(object):
             residueIndex (int): index of residue in the molecule
             residueName (str): name of the residue (eg., THR, CYS)
         """
-        self._atomIndex = atomIndex
-        self._atomName = atomName
-        self._residueIndex = residueIndex
-        self._residueName = residueName
+        self.atomIndex = atomIndex
+        self.atomName = atomName
+        self.residueIndex = residueIndex
+        self.residueName = residueName
         self._position = [0 * units.nanometers,
                             0 * units.nanometers,
                             0 * units.nanometers]
@@ -37,16 +37,93 @@ class Atom(object):
                         0 * units.kilojoules_per_mole * units.nanometers**(-1)]
         
         # These will be added after the ctools is read in and come from [ atomtypes ]
-        self._atomtype = list()
-        self._bondtype = None
-        self._Z = None
-        self._cgnr = None
-        self._mass = list()
-        self._charge = list()
-        self._ptype = "A"
-        self._sigma = list() 
-        self._epsilon = list()
+        self._atomtype = dict()
+        self.bondtype = None
+        self.Z = None
+        self.cgnr = None
+        self._mass = dict()
+        self._charge = dict()
+        self.ptype = "A"
+        self._sigma = dict() 
+        self._epsilon = dict()
+    
+    def setSigma(self, index, sigma):
+        """Sets the sigma
+        
+        Args:
+            sigma (float): sigma of the atom
+            index (int): index to insert at
+        """
+        self._sigma[index] = sigma   
 
+    def getSigma(self, index = None):
+        """
+        """
+        if index:
+            return self._sigma[index]
+        return self._sigma 
+
+    def setEpsilon(self, index, epsilon):
+        """Sets the epsilon
+    
+        Args:
+            epsilon (float): epsilon of the atom
+            index(int): index corresponding to epsilon
+        """
+        self._epsilon[index] = epsilon
+
+    def getEpsilon(self, index = None):
+        """
+        """
+        if index:
+            return self._epsilon[index]
+        return self._epsilon    
+
+    def setCgnr(self, index, cgnr):
+        """Sets the Cgnr
+        
+        Args:
+            cgnr (int): The charge group number
+            index (int): the value corresponding with cgnr precedence
+
+        """
+        self._cgnr[index] = cgnr
+
+    def getCgnr(self, index = None):
+        """Gets the Cgnr
+        
+        Args:
+            index (int): the index to retrieve, defaults to None
+        
+        Returns:
+            cngr (dict, int): returns the index or the dictionary depending on if index is set
+        """
+        if index:
+            return self._cgnr[index]
+        return self._cgnr 
+
+    def setAtomType(self, index, atomtype):
+        """Sets the atomtype
+
+        Args:
+            atomtype (str): the atomtype of the atom
+            index (str): the value corresponding with type precedence (A Type, B Type)
+        """
+        self._atomtype[index] = atomtype
+    
+    def getAtomType(self, index = None):
+        """Gets the atomtype
+        
+        Args:
+            index (str): the value corresponding with type precedence (A Type, B Type)
+        
+        Returns:
+            atomtype (list, str): Returns the atomtype list or the value at index if index is specified
+        """
+        if index:
+            return self._atomtype[index]
+        return self._atomtype
+    
     def setPosition(self, x, y, z):
         """Sets the position of the atom
         
@@ -113,54 +190,66 @@ class Atom(object):
         """
         return self._force    
 
-    def setMass(self, mass):
+    def setMass(self, index, mass):
         """Sets the mass of the atom
         
         Args:
             mass (float): mass of the atom
+            index (str): the index corresponding with mass precedence (A Mass, B Mass)
         """
         unit = units.amu
-        self._mass = convert_units(mass, unit)
+        self._mass[index] = convert_units(mass, unit)
 
-    def getMass(self):
+    def getMass(self, index = None):
         """Gets the mass of the atom
             
         Returns:
             mass (float): mass of the atom
+            index (str): index to retrieve
         """
+        if index:
+            return self._mass[index]
         return self._mass
 
-    def setCharge(self, charge):
+    def setCharge(self, index, charge):
         """Sets the charge of the atom
         
         Args:
             charge (float): Charge of the atom
+            index (int): the index corresponding with charge precedence 
         """
         unit = units.elementary_charge
-        self._charge = convert_units(charge)
+        self._charge[index] = convert_units(charge, unit)
 
-    def getCharge(self):
+    def getCharge(self, index = None):
         """Gets the charge of the atom
         
+        Args:
+            index (int): index of the charge to retrieve defaults to None   
+     
         Returns:
             charge (float): Charge of the atom
         """
+        if index:
+            return self._charge[index]
         return self._charge 
     
     def __repr__(self):
         """
         """
-        return ('Atom(' + str(self._atomIndex) + ", " +  str(self._atomName) + ")")
+        return ('Atom(' + str(self.atomIndex) + ", " +  str(self.atomName) + ")")
 
     def __cmp__(self, other):
         """
         """
-        return self._atomIndex - other._atomIndex
+        return self.atomIndex - other.atomIndex
     
     def __eq__(self, other):
         """
         """
-        return self._atomIndex == other._atomIndex
+        return self.atomIndex == other.atomIndex
     
     def __hash__(self):
-        return hash(self._atomIndex)
+        """
+        """
+        return hash(self.atomIndex)
