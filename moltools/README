@@ -1,5 +1,0 @@
-Tools for dealing with small molecules and mol2 files.
-
-Stuff here:
-- ligandtools.py: Various tools relating to setting up of small molecules from IUPAC names, conformer generation, charge calculation, parameterization for gromacs and AMBER, shape overlays, etc. Many require OpenEye Python toolkits.
-- make_2d_image.py: Tool to take a chemical name and make a 2d image of it. Uses OpenEye image libraries, which are a bit ugly and only make bitmaps. Should find some opensource tool which can be used for these.

@@ -1,4 +1,0 @@
-run_resolvate:
-./resolvate.py -p protG_ions_water.pdb -c protG_ions_water.gro -s protG_alone.pdb -o solvated.pdb -t 0.6
-
-

@@ -1,7 +1,0 @@
-
-
-
-Total number of electrons: 256; net charge: 0
-
-Running: /usr/local/amber11/bin/sqm -O -i sqm.in -o sqm.out
-Error: cannot run "/usr/local/amber11/bin/sqm -O -i sqm.in -o sqm.out" of bcc() in charge.c properly, exit
