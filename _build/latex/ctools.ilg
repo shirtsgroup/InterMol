@@ -1,0 +1,7 @@
+This is makeindex, version 2.14 [02-Oct-2002] (kpathsea + Thai support).
+Scanning style file ./python.ist......done (6 attributes redefined, 0 ignored).
+Scanning input file ctools.idx....done (56 entries accepted, 0 rejected).
+Sorting entries....done (348 comparisons).
+Generating output file ctools.ind....done (88 lines written, 0 warnings).
+Output written in ctools.ind.
+Transcript written in ctools.ilg.
