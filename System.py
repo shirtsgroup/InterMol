@@ -2,7 +2,7 @@
 .. module:: System
     :platform: UNIX
 """
-from collections import OrderedDict
+from ctools.OrderedDict import OrderedDict
 from ctools.Converter import *
 from ctools.MoleculeType import MoleculeType
 from ctools.OrderedSet import OrderedSet
