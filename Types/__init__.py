@@ -20,12 +20,23 @@ all=['AbstractAtomType',
     'LJNBPairCR23Type',
 
     'AngleType',
-    'G96AngleType']
+    'G96AngleType'
+    'CrossBondAngleAngleType'
+    'CrossBondBondAngleType'
+    'QuarticAngleType'
+    'RBDihedralType'
+    'UreyBradleyAngleType'
+
+    'ProperDihedral1Type'
+    'ImproperDihedral2Type'
+    'ImproperDihedral4Type'
+    'ProperDihedral9Type']
 
 from AbstractAtomType import AbstractAtomType
 from AbstractBondType import AbstractBondType
 from AbstractPairType import AbstractPairType
 from AbstractAngleType import AbstractAngleType
+from AbstractDihedralType import AbstractDihedralType
 
 from AtomCR1Type import AtomCR1Type
 from AtomCR23Type import AtomCR23Type
@@ -45,4 +56,14 @@ from LJNBPairCR23Type import LJNBPairCR23Type
 
 from AngleType import AngleType
 from G96AngleType import G96AngleType
+from CrossBondAngleAngleType import CrossBondAngleAngleType
+from CrossBondBondAngleType import CrossBondBondAngleType
+from QuarticAngleType import QuarticAngleType
+from RBDihedralType import RBDihedralType
+from UreyBradleyAngleType import UreyBradleyAngleType
+
+from ProperDihedral1Type import ProperDihedral1Type
+from ImproperDihedral2Type import ImproperDihedral2Type
+from ImproperDihedral4Type import ImproperDihedral4Type
+from ProperDihedral9Type import ProperDihedral9Type
 
