@@ -1,8 +1,7 @@
-class Pair(object):
-    def __init__(self, atom1, atom2, func):
+class AbstractPair(object):
+    def __init__(self, atom1, atom2):
         self.atom1 = atom1
-        self.atom2 = atom2
-        self.func = func
+        self.atom2 = atom2  
 
     def __eq__(self, object):
         if (self.atom1 == (object.atom1 or object.atom2)) and (self.atom2 == (object.atom2 or object.atom1)):
