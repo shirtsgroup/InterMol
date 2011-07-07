@@ -26,7 +26,7 @@ class GromacsTopologyParser(object):
             defines: Sets of default defines to use while parsing.
         """
         self.includes = set()       # set storing includes
-        self.defines = set()        # list of defines
+        self.defines = dict()        # list of defines
         self.comments = list()      # list of comments
 
         #self.atomtypes = HashMap()
@@ -38,8 +38,8 @@ class GromacsTopologyParser(object):
         
 	if defines:
             self.defines.union(defines)
-        self.defines.add("FLEX_SPC")
-        self.defines.add("POSRE")
+        self.defines["FLEX_SPC"] = None
+        self.defines["POSRE"] = None
     
     def parseTopology(self, topfile, verbose = False):
         """
@@ -455,7 +455,10 @@ class GromacsTopologyParser(object):
                         atom.setAtomType(0,split[1].strip())
                         atom.cgnr = int(split[5])
                         atom.setCharge(0, float(split[6]) * units.elementary_charge)
-                        atom.setMass(0, float(split[7]) * units.amu)
+			try:
+                            atom.setMass(0, float(split[7]) * units.amu)
+			except:
+			    pass
 
                         if len(split) == 11:
                             atom.setAtomType(1, split[8].strip())
@@ -1096,7 +1099,8 @@ class GromacsTopologyParser(object):
                                 if verbose:
                                     print "Found a define:", line
                                 define = match.group('defineLiteral')
-                                if define not in self.defines:
+                                
+				if define not in self.defines:
                                     self.defines[define] = match.group('defineData')
                                 else:
                                     print "WARNING: Overriding define:", define
