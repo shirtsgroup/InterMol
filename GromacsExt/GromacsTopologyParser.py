@@ -29,7 +29,7 @@ class GromacsTopologyParser(object):
         self.defines = dict()        # list of defines
         self.comments = list()      # list of comments
 
-        #self.atomtypes = HashMap()
+        self.atomtypes = HashMap()
         self.bondtypes = HashMap()
         self.pairtypes = HashMap()
         self.angletypes = HashMap()
@@ -110,7 +110,7 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newAtomType = None
-
+                        
                         if len(split) == 7:
                             if System._sys._combinationRule == 1:
                                 
@@ -127,7 +127,7 @@ class GromacsTopologyParser(object):
                                         sigma * units.kilojoules_per_mole * units.nanometers**(6),      # sigma
                                         epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
 
-                            elif System._sys._combinationRule == (2 or 3):
+                            elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
                                         split[1].strip(),                           # bondtype
                                         -1,                                         # Z    
@@ -136,6 +136,33 @@ class GromacsTopologyParser(object):
                                         split[4],                                   # ptype
                                         float(split[5]) * units.nanometers ,        # sigma
                                         float(split[6]) * units.kilojoules_per_mole)# epsilon
+
+                        if len(split) == 8:
+                            if System._sys._combinationRule == 1:
+                                
+                                # TODO: double check the following equations
+                                sigma = (float(split[7])/float(split[6]))**(1/6)
+                                epsilon = float(split[6])/(4*sigma**6)
+
+                                newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
+                                        split[1].strip(),                           # bondtype
+                                        split[2],                                   # Z
+                                        float(split[3]) * units.amu,                # mass
+                                        float(split[4]) * units.elementary_charge,  # charge
+                                        split[5],                                   # ptype
+                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # sigma
+                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
+
+                            elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
+                                newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
+                                        split[1].strip(),                           # bondtype
+                                        split[2],                                   # Z    
+                                        float(split[3]) * units.amu,                # mass
+                                        float(split[4]) * units.elementary_charge,  # charge
+                                        split[5],                                   # ptype
+                                        float(split[6]) * units.nanometers ,        # sigma
+                                        float(split[7]) * units.kilojoules_per_mole)# epsilon
+
 
                         System._sys._atomtypes.add(newAtomType)
 
@@ -458,7 +485,7 @@ class GromacsTopologyParser(object):
 			try:
                             atom.setMass(0, float(split[7]) * units.amu)
 			except:
-			    pass
+                            atom.setMass(0, -1 * units.amu)
 
                         if len(split) == 11:
                             atom.setAtomType(1, split[8].strip())
@@ -507,8 +534,9 @@ class GromacsTopologyParser(object):
                         newBondForce = None
                             
                         if len(split) == 3:
+                            # Searching for matching bondtype to pull values from
                             tempType = AbstractBondType(split[0], split[1], split[2])
-                            bondType = self.sys.bondtypes.get(tempType)
+                            bondType = self.bondtypes.get(tempType)
                             
                             if isinstance(bondType, BondType):
                                 split.append(length)
