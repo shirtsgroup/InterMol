@@ -41,6 +41,7 @@ class System(object):
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._forces = OrderedSet()
+	self._boxVector = []
 
 
     def addMolecule(self, molecule):
@@ -79,6 +80,7 @@ class System(object):
         self._v1z = v1z
         self._v2z = v2z
         self._v3z = v3z
+	self._boxVector = [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
 
     def __str__(self):
         """String representation of a System object

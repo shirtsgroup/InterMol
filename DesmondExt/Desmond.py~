@@ -1,0 +1,408 @@
+import sys
+import os
+import string
+import re
+import simtk.unit as units
+from collections import deque
+from ctools.Atom import *
+from ctools.Molecule import *
+from ctools.System import System
+from ctools.Types import *
+from ctools.Force import *
+from ctools.HashMap import *
+
+
+class DesmondParser():
+    """
+    A class containing methods required to read in Desmond CMS File   
+    """	
+    
+#LOAD TOPOLOGY FIRST (FFIOS AND SUCH)
+
+  def loadTopology(lines, start, end, sysDirective, verbose = False):
+    print "Start at string %5d and end at string %6d"%(start,end)
+    i = start
+    moleculeName = None 
+    currentMolecule = None
+    vdwtypeskeys = []
+    vdwtypes = []
+    split = []
+    while i < end:
+      match = sysDirective.match(lines[i])
+      if match:
+	    
+        #moleculeName = "PLACEHOLDER NUMBER %d"%start #find a way to get molecule name
+      	
+	
+        if verbose:
+          print match.groups()
+        if match.group('vdwtypes'): #molecule name is at sites, but vdwtypes comes before sites. So we store info in vdwtypes and edit it later at sites
+          if verbose:
+            print "Parsing [ vdwtypes]..."
+          print "vdwtypes at line %d"%i
+	  i+=6 #ASSUMING ALL COLUMNS AT VDWTYPES ARE THE SAME
+	  while not re.match(r'\s*[:::]',lines[i]):
+  	    vdwtypes.append(lines[i].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE LJ12_6_SIG_EPSILON
+	    vdwtypeskeys.append(lines[i].split()[1])
+	    i+=1
+	  print "VDWTYPES AS LIST OF ARRAYS:"
+	  print vdwtypes
+	  print vdwtypeskeys
+        elif match.group('sites'):   #correlate with atomtypes in GROMACS
+          if verbose:                #come back to this later. m_atmoms works fine to read in atoms, but what do sites do?
+            print "Parsing [ sites]..." #also edit vdwtypes
+          print "sites at line %d"%i
+	  split = lines[i].split()
+	  #if split[1] == "atom":
+	  j = 0
+	  while not re.match(r'\s*[:::]',lines[i]):
+	    split = lines[i].split() 
+	    if j == 0:
+	      moleculeName = split[-1] ##residue name and molecule name are the same
+	      currentMolecule = Molecule(moleculeName)
+              System._sys.addMolecule(currentMolecule)
+              currentMoleculeType = System._sys._molecules[moleculeName]
+	      currentMoleculeType.nrexcl = None #PLACEHOLDER FOR NREXCL....FIND OUT WHERE IT IS
+	      j = 1
+	    if split[1] == "atom":
+	      if len(split) == 7: #What are the indexes???
+	        atom = Atom(int(split[0]), None, int(split(5)), split(6))
+	        atom.setAtomType(0, split[4])
+	        atom.setCharge(0, float(split[3])*units.elementary_charge) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setMass(0, float(split[2]) * units.amu) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setSigma(0, vdwtypes[vdwtypeskeys.index(split[4])][0] * units.nanometers) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setEpsilon(0, vdwtypes[vdwtypeskeys.index(split[4])][1] * units.kilojoules_per_mole ) #NEED TO CONVERT TO ACTUAL UNITS
+	      else:
+	        atom = Atom(int(split[0]), None, None, None)
+	        atom.setAtomType(1, split[4])
+	        atom.setCharge(1, float(split[3])*units.elementary_charge) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setMass(1, float(split[2]) * units.amu) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setSigma(1, vdwtypes[vdwtypeskeys.index(split[4])][0] * units.nanometers) #NEED TO CONVERT TO ACTUAL UNITS
+	        atom.setEpsilon(1, vdwtypes[vdwtypeskeys.index(split[4])][1] * units.kilojoules_per_mole ) #NEED TO CONVERT TO ACTUAL UNITS
+	    i+=1 
+	    exit()
+        elif match.group('bonds'):
+          if verbose:
+            print "Parsing [ bonds]..."
+          print "bonds at line %d"%i
+	  i+=1
+        elif match.group('pairs'):
+          if verbose:
+            print "Parsing [ pairs]..."
+          print "pairs at line %d"%i
+	  i+=1
+        elif match.group('angles'):
+          if verbose:
+            print "Parsing [ angles]..."
+          print "angles at line %d"%i
+	  i+=1
+        elif match.group('dihedrals'):
+          if verbose:
+            print "Parsing [ dihedrals]..."
+          print "dihedrals at line %d"%i
+	  i+=1
+        elif match.group('constraints'):
+          if verbose:
+            print "Parsing [ constraints]..."
+          print "constraints at line %d"%i
+	  i+=1
+        elif match.group('exclusions'):
+          if verbose:
+            print "Parsing [ exclusions]..."
+          print "exclusions at line %d"%i
+	  i+=1
+        elif match.group('visuals'):
+          if verbose:
+            print "Parsing [ visuals]..."
+          print "visuals at line %d"%i
+	  i+=1
+        elif match.group('restraints'):
+          if verbose:
+            print "Parsing [ restraints]..."
+          print "restraints at line %d"%i
+          i+=1
+      else:
+        i+=1  
+   
+  def loadStructure(lines, start, end, sysDirective, verbose = False): 
+    print "Start at string %5d and end at string %6d"%(start,end)
+    i = start
+    xcol = None
+    ycol = None
+    zcol = None
+    rincol = None
+    rncol = None
+    aicol = None
+    an1col = None
+    an2col = None
+    vxcol = None
+    vycol = None
+    vzcol = None
+    bg = False
+    temp = True
+    while i < end and temp:
+      if re.match(r'\s*[:::]',lines[i]):
+        if bg:
+          print "ENDING at pos%d"%i
+	  break
+        else:
+          print "BEGINNING at pos%d"%i
+          bg = True
+	  i+=1
+      if bg:
+        #bline = lines[i].split('"')
+        bline = lines[i].split()
+        #print "Splitting quotations:"
+        print bline
+        exit()
+        cline = bline
+        k = 0
+        for s in cline:
+          if not re.match(r'[\S+]',s) and re.match(r'[\s*]',s):
+	    print "STRING:%s"%s
+	    cline[k] = re.sub(r'\s*','*',s)
+          k+=1
+        #cline = [s if (re.match(r'\S+',s) and not re.match(r'\s*',s)) else re.sub(r'\s*','*',s) for s in bline]
+        print "CLINE:"
+        print cline
+        aline = (' '.join(cline)).split(' ')
+        j = 0
+        print "Reformed list:"
+        print aline
+        exit()
+        print "BEFORE LINE:"
+        print aline
+        while j < len(aline):
+          if re.match(r'$^',aline[j]):
+	    #print "SPACE!!!"
+	    aline.pop(j)
+	    #print aline
+          elif re.match(r'"',aline[j]) and re.match(r'"',aline[j+1]):
+	    #print "QUOTATIONS!!!"
+	    aline.pop(j)
+	    #print aline
+	  else:
+	    j+=1
+        print "AFTER LINE:"
+        print aline
+        print "Xcoord: %f"%float(aline[xcol])
+        print "Ycoord: %f"%float(aline[ycol])
+        print "Zcoord: %f"%float(aline[zcol])
+        print "Residue Index: %s"%(aline[rincol])
+        print "Residue Name: %s"%(aline[rncol])
+        print "Atom Index: %s"%(aline[aicol])
+        print "Atom name 1: %s"%(aline[an1col])
+        print "Atom name 2: %s"%(aline[an2col])
+        print "XVelocity: %f"%float(aline[vxcol])
+        print "YVelocity: %f"%float(aline[vycol])
+        print "ZVelocity: %f"%float(aline[vzcol])
+        temp = False
+      else:
+        match = sysDirective.match(lines[i])
+        if match:
+          if verbose:
+            print match.groups()
+          if match.group('xcoord'):
+            if verbose:
+              print "Parsing [ xcoord]..."
+            xcol = i - start
+            #print "xcoord at line %d"%xcol
+          elif match.group('ycoord'):   
+            if verbose:
+              print "Parsing [ ycoord]..."
+            ycol = i - start
+	    #print "ycoord at line %d"%ycol
+          elif match.group('zcoord'):
+            if verbose:
+              print "Parsing [ zcoord]..."
+            zcol = i - start
+	    #print "zcoord at line %d"%zcol
+          elif match.group('rindex'):
+            if verbose:
+              print "Parsing [ rindex]..."
+            rincol = i - start
+	    #print "rindex at line %d"%rincol
+          elif match.group('rname'):
+            if verbose:
+              print "Parsing [ rname]..."
+	    rncol = i - start
+          elif match.group('aindex'):
+            if verbose:
+              print "Parsing [ aindex]..."
+	    aicol = i - start
+	    #print "rname at line %d"%rname
+          elif match.group('aname1'):
+            if verbose:
+              print "Parsing [ aname]..."
+            an1col = i - start
+	    #print "aname1 at line %d"%aname1
+          elif match.group('aname2'):
+            if verbose:
+              print "Parsing [ aname2]..."
+            an2col = i - start
+	    #print "aname2 at line %d"%aname2
+          elif match.group('xvelocity'):
+            if verbose:
+              print "Parsing [ xvelocity]..."
+            vxcol = i - start
+	    #print "xvelocity at line %d"%vxcol
+          elif match.group('yvelocity'):
+            if verbose:
+              print "Parsing [ yvelocity]..."
+            vycol = i - start
+	    #print "yvelocity at line %d"%vycol
+          elif match.group('zvelocity'):
+            if verbose:
+              print "Parsing [ zvelocity]..."
+	    vzcol = i - start
+            #print "zvelocity at line %d"%vzcol
+      i+=1  
+
+ 
+
+  def loadBoxVector(lines, start, end, verbose = False):
+    i = start
+    v1x = None
+    v2x = None
+    v3x = None
+    v1y = None
+    v2y = None
+    v3y = None
+    v1z = None
+    v2z = None
+    v3z = None
+    while i < end:
+      if re.match(r'\s*[\d+]',lines[i]):
+        v1x = float(re.sub(r'\s', '', lines[i])) * units.angstroms
+        v1y = float(re.sub(r'\s', '', lines[i+1])) * units.angstroms
+        v1z = float(re.sub(r'\s', '', lines[i+2])) * units.angstroms
+        v2x = float(re.sub(r'\s', '', lines[i+3])) * units.angstroms
+        v2y = float(re.sub(r'\s', '', lines[i+4])) * units.angstroms
+        v2z = float(re.sub(r'\s', '', lines[i+5])) * units.angstroms
+        v3x = float(re.sub(r'\s', '', lines[i+6])) * units.angstroms
+        v3y = float(re.sub(r'\s', '', lines[i+7])) * units.angstroms
+        v3z = float(re.sub(r'\s', '', lines[i+8])) * units.angstroms
+        i = end
+      i+=1
+    #print "Box vectors: %4f%4f%4f%4f%4f%4f%4f%4f%4f"%(v1x,v1y,v1z,v2x,v2y,v2z,v3x,v3y,v3z)
+  
+    #MUST CONVERT ANGSTROMS TO NANOMETERS
+    ###System._sys.setBoxVector(v1x, v2x, v3x, v1y, v2y, v3y, v1z, v2z, v3z)
+  
+  def readFile(filename):
+    #CODE TO READ IN CMS FILES
+    #Called create arrays, a method that can be called from Driver
+    filename = "CMS -Redone.cms"  #for other filenames, use try-catch and exception
+    fl = open(filename, 'r')
+    lines = list(fl)
+    fl.close()
+    fblockpos = []
+    a_blockpos = []
+    b_blockpos = []
+    ffio_blockpos = []
+    i,j=0,0
+
+    for line in lines:
+      if re.search("f_m_ct",line,re.VERBOSE):
+        if j > 0:
+          fblockpos.append(i)
+        j+=1
+      if re.search("m_atom",line,re.VERBOSE) and not (re.search("i_m",line)
+      or re.search("s_m",line)):
+        if j > 1:
+          a_blockpos.append(i) 
+        j+=1
+      if re.search("m_bond",line,re.VERBOSE):
+        if j > 2:
+          b_blockpos.append(i)
+        j+=1
+      if re.search("ffio_ff",line,re.VERBOSE):
+        if j > 2:
+          ffio_blockpos.append(i)
+        j+=1
+      i+=1
+    i-=1
+    fblockpos.append(i)
+    a_blockpos.append(i)
+    b_blockpos.append(i)
+    ffio_blockpos.append(i)
+    i = 0
+    #for i in fblockpos:
+    # print "F Position %2d and lines %3s"%(i,lines[i],)
+    #for i in a_blockpos:
+    # print "A Position %2d and lines %3s"%(i,lines[i],)
+    #for i in b_blockpos:
+    # print "B Position %2d and lines %3s"%(i,lines[i],)
+    #for i in ffio_blockpos:
+    # print "FFIO Position %2d and lines %3s"%(i,lines[i],)
+    verbose = False
+    sysDirectiveTop = re.compile(r"""
+     ((?P<vdwtypes>\s*ffio_vdwtypes\[[\d+]+\])
+     |
+     (?P<sites>\s*ffio_sites\[[\d+]+\])
+     |
+     (?P<bonds>\s*ffio_bonds\[[\d+]+\])
+     |
+     (?P<pairs>\s*ffio_pairs\[[\d+]+\])
+     |
+     (?P<angles>\s*ffio_angles\[[\d+]+\])
+     |
+     (?P<dihedrals>\s*ffio_dihedrals\[[\d+]+\])
+     |
+     (?P<constraints>\s*ffio_constraints\[[\d+]+\])
+     |
+     (?P<exclusions>\s*ffio_exclusions\[[\d+]+\])
+     |
+     (?P<visuals>\s*ffio_visuals\[[\d+]+\])
+     |
+     (?P<restraints>\s*ffio_restraints\[[\d+]+\]))
+    """, re.VERBOSE)
+
+    sysDirectiveStr = re.compile(r"""
+     ((?P<xcoord>\s*r_m_x_coord)
+     |
+     (?P<ycoord>\s*r_m_y_coord)
+     |
+     (?P<zcoord>\s*r_m_z_coord)
+     |
+     (?P<rindex>\s*i_m_residue_number)
+     |
+     (?P<rname>\s*s_m_pdb_residue_name)
+     |
+     (?P<aindex>\s*i_m_atomic_number)
+     |
+     (?P<aname1>\s*s_m_pdb_atom_name) 
+     |
+     (?P<aname2>\s*s_m_atom_name)
+     |
+     (?P<xvelocity>\s*r_ffio_x_vel)
+     |
+     (?P<yvelocity>\s*r_ffio_y_vel)
+     |
+     (?P<zvelocity>\s*r_ffio_z_vel))
+    """, re.VERBOSE)
+    #LOADING TOPOLOGY
+
+    while i < (len(ffio_blockpos)-1):
+      loadTopology(lines, ffio_blockpos[i], fblockpos[i+1]-1, sysDirectiveTop, verbose)
+      i+=1
+
+    #LOADING STRUCTURE--CHECK IF THIS WORKS WELL
+    #Atom class includes atom index, atom name, residue index, residue name, position, velocity, force
+    #, atomtype, bondtype, Z, cgnr (charge group number), mass, charge, ptype, sigma, epsilon
+
+    #while i < (len(a_blockpos)-1):
+    #  loadStructure(lines, a_blockpos[i], a_blockpos[i+1]-1, sysDirectiveStr, verbose)
+    #  i+=1
+
+
+    #LOAD RAW BOX VECTOR-Same throughout cms
+
+    #loadBoxVector(lines,fblockpos[0],a_blockpos[0], verbose)
+
+
+
+
+    #WRITE TOPOLOGY
+
+    #WRITE STRUCTURE

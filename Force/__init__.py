@@ -5,7 +5,14 @@ __all__ = ["AbstractAngle",
     "Angle",
     "AngleRestraint",
     "Bond",
-    "Constraint",
+    "Constraint2",
+    "Constraint3",
+    "Constraint4",
+    "Constraint5",
+    "Constraint6",
+    "Constraint7",
+    "Constraint8",
+    "Constraint9",
     "CrossBondAngleAngle",
     "CrossBondBondAngle",
     "CubicBond",
@@ -46,7 +53,14 @@ from AbstractDihedral import AbstractDihedral
 from Angle import Angle
 from AngleRestraint import AngleRestraint
 from Bond import Bond
-from Constraint import Constraint
+from Constraint2 import Constraint2
+from Constraint3 import Constraint3
+from Constraint4 import Constraint4
+from Constraint5 import Constraint5
+from Constraint6 import Constraint6
+from Constraint7 import Constraint7
+from Constraint8 import Constraint8
+from Constraint9 import Constraint9
 from CrossBondAngleAngle import CrossBondAngleAngle
 from CrossBondBondAngle import CrossBondBondAngle
 from CubicBond import CubicBond

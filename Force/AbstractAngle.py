@@ -4,7 +4,6 @@ class AbstractAngle(object):
         self.atom2 = atom2
         self.atom3 = atom3
 
-
     def __eq__(self, object):
         if ((self.atom1 == object.atom1
                 and self.atom2 == object.atom2

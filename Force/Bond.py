@@ -6,13 +6,17 @@ class Bond(AbstractBond):
     @accepts_compatible_units(None, 
             None, 
             units.nanometers, 
-            units.kilojoules_per_mole * units.nanometers**(-2))
-    def __init__(self, atom1, atom2, length, k):
+            units.kilojoules_per_mole * units.nanometers**(-2),
+            None,
+	    None)
+    def __init__(self, atom1, atom2, length, k, order=None, c=0):
         """
         """
         AbstractBond.__init__(self, atom1, atom2)
+	self.order = order
         self.length = length
-        self.k = k
+        self.k = k 
+	self.c = c #constrained or not, Desmond only
 
     def getForceParameters(self):
         return (self.atom1, self.atom2, self.length, self.k)

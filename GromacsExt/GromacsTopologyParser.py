@@ -54,6 +54,7 @@ class GromacsTopologyParser(object):
              self.readTopology(lines, verbose)
  
     def readTopology(self, expanded, verbose = False):
+ #  def readTopology(self, expanded, verbose = True):
         """
         Read in a previously preprocessed Gromacs topology file     
 
@@ -640,7 +641,7 @@ class GromacsTopologyParser(object):
                         if int(split[2]) == 1:
                             if len(split) == 3:
                                 # this probably won't work due to units
-                                newPairForce = AbstractPair(int(split[0]), int(split[1]))
+                                newPairForce = AbstractPair(int(split[0]), int(split[1]), "Both")
 
                         currentMoleculeType.pairForceSet.add(newPairForce)
                         System._sys._forces.add(newPairForce)
@@ -1230,8 +1231,8 @@ class GromacsTopologyParser(object):
                 try:
                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'%(count, atom._atomtype[0], atom.residueIndex, atom.residueName, atom.atomName, atom.cgnr, atom._charge[0]._value, atom._mass[0]._value, atom._atomtype[1], atom._charge[1]._value, atom._mass[1]._value))
                 except:
-                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'%(count, atom._atomtype[0], atom.residueIndex, atom.residueName, atom.atomName, atom.cgnr, atom._charge[0]._value, atom._mass[0]._value))
-
+                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'%(count, atom._atomtype[0], atom.residueIndex, atom.residueName, atom.atomName, atom.cgnr, atom._charge[0]._value, atom._mass[0]._value))
+            
                 count +=1
             lines.append('\n')
 
@@ -1383,8 +1384,13 @@ class GromacsTopologyParser(object):
         if moleculeType.exclusions:
             # [ exclusions ]
             lines.append('[ exclusions ]\n')
+	    i = 1
             for exclusion in moleculeType.exclusions.itervalues():
-                lines.append('%6s%6s%6s\n'%(exclusion.exclusions[0], exclusion.exclusions[1], exclusion.exclusions[2]))
+		if len(exclusion.exclusions) == 2:
+                    lines.append('%6s%6s%6s\n'%(i, exclusion.exclusions[0], exclusion.exclusions[1]))
+		    i+=1
+		else:
+                    lines.append('%6s%6s%6s\n'%(exclusion.exclusions[0], exclusion.exclusions[1], exclusion.exclusions[2]))
             lines.append('\n') 
 
         # [ system ]
