@@ -741,24 +741,26 @@ class DesmondParser():
 	    i+=1
 	if bg:
 	  split = lines[i].split()
-#          newBondType = BondType(atomlist[int(split[1])-1].atomName,
-#                                 atomlist[int(split[2])].atomName,
-#                                 1,
-#                                 float(split[4]) * 0.1 * units.nanometers,
-#                                 float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2))
+	 
+#	  if newBondType not in self.bondtypes:
+#           newBondType = BondType(atomlist[int(split[1])-1].atomName,
+#                                  atomlist[int(split[2])].atomName,
+#                                  1,
+#                                  float(split[4]) * 0.1 * units.nanometers,
+#                                  float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2))
 	  try:
 	    newBondForce = Bond(int(split[1]),
 	                   int(split[2]),
-			   int(split[3]),
 			   float(0) * units.nanometers, #BOND ORDERS ARE DIFFERENT, SPLIT3 IS BOND ORDER. NOT ACCURATE CALCULATION
 			   float(0) * units.kilojoules_per_mole * units.nanometers**(-2),
+			   int(split[3]),
 			   0)
 	  except:
 	    newBondForce = Bond(int(split[1]),
 	                   int(split[2]),
-			   int(split[3]),
 			   float(0), 
 			   float(0),
+			   int(split[3]),
 			   0)
 	bondForceSet.add(newBondForce)
 	forces.add(newBondForce)
@@ -1099,6 +1101,7 @@ class DesmondParser():
       lines.append('  r_chorus_box_cx\n')
       lines.append('  r_chorus_box_cy\n')
       lines.append('  r_chorus_box_cz\n')
+      lines.append('  s_ffio_ct_type\n')
       lines.append('  :::\n')
       
       #box vector
@@ -1113,12 +1116,12 @@ class DesmondParser():
       lines.append('%22s\n'%float(bv[0][2]._value))
       lines.append('%22s\n'%float(bv[1][2]._value))
       lines.append('%22s\n'%float(bv[2][2]._value))
-      lines.append('  full system\n')
+      lines.append('  full_system\n')
       
       #M_ATOM
-      apos = 28 #pos of where m_atom will be; will need to overwite later based on the number of atoms
+      apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
       lines.append('m_atom\n')
-      lines.append('    # First column is atom index #\n')
+#      lines.append('    # First column is atom index #\n')
       lines.append('    i_m_mmod_type\n')
       lines.append('    r_m_x_coord\n')
       lines.append('    r_m_y_coord\n')
@@ -1145,9 +1148,10 @@ class DesmondParser():
         for molecule in moleculetype.moleculeSet:
           for atom in molecule._atoms:
             i += 1
-            lines.append('    %d%2d %10.6f %10.6f %10.6f %2d%4s %2s%2s%3d%8.2f%8.2f%8s%7s%2d %4s%11.7f%11.7f%11.7f\n'
+#            lines.append('    %d%2d %10.6f %10.6f %10.6f %2d%4s %2s%2s%3d%8.2f%8.2f%8s%7s%2d %4s%11.7f%11.7f%11.7f\n'
+	    lines.append('    %d %10.6f %10.6f %10.6f %2d%4s %2s%2s%8s%7s %4s%11.7f%11.7f%11.7f\n'
                         %(i,
-			0, #NOT SURE WHAT TO PUT FOR MMOD TYPE
+#			0, #NOT SURE WHAT TO PUT FOR MMOD TYPE
 			float(atom._position[0]._value)*10,
                         float(atom._position[1]._value)*10,
                         float(atom._position[2]._value)*10,
@@ -1155,17 +1159,17 @@ class DesmondParser():
 			'" "',
 			'" " ', #NOT SURE WHAT TO PUT FOR MMOD RES
 			'" "', #NOT SURE WHAT TO PUT FOR CHAIN NAME
-			0, #COLOR, LEAVING THAT ALONE
-			0.00, #CHARGE 1, LEAVING THAT ALONE
-			0.00, #CHARGE 2, LEAVING THAT ALONE
+#			0, #COLOR, LEAVING THAT ALONE
+#			0.00, #CHARGE 1, LEAVING THAT ALONE
+#			0.00, #CHARGE 2, LEAVING THAT ALONE
                         atom.residueName,
 			'"    " ',
-			0, #FORMAL CHARGE
+#			0, #FORMAL CHARGE
 			atom.atomName,
                         float(atom._velocity[0]._value)*10,
                         float(atom._velocity[1]._value)*10,
                         float(atom._velocity[2]._value)*10))
-      lines[apos] = '  m_atom[%d] {\n'%i
+      lines[apos] = '  m_atom[%d] {\n'%(i)
       lines.append('    :::\n')
       lines.append('  }\n')
       
@@ -1228,6 +1232,7 @@ class DesmondParser():
           lines.append('  r_chorus_box_cx\n')
           lines.append('  r_chorus_box_cy\n')
           lines.append('  r_chorus_box_cz\n')
+          lines.append('  s_ffio_ct_type\n')
           lines.append('  :::\n')
           
           if solute:
@@ -1264,7 +1269,7 @@ class DesmondParser():
             print "  Writing m_atoms..."
           apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
           lines.append('m_atom\n')
-          lines.append('    # First column is atom index #\n')
+#          lines.append('    # First column is atom index #\n')
           lines.append('    i_m_mmod_type\n')
           lines.append('    r_m_x_coord\n')
           lines.append('    r_m_y_coord\n')
@@ -1289,9 +1294,10 @@ class DesmondParser():
           i = 0
           for atom in molecule._atoms:
             i += 1
-            lines.append('    %d%2d%10.6f%10.6f%10.6f %2d%4s %2s%2s%3d%8.2f%8.2f%8s%7s%2d %4s%11.7f%11.7f%11.7f\n'
+#            lines.append('    %d%2d %10.6f %10.6f %10.6f %2d%4s %2s%2s%3d%8.2f%8.2f%8s%7s%2d %4s%11.7f%11.7f%11.7f\n'
+	    lines.append('    %d %10.6f %10.6f %10.6f %2d%4s %2s%2s%8s%7s %4s%11.7f%11.7f%11.7f\n'
                         %(i,
-			0, #NOT SURE WHAT TO PUT FOR MMOD TYPE
+#			0, #NOT SURE WHAT TO PUT FOR MMOD TYPE
 			float(atom._position[0]._value)*10,
                         float(atom._position[1]._value)*10,
                         float(atom._position[2]._value)*10,
@@ -1299,17 +1305,17 @@ class DesmondParser():
 			'" "',
 			'" " ', #NOT SURE WHAT TO PUT FOR MMOD RES
 			'" "', #NOT SURE WHAT TO PUT FOR CHAIN NAME
-			0, #COLOR, LEAVING THAT ALONE
-			0.00, #CHARGE 1, LEAVING THAT ALONE
-			0.00, #CHARGE 2, LEAVING THAT ALONE
+#			0, #COLOR, LEAVING THAT ALONE
+#			0.00, #CHARGE 1, LEAVING THAT ALONE
+#			0.00, #CHARGE 2, LEAVING THAT ALONE
                         atom.residueName,
 			'"    " ',
-			0, #FORMAL CHARGE
+#			0, #FORMAL CHARGE
 			atom.atomName,
                         float(atom._velocity[0]._value)*10,
                         float(atom._velocity[1]._value)*10,
                         float(atom._velocity[2]._value)*10))
-          lines[apos] = '  m_atom[%d] {\n'%i
+	  lines[apos] = '  m_atom[%d] {\n'%i
           lines.append('    :::\n')
           lines.append('  }\n')
 
@@ -1455,7 +1461,7 @@ class DesmondParser():
           lines.append("      s_ffio_charge\n")
           lines.append("      r_ffio_mass\n")
           lines.append("      r_ffio_vdwtype\n")
-          if len(sites[0]) == 7:
+          if len(sites[0]) > 4:
             lines.append("      i_ffio_resnr\n")
             lines.append("      s_ffio_residue\n")    
           lines.append("      :::\n")

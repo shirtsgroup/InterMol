@@ -5,13 +5,13 @@ System._sys = System("Redone Sample")
 print "System initialized\n"
 
 #READING IN DESMOND--WRITING OUT IN DESMOND
-filename = "-Redone.cms"
+filename = "Redone.cms"
 print "Reading in Desmond structure %s"%(filename)
 import ctools.DesmondExt.DesmondParser as DesmondParser
 DesmondParser = DesmondParser()
 DesmondParser.readFile(filename)
 
-filename = "-Redone_out.cms"
+filename = "Redone_out.cms"
 print "Writing out Desmond structure %s"%(filename)
 DesmondParser.writeFile(filename)
 
@@ -36,13 +36,13 @@ DesmondParser.writeFile(filename)
 
 
 #READING IN DESMOND--WRITING OUT IN GROMACS
-#filename = "-Redone.cms"
+#filename = "Redone.cms"
 #print "Reading in Desmond structure %s"%(filename)
 #import ctools.DesmondExt.DesmondParser as DesmondParser
 #DesmondParser = DesmondParser()
 #DesmondParser.readFile(filename)
 
-#filenameout = "-Redone"
+#filenameout = "Redone"
 #print "\nWriting in Gromacs topology %s"%(filenameout+".top")
 #import ctools.GromacsExt.GromacsTopologyParser as GromacsTopologyParser
 #GromacsTopologyParser = GromacsTopologyParser()
