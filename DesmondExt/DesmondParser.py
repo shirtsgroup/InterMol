@@ -1,3 +1,4 @@
+import pdb #FOR DEBUGGING PURPOSES
 import shlex
 import os
 import copy
@@ -875,7 +876,7 @@ class DesmondParser():
             elif match.group('zvelocity'):
               if verbose:
                 print "   Parsing [ zvelocity]..."
-   	      vzcol = i - start - 1
+   	      vzcol = i - start
         i+=1
       
       atom = None     
@@ -1236,6 +1237,7 @@ class DesmondParser():
       resName = ''
 
       #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
+
       for moleculetype in System._sys._molecules.values():
         for molecule in moleculetype.moleculeSet:
           if verbose:
@@ -1247,9 +1249,10 @@ class DesmondParser():
             print "  Writing f_m_ct..."
           lines.append('f_m_ct {\n')
           lines.append('  s_m_title\n')
-          bpos = len(lines) #apos temporarily used for position of s_m_entry_name (for TIP3)
-	  lines.append(' s_name')
-          lines.append('  r_chorus_box_ax\n')
+          bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
+	  lines.append('  s_m_entry_name\n')
+          lines.append('  i_ffio_num_component\n')  
+	  lines.append('  r_chorus_box_ax\n')
           lines.append('  r_chorus_box_ay\n')
           lines.append('  r_chorus_box_az\n')
           lines.append('  r_chorus_box_bx\n')
@@ -1266,12 +1269,13 @@ class DesmondParser():
             endline = '  solute\n'
             solute = False
 	    del lines[bpos]
+            del lines[bpos]
           else:
             for atom in molecule._atoms:
               resName = atom.residueName
 	      break
             if re.match("T3P", resName) or re.search("WAT", resName):
-	      lines[bpos] = ('  s_m_entry_name')
+	      #lines[bpos] = ('  s_m_entry_name\n')
               lines.append('  "TIP3P water box"\n')
               lines.append('  "TIP3P water box"\n')
               lines.append('  1\n')
@@ -1280,6 +1284,7 @@ class DesmondParser():
               lines.append('  %s\n'%(moleculetype.name))
               endline = '  ion\n'
 	      del lines[bpos]
+              del lines[bpos] #deletes line for num component (only in TIP3)
       
           lines.append('%22s\n'%float(bv[0][0]._value))
           lines.append('%22s\n'%float(bv[1][0]._value))
@@ -1492,9 +1497,9 @@ class DesmondParser():
 	  if len(sites) > 0:
             lines.append("    ffio_sites[%d] {\n"%(len(sites)))
             lines.append("      s_ffio_type\n")
-            lines.append("      s_ffio_charge\n")
+            lines.append("      r_ffio_charge\n")
             lines.append("      r_ffio_mass\n")
-            lines.append("      r_ffio_vdwtype\n")
+            lines.append("      s_ffio_vdwtype\n")
             if len(sites[0]) > 4:
               lines.append("      i_ffio_resnr\n")
               lines.append("      s_ffio_residue\n")    
@@ -1712,6 +1717,7 @@ class DesmondParser():
           if verbose:
             print "   -Writing constraints..."
           bpos = len(lines) #storing position for constraints instead of bonds
+          isHOH = False
           alen = 0
 	  alen_max = 0
           atomlst = []
@@ -1729,6 +1735,7 @@ class DesmondParser():
 	      alen = int(list(constraint.type)[-1])
             elif re.match('HOH',constraint.type):
 	      alen = 2
+              isHOH = True
 	    lines.append('      ')
 	    if alen == 1:
 	      lines.append('%d %d %d '%(i,int(constraint.atom1),int(constraint.atom2)))
@@ -1868,6 +1875,8 @@ class DesmondParser():
 	    bpos+=1
 	    lines.insert(bpos,"      :::\n")
 	    j = alen_max
+            if isHOH:
+              j+=1
 	    while j >=1:
               lines.insert(bpos,'      r_ffio_c%d\n'%j)
               j-=1
