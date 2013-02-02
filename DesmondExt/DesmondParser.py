@@ -93,6 +93,10 @@ class DesmondParser():
       atomlist = None
       namecol = 0
       combrcol = 0
+      
+      #DEFAULT VALUES WHEN CONVERTING TO GROMACS
+      System._sys._nbFunc = 1
+      System._sys._genpairs = 'yes'
 
       if re.search("TIP3P", moleculeName):
         moleculeName = "H2O"
@@ -518,7 +522,7 @@ class DesmondParser():
                                      int(split[3]),
                                      int(split[4]),
                                      float(split[6]) * units.degrees,
-                                     float(split[7]) * 4.18 * units.kilojoules_per_mole * (0.01745 * units.radians) **(-2), #UNITS??? DESMOND SAYS UNITS IN ENERGY/DEGREE^2, GROMACS SAYS UNITS IN KJ/MOL / RADIAN ^2
+                                     float(split[7]) * 4.184 * units.kilojoules_per_mole * ((0.01745 * units.radians) **(-2)), #UNITS??? DESMOND SAYS UNITS IN ENERGY/DEGREE^2, GROMACS SAYS UNITS IN KJ/MOL / RADIAN ^2
                                      2)
                 except:
                   newDihedralFroce = ProperDihedral1(int(split[1]),
@@ -544,7 +548,7 @@ class DesmondParser():
                                      int(split[3]),
                                      int(split[4]),
                                      float(split[6]) * units.degrees,
-                                     float(split[7]) * 4.18 * units.kilojoules_per_mole * (0.01745 * units.radians) **(-2))
+                                     float(split[7]) * 4.184 * units.kilojoules_per_mole * ((0.01745 * units.radians) **(-2)))
                 except:
                   newDihedralFroce = ImproperDihedral2(int(split[1]),
                                      int(split[2]),
@@ -1165,7 +1169,7 @@ class DesmondParser():
         for molecule in moleculetype.moleculeSet:
           for atom in molecule._atoms:
             i += 1
-	    lines.append('    %d        %d   %10.6f %10.6f %10.6f     %2d %4s    %2d  %2s    %11.7f %11.7f %11.7f\n'
+	    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s    %11.8f %11.8f %11.8f\n'
                         %(i,
 			7, #NOT SURE WHAT TO PUT FOR MMOD TYPE
 			float(atom._position[0]._value)*10,
@@ -1320,7 +1324,7 @@ class DesmondParser():
           i = 0
           for atom in molecule._atoms:
             i += 1
-	    lines.append('    %d        %d   %10.6f %10.6f %10.6f     %2d %4s    %2d  %2s   %11.7f %11.7f %11.7f\n'
+	    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s   %11.8f %11.8f %11.8f\n'
                         %(i,
 			7, #NOT SURE WHAT TO PUT FOR MMOD TYPE
 			float(atom._position[0]._value)*10,
@@ -1428,9 +1432,9 @@ class DesmondParser():
           if re.search("solute", moleculetype.name): #ALL ATOMS
             for atom in molecule._atoms:
               if atom.residueIndex:
-                sites.append(' %3d %5s %9.6f %9.6f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0]._value),float(atom._mass[0]._value),atom._atomtype[0],atom.residueIndex,atom.residueName)) 
+                sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0]._value),float(atom._mass[0]._value),atom._atomtype[0],atom.residueIndex,atom.residueName)) 
               else:
-                sites.append(' %3d %5s %9.6f %9.6f %2s\n' % (i,'atom',float(atom._charge[0]._value),float(atom._mass[0]._value),atom._atomtype[0]))
+                sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (i,'atom',float(atom._charge[0]._value),float(atom._mass[0]._value),atom._atomtype[0]))
 	      sig = float(atom._sigma[0]._value)
 	      ep = float(atom._epsilon[0]._value)
 	      if combRule == 1:
@@ -1439,15 +1443,15 @@ class DesmondParser():
 	      elif combRule == 2 or combRule == 3:
 	        stemp = sig
 		etemp = ep
-              if ' %2s %18s %8.6f %8.6f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)) not in vdwtypes:
-                vdwtypes.append(' %2s %18s %8.6f %8.6f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
+              if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)) not in vdwtypes:
+                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
               i+=1
           elif re.search("H2O", moleculetype.name): #FOR WATER
             for k in range(0,3):
               if molecule._atoms[k].residueIndex:
-                sites.append(' %3d %5s %9.6f %9.6f %2s %1d %4s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0]._value),float(molecule._atoms[k]._mass[0]._value),molecule._atoms[k]._atomtype[0],molecule._atoms[k].residueIndex,molecule._atoms[k].residueName)) 
+                sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0]._value),float(molecule._atoms[k]._mass[0]._value),molecule._atoms[k]._atomtype[0],molecule._atoms[k].residueIndex,molecule._atoms[k].residueName)) 
               else:
-                sites.append(' %3d %5s %9.6f %9.6f %2s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0]._value),float(molecule._atoms[k]._mass[0]._value),molecule._atoms[k]._atomtype[0]))
+                sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0]._value),float(molecule._atoms[k]._mass[0]._value),molecule._atoms[k]._atomtype[0]))
 	      sig = float(molecule._atoms[k]._sigma[0]._value)
 	      ep = float(molecule._atoms[k]._epsilon[0]._value)
 	      if combRule == 1:
@@ -1456,13 +1460,13 @@ class DesmondParser():
 	      elif combRule == 2 or combRule == 3:
 	        stemp = sig
 		etemp = ep
-              if ' %2s %18s %8.6f %8.6f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)) not in vdwtypes:
-                vdwtypes.append(' %2s %18s %8.6f %8.6f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
+              if ' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)) not in vdwtypes:
+                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
           else: #FOR OTHERS WITH CL-, Na+, AND SUCH--MAY HAVE TO EDIT TO FIT OTHERS
             if molecule._atoms[0].residueIndex:
-              sites.append(' %3d %5s %9.6f %9.6f %2s %1d %4s\n' % (1,'atom',float(molecule._atoms[0]._charge[0]._value),float(molecule._atoms[0]._mass[0]._value),molecule._atoms[0]._atomtype[0],molecule._atoms[0].residueIndex,molecule._atoms[0].residueName)) 
+              sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (1,'atom',float(molecule._atoms[0]._charge[0]._value),float(molecule._atoms[0]._mass[0]._value),molecule._atoms[0]._atomtype[0],molecule._atoms[0].residueIndex,molecule._atoms[0].residueName)) 
             else:
-              sites.append(' %3d %5s %9.6f %9.6f %2s\n' % (1,'atom',float(molecule._atoms[0]._charge[0]._value),float(molecule._atoms[0]._mass[0]._value),molecule._atoms[0]._atomtype[0]))
+              sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (1,'atom',float(molecule._atoms[0]._charge[0]._value),float(molecule._atoms[0]._mass[0]._value),molecule._atoms[0]._atomtype[0]))
 	    sig = float(molecule._atoms[0]._sigma[0]._value)
 	    ep = float(molecule._atoms[0]._epsilon[0]._value)
 	    if combRule == 1:
@@ -1471,7 +1475,7 @@ class DesmondParser():
 	    elif combRule == 2 or combRule == 3:
 	      stemp = sig
 	      etemp = ep
-            vdwtypes.append(' %2s %18s %8.6f %8.6f\n' % (molecule._atoms[0]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
+            vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[0]._atomtype[0],"LJ12_6_sig_epsilon",float(10*stemp),float(etemp/4.184)))
         
           if verbose:
             print "   -Writing vdwtypes..."
@@ -1542,7 +1546,7 @@ class DesmondParser():
 	        name = 'Harm_constrained'
 	      else:
 	        name = 'Harm'
-              lines.append('      %d %d %d %s %f %f\n'
+              lines.append('      %d %d %d %s %10.8f %10.8f\n'
                           %(i,
                            bond.atom1,
                            bond.atom2,
@@ -1580,9 +1584,9 @@ class DesmondParser():
 	  i = 1
           for angle in moleculetype.angleForceSet.itervalues():
             if angle.c == 0:
-              lines.append('      %d %d %d %d %s %f %f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta._value), float(angle.k._value)))
+              lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta._value), float(angle.k._value)))
             elif angle.c == 1:
-              lines.append('      %d %d %d %d %s %f %f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta._value), float(angle.k._value)))
+              lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta._value), float(angle.k._value)))
             i+=1
 	  if i == 1:
 	    if verbose:
@@ -1614,13 +1618,13 @@ class DesmondParser():
                 lines.append("      r_ffio_c1\n")
                 lines.append("      r_ffio_c2\n")
                 lines.append("      :::\n")
-	      lines.append('      %d %d %d %d %d %s %f %f %f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Harm', float(dihedral.phi._value), float(dihedral.k._value)  * ((0.01745)**(2)) / 4.18, int(dihedral.multiplicity)))
+	      lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Harm', float(dihedral.phi._value), float(dihedral.k._value)  * ((0.01745)**(2)) / 4.184, int(dihedral.multiplicity)))
             elif isinstance(dihedral, ImproperDihedral2): 
               if i == 1:
                 lines.append("      r_ffio_c0\n")
                 lines.append("      r_ffio_c1\n")
                 lines.append("      :::\n")
-              lines.append('      %d %d %d %d %d %s %f %f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi._value), float(dihedral.k._value) * ((0.01745)**(2)) / 4.18))
+              lines.append('      %d %d %d %d %d %s %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi._value), float(dihedral.k._value) * ((0.01745)**(2)) / 4.184))
 	    elif isinstance(dihedral, RBDihedral):
 	      if i == 1:
                 lines.append("      r_ffio_c0\n")
@@ -1636,7 +1640,7 @@ class DesmondParser():
 	        name = 'Improper_Trig'
 	      else:
 	        name = 'Proper_Trig'
-	      lines.append('      %d %d %d %d %d %s %f %f %f %f %f %f %f %d\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(dihedral.C0._value) / 4.18, float(dihedral.C1._value) / 4.18, float(dihedral.C2._value) / 4.18, float(dihedral.C3._value) / 4.18, float(dihedral.C4._value) / 4.18, float(dihedral.C5._value) / 4.18, float(0), 0))
+	      lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %d\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(dihedral.C0._value) / 4.184, float(dihedral.C1._value) / 4.184, float(dihedral.C2._value) / 4.184, float(dihedral.C3._value) / 4.184, float(dihedral.C4._value) / 4.184, float(dihedral.C5._value) / 4.184, float(0), 0))
             else:
 	      print "ERROR (writeFile): found unsupported dihedral"
 	    i+=1
@@ -1689,13 +1693,13 @@ class DesmondParser():
 	  i = 1
           for pair in moleculetype.pairForceSet.itervalues():
             if re.match("LJ", pair.type):
-              lines.append('      %d %d %d %s %f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
+              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
             elif re.match("Coulomb", pair.type):
-              lines.append('      %d %d %d %s %f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._coulombCorrection))
+              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._coulombCorrection))
             elif re.match("Both", pair.type):
-              lines.append('      %d %d %d %s %f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
+              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
               i+=1
-              lines.append('      %d %d %d %s %f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
             i+=1
           if i == 1:
 	    if verbose:
@@ -1745,7 +1749,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH1')
-	      lines.append('%f '%(float(constraint.length1._value*10)))
+	      lines.append('%10.8f '%(float(constraint.length1._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1761,9 +1765,9 @@ class DesmondParser():
 		  j+=1
               lines.append('%s '%(constraint.type))
 	      if re.match('HOH',constraint.type):
-	        lines.append('%f %f %f\n'%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10)))
+	        lines.append('%10.8f %10.8f %10.8f\n'%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10)))
 	      else:
-		lines.append('%f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10)))
+		lines.append('%10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10)))
 	        if alen_max > alen:
 	          j = alen
 		  while j < alen_max:
@@ -1778,7 +1782,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH3')
-	      lines.append('%f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1793,7 +1797,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH4')
-	      lines.append('%f %f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1808,7 +1812,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH5')
-	      lines.append('%f %f %f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1823,7 +1827,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH6')
-	      lines.append('%f %f %f %f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1838,7 +1842,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH7')
-	      lines.append('%f %f %f %f %f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10),float(constraint.length7._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10),float(constraint.length7._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
@@ -1853,7 +1857,7 @@ class DesmondParser():
 		  lines.append('%s '%'<>')
 		  j+=1
               lines.append('%s '%'AH8')
-	      lines.append('%f %f %f %f %f %f %f %f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10),float(constraint.length7._value*10),float(constraint.length8._value*10)))
+	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1._value*10),float(constraint.length2._value*10),float(constraint.length3._value*10),float(constraint.length4._value*10),float(constraint.length5._value*10),float(constraint.length6._value*10),float(constraint.length7._value*10),float(constraint.length8._value*10)))
 	      if alen_max > alen:
 	        j = alen
 		while j < alen_max:
