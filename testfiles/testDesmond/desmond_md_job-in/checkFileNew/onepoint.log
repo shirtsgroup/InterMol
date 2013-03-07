@@ -1,0 +1,18 @@
+Thu, 07 Mar 2013 17:31:27 Desmond Driver v2.2
+ERROR /scr/buildbot/trunk_OB_src/desmond-src/other/viparr/src/viparr/ctblock.c:482, internal_write_terms
+Invalid site id 2
+
+Traceback (most recent call last):
+  File "/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/desmond_driver.py", line 78, in <module>
+    backend = desmondbackend.create_desmond_backend(option.backend_name, cmdargs)
+  File "/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/desmondbackend.py", line 32, in create_desmond_backend
+    return klass(backend_name, *args, **kwargs)
+  File "/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/desmondbackend.py", line 541, in __init__
+    convert_to_dms(self.cfg, cms_filename, dms_filename)
+  File "/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/desmondbackend.py", line 220, in convert_to_dms
+    cms2dms(cms, dms)
+  File "/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/desmondbackend.py", line 194, in cms2dms
+    subprocess.check_call(cmd)
+  File "/opt/schrodinger2011/mmshare-v20109/lib/Linux-x86_64/lib/python2.7/subprocess.py", line 504, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['/opt/schrodinger2011/desmond-v30110/bin/Linux-x86_64/mae2dms', 'desmond_md_job-in_OUT.cms', 'desmond_md_job-in_OUT.dms']' returned non-zero exit status 1
