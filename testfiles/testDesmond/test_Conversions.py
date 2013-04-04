@@ -9,10 +9,11 @@ print "WHICH CONVERSION DO YOU WANT?\n"
 print "1. Desmond (Read) --> Desmond (Write)\n"
 print "2. Desmond (Read) --> Gromacs (Write)\n"
 print "3. Gromacs (Read) --> Desmond (Write)\n"
+print "4. Gromacs (Read) --> Gromacss (Write)\n"
 while True:
   try:
     num = int(raw_input(""))
-    if(1 <= num <= 3):
+    if(1 <= num <= 4):
       break
     else:
       print "Not valid response; try again\n"
@@ -39,14 +40,7 @@ elif num == 2:
   import ctools.DesmondExt.DesmondParser as DesmondParser
   DesmondParser = DesmondParser()
   DesmondParser.readFile(filename+".cms")
-  print "\nWriting in Gromacs topology %s"%(filename_out+".top")
-  import ctools.GromacsExt.GromacsTopologyParser as GromacsTopologyParser
-  GromacsTopologyParser = GromacsTopologyParser()
-  GromacsTopologyParser.writeTopology(filename_out+".top")
-  print "\nWriting in Gromacs structure %s"%(filename_out+".gro")
-  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
-  GromacsStructureParser.writeStructure(filename_out+".gro")
-else:
+elif num == 3:
   from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
   print 'Reading in Gromacs topology "%s"...' %(filename)
   if not GromacsTopologyParser._GroTopParser:
@@ -59,5 +53,21 @@ else:
   import ctools.DesmondExt.DesmondParser as DesmondParser
   DesmondParser = DesmondParser()
   DesmondParser.writeFile(filename_out)
-
+elif num == 4:
+  from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+  print 'Reading in Gromacs topology "%s"...' %(filename)
+  if not GromacsTopologyParser._GroTopParser:
+    GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
+  GromacsTopologyParser._GroTopParser.parseTopology(filename + '.top')
+  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+  print 'Reading in Gromacs structure "%s"...' %(filename)
+  GromacsStructureParser.readStructure(filename + '.gro')
+  print "\nWriting out Gromacs topology %s"%(filename_out+".top")
+  import ctools.GromacsExt.GromacsTopologyParser as GromacsTopologyParser
+  GromacsTopologyParser = GromacsTopologyParser()
+  GromacsTopologyParser.writeTopology(filename_out+".top")
+  print "\nWriting in Gromacs structure %s"%(filename_out+".gro")
+  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+  GromacsStructureParser.writeStructure(filename_out+".gro")
+  
 
