@@ -6,7 +6,7 @@
 Lee <ctl4f@virginia.edu>
 """
 import simtk.unit as units
-from ctools.Converter import *
+from Converter import *
 
 class Atom(object):
     def __init__(self, 

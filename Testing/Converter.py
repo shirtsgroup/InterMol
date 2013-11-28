@@ -1,6 +1,8 @@
 import sys
+import simtk.unit as units
+
 sys.path.append('../..')
-from utilities import Units
+
 
 def convert_units(arg, unit):
     """Checks compatibility and converts units using simtk.units package

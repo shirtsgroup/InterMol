@@ -4,14 +4,16 @@ import os
 import copy
 import string
 import re
+import sys
 import simtk.unit as units
 from collections import deque
-from ctools.Atom import *
-from ctools.Molecule import *
-from ctools.System import System
-from ctools.Types import *
-from ctools.Force import *
-from ctools.HashMap import *
+sys.path.append('../..')
+from Atom import *
+from Molecule import *
+from System import System
+from Types import *
+from Force import *
+from HashMap import *
 
 
 class DesmondParser():

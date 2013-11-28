@@ -1,5 +1,5 @@
-from ctools.OrderedSet import OrderedSet
-from ctools.HashMap import HashMap
+from OrderedSet import OrderedSet
+from HashMap import HashMap
 class MoleculeType(object):
     """An abstract container for molecules of one type
     """

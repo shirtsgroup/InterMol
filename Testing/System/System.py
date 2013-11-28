@@ -41,9 +41,9 @@ class System(object):
         self._genpairs = True
         self._ljCorrection = 0
         self._coulombCorrection = 0  
-        self._molecules = OrderedDict()
-        self._atomtypes = HashMap()
-        self._forces = OrderedSet()
+        self._molecules = OrderedDict.OrderedDict()
+        self._atomtypes = HashMap.HashMap()
+        self._forces = OrderedSet.OrderedSet()
 	self._boxVector = []
 
 
