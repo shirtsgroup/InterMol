@@ -10,6 +10,7 @@ import Converter
 import MoleculeType
 import OrderedSet
 import HashMap
+import simtk.unit as units
 
 class System(object):
     _sys = None
@@ -54,7 +55,7 @@ class System(object):
             molecule (Molecule): The molecule object to be appended
         """
         # if key is in the dictionary, return its value. If not, insert key with a value of default and return default.        
-        self._molecules.setdefault(molecule.name,MoleculeType(molecule.name)).addMolecule(molecule)
+        self._molecules.setdefault(molecule.name,MoleculeType.MoleculeType(molecule.name)).addMolecule(molecule)
     
     def removeMoleculeType(self, molecule):
         """Remove a molecule from the System.
