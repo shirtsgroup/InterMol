@@ -1,4 +1,6 @@
-from ctools.Decorators import *
+import sys
+sys.path.append('..')
+from Decorators import Decorators
 
 class AbstractAtomType(object):
 
