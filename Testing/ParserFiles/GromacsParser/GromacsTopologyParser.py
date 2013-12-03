@@ -5,12 +5,13 @@ import re
 import copy
 import simtk.unit as units
 from collections import deque
-from ctools.Atom import Atom
-from ctools.Molecule import Molecule
-from ctools.System import System
-from ctools.Types import *
-from ctools.Force import *
-from ctools.HashMap import *
+sys.path.append('../..')
+from Atom import Atom
+from Molecule import Molecule
+from System import System
+from Types import *
+from Force import *
+from HashMap import *
 
 class GromacsTopologyParser(object):
     """

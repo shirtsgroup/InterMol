@@ -2,9 +2,10 @@ import sys
 import os
 import string
 from collections import deque
-from ctools.Atom import *
-from ctools.Molecule import *
-from ctools.System import System
+sys.path.append('../..')
+from Atom import *
+from Molecule import *
+from System import System
 
 def readStructure(filename):
     """Read in a Gromacs structure file
