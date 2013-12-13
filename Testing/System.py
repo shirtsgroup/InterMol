@@ -4,12 +4,11 @@
 """
 import os.path
 import sys
-sys.path.append('../..')
-from mmtools import OrderedDict
-from mmtools import Converter
-from mmtools import MoleculeType
-from mmtools import OrderedSet
-from mmtools import HashMap
+from Testing  import OrderedDict
+from Testing import Converter
+from Testing import MoleculeType
+from Testing import OrderedSet
+from Testing  import HashMap
 
 class System(object):
     _sys = None
