@@ -2,9 +2,10 @@ import sys
 import string
 import os
 path = os.getcwd()+"/"
-sys.path.append('../..')
-from System import System
-System._sys = System.System("Redone Sample")
+sys.path.append('../../..')
+from ctools.System import *
+
+System._sys = System("Redone Sample")
 print "System initialized\n"
 f = open("DesmondToDesmondErrors.txt", "w")
 for dir in os.listdir(path+"/"):
@@ -14,7 +15,7 @@ for dir in os.listdir(path+"/"):
 				filename = string.rstrip(file,".cms")
 				print "\nReading in Desmond structure %s"%(filename)
 				sys.path.append('../../ParserFiles')
-				from DesmondParser import DesmondParser
+				from ctools.DesmondExt.DesmondParser import DesmondParser
 				DesmondParser = DesmondParser()
 				try:
 					DesmondParser.readFile(path+filename+"/"+filename+".cms")
