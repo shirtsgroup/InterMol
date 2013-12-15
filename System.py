@@ -2,13 +2,12 @@
 .. module:: System
     :platform: UNIX
 """
-import os.path
-import sys
-from Testing  import OrderedDict
-from Testing import Converter
-from Testing import MoleculeType
-from Testing import OrderedSet
-from Testing  import HashMap
+
+from OrderedDict import OrderedDict
+from Converter import *
+from MoleculeType import MoleculeType
+from OrderedSet import OrderedSet
+from HashMap import HashMap
 
 class System(object):
     _sys = None

@@ -1,6 +1,6 @@
 import sys
 import os.path
-from ctools.System import System
+from System import System
 
 System._sys = System("Redone Sample")
 print "System initialized\n"
@@ -30,44 +30,44 @@ filename_out = filename + "_OUT"
 #READING IN DESMOND--WRITING OUT IN DESMOND
 if num == 1:
   print "\nReading in Desmond structure %s"%(filename)
-  import ctools.DesmondExt.DesmondParser as DesmondParser
+  import DesmondExt.DesmondParser as DesmondParser
   DesmondParser = DesmondParser()
   DesmondParser.readFile(filename+".cms")
   print "\nWriting out Desmond structure %s"%(filename_out)
   DesmondParser.writeFile(filename_out+".cms")
 elif num == 2:
   print "\nReading in Desmond structure %s"%(filename)
-  import ctools.DesmondExt.DesmondParser as DesmondParser
+  import DesmondExt.DesmondParser as DesmondParser
   DesmondParser = DesmondParser()
   DesmondParser.readFile(filename+".cms")
 elif num == 3:
-  from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+  from GromacsExt.GromacsTopologyParser import GromacsTopologyParser
   print 'Reading in Gromacs topology "%s"...' %(filename)
   if not GromacsTopologyParser._GroTopParser:
     GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
   GromacsTopologyParser._GroTopParser.parseTopology(filename + '.top')
-  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+  import GromacsExt.GromacsStructureParser as GromacsStructureParser
   print 'Reading in Gromacs structure "%s"...' %(filename)
   GromacsStructureParser.readStructure(filename + '.gro')
   print "Writing out Desmond structure %s"%(filename_out)
-  import ctools.DesmondExt.DesmondParser as DesmondParser
+  import DesmondExt.DesmondParser as DesmondParser
   DesmondParser = DesmondParser()
   DesmondParser.writeFile(filename_out)
 elif num == 4:
-  from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+  from GromacsExt.GromacsTopologyParser import GromacsTopologyParser
   print 'Reading in Gromacs topology "%s"...' %(filename)
   if not GromacsTopologyParser._GroTopParser:
     GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
   GromacsTopologyParser._GroTopParser.parseTopology(filename + '.top')
-  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+  import GromacsExt.GromacsStructureParser as GromacsStructureParser
   print 'Reading in Gromacs structure "%s"...' %(filename)
   GromacsStructureParser.readStructure(filename + '.gro')
   print "\nWriting out Gromacs topology %s"%(filename_out+".top")
-  import ctools.GromacsExt.GromacsTopologyParser as GromacsTopologyParser
+  import GromacsExt.GromacsTopologyParser as GromacsTopologyParser
   GromacsTopologyParser = GromacsTopologyParser()
   GromacsTopologyParser.writeTopology(filename_out+".top")
   print "\nWriting in Gromacs structure %s"%(filename_out+".gro")
-  import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+  import GromacsExt.GromacsStructureParser as GromacsStructureParser
   GromacsStructureParser.writeStructure(filename_out+".gro")
   
 

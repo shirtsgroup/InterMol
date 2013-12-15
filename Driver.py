@@ -1,5 +1,5 @@
 import sys
-from ctools.System import System
+from System import System
 
 def initSystem(name):
     """Initialize the System. This must be called prior to reading in anything
@@ -21,7 +21,7 @@ def loadStructure(*files):
         extension = file.split(".")[-1]
        
         if extension.lower() == 'gro':
-            import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+            import GromacsExt.GromacsStructureParser as GromacsStructureParser
             print 'Reading in Gromacs structure "%s"...' %(filename)
             GromacsStructureParser.readStructure(filename)
         
@@ -45,7 +45,7 @@ def loadTopology(*files):
 
 
         if extension.lower() == 'top':
-            from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+            from GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print 'Reading in Gromacs topology "%s"...' %(filename)
             if not GromacsTopologyParser._GroTopParser:
                 GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
@@ -69,7 +69,7 @@ def writeStructure(*files):
         extension = file.split(".")[-1]
 
         if extension.lower() == 'gro':
-            import ctools.GromacsExt.GromacsStructureParser as GromacsStructureParser
+            import GromacsExt.GromacsStructureParser as GromacsStructureParser
             print "Writing Gromacs structure file..."
             GromacsStructureParser.writeStructure(filename)
         
@@ -93,7 +93,7 @@ def writeTopology(*files):
         extension = file.split(".")[-1]
 
         if extension.lower() == 'top':
-            from ctools.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+            from GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print "Writing Gromacs topology file..."
             GromacsTopologyParser._GroTopParser.writeTopology(filename)
 

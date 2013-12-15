@@ -1,10 +1,11 @@
 import sys
 import string
 import os
-path = os.getcwd() + "/"
-sys.path.append('../..')
-from System import System
-System._sys = System.System("Redone Sample")
+path = os.getcwd()+"/Inputs/DesmondInputs/"
+
+from System import *
+
+System._sys = System("Redone Sample")
 print "System initialized\n"
 f = open( "DesmondToGromacsErrors.txt", "w")
 for dir in os.listdir(path):
@@ -13,7 +14,6 @@ for dir in os.listdir(path):
                         if ".cms" in file:
                                 filename = string.rstrip(file,".cms")
                                 print "\nReading in Desmond structure %s"%(filename)
-                                sys.path.append('../../ParserFiles')
                                 from DesmondParser import DesmondParser
                                 DesmondParser = DesmondParser()
                                 try:
@@ -22,9 +22,9 @@ for dir in os.listdir(path):
 					f.write("\nError reading %s -- %s" %(filename, e))
 				filename_out = filename + "_OUT"
 				try:
-					if not (os.path.exists('%sDesmondToGromacsInputs/%s' %(path,filename))):
+					if not (os.path.exists('%sOutputs/DesmondToGromacsOutputs/%s' %(path,filename))):
 						os.makedirs('%sDesmondToGromacsInputs/%s' %(path,filename))
-					filename_out = os.path.abspath('%sDesmondToGromacsInputs/%s/%s' %(path,filename, filename_out))
+					filename_out = os.path.abspath('%sDesmondToGromacsOutputs/%s/%s' %(path,filename, filename_out))
 					print "\nWriting out Gromacs topology %s.top"%(filename_out)
 					from GromacsParser import GromacsTopologyParser
 					GromacsTopologyParser = GromacsTopologyParser()
