@@ -1,28 +1,48 @@
 import sys
 import os.path
-from System import System
+from optparse import OptionParser
 
-System._sys = System("Redone Sample")
-print "System initialized\n"
-print "ENTER FILENAME?\n"
-filename = raw_input("")
-while not (os.path.isfile(filename+".gro") or os.path.isfile(filename+".top")):
- print "File doesn't exit, try again\n"
- filename = raw_input("")
-filename_out = filename + "_OUT"
-from GromacsExt.GromacsTopologyParser import GromacsTopologyParser
-print 'Reading in Gromacs topology "%s"...' %(filename)
-if not GromacsTopologyParser._GroTopParser:
-  GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
-GromacsTopologyParser._GroTopParser.parseTopology(filename + '.top')
-import GromacsExt.GromacsStructureParser as GromacsStructureParser
-print 'Reading in Gromacs structure "%s"...' %(filename)
-GromacsStructureParser.readStructure(filename + '.gro')
-print "\nWriting out Gromacs topology %s"%(filename_out+".top")
-import GromacsExt.GromacsTopologyParser as GromacsTopologyParser
+from intermol.System import System
+from intermol.GromacsExt.GromacsStructureParser import readStructure, writeStructure
+from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
+
+parser = OptionParser()
+parser.add_option('-p', type='str', dest='top', default='',
+        help="Topology .top file")
+parser.add_option('-c', type='str', dest='gro', default='',
+        help="Structure .gro file")
+parser.add_option('-n', type='str', dest='name', default='system',
+        help="Name of system")
+
+(options, args) = parser.parse_args()
+gro = options.gro
+gro_file = os.path.join('Inputs/GromacsInputs/', gro)
+if not os.path.isfile(gro_file):
+    raise Exception("File not found: {0}!".format(gro_file))
+
+top = options.top
+top_file = os.path.join('Inputs/GromacsInputs/', top)
+if not os.path.isfile(top_file):
+    raise Exception("File not found: {0}!".format(top_file))
+
+name = options.name
+#--- end of options ---
+
+System._sys = System(name)
+print "System initialized"
+
+print "Reading in Gromacs topology '{0}'...".format(top_file)
+GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
+GromacsTopologyParser._GroTopParser.parseTopology(top_file)
+
+print "Reading in Gromacs structure '{0}'...".format(gro_file)
+readStructure(gro_file)
+
+top_out = os.path.join('Outputs/GromacsToGromacs/', name + '.top')
+print "Writing out Gromacs topology '{0}'".format(top_out)
 GromacsTopologyParser = GromacsTopologyParser()
-GromacsTopologyParser.writeTopology(filename_out+".top")
-print "\nWriting in Gromacs structure %s"%(filename_out+".gro")
-import GromacsExt.GromacsStructureParser as GromacsStructureParser
-GromacsStructureParser.writeStructure(filename_out+".gro")
+GromacsTopologyParser.writeTopology(top_out)
 
+gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
+print "Writing in Gromacs structure '{0}'".format(gro_out)
+writeStructure(gro_out)
