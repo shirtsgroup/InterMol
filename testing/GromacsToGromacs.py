@@ -5,7 +5,7 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 
-def gromacs_to_gromacs(top, gro, name='system', clean=True):
+def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='', clean=True):
     """Test gromacs to gromacs conversion
     """
 
@@ -21,8 +21,7 @@ def gromacs_to_gromacs(top, gro, name='system', clean=True):
     gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
 
     # calc input energies
-    e_in = gromacs_energies(top_in, gro_in, 'in',
-            gropath=options.gropath, grosuff=options.grosuff)
+    e_in = gromacs_energies(top_in, gro_in, 'in', gropath, grosuff)
 
     # where the magic happens
     Driver.initSystem(name)
@@ -30,8 +29,7 @@ def gromacs_to_gromacs(top, gro, name='system', clean=True):
     Driver.write(top_out, gro_out)
 
     # calc output energies
-    e_out = gromacs_energies(top_out, gro_out, 'GtoG',
-            gropath=options.gropath, grosuff=options.grosuff)
+    e_out = gromacs_energies(top_out, gro_out, 'GtoG', gropath, grosuff)
 
     # delete gromacs backup files
     if clean:
@@ -66,8 +64,10 @@ if __name__ == "__main__":
     top = options.top
     gro = options.gro
     name = options.name
+    gropath = options.gropath
+    grosuff = options.grosuff
 
-    rms, e_in, e_out = gromacs_to_gromacs(top, gro, name)
+    rms, e_in, e_out = gromacs_to_gromacs(top, gro, name, gropath, grosuff)
 
     print "======================================================================="
     print "Summary statistics"
