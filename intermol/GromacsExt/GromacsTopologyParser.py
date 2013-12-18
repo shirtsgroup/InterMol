@@ -5,6 +5,7 @@ import re
 import copy
 
 import simtk.unit as units
+#import intermol.unit as units
 from collections import deque
 from intermol.Atom import Atom
 from intermol.Molecule import Molecule

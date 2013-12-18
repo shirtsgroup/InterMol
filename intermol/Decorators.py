@@ -1,4 +1,5 @@
 import simtk.unit as units
+#import intermol.unit as units
 
 #=============================================================================================
 # EXCEPTIONS

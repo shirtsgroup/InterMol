@@ -18,6 +18,7 @@ parser.add_option('-g', type='str', dest='gropath', default='',
         help="path for GROMACS binary")
 parser.add_option('-s', type='str', dest='grosuff', default='',
         help="suffix for GROMACS binary")
+
 (options, args) = parser.parse_args()
 gro = options.gro
 gro_in = os.path.join('Inputs/Gromacs/', gro)
@@ -36,7 +37,8 @@ gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
 #--- end of options ---
 
 # calc input energies
-e_in = gromacs_energies(top_in, gro_in, 'in',gropath=options.gropath,grosuff=options.grosuff) 
+e_in = gromacs_energies(top_in, gro_in, 'in',
+        gropath=options.gropath, grosuff=options.grosuff)
 
 # where the magic happens
 Driver.initSystem(name)
@@ -44,7 +46,8 @@ Driver.load(top_in, gro_in)
 Driver.write(top_out, gro_out)
 
 # calc output energies
-e_out = gromacs_energies(top_out, gro_out, 'GtoG',gropath=options.gropath,grosuff=options.grosuff)
+e_out = gromacs_energies(top_out, gro_out, 'GtoG',
+        gropath=options.gropath, grosuff=options.grosuff)
 
 print "======================================================================="
 print "Summary statistics"
