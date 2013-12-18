@@ -1,4 +1,3 @@
-import sys
 import os.path
 from optparse import OptionParser
 
@@ -7,9 +6,9 @@ import intermol.Driver as Driver
 
 #--- cmd line options ---
 parser = OptionParser()
-parser.add_option('-p', type='str', dest='top', default='',
+parser.add_option('-p', type='str', dest='top', default='system2_GMX.top',
         help="Topology .top file")
-parser.add_option('-c', type='str', dest='gro', default='',
+parser.add_option('-c', type='str', dest='gro', default='system2_GMX.gro',
         help="Structure .gro file")
 parser.add_option('-n', type='str', dest='name', default='system',
         help="Name of system")
