@@ -59,7 +59,7 @@ e_in = np.asarray(e_in)
 e_out = np.asarray(e_out)
 print "%20s %12s %12s %12s" % ("Type", "Input", "Output", "Diff")
 for name, i, o in zip(types, e_in, e_out):
-    print "%20s %12.5f %12.5f %12.5f" % (name, i, o, i-o)
+    print "%20s %13.6f %13.6f %13.6f" % (name, i, o, i-o)
 
 print " "
 diff = e_out - e_in
