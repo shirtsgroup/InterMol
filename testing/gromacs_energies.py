@@ -42,7 +42,7 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
 
     # energizin'
     select = " ".join(map(str, range(1, 15))) + " 0 "
-    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_out}".format(ener=ener,
+    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_out} -dp".format(ener=ener,
             ener_out=ener_out))
 
     # extract g_energy output and parse initial energies
