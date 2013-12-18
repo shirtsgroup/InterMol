@@ -49,7 +49,7 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
     with open(ener_out) as f:
         all_lines = f.readlines()
 
-    # take second to last line - last line is after taking a timestep
-    sec_last = all_lines[-2].split()
+    # take last line
+    sec_last = all_lines[-1].split()
     data = map(float, sec_last)
     return data

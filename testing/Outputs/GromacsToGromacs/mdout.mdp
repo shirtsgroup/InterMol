@@ -2,7 +2,7 @@
 ;	File 'Outputs/GromacsToGromacs/mdout.mdp' was generated
 ;	By user: mrshirts (501)
 ;	On host: vpn-user-1-112.itc.virginia.edu
-;	At date: Tue Dec 17 21:56:37 2013
+;	At date: Tue Dec 17 23:47:50 2013
 ;
 
 ; VARIOUS PREPROCESSING OPTIONS
@@ -17,7 +17,7 @@ integrator               = md-vv
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.002
-nsteps                   = 1
+nsteps                   = 0
 ; For exact run continuation or redoing part of a run
 init-step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)

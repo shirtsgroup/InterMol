@@ -1,4 +1,4 @@
-# This file was created Tue Dec 17 21:56:37 2013
+# This file was created Tue Dec 17 23:47:50 2013
 # by the following command:
 # /Users/mrshirts/work/gromacs_allv/gromacs-4.6.3/install_gromacs/bin/g_energy -f Outputs/GromacsToGromacs/ener.edr -o Outputs/GromacsToGromacs/energy.xvg 
 #
@@ -31,4 +31,3 @@
 @ s12 legend "Total Energy"
 @ s13 legend "Temperature"
     0.000000    2.403634   13.032457    0.006370    0.052781   23.949989  -644.885193  3180.604004  -124.145264  -24011.349609  -2646.746094  -24207.082031  5561.815430  -18645.265625  299.900787
-    0.002000    5.753236   15.292902    0.162891    1.230665   22.731270  -646.911438  3184.854248  -124.145264  -24001.599609  -2646.609375  -24189.234375  5544.723633  -18644.511719  298.979187
