@@ -1,5 +1,9 @@
+from os.path import splitext
 import sys
+import pdb
+
 from intermol.System import System
+
 
 def initSystem(name):
     """Initialize the System. This must be called prior to reading in anything
@@ -10,101 +14,63 @@ def initSystem(name):
     System._sys = System(name)
     print "System initialized\n"
 
-def loadStructure(*files):
+def load(*files):
     """
     """
-    for file in files:
+    for f in files:
         try:
-            filename = str(file)
+            filename = str(f)
         except:
-            sys.stderr.write("ERROR(loadStructure): Invalid argument! Arguments should be string filenames\n")
+            raise Exception("Arguments should be string filenames")
 
-        extension = file.split(".")[-1]
+        extension = splitext(filename)[1].lower()
 
-        if extension.lower() == 'gro':
+        if extension == '.gro':
             import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
-            print 'Reading in Gromacs structure "%s"...' %(filename)
+            print "Reading in Gromacs structure '{0}'...".format(filename)
             GromacsStructureParser.readStructure(filename)
+            print "Structure loaded\n"
 
-        elif extension.lower() == '':
-            pass
-
-        else:
-            sys.stderr.write(" Error: '%s' is not a supported structure file format\n" %(extension.lower()))
-
-        print "Structure loaded\n"
-
-def loadTopology(*files):
-    """
-    """
-    for file in files:
-        try:
-            filename = str(file)
-        except:
-            sys.stderr.write("ERROR(loadTopology): Invalid argument! Arguments should be string filenames\n")
-
-        extension = file.split(".")[-1]
-
-
-        if extension.lower() == 'top':
+        elif extension == '.top':
             from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
-            print 'Reading in Gromacs topology "%s"...' %(filename)
+            print "Reading in Gromacs topology '{0}'...".format(filename)
             if not GromacsTopologyParser._GroTopParser:
                 GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
             GromacsTopologyParser._GroTopParser.parseTopology(filename)
-        elif extension.lower() == '':
-            pass
+            print "Topology loaded\n"
 
         else:
-            sys.stderr.write(" Error: '%s' is not a supported topology file format\n" %(extension.lower()))
+            pdb.set_trace()
+            raise Exception("{0} is not a supported file format".format(extension))
 
-        print "Topology loaded\n"
-
-def writeStructure(*files):
+def write(*files):
     """
     """
-    for file in files:
+    for f in files:
         try:
-            filename = str(file)
+            filename = str(f)
         except:
-            sys.stderr.write("ERROR(writeStructure): Invalid argument! Arguments should be string filenames\n")
+            raise Exception("Arguments should be string filenames")
 
-        extension = file.split(".")[-1]
+        extension = splitext(filename)[1].lower()
 
-        if extension.lower() == 'gro':
+        if extension == '.gro':
             import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
             print "Writing Gromacs structure file..."
             GromacsStructureParser.writeStructure(filename)
 
-        elif extension.lower() == 'pdb':
-            print "Writing PDB structure file..."
-
-        else:
-            sys.stderr.write(" Error: '%s' is not a supported structure file format\n" %(extension.lower()))
-
-        print 'Finished writing "%s"\n' %(filename)
-
-
-def writeTopology(*files):
-    """
-    """
-    for file in files:
-        try:
-            filename = str(file)
-        except:
-            sys.stderr.write("ERROR(writeTopology): Invalid argument! Arguments should be string filenames\n")
-
-        extension = file.split(".")[-1]
-
-        if extension.lower() == 'top':
+        elif extension == '.top':
             from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print "Writing Gromacs topology file..."
             GromacsTopologyParser._GroTopParser.writeTopology(filename)
 
-        elif extension.lower() == '':
-            pass
+        elif extension == '.cms':
+            from intermol.DesmondExt.DesmondParser import DesmondParser
+            print "Writing Desmond topology file..."
+            DesmondParser = DesmondParser()
+            DesmondParser.writeFile(filename)
 
         else:
-            sys.stderr.write(" Error: '%s' is not a supported topology file format\n" %(extension.lower()))
+            raise Exception("{0} is not a supported file format".format(extension))
 
-        print 'Finished writing "%s"\n' %(filename)
+        print "Finished writing '{0}'".format(filename)

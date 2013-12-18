@@ -1018,7 +1018,7 @@ class DesmondParser():
       self.a_blockpos.append(i)
       self.b_blockpos.append(i)
       self.ffio_blockpos.append(i)
-      verbose = True
+      verbose = False 
       
       sysDirectiveTop = re.compile(r"""
         ((?P<vdwtypes>\s*ffio_vdwtypes\[[\d+]+\])
@@ -1095,7 +1095,7 @@ class DesmondParser():
 #        Args:
 #            filename: the name of the file to write out to
               
-      verbose = True 
+      verbose = False 
       lines = list()
       vdwtypes = []
       sites = []
