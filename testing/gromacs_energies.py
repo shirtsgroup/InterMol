@@ -1,8 +1,12 @@
 import os
 import pdb
 
-def gromacs_energies(top, gro, in_out='in'):
+def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
     """
+
+    gropath = path to gromacs binaries
+    grosuff = suffix of gromacs binaries, usually '' or '_d'
+
     """
     mdp = 'Inputs/Gromacs/grompp.mdp'
     if in_out == 'in':
@@ -21,18 +25,22 @@ def gromacs_energies(top, gro, in_out='in'):
     traj  = os.path.join(base, 'traj.trr')
     log  = os.path.join(base, 'md.log')
 
+    grompp_bin = gropath + '/grompp' + grosuff
+    mdrun_bin = gropath + '/mdrun' + grosuff
+    genergy_bin = gropath + '/g_energy' + grosuff
+
     # grompp'n it up
-    os.system("grompp -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout}".format(mdp=mdp,
+    os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout}".format(mdp=mdp,
             top=top, gro=gro, tpr=tpr, mdout=mdout))
 
     # mdrunin'
-    os.system("mdrun -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(tpr=tpr,
+    os.system(mdrun_bin + " -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(tpr=tpr,
             traj=traj, state=state, conf=conf, ener=ener, log=log))
 
     # energizin'
     select = " ".join(map(str, range(1, 15))) + " 0 "
-    os.system("echo {select} | g_energy -f {ener} -o {ener_out}".format(select=select,
-        ener=ener, ener_out=ener_out))
+    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_out}".format(ener=ener,
+            ener_out=ener_out))
 
     # extract g_energy output and parse initial energies
     with open(ener_out) as f:

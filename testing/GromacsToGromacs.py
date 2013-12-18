@@ -14,7 +14,10 @@ parser.add_option('-c', type='str', dest='gro', default='system2_GMX.gro',
         help="Structure .gro file")
 parser.add_option('-n', type='str', dest='name', default='system',
         help="Name of system")
-
+parser.add_option('-g', type='str', dest='gropath', default='',
+        help="path for GROMACS binary")
+parser.add_option('-s', type='str', dest='grosuff', default='',
+        help="suffix for GROMACS binary")
 (options, args) = parser.parse_args()
 gro = options.gro
 gro_in = os.path.join('Inputs/Gromacs/', gro)
@@ -33,7 +36,7 @@ gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
 #--- end of options ---
 
 # calc input energies
-e_in = gromacs_energies(top_in, gro_in, 'in')
+e_in = gromacs_energies(top_in, gro_in, 'in',gropath=options.gropath,grosuff=options.grosuff) 
 
 # where the magic happens
 Driver.initSystem(name)
@@ -41,7 +44,7 @@ Driver.load(top_in, gro_in)
 Driver.write(top_out, gro_out)
 
 # calc output energies
-e_out = gromacs_energies(top_out, gro_out, 'GtoG')
+e_out = gromacs_energies(top_out, gro_out, 'GtoG',gropath=options.gropath,grosuff=options.grosuff)
 
 print "======================================================================="
 print "Summary statistics"
