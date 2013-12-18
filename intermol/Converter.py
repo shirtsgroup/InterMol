@@ -1,13 +1,12 @@
-#import simtk.unit as units
 import intermol.unit as units
 
 def convert_units(arg, unit):
     """Checks compatibility and converts units using simtk.units package
-    
+
     Args:
         arg (Quantity): quantity to be converted
         unit (Unit): Unit to be converted to
-    
+
     Returns:
         arg (Quantity): Quantity scaled to the new unit
     """

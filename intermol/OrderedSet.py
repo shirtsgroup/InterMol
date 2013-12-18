@@ -6,7 +6,7 @@ class OrderedSet(object):
         """
         self.list = list()
         self.map = {}
-        
+
     def __len__(self):
         """Return the size of the OrderedSet
         """
@@ -14,7 +14,7 @@ class OrderedSet(object):
 
     def __contains__(self, key):
         """Check if the orderedSet contains some key
-        
+
         Args:
             key: the key to check
         """
@@ -32,7 +32,7 @@ class OrderedSet(object):
 
     def add(self, key):
         """Add a key to the container
-        
+
         Args:
             key: key to add
         """
@@ -49,7 +49,7 @@ class OrderedSet(object):
         if key in self.map:
             self.map.pop(key)
             self.list.remove(key)
-    
+
     def get(self, key):
         """Get a key from the container
 
@@ -60,7 +60,7 @@ class OrderedSet(object):
             return copy.deepcopy(self.map[key])
         else:
             return False
-     
+
     def pop(self, last=True):
         """Pop a value from the container
 
@@ -74,7 +74,7 @@ class OrderedSet(object):
         else:
             key = self.list[0]
         self.remove(key)
-        return key    
+        return key
 
     def __repr__(self):
         return repr(self.list)
@@ -95,10 +95,10 @@ class OrderedSet(object):
             temp = self.list[key]
             self.map.pop(temp)
             self.map[value] = value
-            list[key] = value   
+            list[key] = value
         else:
             idx = self.list.index(key)
             self.list[idx] = value
             self.map.pop(key)
             self.map[value] = value
-              
+

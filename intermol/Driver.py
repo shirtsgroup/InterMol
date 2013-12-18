@@ -1,5 +1,4 @@
 from os.path import splitext
-import sys
 import pdb
 
 from intermol.System import System

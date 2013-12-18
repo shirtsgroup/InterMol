@@ -14,7 +14,7 @@ class Molecule(object):
     """
     def __init__(self, name = None):
         """Initialize the molecule
-        
+
         Args:
             name (str): name of the molecule
         """
@@ -24,18 +24,18 @@ class Molecule(object):
             # TODO Fix the naming resolution
             self.name = "Untitled"
         self._atoms = OrderedSet()
-        
-    def addAtom(self, atom): 
-        """Add and atom 
-        
+
+    def addAtom(self, atom):
+        """Add and atom
+
         Args:
             atom (atom): the atom to add into the molecule
         """
-        self._atoms.add(atom)   
+        self._atoms.add(atom)
 
     def removeAtom(self, atom):
         """Remove Atom
-        
+
         Args:
             atom (atom): the atom to remove from the molecule
         """
@@ -44,7 +44,7 @@ class Molecule(object):
     def getAtoms(self):
         """Return an orderedset of atoms
         """
-        return self._atoms    
+        return self._atoms
 
     def __repr__(self):
-        return self.name 
+        return self.name

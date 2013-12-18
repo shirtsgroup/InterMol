@@ -9,6 +9,7 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
 
     """
     mdp = 'Inputs/Gromacs/grompp.mdp'
+
     if in_out == 'in':
         base = 'Inputs/Gromacs'
     elif in_out == 'GtoG':
@@ -25,12 +26,9 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
     traj  = os.path.join(base, 'traj.trr')
     log  = os.path.join(base, 'md.log')
 
-    #grompp_bin = os.path.join(gropath, 'grompp', grosuff)
-    grompp_bin = os.path.join(gropath, 'grompp')
-    #mdrun_bin = os.path.join(gropath, 'mdrun', grosuff)
-    mdrun_bin = os.path.join(gropath, 'mdrun')
-    #genergy_bin = os.path.join(gropath, 'g_energy', grosuff)
-    genergy_bin = os.path.join(gropath, 'g_energy')
+    grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
+    mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
+    genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
     os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout}".format(mdp=mdp,

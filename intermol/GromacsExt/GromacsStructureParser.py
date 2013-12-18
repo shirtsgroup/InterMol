@@ -9,15 +9,15 @@ from intermol.System import System
 
 def readStructure(filename):
     """Read in a Gromacs structure file
-   
+
     Args:
         filename (str): the file to be read in
     """
-    
+
     fd = open(filename, 'r')
     lines = list(fd)
     fd.close()
-    
+
     i = 2
     for moleculetype in System._sys._molecules.values():
         for molecule in moleculetype.moleculeSet:
@@ -28,26 +28,26 @@ def readStructure(filename):
                     atom.atomName=lines[i][11:15].strip()
                     atom.atomIndex=int(lines[i][16:20])
                     position = [None, None, None]
-                    position[0]=float(lines[i][20:28])*units.nanometers
-                    position[1]=float(lines[i][28:36])*units.nanometers
-                    position[2]=float(lines[i][36:44])*units.nanometers
+                    position[0]=float(lines[i][20:28]) * units.nanometers
+                    position[1]=float(lines[i][28:36]) * units.nanometers
+                    position[2]=float(lines[i][36:44]) * units.nanometers
                     atom.setPosition(position[0], position[1], position[2])
                     velocity  = [None, None, None]
                     try:
-                        velocity[0]=float(lines[i][44:52])*units.nanometers * units.picoseconds**(-1)
-                        velocity[1]=float(lines[i][52:60])*units.nanometers * units.picoseconds**(-1)
-                        velocity[2]=float(lines[i][60:68])*units.nanometers * units.picoseconds**(-1)
+                        velocity[0]=float(lines[i][44:52]) * units.nanometers / units.picoseconds
+                        velocity[1]=float(lines[i][52:60]) * units.nanometers / units.picoseconds
+                        velocity[2]=float(lines[i][60:68]) * units.nanometers / units.picoseconds
                     except:
-                        velocity[0] = 0.0 * units.nanometers * units.picoseconds**(-1)
-                        velocity[1] = 0.0 * units.nanometers * units.picoseconds**(-1)
-                        velocity[2] = 0.0 * units.nanometers * units.picoseconds**(-1)
+                        velocity[0] = 0.0 * units.nanometers / units.picoseconds
+                        velocity[1] = 0.0 * units.nanometers / units.picoseconds
+                        velocity[2] = 0.0 * units.nanometers / units.picoseconds
                     atom.setVelocity(velocity[0], velocity[1], velocity[2])
                     i += 1
 
                 else:
                     sys.exit()
- 
-    rawBoxVector = lines[i]      
+
+    rawBoxVector = lines[i]
     v1x = None
     v2x = None
     v3x = None
@@ -67,7 +67,7 @@ def readStructure(filename):
         v1z = 0.0 * units.nanometers
         v2z = 0.0 * units.nanometers
         v3z = float(rawBoxVector[23:34]) * units.nanometers
-    
+
     elif len(rawBoxVector.split()) == 9:
         v1x = float(rawBoxVector[0:10]) * units.nanometers
         v2x = float(rawBoxVector[11:22]) * units.nanometers
@@ -82,7 +82,7 @@ def readStructure(filename):
 
 def writeStructure(filename):
     """Write the system out  in a Gromacs 4.5.4 format
-    
+
     Args:
         filename (str): the file to write out to
     """
@@ -103,7 +103,7 @@ def writeStructure(filename):
                         atom._velocity[0]._value,
                         atom._velocity[1]._value,
                         atom._velocity[2]._value))
-    lines.append('%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n'
+    lines.append('%10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f\n'
           %(System._sys._v1x._value,
             System._sys._v2y._value,
             System._sys._v3z._value,
@@ -116,8 +116,6 @@ def writeStructure(filename):
 
     lines.insert(0, (System._sys._name+'\n'))
     lines.insert(1, str(i)+'\n')
-
-
 
     fout = open(filename, 'w')
     for line in lines:

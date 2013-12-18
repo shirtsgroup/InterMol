@@ -12,7 +12,7 @@ parser.add_option('-p', type='str', dest='top', default='system2_GMX.top',
         help="Topology .top file")
 parser.add_option('-c', type='str', dest='gro', default='system2_GMX.gro',
         help="Structure .gro file")
-parser.add_option('-n', type='str', dest='name', default='system',
+parser.add_option('-n', type='str', dest='name', default='system2_GMX',
         help="Name of system")
 parser.add_option('-g', type='str', dest='gropath', default='',
         help="path for GROMACS binary")
