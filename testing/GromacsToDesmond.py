@@ -15,12 +15,12 @@ parser.add_option('-n', type='str', dest='name', default='system',
 
 (options, args) = parser.parse_args()
 gro = options.gro
-gro_in = os.path.join('Inputs/GromacsInputs/', gro)
+gro_in = os.path.join('Inputs/Gromacs/', gro)
 if not os.path.isfile(gro_in):
     raise Exception("File not found: {0}!".format(gro_in))
 
 top = options.top
-top_in = os.path.join('Inputs/GromacsInputs/', top)
+top_in = os.path.join('Inputs/Gromacs/', top)
 if not os.path.isfile(top_in):
     raise Exception("File not found: {0}!".format(top_in))
 
