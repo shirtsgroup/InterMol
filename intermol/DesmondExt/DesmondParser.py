@@ -4,8 +4,10 @@ import os
 import copy
 import string
 import re
-import simtk.unit as units
 from collections import deque
+
+#import simtk.unit as units
+import intermol.unit as units
 from intermol.Atom import *
 from intermol.Molecule import *
 from intermol.System import System

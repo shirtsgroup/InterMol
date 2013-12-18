@@ -5,7 +5,8 @@
 .. moduleuthor:: Christoph Klein <ctk3b@virginia.edu>, Christopher
 Lee <ctl4f@virginia.edu>
 """
-import simtk.unit as units
+#import simtk.unit as units
+import intermol.unit as units
 from Converter import *
 
 class Atom(object):

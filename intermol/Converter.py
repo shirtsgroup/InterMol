@@ -1,4 +1,5 @@
-import simtk.unit as units
+#import simtk.unit as units
+import intermol.unit as units
 
 def convert_units(arg, unit):
     """Checks compatibility and converts units using simtk.units package
