@@ -45,7 +45,7 @@ def readStructure(filename):
                 else:
                     sys.exit()
 
-    rawBoxVector = lines[i]
+    rawBoxVector = lines[i].split()
     v1x = None
     v2x = None
     v3x = None
@@ -55,18 +55,18 @@ def readStructure(filename):
     v1z = None
     v2z = None
     v3z = None
-    if len(rawBoxVector.split()) == 3:
-        v1x = float(rawBoxVector[0:10]) * units.nanometers
+    if len(rawBoxVector) == 3:
+        v1x = float(rawBoxVector[0]) * units.nanometers
         v2x = 0.0 * units.nanometers
         v3x = 0.0 * units.nanometers
         v1y = 0.0 * units.nanometers
-        v2y = float(rawBoxVector[11:22]) * units.nanometers
+        v2y = float(rawBoxVector[1]) * units.nanometers
         v3y = 0.0 * units.nanometers
         v1z = 0.0 * units.nanometers
         v2z = 0.0 * units.nanometers
-        v3z = float(rawBoxVector[23:34]) * units.nanometers
+        v3z = float(rawBoxVector[2]) * units.nanometers
 
-    elif len(rawBoxVector.split()) == 9:
+    elif len(rawBoxVector) == 9:
         v1x = float(rawBoxVector[0:10]) * units.nanometers
         v2x = float(rawBoxVector[11:22]) * units.nanometers
         v3x = float(rawBoxVector[23:34]) * units.nanometers
