@@ -38,6 +38,14 @@ def load(*files):
             GromacsTopologyParser._GroTopParser.parseTopology(filename)
             print "Topology loaded\n"
 
+        elif extension == '.cms':
+            from intermol.DesmondExt.DesmondParser import DesmondParser as DesmondParser
+            DesmondParser = DesmondParser()
+            print "Reading in Desmond structure '{0}'..."
+            DesmondParser.readFile(filename)
+            print "Sructure loaded\n"
+                
+
         else:
             pdb.set_trace()
             raise Exception("{0} is not a supported file format".format(extension))
