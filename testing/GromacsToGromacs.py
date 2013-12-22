@@ -49,11 +49,11 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-p', type='str', dest='top', default='system2_GMX.top',
+    parser.add_option('-p', type='str', dest='top', default='micelle/micelle.top',
             help="Topology .top file")
-    parser.add_option('-c', type='str', dest='gro', default='system2_GMX.gro',
+    parser.add_option('-c', type='str', dest='gro', default='micelle/micelle.gro',
             help="Structure .gro file")
-    parser.add_option('-n', type='str', dest='name', default='system2_GMX',
+    parser.add_option('-n', type='str', dest='name', default='micelle',
             help="Name of system")
     parser.add_option('-g', type='str', dest='gropath', default='',
             help="path for GROMACS binary")
