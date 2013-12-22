@@ -13,13 +13,6 @@
 ; Include water topology
 #include "spc.itp"
 
-#ifdef POSRES_WATER
-; Position restraint for each water oxygen
-[ position_restraints ]
-;  i funct       fcx        fcy        fcz
-   1    1       1000       1000       1000
-#endif
-
 ; Include generic topology for ions
 #include "SDS.itp"
 #include "ions.itp"
