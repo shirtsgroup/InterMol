@@ -538,30 +538,37 @@ class GromacsTopologyParser(object):
                             
                         if len(split) == 3:
                             # Searching for matching bondtype to pull values from
-                            tempType = AbstractBondType(split[0], split[1], split[2])
+                            # Can't be this hard?
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            tempType = AbstractBondType(atomtype1, atomtype2, split[2])
                             bondType = self.bondtypes.get(tempType)
-                            
+                            if not (bondType):
+                                # we only have the reversed bond order stored, flip the atoms
+                                tempType = AbstractBondType(atomtype2, atomtype1, split[2])
+                                bondType = self.bondtypes.get(tempType)
+
                             if isinstance(bondType, BondType):
-                                split.append(length)
-                                split.append(k)
+                                split.append(bondType.length)
+                                split.append(bondType.k)
 
                             if isinstance(bondType, G96BondType):
-                                split.append(length)
-                                split.append(k)
+                                split.append(bondType.length)
+                                split.append(bondType.l)
 
                             if isinstance(bondType, CubicBondType):
-                                split.append(length)
-                                split.append(C2)
-                                split.append(C3)
+                                split.append(bondType.length)
+                                split.append(bondType.C2)
+                                split.append(bondType.C3)
 
                             if isinstance(bondType, MorseBondType):
-                                split.append(length)
-                                split.append(D)
-                                split.append(beta)
+                                split.append(bondType.length)
+                                split.append(bondType.D)
+                                split.append(bomdType.beta)
 
                             if isinstance(bondType, HarmonicBondType):
-                                split.append(length)
-                                split.append(k)
+                                split.append(bondType.length)
+                                split.append(bondType.k)
 
                         if int(split[2]) == 1: 
                             try:
@@ -659,41 +666,48 @@ class GromacsTopologyParser(object):
                         newAngleForce = None
 
                         if len(split) == 4:
-                            tempType = AbstractAngleType(split[0], split[1], split[2], split[3])
-                            angleType = System._sys._angletypes.get(tempType)
-                     
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
+                            tempType = AbstractAngleType(atomtype1, atomtype2, atomtype3, split[3])
+                            angleType = self.angletypes.get(tempType)
+                            if not (angleType):
+                                #flip it around.
+                                tempType = AbstractAngleType(atomtype3, atomtype2, atomtype1, split[3])
+                                angleType = self.angletypes.get(tempType)
+
                             if isinstance(angleType, AngleType):
-                                split.append(theta)
-                                split.append(k)
+                                split.append(angleType.theta)
+                                split.append(angleType.k)
 
                             if isinstance(angleType, G96BondType):
-                                split.append(theta)
-                                split.append(k)
+                                split.append(angleType.theta)
+                                split.append(angleType.k)
 
                             if isinstance(angleType, CrossBondBondAngleType):
-                                split.append(r1)
-                                split.append(r2)
-                                split.append(k)
+                                split.append(angleType.r1)
+                                split.append(angleType.r2)
+                                split.append(angleType.k)
 
                             if isinstance(angleType, CrossBondAngleAngleType):
-                                split.append(r1)
-                                split.append(r2)
-                                split.append(r3)
-                                split.append(k)
+                                split.append(angleType.r1)
+                                split.append(angleType.r2)
+                                split.append(angleType.r3)
+                                split.append(angleType.k)
 
                             if isinstance(angleType, UreyBradleyAngleType):
-                                split.append(theta)
-                                split.append(k)
-                                split.append(r)
-                                split.append(kUB)
+                                split.append(angleType.theta)
+                                split.append(angleType.k)
+                                split.append(angleType.r)
+                                split.append(angleType.kUB)
 
                             if isinstance(angleType, QuarticAngleType):
-                                split.append(theta)
-                                split.append(C0)
-                                split.append(C1)
-                                split.append(C2)
-                                split.append(C3)
-                                split.append(C4)
+                                split.append(angleType.theta)
+                                split.append(angleType.C0)
+                                split.append(angleType.C1)
+                                split.append(angleType.C2)
+                                split.append(angleType.C3)
+                                split.append(angleType.C4)
 
 
                         # Angle 
@@ -820,35 +834,44 @@ class GromacsTopologyParser(object):
                         newDihedralForce = None
 
                         if len(split) == 5:
-                            tempType = AbstractDihedralType(split[0], split[1], split[2], split[3], split[4])
-                            dihedralType = System._sys._dihedraltypes.get(tempType)
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
+                            atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
+                            tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[3])
+                            dihedralType = self.dihedraltypes.get(tempType)
+                            pdb.set_trace()
+                            if not (dihedralType):
+                                #flip it around.
+                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[3])
+                                dihedralType = self.dihedraltypes.get(tempType)
 
                             if isinstance(dihedralType, ProperDihedral1Type):
-                                split.append(phi)
-                                split.append(k)
-                                split.append(multiplicity)
+                                split.append(dihedralType.phi)
+                                split.append(dihedralType.k)
+                                split.append(dihedralType.multiplicity)
 
-                            if isinstance(dihedralype, ProperDihedral9Type):
-                                split.append(phi)
-                                split.append(k)
-                                split.append(multicplicity)
+                            if isinstance(dihedralType, ProperDihedral9Type):
+                                split.append(dihedralType.phi)
+                                split.append(dihedralType.k)
+                                split.append(dihedralType.multicplicity)
 
                             if isinstance(dihedralType, ImproperDihedral2Type):
-                                split.append(xi)
-                                split.append(k)
+                                split.append(dihedralType.xi)
+                                split.append(dihedralType.k)
 
                             if isinstance(dihedralType, RBDihedralType):
-                                split.append(C0)
-                                split.append(C1)
-                                split.append(C2)
-                                split.append(C3)
-                                split.append(C4)
-                                split.append(C5)
+                                split.append(dihedralType.C0)
+                                split.append(dihedralType.C1)
+                                split.append(dihedralType.C2)
+                                split.append(dihedralType.C3)
+                                split.append(dihedralType.C4)
+                                split.append(dihedralType.C5)
 
                             if isinstance(dihedralType, ImproperDihedral4Type):
-                                split.append(phi)
-                                split.append(k)
-                                split.append(multiplicity)
+                                split.append(dihedralType.phi)
+                                split.append(dihedralType.k)
+                                split.append(dihedralType.multiplicity)
 
 
                         # Proper Dihedral 1
@@ -1121,7 +1144,9 @@ class GromacsTopologyParser(object):
                                 if verbose:
                                     print "Found a include:", line
                                 include = match.group('include')
-                                fd = self.open(include)
+                                # assume it is in the same directory as the .top file, or relative to the top file  
+                                includefile = os.path.join(os.path.split(filename)[0],include)
+                                fd = self.open(includefile)
                                 if fd != None:
                                     tempList = list(fd)
                                     tempList.reverse()
@@ -1162,7 +1187,8 @@ class GromacsTopologyParser(object):
         """
         Open a file and add to includes list
     
-        Checks if a file exists in the current directory or in the GMXLIB environment then either opens or fails
+        Checks if a file exists in the same directory as the top and gro files
+        or in the GMXLIB environment; then opens if found or fails if not
         
         Args:
             filename: the name of the file to open
@@ -1184,7 +1210,8 @@ class GromacsTopologyParser(object):
                 return fd
             except IOError, (errno, strerror):
                 sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno,strerror,filename))
-        filename = os.path.join(os.environ['GMXLIB'], filename)
+        # check for the base pathname in GMXLIB
+        filename = os.path.join(os.environ['GMXLIB'], os.path.basename(filename))
         try:
             fd = open(filename)
             self.includes.add(temp)
