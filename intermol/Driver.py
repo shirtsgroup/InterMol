@@ -44,7 +44,6 @@ def load(*files):
             print "Reading in Desmond structure '{0}'..."
             DesmondParser.readFile(filename)
             print "Sructure loaded\n"
-                
 
         else:
             pdb.set_trace()

@@ -1207,8 +1207,12 @@ class GromacsTopologyParser(object):
         # [ defaults ]
         lines.append('[ defaults ]\n')
         lines.append('; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n')
-        lines.append('%d%16d%18s%20.4f%8.4f\n'%(System._sys._nbFunc, System._sys._combinationRule,
-              System._sys._genpairs, System._sys._ljCorrection, System._sys._coulombCorrection))
+        lines.append('%d%16d%18s%20.4f%8.4f\n'
+                % (System._sys._nbFunc, 
+                   System._sys._combinationRule,
+                   System._sys._genpairs, 
+                   System._sys._ljCorrection, 
+                   System._sys._coulombCorrection))
         lines.append('\n')
 
 
@@ -1216,13 +1220,23 @@ class GromacsTopologyParser(object):
         lines.append('[ atomtypes ]\n')
         lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
         for atomtype in System._sys._atomtypes.itervalues():
-            lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'%(atomtype.atomtype, atomtype.bondtype, atomtype.Z, atomtype.mass._value, atomtype.charge._value, atomtype.ptype, atomtype.sigma._value, atomtype.epsilon._value)) 
+            lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
+                    % (atomtype.atomtype, 
+                       atomtype.bondtype, 
+                       atomtype.Z, 
+                       atomtype.mass._value, 
+                       atomtype.charge._value, 
+                       atomtype.ptype, 
+                       atomtype.sigma._value, 
+                       atomtype.epsilon._value)) 
         lines.append('\n')
  
         # [ moleculetype]
         for moleculeType in System._sys._molecules.itervalues(): 
             lines.append('[ moleculetype ]\n')
-            lines.append('%s%10d\n\n'%(moleculeType.name, moleculeType.nrexcl))
+            lines.append('%s%10d\n\n'
+                    % (moleculeType.name, 
+                       moleculeType.nrexcl))
                 
             # [ atoms ]
             lines.append('[ atoms ]\n')
@@ -1231,9 +1245,28 @@ class GromacsTopologyParser(object):
             count = 1
             for atom in molecule._atoms:
                 try:
-                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'%(count, atom._atomtype[0], atom.residueIndex, atom.residueName, atom.atomName, atom.cgnr, atom._charge[0]._value, atom._mass[0]._value, atom._atomtype[1], atom._charge[1]._value, atom._mass[1]._value))
+                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
+                            % (count, 
+                               atom._atomtype[0], 
+                               atom.residueIndex, 
+                               atom.residueName, 
+                               atom.atomName, 
+                               atom.cgnr, 
+                               atom._charge[0]._value, 
+                               atom._mass[0]._value, 
+                               atom._atomtype[1], 
+                               atom._charge[1]._value, 
+                               atom._mass[1]._value))
                 except:
-                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'%(count, atom._atomtype[0], atom.residueIndex, atom.residueName, atom.atomName, atom.cgnr, atom._charge[0]._value, atom._mass[0]._value))
+                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'
+                             % (count, 
+                                atom._atomtype[0], 
+                                atom.residueIndex, 
+                                atom.residueName, 
+                                atom.atomName, 
+                                atom.cgnr, 
+                                atom._charge[0]._value, 
+                                atom._mass[0]._value))
             
                 count +=1
             lines.append('\n')
@@ -1245,11 +1278,21 @@ class GromacsTopologyParser(object):
                 for bond in moleculeType.bondForceSet.itervalues():
     
                     if isinstance(bond, Bond):
-                        type = 1
-                        lines.append('%6d%7d%4d%18.8e%18.8e\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
+                        b_type = 1
+                        lines.append('%6d%7d%4d%18.8e%18.8e\n'
+                                % (bond.atom1, 
+                                   bond.atom2, 
+                                   b_type, 
+                                   bond.length._value, 
+                                   bond.k._value))
                     elif isinstance(bond, G96Bond):
-                        type = 2
-                        lines.append('%6d%7d%4d%5.8f%5.8f\n'%(bond.atom1, bond.atom2, type, bond.length._value, bond.k._value))
+                        b_type = 2
+                        lines.append('%6d%7d%4d%5.8f%5.8f\n'
+                                % (bond.atom1, 
+                                   bond.atom2, 
+                                   b_type, 
+                                   bond.length._value, 
+                                   bond.k._value))
                     else:
                         print "ERROR (writeTopology): found unsupported bond type"
                 lines.append('\n')       
@@ -1261,8 +1304,11 @@ class GromacsTopologyParser(object):
                 for pair in moleculeType.pairForceSet.itervalues():
   
                     if isinstance(pair, AbstractPair):
-                        type = 1
-                        lines.append('%6d%7d%4d\n'%(pair.atom1, pair.atom2, type))
+                        p_type = 1
+                        lines.append('%6d%7d%4d\n' 
+                                % (pair.atom1, 
+                                   pair.atom2, 
+                                   p_type))
 
                     else:
                         print "ERROR (writeTopology): found unsupported pair type"
@@ -1275,8 +1321,14 @@ class GromacsTopologyParser(object):
                 lines.append(';   ai     aj     ak    funct   theta         cth\n')
                 for angle in moleculeType.angleForceSet.itervalues():
                     if isinstance(angle, Angle):
-                        type = 1
-                        lines.append('%6d%7d%7d%7d%18.8e%18.8e\n'%(angle.atom1, angle.atom2, angle.atom3, type, angle.theta._value, angle.k._value))
+                        a_type = 1
+                        lines.append('%6d%7d%7d%7d%18.8e%18.8e\n'
+                                % (angle.atom1, 
+                                   angle.atom2, 
+                                   angle.atom3, 
+                                   a_type, 
+                                   angle.theta._value, 
+                                   angle.k._value))
                     else:
                         print "ERROR (writeTopology): found unsupported angle type"                    
                 lines.append('\n')
@@ -1309,66 +1361,66 @@ class GromacsTopologyParser(object):
                     
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
                     if isinstance(dihedral, ProperDihedral1):
-                        type = 1
+                        d_type = 1
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                %(dihedral.atom1, 
-                                dihedral.atom2, 
-                                dihedral.atom3, 
-                                dihedral.atom4, 
-                                type, 
-                                dihedral.phi._value, 
-                                dihedral.k._value, 
-                                dihedral.multiplicity))
+                                % (dihedral.atom1, 
+                                   dihedral.atom2, 
+                                   dihedral.atom3, 
+                                   dihedral.atom4, 
+                                   d_type, 
+                                   dihedral.phi._value, 
+                                   dihedral.k._value, 
+                                   dihedral.multiplicity))
     
                     elif isinstance(dihedral, ImproperDihedral2):
-                        type = 2
+                        d_type = 2
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f\n'
-                                %(dihedral.atom1, 
-                                dihedral.atom2, 
-                                dihedral.atom3, 
-                                dihedral.atom4, 
-                                type, 
-                                dihedral.xi._value, 
-                                dihedral.k._value))
+                                % (dihedral.atom1, 
+                                   dihedral.atom2, 
+                                   dihedral.atom3, 
+                                   dihedral.atom4, 
+                                   d_type, 
+                                   dihedral.xi._value, 
+                                   dihedral.k._value))
         
                     elif isinstance(dihedral, RBDihedral):
-                        type = 3
+                        d_type = 3
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
-                                %(dihedral.atom1, 
-                                dihedral.atom2,
-                                dihedral.atom3,     
-                                dihedral.atom4, 
-                                type, 
-                                dihedral.C0._value, 
-                                dihedral.C1._value, 
-                                dihedral.C2._value, 
-                                dihedral.C3._value, 
-                                dihedral.C4._value, 
-                                dihedral.C5._value))
+                                % (dihedral.atom1, 
+                                   dihedral.atom2,
+                                   dihedral.atom3,     
+                                   dihedral.atom4, 
+                                   d_type, 
+                                   dihedral.C0._value, 
+                                   dihedral.C1._value, 
+                                   dihedral.C2._value, 
+                                   dihedral.C3._value, 
+                                   dihedral.C4._value, 
+                                   dihedral.C5._value))
     
                     elif isinstance(dihedral, ImproperDihedral4):
-                        type = 4
+                        d_type = 4
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                %(dihedral.atom1, 
-                                dihedral.atom2, 
-                                dihedral.atom3, 
-                                dihedral.atom4, 
-                                type, 
-                                dihedral.phi._value, 
-                                dihedral.k._value, 
-                                dihedral.multiplicity))
+                                % (dihedral.atom1, 
+                                   dihedral.atom2, 
+                                   dihedral.atom3, 
+                                   dihedral.atom4, 
+                                   d_type, 
+                                   dihedral.phi._value, 
+                                   dihedral.k._value, 
+                                   dihedral.multiplicity))
     
                     elif isinstance(dihedral, ProperDihedral9):
-                        type = 9
+                        d_type = 9
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                %(dihedral.atom1, 
-                                dihedral.atom2, 
-                                dihedral.atom3, 
-                                dihedral.atom4, 
-                                type, 
-                                dihedral.phi._value, 
-                                dihedral.k._value, 
-                                dihedral.multiplicity))
+                                % (dihedral.atom1, 
+                                   dihedral.atom2, 
+                                   dihedral.atom3, 
+                                   dihedral.atom4, 
+                                   d_type, 
+                                   dihedral.phi._value, 
+                                   dihedral.k._value, 
+                                   dihedral.multiplicity))
        
                     else:
                         print "ERROR (writeTopology): found unsupported  dihedral type"
@@ -1379,25 +1431,33 @@ class GromacsTopologyParser(object):
             # [ settles ]
             lines.append('[ settles ]\n')
             lines.append('; i  funct   dOH  dHH\n')
-            type = 1 
-            lines.append('%6d%6d%18.8f%18.8f\n'%(settles.atom1, type, settles.dOH._value, settles.dHH._value))
+            s_type = 1 
+            lines.append('%6d%6d%18.8f%18.8f\n'
+                    % (settles.atom1, 
+                       s_type, 
+                       settles.dOH._value, 
+                       settles.dHH._value))
             lines.append('\n')
 
         if moleculeType.exclusions:
             # [ exclusions ]
             lines.append('[ exclusions ]\n')
-	    i = 1
-            for exclusion in moleculeType.exclusions.itervalues():
-		if len(exclusion.exclusions) == 2:
-                    lines.append('%6s%6s%6s\n'%(i, exclusion.exclusions[0], exclusion.exclusions[1]))
-		    i+=1
-		else:
-                    lines.append('%6s%6s%6s\n'%(exclusion.exclusions[0], exclusion.exclusions[1], exclusion.exclusions[2]))
-            lines.append('\n') 
+            for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
+                if len(exclusion.exclusions) == 2:
+                    lines.append('%6s%6s%6s\n' 
+                            %(i+1, 
+                              exclusion.exclusions[0], 
+                              exclusion.exclusions[1]))
+                else:
+                    lines.append('%6s%6s%6s\n' 
+                            % (exclusion.exclusions[0], 
+                               exclusion.exclusions[1], 
+                               exclusion.exclusions[2]))
+                    lines.append('\n') 
 
         # [ system ]
         lines.append('[ system ]\n')
-        lines.append('%s\n'%(System._sys._name))
+        lines.append('%s\n' % (System._sys._name))
         lines.append('\n')
 
 
@@ -1405,7 +1465,9 @@ class GromacsTopologyParser(object):
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')
         for molType in System._sys._molecules:
-            lines.append('%-15s%8d\n'%(molType, len(System._sys._molecules[molType].moleculeSet)))
+            lines.append('%-15s%8d\n'
+                    % (molType, 
+                      len(System._sys._molecules[molType].moleculeSet)))
 
         fout = open(filename, 'w')
         for line in lines:
