@@ -394,6 +394,7 @@ class GromacsTopologyParser(object):
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
+                        # I believe this needs to be expanded!
                         #newPairType = PairType(expanded.pop(i).split())
                         #self.pairtypes.add(newPairType)
                         expanded.pop(i)
@@ -821,8 +822,6 @@ class GromacsTopologyParser(object):
 
                         currentMoleculeType.angleForceSet.add(newAngleForce)
                         System._sys._forces.add(newAngleForce)
-                                
-                            
 
                 elif match.group('dihedrals'):
                     if verbose:
@@ -840,7 +839,6 @@ class GromacsTopologyParser(object):
                             atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
                             tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[3])
                             dihedralType = self.dihedraltypes.get(tempType)
-                            pdb.set_trace()
                             if not (dihedralType):
                                 #flip it around.
                                 tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[3])
