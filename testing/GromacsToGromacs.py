@@ -5,7 +5,8 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 
-def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='', clean=True):
+def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='',
+        energy=True, clean=True):
     """Test gromacs to gromacs conversion
     """
 
@@ -21,7 +22,8 @@ def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='', clean=Tr
     gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
 
     # calc input energies
-    e_in = gromacs_energies(top_in, gro_in, 'in', gropath, grosuff)
+    if energy:
+        e_in = gromacs_energies(top_in, gro_in, 'in', gropath, grosuff)
 
     # where the magic happens
     Driver.initSystem(name)
@@ -29,7 +31,8 @@ def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='', clean=Tr
     Driver.write(top_out, gro_out)
 
     # calc output energies
-    e_out = gromacs_energies(top_out, gro_out, 'GtoG', gropath, grosuff)
+    if energy:
+        e_out = gromacs_energies(top_out, gro_out, 'GtoG', gropath, grosuff)
 
     # delete gromacs backup files
     if clean:
@@ -38,12 +41,12 @@ def gromacs_to_gromacs(top, gro, name='system', gropath='', grosuff='', clean=Tr
         filelist += glob.glob("Outputs/GromacsToGromacs/#*#")
         for f in filelist:
             os.remove(f)
-
-    e_in = np.asarray(e_in)
-    e_out = np.asarray(e_out)
-    diff = e_out - e_in
-    rms = np.sqrt(np.mean(diff ** 2))
-    return rms, e_in, e_out
+    if energy:
+        e_in = np.asarray(e_in)
+        e_out = np.asarray(e_out)
+        diff = e_out - e_in
+        rms = np.sqrt(np.mean(diff ** 2))
+        return rms, e_in, e_out
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -59,6 +62,12 @@ if __name__ == "__main__":
             help="path for GROMACS binary")
     parser.add_option('-s', type='str', dest='grosuff', default='',
             help="suffix for GROMACS binary")
+    parser.add_option('-x', type='int', dest='clean', default=1,
+            help="Clean backup files produced by GROMACS")
+    parser.add_option('-e', type='int', dest='energy', default=1,
+            help="Evaluate energies")
+
+
 
     (options, args) = parser.parse_args()
     top = options.top
@@ -66,8 +75,10 @@ if __name__ == "__main__":
     name = options.name
     gropath = options.gropath
     grosuff = options.grosuff
+    energy = options.energy
+    clean = options.clean
 
-    rms, e_in, e_out = gromacs_to_gromacs(top, gro, name, gropath, grosuff)
+    rms, e_in, e_out = gromacs_to_gromacs(top, gro, name, gropath, grosuff, energy, clean)
 
     print "======================================================================="
     print "Summary statistics"

@@ -16,14 +16,14 @@ from intermol.HashMap import *
 
 class GromacsTopologyParser(object):
     """
-    A class containing methods required to read in a Gromacs(4.5.4) Topology File   
+    A class containing methods required to read in a Gromacs(4.5.4) Topology File
     """
     _GroTopParser = None
     def __init__(self, defines=None):
         """
         Initializes a GromacsTopologyParse object which serves to read in a Gromacs
         topology into the abstract representation.
-    
+
         Args:
             defines: Sets of default defines to use while parsing.
         """
@@ -37,12 +37,12 @@ class GromacsTopologyParser(object):
         self.angletypes = HashMap()
         self.dihedraltypes = HashMap()
         self.constrainttypes = HashMap()
-        
-	if defines:
+
+        if defines:
             self.defines.union(defines)
-        self.defines["FLEX_SPC"] = None
-        self.defines["POSRE"] = None
-    
+            self.defines["FLEX_SPC"] = None
+            self.defines["POSRE"] = None
+
     def parseTopology(self, topfile, verbose = False):
         """
         Parses a Gromacs topology reading into the abstract
@@ -58,7 +58,7 @@ class GromacsTopologyParser(object):
     def readTopology(self, expanded, verbose = False):
  #  def readTopology(self, expanded, verbose = True):
         """
-        Read in a previously preprocessed Gromacs topology file     
+        Read in a previously preprocessed Gromacs topology file
 
         Args:
             expanded: lines from a preprocessed topology file
@@ -85,7 +85,7 @@ class GromacsTopologyParser(object):
           (?P<system>system))
           [ ]{1} \]
         """, re.VERBOSE)
-        i = 0       
+        i = 0
         while i < len(expanded):
             match = sysDirective.match(expanded[i])
             if match:
@@ -95,28 +95,28 @@ class GromacsTopologyParser(object):
                     if verbose:
                         print "Parsing [ defaults ]..."
                     expanded.pop(i)
-                    
+
                     fields = expanded[i].split()
                     System._sys._nbFunc = int(fields[0])
                     System._sys._combinationRule = int(fields[1])
                     System._sys._genpairs = fields[2]
                     System._sys._ljCorrection = float(fields[3])
                     System._sys._coulombCorrection = float(fields[4])
-                    
+
                     expanded.pop(i)
 
                 elif match.group('atomtypes'):
                     if verbose:
                         print "Parsing [ atomtypes ]..."
-                    expanded.pop(i)                    
-                
+                    expanded.pop(i)
+
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newAtomType = None
-                        
+
                         if len(split) == 7:
                             if System._sys._combinationRule == 1:
-                                
+
                                 # TODO: double check the following equations
                                 sigma = (float(split[6])/float(split[5]))**(1/6)
                                 epsilon = float(split[5])/(4*sigma**6)
@@ -133,7 +133,7 @@ class GromacsTopologyParser(object):
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
                                         split[1].strip(),                           # bondtype
-                                        -1,                                         # Z    
+                                        -1,                                         # Z
                                         float(split[2]) * units.amu,                # mass
                                         float(split[3]) * units.elementary_charge,  # charge
                                         split[4],                                   # ptype
@@ -142,7 +142,7 @@ class GromacsTopologyParser(object):
 
                         if len(split) == 8:
                             if System._sys._combinationRule == 1:
-                                
+
                                 # TODO: double check the following equations
                                 sigma = (float(split[7])/float(split[6]))**(1/6)
                                 epsilon = float(split[6])/(4*sigma**6)
@@ -159,7 +159,7 @@ class GromacsTopologyParser(object):
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
                                         split[1].strip(),                           # bondtype
-                                        split[2],                                   # Z    
+                                        split[2],                                   # Z
                                         float(split[3]) * units.amu,                # mass
                                         float(split[4]) * units.elementary_charge,  # charge
                                         split[5],                                   # ptype
@@ -171,19 +171,19 @@ class GromacsTopologyParser(object):
 
                 elif match.group('bondtypes'):
                     if verbose:
-                        print "Parsing [ bondtypes ]..."                    
+                        print "Parsing [ bondtypes ]..."
                     expanded.pop(i)
-                    
+
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newBondType = None
-            
-                        # Bond 
+
+                        # Bond
                         if int(split[2]) == 1:
-                            newBondType = BondType(split[0], 
+                            newBondType = BondType(split[0],
                                     split[1],
-                                    split[2], 
-                                    float(split[3]) * units.nanometers, 
+                                    split[2],
+                                    float(split[3]) * units.nanometers,
                                     float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
 
                         # G96Bond
@@ -204,7 +204,7 @@ class GromacsTopologyParser(object):
                                         float(split[5]) * units.nanometers**(-1))
 
 
-                        # Cubic 
+                        # Cubic
                         elif int(split[2]) == 4:
                             newBondType = CubicBondType(split[0],
                                         split[1],
@@ -213,7 +213,7 @@ class GromacsTopologyParser(object):
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2),
                                         float(split[5]) * units.kilojoules_per_mole * units.nanometers**(-3))
 
-                        # Harmonic 
+                        # Harmonic
                         elif int(split[2]) == 6:
                             newBondType = HarmonicBondType(split[0],
                                         split[1],
@@ -229,11 +229,11 @@ class GromacsTopologyParser(object):
 
                 elif match.group('pairtypes'):
                     if verbose:
-                        print "Parsing [ pairtypes ]..."                   
+                        print "Parsing [ pairtypes ]..."
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                        
+
                         split = expanded.pop(i).split()
                         newPairType = None
                         if int(split[2]) == 1:
@@ -274,7 +274,7 @@ class GromacsTopologyParser(object):
                                             float(split[6]) * units.kilojoules_per_mole)
 
 
-                        # LJ/Coul. 1-4 (Type 2) 
+                        # LJ/Coul. 1-4 (Type 2)
                         elif int(split[2]) == 2:
                             if System._sys._combinationRule == 1:
                                 newPairType = LJ1PairCR1Type(split[0],
@@ -297,14 +297,11 @@ class GromacsTopologyParser(object):
                                         float(split[7]) * units.kilojoules_per_mole)
 
                         else:
-                            # TODO: need better error handling 
+                            # TODO: need better error handling
                             print "could not find pair type"
 
                         if newPairType:
-                            self.pairtypes.add(newPairType)    
-                        
-
-
+                            self.pairtypes.add(newPairType)
 
                 elif match.group('angletypes'):
                     if verbose:
@@ -333,7 +330,7 @@ class GromacsTopologyParser(object):
                                     float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole)
 
-                        # Cross bond-bond 
+                        # Cross bond-bond
                         elif int(split[3]) == 3:
                             newAngleType = CrossBondBondAngleType(split[0],
                                     split[1],
@@ -366,7 +363,6 @@ class GromacsTopologyParser(object):
                                     float(split[6]) * units.nanometers,
                                     float(split[7]) * units.kilojoules_per_mole)
 
-                    
                         # Quartic
                         elif int(split[3]) == 6:
                             newAngleType = QuarticAngleType(split[0],
@@ -386,18 +382,56 @@ class GromacsTopologyParser(object):
 
                         if newAngleType:
                             self.angletypes.add(newAngleType)
-                                    
 
                 elif match.group('dihedraltypes'):
                     if verbose:
-                        print "Parsing [ dihedraltypes ]..."                    
+                        print "Parsing [ dihedraltypes ]..."
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                        # I believe this needs to be expanded!
-                        #newPairType = PairType(expanded.pop(i).split())
-                        #self.pairtypes.add(newPairType)
-                        expanded.pop(i)
+                        split = expanded.pop(i).split()
+                        newDihedralType = None
+
+                        # Proper Dihedral 1
+                        if (int(split[2]) == 1) and (len(split) == 6):
+                            newDihedralType = ProperDihedral1Type('*',
+                                    split[0],
+                                    split[1],
+                                    '*',
+                                    split[2],
+                                    float(split[3]) * units.degrees,
+                                    float(split[4]) * units.kilojoules_per_mole,
+                                    int(split[5]))
+
+                        # Proper Dihedral 2
+                        elif (int(split[2]) == 2) and (len(split) == 5):
+                            newDihedralType = ImproperDihedral2Type('*',
+                                    split[0],
+                                    split[1],
+                                    '*',
+                                    split[2],
+                                    float(split[3]) * units.degrees,
+                                    float(split[4]) * units.kilojoules_per_mole * units.radians**(-2))
+
+                        # RBDihedral
+                        elif (int(split[2]) == 3) and (len(split) == 9):
+                            newDihedralType = RBDihedralType('*',
+                                    split[0],
+                                    split[1],
+                                    '*',
+                                    split[2],
+                                    float(split[3]) * units.kilojoules_per_mole,
+                                    float(split[4]) * units.kilojoules_per_mole,
+                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    float(split[7]) * units.kilojoules_per_mole,
+                                    float(split[8]) * units.kilojoules_per_mole)
+
+                        else:
+                            print "could not find dihedral type"
+
+                        if newDihedralType:
+                            self.dihedraltypes.add(newDihedralType)
 
                 elif match.group('constrainttypes'):
                     if verbose:
@@ -415,7 +449,7 @@ class GromacsTopologyParser(object):
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                       expanded.pop(i) 
+                       expanded.pop(i)
 
                 elif match.group('system'):
                     if verbose:
@@ -486,9 +520,9 @@ class GromacsTopologyParser(object):
                         atom.setAtomType(0,split[1].strip())
                         atom.cgnr = int(split[5])
                         atom.setCharge(0, float(split[6]) * units.elementary_charge)
-			try:
+                        try:
                             atom.setMass(0, float(split[7]) * units.amu)
-			except:
+                        except:
                             atom.setMass(0, -1 * units.amu)
 
                         if len(split) == 11:
@@ -514,18 +548,16 @@ class GromacsTopologyParser(object):
                                         atom.setMass(index, atomType.mass)
                                     else:
                                         sys.stderr.write("Warning: A suspicious parameter was found in atom/atomtypes. Visually inspect before using.\n")
-                                
-                                
                                 # Assuming ptype = A
                                 #atom.ptype = atomType.ptype
 
                                 atom.setSigma(index, atomType.sigma)
                                 atom.setEpsilon(index, atomType.epsilon)
-                                
+
                             else:
                                 sys.stderr.write("Warning: A corresponding AtomType was not found. Insert missing values yourself.\n")
                             index +=1
-                        
+
                         currentMolecule.addAtom(atom)
 
                 elif match.group('bonds'):
@@ -536,7 +568,7 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newBondForce = None
-                            
+
                         if len(split) == 3:
                             # Searching for matching bondtype to pull values from
                             # Can't be this hard?
@@ -571,7 +603,7 @@ class GromacsTopologyParser(object):
                                 split.append(bondType.length)
                                 split.append(bondType.k)
 
-                        if int(split[2]) == 1: 
+                        if int(split[2]) == 1:
                             try:
                                 newBondForce = Bond(int(split[0]),
                                         int(split[1]),
@@ -634,7 +666,6 @@ class GromacsTopologyParser(object):
                                         int(split[1]),
                                         split[3],
                                         split[4])
-                            
 
                         currentMoleculeType.bondForceSet.add(newBondForce)
                         System._sys._forces.add(newBondForce)
@@ -655,7 +686,6 @@ class GromacsTopologyParser(object):
 
                         currentMoleculeType.pairForceSet.add(newPairForce)
                         System._sys._forces.add(newPairForce)
-                                    
 
                 elif match.group('angles'):
                     if verbose:
@@ -725,7 +755,7 @@ class GromacsTopologyParser(object):
                                         int(split[2]),
                                         split[4],
                                         split[5])
-                        
+
                         # G96Angle
                         elif int(split[3]) == 2:
                             try:
@@ -777,7 +807,6 @@ class GromacsTopologyParser(object):
                                         split[6],
                                         split[7])
 
-
                         # Urey-Bradley
                         elif int(split[3]) == 5:
                             try:
@@ -796,7 +825,7 @@ class GromacsTopologyParser(object):
                                         split[5],
                                         split[6],
                                         split[7])
-                        
+
                         # Quartic
                         elif int(split[3]) == 6:
                             try:
@@ -837,11 +866,21 @@ class GromacsTopologyParser(object):
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
                             atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
-                            tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[3])
+
+                            tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[4])
                             dihedralType = self.dihedraltypes.get(tempType)
+
                             if not (dihedralType):
-                                #flip it around.
-                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[3])
+                                # flip it around
+                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+                            if not (dihedralType):
+                                # try with wildcards
+                                tempType = AbstractDihedralType('*', atomtype2, atomtype3, '*', split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+                            if not (dihedralType):
+                                # try with flipped wildcards
+                                tempType = AbstractDihedralType('*', atomtype3, atomtype2, '*', split[4])
                                 dihedralType = self.dihedraltypes.get(tempType)
 
                             if isinstance(dihedralType, ProperDihedral1Type):
@@ -871,7 +910,6 @@ class GromacsTopologyParser(object):
                                 split.append(dihedralType.k)
                                 split.append(dihedralType.multiplicity)
 
-
                         # Proper Dihedral 1
                         if int(split[4]) == 1:
                             try:
@@ -891,7 +929,7 @@ class GromacsTopologyParser(object):
                                         split[6],
                                         split[7])
 
-                        # Improper Dihedral 2 
+                        # Improper Dihedral 2
                         elif int(split[4]) == 2:
                             try:
                                 newDihedralForce = ImproperDihedral2(int(split[0]),
@@ -1097,11 +1135,11 @@ class GromacsTopologyParser(object):
                                 line += match.group('directive')
                             else:
                                 print "WARNING: Previous line continues yet EOF encountered"
-                                break   # EOF so we can't loop again        
+                                break   # EOF so we can't loop again
                         else:
-                            break   # line terminates   
+                            break   # line terminates
                     line = line.strip() # just in case theres whitespace we missed
-                        
+
                     match = preReg.match(line)
                     if match != None:
                         if match.group('ifdef') and write[condDepth]:
@@ -1112,7 +1150,7 @@ class GromacsTopologyParser(object):
                             if ifdef in self.defines:
                                 write.append(True)
                             else:
-                                write.append(False) 
+                                write.append(False)
                         elif match.group('ifndef') and write[condDepth]:
                             if verbose:
                                 print 'Found an ifndef:', match.group('ifndef')
@@ -1121,7 +1159,7 @@ class GromacsTopologyParser(object):
                             if ifndef not in self.defines:
                                 write.append(True)
                             else:
-                                write.append(False) 
+                                write.append(False)
                         elif match.group('else'):
                             if verbose:
                                 print 'Found an else'
@@ -1142,7 +1180,7 @@ class GromacsTopologyParser(object):
                                 if verbose:
                                     print "Found a include:", line
                                 include = match.group('include')
-                                # assume it is in the same directory as the .top file, or relative to the top file  
+                                # assume it is in the same directory as the .top file, or relative to the top file
                                 includefile = os.path.join(os.path.split(filename)[0],include)
                                 fd = self.open(includefile)
                                 if fd != None:
@@ -1153,8 +1191,8 @@ class GromacsTopologyParser(object):
                                 if verbose:
                                     print "Found a define:", line
                                 define = match.group('defineLiteral')
-                                
-				if define not in self.defines:
+
+                                if define not in self.defines:
                                     self.defines[define] = match.group('defineData')
                                 else:
                                     print "WARNING: Overriding define:", define
@@ -1164,7 +1202,7 @@ class GromacsTopologyParser(object):
                                     print "Found a undefine:", line
                                 undef = match.group('undef')
                                 if undef in self.defines:
-                                    self.defines.pop(undef)     
+                                    self.defines.pop(undef)
                     elif write[condDepth]:
                         if line != '':
                             for define in self.defines:
@@ -1176,24 +1214,24 @@ class GromacsTopologyParser(object):
                         if comment:
                             self.comments.append(comment)
                 else:
-                    print "ERROR: Unreadable line!" 
+                    print "ERROR: Unreadable line!"
             return expanded
         else:
-            fd.close() 
-    
+            fd.close()
+
     def open(self, filename):
         """
         Open a file and add to includes list
-    
+
         Checks if a file exists in the same directory as the top and gro files
         or in the GMXLIB environment; then opens if found or fails if not
-        
+
         Args:
             filename: the name of the file to open
-    
+
         Returns:
             file descriptor of the file to be openend
-        
+
         Raises:
             IOError when the file cannot be opened for any reason 
         """
@@ -1217,26 +1255,26 @@ class GromacsTopologyParser(object):
         except IOError, (errno, strerror):
             sys.stderr.write("Unrecoverable I/O error(%d): %s: '%s'\n" %(errno, strerror,filename))
             sys.exit()
-    
+
     def writeTopology(self, filename):
         """
         Write this topology to file
-    
+
         Write out this topology in Gromacs format
-        
+
         Args:
             filename: the name of the file to write out to
         """
         lines = list()
-       
+
         # [ defaults ]
         lines.append('[ defaults ]\n')
         lines.append('; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n')
         lines.append('%d%16d%18s%20.4f%8.4f\n'
-                % (System._sys._nbFunc, 
+                % (System._sys._nbFunc,
                    System._sys._combinationRule,
-                   System._sys._genpairs, 
-                   System._sys._ljCorrection, 
+                   System._sys._genpairs,
+                   System._sys._ljCorrection,
                    System._sys._coulombCorrection))
         lines.append('\n')
 
@@ -1246,23 +1284,23 @@ class GromacsTopologyParser(object):
         lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
         for atomtype in System._sys._atomtypes.itervalues():
             lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
-                    % (atomtype.atomtype, 
-                       atomtype.bondtype, 
-                       atomtype.Z, 
-                       atomtype.mass._value, 
-                       atomtype.charge._value, 
-                       atomtype.ptype, 
-                       atomtype.sigma._value, 
-                       atomtype.epsilon._value)) 
+                    % (atomtype.atomtype,
+                       atomtype.bondtype,
+                       atomtype.Z,
+                       atomtype.mass._value,
+                       atomtype.charge._value,
+                       atomtype.ptype,
+                       atomtype.sigma._value,
+                       atomtype.epsilon._value))
         lines.append('\n')
- 
+
         # [ moleculetype]
-        for moleculeType in System._sys._molecules.itervalues(): 
+        for moleculeType in System._sys._molecules.itervalues():
             lines.append('[ moleculetype ]\n')
             lines.append('%s%10d\n\n'
-                    % (moleculeType.name, 
+                    % (moleculeType.name,
                        moleculeType.nrexcl))
-                
+
             # [ atoms ]
             lines.append('[ atoms ]\n')
             lines.append(';num, type, resnum, resname, atomname, cgnr, q, m\n')
@@ -1271,7 +1309,7 @@ class GromacsTopologyParser(object):
             for atom in molecule._atoms:
                 try:
                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
-                            % (count, 
+                            % (count,
                                atom._atomtype[0], 
                                atom.residueIndex, 
                                atom.residueName, 
@@ -1292,7 +1330,7 @@ class GromacsTopologyParser(object):
                                 atom.cgnr, 
                                 atom._charge[0]._value, 
                                 atom._mass[0]._value))
-            
+
                 count +=1
             lines.append('\n')
 
@@ -1301,45 +1339,44 @@ class GromacsTopologyParser(object):
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
                 for bond in moleculeType.bondForceSet.itervalues():
-    
+
                     if isinstance(bond, Bond):
                         b_type = 1
                         lines.append('%6d%7d%4d%18.8e%18.8e\n'
-                                % (bond.atom1, 
-                                   bond.atom2, 
-                                   b_type, 
-                                   bond.length._value, 
+                                % (bond.atom1,
+                                   bond.atom2,
+                                   b_type,
+                                   bond.length._value,
                                    bond.k._value))
                     elif isinstance(bond, G96Bond):
                         b_type = 2
                         lines.append('%6d%7d%4d%5.8f%5.8f\n'
-                                % (bond.atom1, 
-                                   bond.atom2, 
-                                   b_type, 
-                                   bond.length._value, 
+                                % (bond.atom1,
+                                   bond.atom2,
+                                   b_type,
+                                   bond.length._value,
                                    bond.k._value))
                     else:
                         print "ERROR (writeTopology): found unsupported bond type"
-                lines.append('\n')       
-       
+                lines.append('\n')
+
             if moleculeType.pairForceSet:
                 # [ pair ]
                 lines.append('[ pairs ]\n')
                 lines.append(';  ai    aj   funct\n')
                 for pair in moleculeType.pairForceSet.itervalues():
-  
+
                     if isinstance(pair, AbstractPair):
                         p_type = 1
-                        lines.append('%6d%7d%4d\n' 
-                                % (pair.atom1, 
-                                   pair.atom2, 
+                        lines.append('%6d%7d%4d\n'
+                                % (pair.atom1,
+                                   pair.atom2,
                                    p_type))
 
                     else:
                         print "ERROR (writeTopology): found unsupported pair type"
                 lines.append('\n')
 
- 
             if moleculeType.angleForceSet:
                 # [ angles ]
                 lines.append('[ angles ]\n')
@@ -1348,21 +1385,21 @@ class GromacsTopologyParser(object):
                     if isinstance(angle, Angle):
                         a_type = 1
                         lines.append('%6d%7d%7d%7d%18.8e%18.8e\n'
-                                % (angle.atom1, 
-                                   angle.atom2, 
-                                   angle.atom3, 
-                                   a_type, 
-                                   angle.theta._value, 
+                                % (angle.atom1,
+                                   angle.atom2,
+                                   angle.atom3,
+                                   a_type,
+                                   angle.theta._value,
                                    angle.k._value))
                     else:
-                        print "ERROR (writeTopology): found unsupported angle type"                    
+                        print "ERROR (writeTopology): found unsupported angle type"
                 lines.append('\n')
-   
-            """ 
+
+            """
             # [ pairs]
             lines.append('[ pairs ]\n')
             lines.append(';   ai     aj    funct')
-            
+
             for pair  in moleculeType.pairForceSet.itervalues():
                 if isinstance(pair, LJ1PairCR1) or isinstance(pair, LJ1PairCR23)
                     type = 1
@@ -1370,87 +1407,87 @@ class GromacsTopologyParser(object):
 
                 elif isinstance(pair, LJ2PairCR1) or isinstance(pair, LJ2PairCR23):
                     type = 2
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value)) 
-                
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value))
+
                 elif isinstance(pair, LJNBCR1) or isinstance( pair, LJNBCR23):
                     type = 1
-                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi._value, pair.qj._value, pair.V._value, pair.W._value))    
+                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi._value, pair.qj._value, pair.V._value, pair.W._value))
                 else:
                     print "Could not identify pair!"
             """
-  
-            if moleculeType.dihedralForceSet:          
+
+            if moleculeType.dihedralForceSet:
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-                    
+
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
                     if isinstance(dihedral, ProperDihedral1):
                         d_type = 1
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1, 
-                                   dihedral.atom2, 
-                                   dihedral.atom3, 
-                                   dihedral.atom4, 
-                                   d_type, 
-                                   dihedral.phi._value, 
-                                   dihedral.k._value, 
+                                % (dihedral.atom1,
+                                   dihedral.atom2,
+                                   dihedral.atom3,
+                                   dihedral.atom4,
+                                   d_type,
+                                   dihedral.phi._value,
+                                   dihedral.k._value,
                                    dihedral.multiplicity))
-    
+
                     elif isinstance(dihedral, ImproperDihedral2):
                         d_type = 2
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f\n'
-                                % (dihedral.atom1, 
-                                   dihedral.atom2, 
-                                   dihedral.atom3, 
-                                   dihedral.atom4, 
-                                   d_type, 
-                                   dihedral.xi._value, 
+                                % (dihedral.atom1,
+                                   dihedral.atom2,
+                                   dihedral.atom3,
+                                   dihedral.atom4,
+                                   d_type,
+                                   dihedral.xi._value,
                                    dihedral.k._value))
-        
+
                     elif isinstance(dihedral, RBDihedral):
                         d_type = 3
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
-                                % (dihedral.atom1, 
+                                % (dihedral.atom1,
                                    dihedral.atom2,
-                                   dihedral.atom3,     
-                                   dihedral.atom4, 
-                                   d_type, 
-                                   dihedral.C0._value, 
-                                   dihedral.C1._value, 
-                                   dihedral.C2._value, 
-                                   dihedral.C3._value, 
-                                   dihedral.C4._value, 
+                                   dihedral.atom3,
+                                   dihedral.atom4,
+                                   d_type,
+                                   dihedral.C0._value,
+                                   dihedral.C1._value,
+                                   dihedral.C2._value,
+                                   dihedral.C3._value,
+                                   dihedral.C4._value,
                                    dihedral.C5._value))
-    
+
                     elif isinstance(dihedral, ImproperDihedral4):
                         d_type = 4
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1, 
-                                   dihedral.atom2, 
-                                   dihedral.atom3, 
-                                   dihedral.atom4, 
-                                   d_type, 
-                                   dihedral.phi._value, 
-                                   dihedral.k._value, 
+                                % (dihedral.atom1,
+                                   dihedral.atom2,
+                                   dihedral.atom3,
+                                   dihedral.atom4,
+                                   d_type,
+                                   dihedral.phi._value,
+                                   dihedral.k._value,
                                    dihedral.multiplicity))
-    
+
                     elif isinstance(dihedral, ProperDihedral9):
                         d_type = 9
                         lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1, 
-                                   dihedral.atom2, 
-                                   dihedral.atom3, 
-                                   dihedral.atom4, 
-                                   d_type, 
-                                   dihedral.phi._value, 
-                                   dihedral.k._value, 
+                                % (dihedral.atom1,
+                                   dihedral.atom2,
+                                   dihedral.atom3,
+                                   dihedral.atom4,
+                                   d_type,
+                                   dihedral.phi._value,
+                                   dihedral.k._value,
                                    dihedral.multiplicity))
-       
+
                     else:
                         print "ERROR (writeTopology): found unsupported  dihedral type"
                 lines.append('\n')
-        
+
         if moleculeType.settles:
             settles = moleculeType.settles
             # [ settles ]

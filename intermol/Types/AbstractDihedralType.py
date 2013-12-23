@@ -23,5 +23,8 @@ class AbstractDihedralType(object):
 
 
     def __hash__(self):
-        return hash(tuple([self.atom1, self.atom2, self.atom3, self.atom4, self.type]))
+        if (self.atom1 == '*') and (self.atom4 == '*'):
+            return hash(tuple([self.atom2, self.atom3, self.type]))
+        else:
+            return hash(tuple([self.atom1, self.atom2, self.atom3, self.atom4, self.type]))
 
