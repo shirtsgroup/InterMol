@@ -22,15 +22,15 @@ def readStructure(filename):
             for atom in molecule._atoms:
                 if lines[i]:
                     atom.residueIndex=int(lines[i][0:5])
-                    atom.residueName=lines[i][6:10].strip()
-                    atom.atomName=lines[i][11:15].strip()
-                    atom.atomIndex=int(lines[i][16:20])
+                    atom.residueName = lines[i][6:10].strip()
+                    atom.atomName = lines[i][11:15].strip()
+                    atom.atomIndex = int(lines[i][16:20])
                     position = [None, None, None]
-                    position[0]=float(lines[i][20:28]) * units.nanometers
-                    position[1]=float(lines[i][28:36]) * units.nanometers
-                    position[2]=float(lines[i][36:44]) * units.nanometers
+                    position[0] = float(lines[i][20:28]) * units.nanometers
+                    position[1] = float(lines[i][28:36]) * units.nanometers
+                    position[2] = float(lines[i][36:44]) * units.nanometers
                     atom.setPosition(position[0], position[1], position[2])
-                    velocity  = [None, None, None]
+                    velocity = [None, None, None]
                     try:
                         velocity[0]=float(lines[i][44:52]) * units.nanometers / units.picoseconds
                         velocity[1]=float(lines[i][52:60]) * units.nanometers / units.picoseconds

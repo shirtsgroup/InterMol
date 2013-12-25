@@ -960,7 +960,7 @@ class GromacsTopologyParser(object):
                                         float(split[9]) * units.kilojoules_per_mole,
                                         float(split[10]) * units.kilojoules_per_mole)
                             except:
-                                newDihedralFroce = RBDihedral(int(split[0]),
+                                newDihedralForce = RBDihedral(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
