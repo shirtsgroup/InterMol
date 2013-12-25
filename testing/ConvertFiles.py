@@ -13,7 +13,7 @@ program_in = options.input
 program_out = options.output
 filename = options.files
 args.append(filename)
-
+    
 print "Starting in %s and finishing in %s" %(program_in, program_out)
 for name in args:
     
@@ -40,3 +40,4 @@ for name in args:
     elif 'Desmond' == program_out:
         cms_out = os.path.join('Outputs', program_in + 'to' + program_out, name, name+ '_OUT.cms')
         Driver.write(cms_out)
+print "$s converted" %(args)
