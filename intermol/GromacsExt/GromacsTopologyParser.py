@@ -1239,6 +1239,7 @@ class GromacsTopologyParser(object):
             print "WARNING: Omitting file ", filename, ". It has already been included!"
             return None
         temp = filename
+        pdb.set_trace()
         if os.path.exists(filename):
             try:
                 fd = open(filename)
@@ -1246,12 +1247,28 @@ class GromacsTopologyParser(object):
                 return fd
             except IOError, (errno, strerror):
                 sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno,strerror,filename))
-        # check for the base pathname in GMXLIB
-        filename = os.path.join(os.environ['GMXLIB'], os.path.basename(filename))
+        # check for the base pathname in GMXLIB. It could be a directory, so it might not the the last one
+        restname,basename = os.path.split(filename)
+        libname = os.path.join(os.environ['GMXLIB'], basename)
+        try:
+            fd = open(libname)
+            self.includes.add(temp)
+            return fd
+        except:
+            pass
+
+        # looks like we need to add another level of the path to locate it in GMXLIB
+        # but this doesn't work, because eventually we need to be in $GMXLIB/basename1.
+        # do we need to change the includes?
+        restname,basename1 = os.path.split(restname)
+        basename = os.path.join(basename1,basename)
+        filename = os.path.join(os.environ['GMXLIB'], basename)
+
         try:
             fd = open(filename)
             self.includes.add(temp)
             return fd
+
         except IOError, (errno, strerror):
             sys.stderr.write("Unrecoverable I/O error(%d): %s: '%s'\n" %(errno, strerror,filename))
             sys.exit()
