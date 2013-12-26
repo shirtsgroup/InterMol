@@ -20,10 +20,10 @@ for name in args:
     Driver.initSystem(name)
 
     if  'Gromacs' == program_in:
-        gro_in = os.path.join('Inputs/Gromacs/', name+'.gro')
+        gro_in = os.path.join('Inputs/Gromacs/', name, name+'.gro')
         if not os.path.isfile(gro_in):
             raise Exception ("File not found: {0}!".format(gro_in))
-        top_in = os.path.join('Inputs/Gromacs/', name+'.top')
+        top_in = os.path.join('Inputs/Gromacs/', name, name+'.top')
         if not os.path.isfile(top_in):
             raise Exception ("File not found: {0}!".format(top_in))
         Driver.load(top_in, gro_in)    
@@ -34,8 +34,8 @@ for name in args:
         Driver.load(cms_in)
     
     if 'Gromacs' == program_out:
-        gro_out = os.path.join('Outputs', program_in + 'to' + program_out,  name+ '_OUT.gro')
-        gro_out = os.path.join('Outputs', program_in + 'to' + program_out,  name+ '_OUT.top')
+        gro_out = os.path.join('Outputs', program_in + 'to' + program_out,  name, name+ '_OUT.gro')
+        top_out = os.path.join('Outputs', program_in + 'to' + program_out,  name, name+ '_OUT.top')
         Driver.write(top_out, gro_out)
     elif 'Desmond' == program_out:
         cms_out = os.path.join('Outputs', program_in + 'to' + program_out, name, name+ '_OUT.cms')
