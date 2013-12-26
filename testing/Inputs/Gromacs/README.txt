@@ -1,4 +1,4 @@
-Test GROMACS Files
+Large test GROMACS Files
 
 2PPN/
   A protein in water, with all parameters included from itp files. 1 Protein, 3588 water molecules
@@ -14,3 +14,15 @@ micelle/
 
 hostguest/
   a nonprotein host + a guest. 1 host, 1 guest (separate molecules), 2714 waters, and 2 Cl-.
+
+Unit tests:
+
+dihedral1/
+  tests dihedral type 1
+
+dihedral1/
+  tests dihedral type 2
+
+dihedral1/
+  tests dihedral type 3
+
