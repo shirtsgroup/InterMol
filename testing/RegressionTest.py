@@ -21,16 +21,16 @@ for name in filenames:
     try:
         Driver.load(cms_in)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
     cms_out = os.path.join('Outputs', 'DesmondToDesmond', name, name+ '_OUT.cms')
     try:
         Driver.write(cms_out)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
     gro_out = os.path.join('Outputs', 'DesmondToGromacs',  name+ '_OUT.gro')
@@ -38,8 +38,8 @@ for name in filenames:
     try:
         Driver.write(top_out, gro_out)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
 #List of Gromacs files to be converted
@@ -60,8 +60,8 @@ for name in filenames:
     try:
         Driver.load(top_in, gro_in)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
     gro_out = os.path.join('Outputs', 'GromacsToGromacs', name, name+ '_OUT.gro')
@@ -69,16 +69,16 @@ for name in filenames:
     try:
         Driver.write(top_out, gro_out)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
     cms_out = os.path.join('Outputs', 'GromacsToDesmond', name, name+ '_OUT.cms')
     try: 
         Driver.write(cms_out)
     except:
-        e = sys.exc_info()[0]
-        error.write('\n(%s) -- %s' %(name, e))
+        e = sys.exc_info()
+        error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
         pass
 
 #Gromacs files whose directories and filenames aren't the same name
@@ -96,8 +96,8 @@ if not os.path.isfile(complex_top_in):
 try:
     Driver.load(complex_top_in, complex_gro_in)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 complex_gro_out = os.path.join('Outputs/GromacsToGromacs/micelle', 'complex_OUT.gro')
@@ -105,16 +105,16 @@ complex_top_out = os.path.join('Outputs/GromacsToGromacs/micelle', 'complex_OUT.
 try:
     Driver.write(complex_top_out, complex_gro_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 complex_cms_out = os.path.join('Outputs/GromacsToDesmond/micelle', 'complex_OUT.cms')
 try:
     Driver.write(complex_cms_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 #system_GMX located in system
@@ -131,8 +131,8 @@ if not os.path.isfile(GMX_top_in):
 try:
     Driver.load(GMX_top_in, GMX_gro_in)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 GMX_gro_out = os.path.join('Outputs/GromacsToGromacs/system', 'system_GMX_OUT.gro')
@@ -140,15 +140,15 @@ GMX_top_out = os.path.join('Outputs/GromacsToGromacs/system', 'system_GMX_OUT.to
 try:
     Driver.write(GMX_top_out, GMX_gro_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 GMX_cms_out = os.path.join('Outputs/GromacsToDesmond/system', 'system_GMX_OUT.cms')
 try:
     Driver.write(GMX_cms_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 #system2_GMX located in system2
@@ -165,8 +165,8 @@ if not os.path.isfile(GMX2_top_in):
 try:
     Driver.load(GMX2_top_in, GMX2_gro_in)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 GMX2_gro_out = os.path.join('Outputs/GromacsToGromacs/system2', 'system2_GMX_OUT.gro')
@@ -174,14 +174,14 @@ GMX2_top_out = os.path.join('Outputs/GromacsToGromacs/system2', 'system2_GMX_OUT
 try:
     Driver.write(GMX2_top_out, GMX2_gro_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
 
 GMX2_cms_out = os.path.join('Outputs/GromacsToDesmond/system2', 'system2_GMX_OUT.cms')
 try:
     Driver.write(GMX2_cms_out)
 except:
-    e = sys.exc_info()[0]
-    error.write('\n(%s) -- %s' %(name, e))
+    e = sys.exc_info()
+    error.write('\n(%s) -- %s--line %s' %(name, e, sys.exc_traceback.tb_lineno))
     pass
