@@ -391,10 +391,11 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newDihedralType = None
-
-                        # Proper Dihedral 1
-                        if (int(split[2]) == 1) and (len(split) == 6):
-                            newDihedralType = ProperDihedral1Type('*',
+                        # first, check whether they are using 2 or 4 atom types
+                        if split[2].isdigit():
+                            # Proper Dihedral 1
+                            if (int(split[2]) == 1) and (len(split) == 6):
+                                newDihedralType = ProperDihedral1Type('*',
                                     split[0],
                                     split[1],
                                     '*',
@@ -403,9 +404,9 @@ class GromacsTopologyParser(object):
                                     float(split[4]) * units.kilojoules_per_mole,
                                     int(split[5]))
 
-                        # Proper Dihedral 2
-                        elif (int(split[2]) == 2) and (len(split) == 5):
-                            newDihedralType = ImproperDihedral2Type('*',
+                            # Proper Dihedral 2
+                            elif (int(split[2]) == 2) and (len(split) == 5):
+                                newDihedralType = ImproperDihedral2Type('*',
                                     split[0],
                                     split[1],
                                     '*',
@@ -413,9 +414,9 @@ class GromacsTopologyParser(object):
                                     float(split[3]) * units.degrees,
                                     float(split[4]) * units.kilojoules_per_mole * units.radians**(-2))
 
-                        # RBDihedral
-                        elif (int(split[2]) == 3) and (len(split) == 9):
-                            newDihedralType = RBDihedralType('*',
+                            # RBDihedral
+                            elif (int(split[2]) == 3) and (len(split) == 9):
+                                newDihedralType = RBDihedralType('*',
                                     split[0],
                                     split[1],
                                     '*',
@@ -426,6 +427,41 @@ class GromacsTopologyParser(object):
                                     float(split[6]) * units.kilojoules_per_mole,
                                     float(split[7]) * units.kilojoules_per_mole,
                                     float(split[8]) * units.kilojoules_per_mole)
+                        elif split[4].isdigit():
+                            # Proper Dihedral 1
+                            if (int(split[4]) == 1) and (len(split) == 8):
+                                newDihedralType = ProperDihedral1Type(split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    float(split[5]) * units.degrees,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    int(split[7]))
+
+                            # Proper Dihedral 2
+                            elif (int(split[4]) == 2) and (len(split) == 7):
+                                newDihedralType = ImproperDihedral2Type(split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    float(split[5]) * units.degrees,
+                                    float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
+
+                            # RBDihedral
+                            elif (int(split[4]) == 3) and (len(split) == 11):
+                                newDihedralType = RBDihedralType(split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    float(split[7]) * units.kilojoules_per_mole,
+                                    float(split[8]) * units.kilojoules_per_mole,
+                                    float(split[9]) * units.kilojoules_per_mole,
+                                    float(split[10]) * units.kilojoules_per_mole)
 
                         else:
                             print "could not find dihedral type"
@@ -610,6 +646,7 @@ class GromacsTopologyParser(object):
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
                             except:
+                                pdb.set_trace()
                                 newBondForce = Bond(int(split[0]),
                                         int(split[1]),
                                         split[3],
@@ -1180,9 +1217,7 @@ class GromacsTopologyParser(object):
                                 if verbose:
                                     print "Found a include:", line
                                 include = match.group('include')
-                                # assume it is in the same directory as the .top file, or relative to the top file
-                                includefile = os.path.join(os.path.split(filename)[0],include)
-                                fd = self.open(includefile)
+                                fd = self.open(include)
                                 if fd != None:
                                     tempList = list(fd)
                                     tempList.reverse()
@@ -1219,7 +1254,7 @@ class GromacsTopologyParser(object):
         else:
             fd.close()
 
-    def open(self, filename):
+    def open(self, filename, parentfile=''):
         """
         Open a file and add to includes list
 
@@ -1239,34 +1274,39 @@ class GromacsTopologyParser(object):
             print "WARNING: Omitting file ", filename, ". It has already been included!"
             return None
         temp = filename
-        pdb.set_trace()
         if os.path.exists(filename):
             try:
                 fd = open(filename)
                 self.includes.add(temp)
+                sys.stderr.write("local instance of topology file '%s' used\n" % (filename))
                 return fd
             except IOError, (errno, strerror):
                 sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno,strerror,filename))
-        # check for the base pathname in GMXLIB. It could be a directory, so it might not the the last one
-        restname,basename = os.path.split(filename)
-        libname = os.path.join(os.environ['GMXLIB'], basename)
+        # if we can't find it, check for the pathname in GMXLIB. 
+        filename = os.path.join(os.environ['GMXLIB'], temp)
         try:
-            fd = open(libname)
-            self.includes.add(temp)
+            fd = open(filename)
+            self.includes.add(filename)
+            sys.stderr.write("version in GMXLIB = %s used for topology file '%s'\n" % (os.environ['GMXLIB'],temp))
             return fd
         except:
             pass
 
-        # looks like we need to add another level of the path to locate it in GMXLIB
-        # but this doesn't work, because eventually we need to be in $GMXLIB/basename1.
-        # do we need to change the includes?
-        restname,basename1 = os.path.split(restname)
-        basename = os.path.join(basename1,basename)
-        filename = os.path.join(os.environ['GMXLIB'], basename)
-
+        # if we can't include the file locally or from GMXLIB, 
+        # let's look for it in the directory of one of the previous files.
+        # NOTE: could be dangerous if multiple files with the same name are 
+        # found in different directories!
+        found = False
+        for parentfile in self.includes:       
+            parentdir,oldfile = os.path.split(parentfile)
+            filename = os.path.join(parentdir,temp)
+            if os.path.exists(filename):
+                found = True
+                break
         try:
             fd = open(filename)
             self.includes.add(temp)
+            sys.stderr.write("version in %s used for topology file '%s'\n" % (parentdir,filename))
             return fd
 
         except IOError, (errno, strerror):

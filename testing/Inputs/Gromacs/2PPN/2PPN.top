@@ -8,8 +8,8 @@
 ;	FK506-BINDING PROTEIN 1A; 6 ROTAMASE, 12 KDA FKBP, FKBP-12, IMMUNOPHILIN FKBP12
 ;
 ; Include forcefield parameters
-#include "ffoplsaa.itp"
-#include "ffoplsaa_tip3p.itp"
+#include "oplsaa.ff/forcefield.itp"
+#include "oplsaa.ff/tip3p.itp"
 
 [ moleculetype ]
 ; Name            nrexcl
@@ -15621,7 +15621,7 @@ Protein_A           3
 #endif
 
 ; Include generic topology for ions
-#include "ions.itp"
+;#include "ions.itp"
 
 [ system ]
 ; Name

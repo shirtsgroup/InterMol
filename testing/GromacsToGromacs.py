@@ -5,7 +5,7 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 
-def gromacs_to_gromacs(top, gro, name='hostguest', gropath='', grosuff='',
+def gromacs_to_gromacs(top, gro, name='2PPN', gropath='', grosuff='',
         energy=True, clean=True):
     """Test gromacs to gromacs conversion
     """
@@ -52,11 +52,11 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-p', type='str', dest='top', default='hostguest/hostguest.top',
+    parser.add_option('-p', type='str', dest='top', default='2PPN/2PPN.top',
             help="Topology .top file")
-    parser.add_option('-c', type='str', dest='gro', default='hostguest/hostguest.gro',
+    parser.add_option('-c', type='str', dest='gro', default='2PPN/2PPN.gro',
             help="Structure .gro file")
-    parser.add_option('-n', type='str', dest='name', default='hostguest',
+    parser.add_option('-n', type='str', dest='name', default='2PPN',
             help="Name of system")
     parser.add_option('-g', type='str', dest='gropath', default='',
             help="path for GROMACS binary")

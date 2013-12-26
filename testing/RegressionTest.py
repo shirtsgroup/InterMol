@@ -43,7 +43,7 @@ for name in filenames:
         pass
 
 #List of Gromacs files to be converted
-filenames = ['2PPN', 'micelle']
+filenames = ['2PPN', 'micelle','proteinligand','solventprotein','hostguest']
 
 #Converrt Gromacs files to Desmond and Gromacs
 for name in filenames:
