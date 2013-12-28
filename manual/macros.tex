@@ -1,0 +1,42 @@
+
+\setlength {\parindent}{0.0cm}
+\setlength {\parskip}{1ex}
+
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+
+\newcommand{\eg}{\em e.g.\@}
+\newcommand{\ie}{\em i.e.\@}
+
+\newif\ifpdfman
+\ifx\pdfoutput\undefined
+  \pdfmanfalse % not using pdflatex  
+\else
+  \pdfoutput=1 % using pdflatex
+  \pdfmantrue
+\fi
+
+\ifpdfman
+  \usepackage[pdftex]{graphicx}
+	\usepackage[pdftex,plainpages=false,pdfpagelabels,colorlinks=true, urlcolor=blue,citecolor=blue,pdfstartview=FitV]{hyperref}
+\else
+  \usepackage{graphicx}
+  \usepackage[plainpages=false,colorlinks=true,urlcolor=blue,citecolor=blue]{hyperref}
+\fi
+
+% Slightly darker colors print better on b/w printers
+\usepackage{color}
+\definecolor{blue}{rgb}{0,0,0.5}
+\definecolor{red}{rgb}{0.5,0,0}
+
+\newcommand{\gmxmajor}{@MANUAL_MAJOR_VERSION@}
+\newcommand{\gmxver}{@MANUAL_VERSION@}
+\newcommand{\gmxyear}{\the\year}
+\newcommand{\wwwpage}{\href{http://www.gromacs.org}{www.gromacs.org}}
+% NOTE: \wwwpage is explicitly included in the 'verbatim' citing instructions!
+\newcommand{\email}{\href{mailto:gromacs@gromacs.org}{gromacs@gromacs.org}}
+\setlength{\headwidth}{\textwidth}
+\setlength{\headheight}{1.0cm
+
