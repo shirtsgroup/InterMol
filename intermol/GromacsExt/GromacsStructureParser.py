@@ -1,4 +1,3 @@
-from collections import deque
 import pdb
 
 from intermol.Atom import *

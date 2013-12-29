@@ -1278,7 +1278,7 @@ class GromacsTopologyParser(object):
             try:
                 fd = open(filename)
                 self.includes.add(temp)
-                sys.stderr.write("local instance of topology file '%s' used\n" % (filename))
+                sys.stderr.write("Local instance of topology file '%s' used\n" % (filename))
                 return fd
             except IOError, (errno, strerror):
                 sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno,strerror,filename))

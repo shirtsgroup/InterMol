@@ -76,6 +76,12 @@ def write(*files):
             DesmondParser = DesmondParser()
             DesmondParser.writeFile(filename)
 
+        elif extension == '.lmp':
+            import intermol.LammpsExt.LammpsParser as LammpsParser
+            print "Writing LAMMPS data & input files..."
+            LammpsParser.writeData(filename)
+
+
         else:
             raise Exception("{0} is not a supported file format".format(extension))
 
