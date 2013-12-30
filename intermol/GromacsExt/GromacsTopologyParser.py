@@ -646,7 +646,6 @@ class GromacsTopologyParser(object):
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
                             except:
-                                pdb.set_trace()
                                 newBondForce = Bond(int(split[0]),
                                         int(split[1]),
                                         split[3],

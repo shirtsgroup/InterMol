@@ -11,51 +11,51 @@ from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
 
-
-
 def writeData(filename):
     """Write system to LAMMPS data file
 
     Args:
         filename (str): name of output file
+
+
     """
-    """
-    if len(gbb.pair_types) > 0:
-        f.write('\n')
-        f.write('Pair Coeffs\n')
-        f.write('\n')
-        for i, value in sorted(gbb.pair_types.items()):
-            f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+    # Real units
+    # TODO: allow user to specify different unit sets
+    LENGTH = units.angstroms
+    ENERGY = units.kilocalorie
+    MASS = units.grams / units.mole
+    MOLE = units.mole
 
-    if len(gbb.bond_types) > 0:
-        f.write('\n')
-        f.write('Bond Coeffs\n')
-        f.write('\n')
-        for i, value in sorted(gbb.bond_types.items()):
-            f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+    mass_list = list()
+    mass_list.append('\n')
+    mass_list.append('Masses\n')
+    mass_list.append('\n')
 
-    if len(gbb.angle_types) > 0:
-        f.write('\n')
-        f.write('Angle Coeffs\n')
-        f.write('\n')
-        for i, value in sorted(gbb.angle_types.items()):
-            f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+    pair_coeff_list = list()
+    pair_coeff_list.append('\n')
+    pair_coeff_list.append('Pair Coeffs\n')
+    pair_coeff_list.append('\n')
 
-    if len(gbb.dihedral_types) > 0:
-        f.write('\n')
-        f.write('Dihedral Coeffs\n')
-        f.write('\n')
-        for i, value in sorted(gbb.dihedral_types.items()):
-            f.write("%d %8.4f %8.4f %8.4f %8.4f\n" % (i, value[0], value[1], value[2], value[3]))
-    """
+    bond_coeff_list = list()
+    bond_coeff_list.append('\n')
+    bond_coeff_list.append('Bond Coeffs\n')
+    bond_coeff_list.append('\n')
 
-    n_atom_types = 0
-    n_bond_types = 0
-    n_angle_types = 0
-    n_dihedral_types = 0
-    n_improper_types = 0
+    angle_coeff_list = list()
+    angle_coeff_list.append('\n')
+    angle_coeff_list.append('Angle Coeffs\n')
+    angle_coeff_list.append('\n')
 
-    # add mapping for numeric types
+    dihedral_coeff_list = list()
+    dihedral_coeff_list.append('\n')
+    dihedral_coeff_list.append('Dihedral Coeffs\n')
+    dihedral_coeff_list.append('\n')
+
+    improper_coeff_list = list()
+    improper_coeff_list.append('\n')
+    improper_coeff_list.append('Improper Coeffs\n')
+    improper_coeff_list.append('\n')
+
     atom_list = list()
     atom_list.append('\n')
     atom_list.append('Atoms\n')
@@ -65,23 +65,65 @@ def writeData(filename):
     vel_list.append('\n')
     vel_list.append('Velocities\n')
     vel_list.append('\n')
-    for moleculetype in System._sys._molecules.values():
-        for molecule in moleculetype.moleculeSet:
+
+    atom_type_dict = dict()
+    a_i = 1  # counter for atom types
+    for moleculeType in System._sys._molecules.itervalues():
+        for molecule in moleculeType.moleculeSet:
             for atom in molecule._atoms:
+                # type, mass and pair coeffs
+                if atom._atomtype[0] in atom_type_dict:
+                    pass
+                else:
+                    atom_type_dict[atom._atomtype[0]] = a_i
+                    mass_list.append('%d %8.4f\n'
+                                % (a_i,
+                                   atom._mass[0].in_units_of(MASS)._value))
+                    pair_coeff_list.append('%d %8.4f %8.4f\n'
+                                % (a_i,
+                                   atom._sigma[0].in_units_of(LENGTH)._value,
+                                   atom._epsilon[0].in_units_of(ENERGY/MOLE)._value))
+                    a_i += 1
+                # atom
                 atom_list.append('%-6d %-6d %-6d %5.8f %8.3f %8.3f %8.3f\n'
                     % (atom.atomIndex,
                        atom.residueIndex,
-                       #atom.numericType,
-                       1,
+                       atom_type_dict[atom._atomtype[0]],
                        atom._charge[0]._value,
                        atom._position[0]._value,
                        atom._position[1]._value,
                        atom._position[2]._value))
+                # velocity
                 vel_list.append('%-6d %8.4f %8.4f %8.4f\n'
                     % (atom.atomIndex,
                        atom._velocity[0]._value,
                        atom._velocity[1]._value,
                        atom._velocity[2]._value))
+
+    bond_style = 0
+    bond_type_set = set()
+    bond_type_dict = dict()
+    for moleculeType in System._sys._molecules.itervalues():
+        # bond types
+        if moleculeType.bondForceSet:
+            for bond in moleculeType.bondForceSet.itervalues():
+                if isinstance(bond, Bond):
+                    if bond_style == 0:
+                        bond_style = 'harmonic'
+                    elif bond_style != 'harmonic':
+                        warnings.warn("More than one bond style found!")
+                else:
+                    warnings.warn("Found unsupported bond type for LAMMPS!")
+
+                identifier = 0
+                bond_type_set.add(identifier)
+                temp = (type(bond),
+                        bond.length._value,
+                        bond.k._value)
+                bond_type_dict[identifier] = temp
+
+    bond_type_int = dict(zip(bond_type_set, range(1, len(bond_type_set) + 1)))
+    pdb.set_trace()
 
     bond_list = list()
     bond_list.append('\n')
@@ -114,7 +156,6 @@ def writeData(filename):
                                bond.atom2))
 
                 bond_list.append(line)
-
         if moleculeType.angleForceSet:
             for angle in moleculeType.angleForceSet.itervalues():
                 if isinstance(angle, Angle):
@@ -127,15 +168,22 @@ def writeData(filename):
 
                 angle_list.append(line)
 
+    # actual file writing
     with open(filename, 'w') as f:
         f.write(System._sys._name + '\n')
         f.write('\n')
 
-        n_atoms = len(atom_list)
-        n_bonds = len(bond_list)
-        n_angles = len(angle_list)
-        n_dihedrals = len(dihedral_list)
-        n_impropers = len(improper_list)
+        n_atoms = len(atom_list) - 3
+        n_bonds = len(bond_list) - 3
+        n_angles = len(angle_list) - 3
+        n_dihedrals = len(dihedral_list) - 3
+        n_impropers = len(improper_list) - 3
+
+        n_atom_types = len(pair_coeff_list) - 3
+        n_bond_types = len(bond_coeff_list) - 3
+        n_angle_types = len(angle_coeff_list) - 3
+        n_dihedral_types = len(dihedral_coeff_list) - 3
+        n_improper_types = len(improper_coeff_list) - 3
 
         f.write(str(n_atoms) + ' atoms\n')
         f.write(str(n_bonds) + ' bonds\n')
@@ -159,26 +207,33 @@ def writeData(filename):
         f.write('0.0 %10.6f ylo yhi\n' % (System._sys._v2y._value))
         f.write('0.0 %10.6f zlo zhi\n' % (System._sys._v3z._value))
 
-        f.write('\n')
-        f.write('Masses\n')
-        f.write('\n')
+        # write masses
+        for mass in mass_list:
+            f.write(mass)
 
-        # find unique masses and corresponding atomtypes
-        masses = set()
-        for moleculetype in System._sys._molecules.values():
-            for molecule in moleculetype.moleculeSet:
-                for atom in molecule._atoms:
-                    #masses.add((atom.numericType, atom._mass))
-                    masses.add((1, atom._mass[0]._value))
-        for mass in sorted(masses):
-            f.write(" ".join(map(str, mass)) + '\n')
+        # write coefficients
+        for pair in pair_coeff_list:
+            f.write(pair)
+        if len(bond_coeff_list) > 3:
+            for bond in bond_coeff_list:
+                f.write(bond)
+        if len(angle_coeff_list) > 3:
+            for angle in angle_coeff_list:
+                f.write(pair)
+        if len(dihedral_coeff_list) > 3:
+            for dihedral in dihedral_coeff_list:
+                f.write(dihedral)
+        if len(improper_coeff_list) > 3:
+            for improper in improper_coeff_list:
+                f.write(improper)
 
+        # write atoms and velocities
         for atom in atom_list:
             f.write(atom)
-
         for vel in vel_list:
             f.write(vel)
 
+        # write connectivity
         if len(bond_list) > 3:
             for bond in bond_list:
                 f.write(bond)

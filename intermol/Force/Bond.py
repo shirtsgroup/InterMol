@@ -1,3 +1,4 @@
+import pdb
 from intermol.Decorators import *
 from AbstractBond import *
 
@@ -13,10 +14,10 @@ class Bond(AbstractBond):
         """
         """
         AbstractBond.__init__(self, atom1, atom2)
-	self.order = order
         self.length = length
         self.k = k 
-	self.c = c #constrained or not, Desmond only
+    	self.order = order
+    	self.c = c #constrained or not, Desmond only
 
     def getarameters(self):
         return (self.atom1, self.atom2, self.length, self.k)
@@ -26,4 +27,16 @@ class Bond(AbstractBond):
     
     def __str__(self):
         return str(self.atom1) +'  '+ str(self.atom2) +'  '+  str(self.length) +'  '+  str(self.k)
+
+    """
+    def __hash__(self):
+        return hash(tuple([type(self), self.length._value, self.k._value]))
+
+    def __eq__(self, object):
+        if (type(self) == type(object)) and (self.length._value == object.length._value) and (self.k._value == object.k._value):
+            return True
+        else:
+            return False
+    """
+
 

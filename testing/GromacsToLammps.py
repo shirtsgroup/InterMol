@@ -6,9 +6,9 @@ import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 #from lammps_energies import lammpss_energies
 
-def gromacs_to_gromacs(top, gro, name='system2_GMX', gropath='', grosuff='',
+def gromacs_to_lammps(top, gro, name='system2_GMX', gropath='', grosuff='',
         energy=True, clean=True):
-    """Test gromacs to gromacs conversion
+    """Test gromacs to lammps conversion
     """
 
     gro_in = os.path.join('Inputs/Gromacs/', gro)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     energy = options.energy
     clean = options.clean
 
-    results = gromacs_to_gromacs(top, gro, name, gropath, grosuff, energy, clean)
+    results = gromacs_to_lammps(top, gro, name, gropath, grosuff, energy, clean)
 
     if energy:
         rms, e_in, e_out = results
