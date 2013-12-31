@@ -80,7 +80,8 @@ def write(*files):
             import intermol.LammpsExt.LammpsParser as LammpsParser
             print "Writing LAMMPS data & input files..."
             LammpsParser.writeData(filename)
-
+            input_name = splitext(filename)[0] + '.input'
+            print "Finished writing '{0}'".format(input_name)
 
         else:
             raise Exception("{0} is not a supported file format".format(extension))

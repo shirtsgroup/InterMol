@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+#sys.path.append('..')
 
 from intermol.Decorators import *
 from AbstractBondType import *
@@ -10,4 +10,4 @@ class BondType(AbstractBondType):
         AbstractBondType.__init__(self, atom1, atom2, type)
         self.length = length
         self.k = k
-	self.c = c #constrained or not, Desmond
+        self.c = c #constrained or not, Desmond

@@ -19,7 +19,7 @@ def gromacs_to_lammps(top, gro, name='system2_GMX', gropath='', grosuff='',
     if not os.path.isfile(top_in):
         raise Exception("File not found: {0}!".format(top_in))
 
-    lmp_out = os.path.join('Outputs/GromacsToLammps/', name + '.lmp')
+    lmp_out = os.path.join('Outputs/GromacsToLammps/', '{0}.lmp'.format(name))
 
     # calc input energies
     if energy:
@@ -32,7 +32,7 @@ def gromacs_to_lammps(top, gro, name='system2_GMX', gropath='', grosuff='',
 
     # calc output energies
     if energy:
-        e_out = lammps_energies(lmp_out, inp_out, 'GtoL', gropath, grosuff)
+        e_out = lammps_energies(lmp_out, inp_out, 'GtoL')
 
     # delete gromacs backup files
     if clean:
@@ -66,7 +66,6 @@ if __name__ == "__main__":
             help="Clean backup files produced by GROMACS")
     parser.add_option('-e', type='int', dest='energy', default=1,
             help="Evaluate energies")
-
 
 
     (options, args) = parser.parse_args()

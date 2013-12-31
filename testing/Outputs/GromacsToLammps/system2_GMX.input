@@ -1,0 +1,16 @@
+units real
+atom_style full
+
+dimension 3
+boundary p p p
+
+pair_style lj/cut/coul/long 10.0
+pair_modify mix geometric
+kspace_style pppm 1.0e-4
+
+
+read_data system2_GMX.lmp
+
+thermo_style custom ebond eangle edihed epair evdwl ecoul etotal temp
+
+run 0
