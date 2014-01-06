@@ -1,6 +1,7 @@
 import os
 import warnings
 import re
+import numpy as np
 import pdb
 
 import intermol.unit as units
@@ -19,6 +20,7 @@ def writeData(filename, unit_set='real'):
         unit_set (str): LAMMPS unit set for output file
     """
     # TODO: allow user to specify different unit sets
+    RAD = units.radians
     if unit_set == 'real':
         DIST = units.angstroms
         VEL = units.angstroms / units.femtosecond
@@ -89,32 +91,127 @@ def writeData(filename, unit_set='real'):
     improper_list.append('Impropers\n')
     improper_list.append('\n')
 
-    # read all atom specific information
+
+    # dicts for type information
     atom_type_dict = dict()  # str_type:int_type
-    a_i = 1  # counter for atom types
+    a_type_i = 1  # counter for atom types
+
+    bond_style = 0
+    bond_type_dict = dict()  # typeObject:int_type
+    b_type_i = 1  # counter for bond types
+
+    angle_style = 0
+    angle_type_dict = dict()
+    ang_type_i = 1
+
+    # read all atom specific and FF information
     for moleculeType in System._sys._molecules.itervalues():
+        # bond types
+        if moleculeType.bondForceSet:
+            for bond in moleculeType.bondForceSet.itervalues():
+                if isinstance(bond, Bond):
+                    if bond_style == 0:
+                        bond_style = 'harmonic'
+                    elif bond_style != 'harmonic':
+                        # this may need to be an error
+                        # or require some form of conversion if possible
+                       warnings.warn("More than one bond style found!")
+
+                    atom1 = moleculeType.moleculeSet[0]._atoms[bond.atom1 - 1]
+                    atomtype1 = atom1.getAtomType()[0]
+                    atom2 = moleculeType.moleculeSet[0]._atoms[bond.atom2 - 1]
+                    atomtype2 = atom2.getAtomType()[0]
+
+                    temp = BondType(atomtype1,
+                            atomtype2,
+                            1,
+                            bond.length,
+                            bond.k)
+                    # NOTE: k includes the factor of 0.5 for harmonics in LAMMPS
+                    #       For now, I will assume that we always store it without internally
+                    #       since that's the way GROMACS does it.
+                    if temp not in bond_type_dict:
+                        bond_type_dict[temp] = b_type_i
+                        bond_coeff_list.append('%d %18.8e %18.8e\n'
+                                    % (b_type_i,
+                                       bond.length.in_units_of(DIST)._value,
+                                       0.5 * bond.k.in_units_of(ENERGY/(DIST*DIST * MOLE))._value))
+                        b_type_i += 1
+                else:
+                    warnings.warn("Found unsupported bond type for LAMMPS!")
+        # angle types
+        if moleculeType.angleForceSet:
+            for angle in moleculeType.angleForceSet.itervalues():
+                if isinstance(angle, Angle):
+                    if angle_style == 0:
+                        angle_style = 'harmonic'
+                    elif angle_style != 'harmonic':
+                        # this may need to be an error
+                        # or require some form of conversion if possible
+                       warnings.warn("More than one angle style found!")
+
+                    atom1 = moleculeType.moleculeSet[0]._atoms[angle.atom1 - 1]
+                    atomtype1 = atom1.getAtomType()[0]
+                    atom2 = moleculeType.moleculeSet[0]._atoms[angle.atom2 - 1]
+                    atomtype2 = atom2.getAtomType()[0]
+                    atom3 = moleculeType.moleculeSet[0]._atoms[angle.atom3 - 1]
+                    atomtype3 = atom3.getAtomType()[0]
+
+                    temp = AngleType(atomtype1,
+                            atomtype2,
+                            atomtype3,
+                            1,
+                            angle.theta,
+                            angle.k)
+                    # NOTE: k includes the factor of 0.5 for harmonics in LAMMPS
+                    #       For now, I will assume that we always store it without internally
+                    #       since that's the way GROMACS does it.
+                    if temp not in angle_type_dict:
+                        angle_type_dict[temp] = ang_type_i
+                        angle_coeff_list.append('%d %18.8e %18.8e\n'
+                                    % (ang_type_i,
+                                       angle.theta._value,
+                                       0.5 * angle.k.in_units_of(ENERGY/(RAD*RAD * MOLE))._value))
+                        ang_type_i += 1
+                else:
+                    warnings.warn("Found unsupported angle type for LAMMPS!")
+
+        # atom specific information
+        x_min = y_min = z_min = np.inf
         for molecule in moleculeType.moleculeSet:
             for atom in molecule._atoms:
                 # type, mass and pair coeffs
                 if atom._atomtype[0] not in atom_type_dict:
-                    atom_type_dict[atom._atomtype[0]] = a_i
+                    atom_type_dict[atom._atomtype[0]] = a_type_i
                     mass_list.append('%d %8.4f\n'
-                                % (a_i,
+                                % (a_type_i,
                                    atom._mass[0].in_units_of(MASS)._value))
                     pair_coeff_list.append('%d %8.4f %8.4f\n'
-                                % (a_i,
+                                % (a_type_i,
                                    atom._sigma[0].in_units_of(DIST)._value,
                                    atom._epsilon[0].in_units_of(ENERGY/MOLE)._value))
-                    a_i += 1
+                    a_type_i += 1
+
+                # box minima
+                x = atom._position[0].in_units_of(DIST)._value
+                y = atom._position[1].in_units_of(DIST)._value
+                z = atom._position[2].in_units_of(DIST)._value
+                if x < x_min:
+                    x_min = x
+                if y < y_min:
+                    y_min = y
+                if z < z_min:
+                    z_min = z
+
                 # atom
                 atom_list.append('%-6d %-6d %-6d %5.8f %8.3f %8.3f %8.3f\n'
                     % (atom.atomIndex,
                        atom.residueIndex,
                        atom_type_dict[atom._atomtype[0]],
                        atom._charge[0].in_units_of(CHARGE)._value,
-                       atom._position[0].in_units_of(DIST)._value,
-                       atom._position[1].in_units_of(DIST)._value,
-                       atom._position[2].in_units_of(DIST)._value))
+                       x,
+                       y,
+                       z))
                 # velocity
                 vel_list.append('%-6d %8.4f %8.4f %8.4f\n'
                     % (atom.atomIndex,
@@ -123,66 +220,52 @@ def writeData(filename, unit_set='real'):
                        atom._velocity[2].in_units_of(VEL)._value))
 
     # read all connectivity information
-    bond_style = 0
-    bond_type_dict = dict()
-    bond_numbering = dict()
-    b_type_i = 1
-    b_mol_i = 1
-    b_i = 1
-
     for moleculeType in System._sys._molecules.itervalues():
         # atom index offsets from 1 for each molecule
         offsets = list()
         for molecule in moleculeType.moleculeSet:
             offsets.append(molecule._atoms[0].atomIndex - 1)
 
-        # bond types
-        if moleculeType.bondForceSet:
-            for bond in moleculeType.bondForceSet.itervalues():
-                if isinstance(bond, Bond):
-                    if bond_style == 0:
-                        bond_style = 'harmonic'
-                    elif bond_style != 'harmonic':
-                        warnings.warn("More than one bond style found!")
-                        # this may need to be an error
+        for i, offset in enumerate(offsets):
+            for j, bond in enumerate(moleculeType.bondForceSet.itervalues()):
+                atom1 = moleculeType.moleculeSet[0]._atoms[bond.atom1 - 1]
+                atomtype1 = atom1.getAtomType()[0]
+                atom2 = moleculeType.moleculeSet[0]._atoms[bond.atom2 - 1]
+                atomtype2 = atom2.getAtomType()[0]
 
-                    atomtype1 = moleculeType.moleculeSet[0]._atoms[bond.atom1 - 1].getAtomType()[0]
-                    atomtype2 = moleculeType.moleculeSet[0]._atoms[bond.atom2 - 1].getAtomType()[0]
+                temp = BondType(atomtype1,
+                        atomtype2,
+                        1,
+                        bond.length,
+                        bond.k)
 
-                    temp = BondType(atomtype1,
-                            atomtype2,
-                            1,
-                            bond.length,
-                            bond.k)
-                    if temp not in bond_type_dict.itervalues():
-                        bond_coeff_list.append('%d %18.8e %18.8e\n'
-                                    % (b_type_i,
-                                       bond.length.in_units_of(DIST)._value,
-                                       bond.k.in_units_of(ENERGY/(DIST*DIST * MOLE))._value))
+                bond_list.append('%6d %6d %6d %6d\n'
+                            % (i + j,
+                               bond_type_dict[temp],
+                               bond.atom1 + offset,
+                               bond.atom2 + offset))
 
-                else:
-                    warnings.warn("Found unsupported bond type for LAMMPS!")
+            for j, angle in enumerate(moleculeType.angleForceSet.itervalues()):
+                atom1 = moleculeType.moleculeSet[0]._atoms[angle.atom1 - 1]
+                atomtype1 = atom1.getAtomType()[0]
+                atom2 = moleculeType.moleculeSet[0]._atoms[angle.atom2 - 1]
+                atomtype2 = atom2.getAtomType()[0]
+                atom3 = moleculeType.moleculeSet[0]._atoms[angle.atom3 - 1]
+                atomtype3 = atom3.getAtomType()[0]
 
-                if temp not in bond_type_dict.itervalues():
-                    bond_type_dict[b_type_i] = temp
-                    b_type_i += 1
-                    bond_numbering[b_mol_i] = b_type_i
-                    b_mol_i += 1
-                else:
-                    bond_numbering[]
+                temp = AngleType(atomtype1,
+                        atomtype2,
+                        atomtype3,
+                        1,
+                        angle.theta,
+                        angle.k)
 
-            pdb.set_trace()
-            for offset in offsets:
-                for per_mol, bond in enumerate(moleculeType.bondForceSet.itervalues()):
-                    bond_list.append('%6d %6d %6d %6d\n'
-                                % (b_i,
-                                   bond_numbering[per_mol + 1],
-                                   bond.atom1 + offset,
-                                   bond.atom2 + offset))
-                    b_i += 1
-
-
-    pdb.set_trace()
+                angle_list.append('%6d %6d %6d %6d %6d\n'
+                            % (i + j,
+                               angle_type_dict[temp],
+                               angle.atom1 + offset,
+                               angle.atom2 + offset,
+                               angle.atom3 + offset))
 
     # actual data file writing
     with open(filename, 'w') as f:
@@ -209,33 +292,41 @@ def writeData(filename, unit_set='real'):
         f.write('\n')
 
         f.write('{0} atom types\n'.format(n_atom_types))
-        if n_bonds > 0:
+        if n_bond_types > 0:
             f.write('{0} bond types\n'.format(n_bond_types))
-        if n_angles > 0:
+        if n_angle_types > 0:
             f.write('{0} angle types\n'.format(n_angle_types))
-        if n_dihedrals > 0:
+        if n_dihedral_types > 0:
             f.write('{0} dihedral types\n'.format(n_dihedral_types))
-        if n_impropers > 0:
+        if n_improper_types > 0:
             f.write('{0} improper types\n'.format(n_improper_types))
         f.write('\n')
 
-        f.write('0.0 %10.6f xlo xhi\n' % (System._sys._v1x.in_units_of(DIST)._value))
-        f.write('0.0 %10.6f ylo yhi\n' % (System._sys._v2y.in_units_of(DIST)._value))
-        f.write('0.0 %10.6f zlo zhi\n' % (System._sys._v3z.in_units_of(DIST)._value))
+        # shifting of box dimensions
+        f.write('%10.6f %10.6f xlo xhi\n'
+                % (x_min,
+                   x_min + System._sys._v1x.in_units_of(DIST)._value))
+        f.write('%10.6f %10.6f ylo yhi\n'
+                % (y_min,
+                   y_min + System._sys._v2y.in_units_of(DIST)._value))
+        f.write('%10.6f %10.6f zlo zhi\n'
+                % (z_min,
+                   z_min + System._sys._v3z.in_units_of(DIST)._value))
 
         # write masses
         for mass in mass_list:
             f.write(mass)
 
         # write coefficients
-        for pair in pair_coeff_list:
-            f.write(pair)
+        if len(pair_coeff_list) > 3:
+            for pair in pair_coeff_list:
+                f.write(pair)
         if len(bond_coeff_list) > 3:
             for bond in bond_coeff_list:
                 f.write(bond)
         if len(angle_coeff_list) > 3:
             for angle in angle_coeff_list:
-                f.write(pair)
+                f.write(angle)
         if len(dihedral_coeff_list) > 3:
             for dihedral in dihedral_coeff_list:
                 f.write(dihedral)
