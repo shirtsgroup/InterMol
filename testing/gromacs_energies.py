@@ -1,7 +1,7 @@
 import os
 import pdb
 
-def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
+def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff=''):
     """
 
     gropath = path to gromacs binaries
@@ -12,19 +12,27 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
 
     if in_out == 'in':
         base = 'Inputs/Gromacs'
+        if top == None:
+            top = os.path.join(base, name, 'topol.top')
+        if gro == None:
+            gro = os.path.join(base, name, 'conf.gro')
     elif in_out == 'GtoG':
         base = 'Outputs/GromacsToGromacs'
+        if top == None:
+            base = os.path.join(base, name, 'topol.top')
+        if gro == None:
+            base = os.path.join(base, name, 'conf.gro')
     else:
         raise Exception("Unknown flag: {0}".format(in_out))
 
-    tpr  = os.path.join(base, 'topol.tpr')
-    ener  = os.path.join(base, 'ener.edr')
-    ener_out  = os.path.join(base, 'energy.xvg')
-    conf  = os.path.join(base, 'confout.gro')
-    mdout = os.path.join(base, 'mdout.mdp')
-    state  = os.path.join(base, 'state.cpt')
-    traj  = os.path.join(base, 'traj.trr')
-    log  = os.path.join(base, 'md.log')
+    tpr  = os.path.join(base, name, 'topol.tpr')
+    ener  = os.path.join(base, name, 'ener.edr')
+    ener_xvg  = os.path.join(base, name, 'energy.xvg')
+    conf  = os.path.join(base, name, 'confout.gro')
+    mdout = os.path.join(base, name, 'mdout.mdp')
+    state  = os.path.join(base, name, 'state.cpt')
+    traj  = os.path.join(base, name, 'traj.trr')
+    log  = os.path.join(base, name, 'md.log')
 
     grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
     mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
@@ -40,11 +48,11 @@ def gromacs_energies(top, gro, in_out='in', gropath='',grosuff=''):
 
     # energizin'
     select = " ".join(map(str, range(1, 15))) + " 0 "
-    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_out} -dp".format(ener=ener,
-            ener_out=ener_out))
+    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_xvg} -dp".format(ener=ener,
+            ener_xvg=ener_xvg))
 
     # extract g_energy output and parse initial energies
-    with open(ener_out) as f:
+    with open(ener_xvg) as f:
         all_lines = f.readlines()
 
     # take last line

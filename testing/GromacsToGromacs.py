@@ -5,10 +5,16 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 
-def gromacs_to_gromacs(top, gro, name='2PPN', gropath='', grosuff='',
+def gromacs_to_gromacs(name='2PPN', top=None, gro=None, gropath='', grosuff='',
         energy=True, clean=True):
     """Test gromacs to gromacs conversion
     """
+
+    if top == None:
+        top = os.path.join(name,'topol.top')
+
+    if gro == None:
+        gro = os.path.join(name,'conf.gro')
 
     gro_in = os.path.join('Inputs/Gromacs/', gro)
     if not os.path.isfile(gro_in):
@@ -23,7 +29,7 @@ def gromacs_to_gromacs(top, gro, name='2PPN', gropath='', grosuff='',
 
     # calc input energies
     if energy:
-        e_in = gromacs_energies(top_in, gro_in, 'in', gropath, grosuff)
+        e_in = gromacs_energies(name, top_in, gro_in, 'in', gropath, grosuff)
 
     # where the magic happens
     Driver.initSystem(name)
@@ -32,7 +38,7 @@ def gromacs_to_gromacs(top, gro, name='2PPN', gropath='', grosuff='',
 
     # calc output energies
     if energy:
-        e_out = gromacs_energies(top_out, gro_out, 'GtoG', gropath, grosuff)
+        e_out = gromacs_energies(name, top_out, gro_out, 'GtoG', gropath, grosuff)
 
     # delete gromacs backup files
     if clean:
@@ -52,12 +58,12 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-p', type='str', dest='top', default='2PPN/2PPN.top',
-            help="Topology .top file")
-    parser.add_option('-c', type='str', dest='gro', default='2PPN/2PPN.gro',
-            help="Structure .gro file")
     parser.add_option('-n', type='str', dest='name', default='2PPN',
             help="Name of system")
+    parser.add_option('-p', type='str', dest='top', default=None,
+            help="Topology .top file")
+    parser.add_option('-c', type='str', dest='gro', default=None,
+            help="Structure .gro file")
     parser.add_option('-g', type='str', dest='gropath', default='',
             help="path for GROMACS binary")
     parser.add_option('-s', type='str', dest='grosuff', default='',
@@ -70,15 +76,15 @@ if __name__ == "__main__":
 
 
     (options, args) = parser.parse_args()
+    name = options.name
     top = options.top
     gro = options.gro
-    name = options.name
     gropath = options.gropath
     grosuff = options.grosuff
     energy = options.energy
     clean = options.clean
 
-    rms, e_in, e_out = gromacs_to_gromacs(top, gro, name, gropath, grosuff, energy, clean)
+    rms, e_in, e_out = gromacs_to_gromacs(name,top, gro, gropath, grosuff, energy, clean)
 
     print "======================================================================="
     print "Summary statistics"
