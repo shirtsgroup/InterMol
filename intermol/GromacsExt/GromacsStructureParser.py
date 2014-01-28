@@ -1,5 +1,5 @@
 import pdb
-
+import numpy as np
 from intermol.Atom import *
 from intermol.Molecule import *
 from intermol.System import System
@@ -24,58 +24,37 @@ def readStructure(filename):
                     atom.residueName = lines[i][6:10].strip()
                     atom.atomName = lines[i][11:15].strip()
                     atom.atomIndex = int(lines[i][16:20])
-                    position = [None, None, None]
-                    position[0] = float(lines[i][20:28]) * units.nanometers
-                    position[1] = float(lines[i][28:36]) * units.nanometers
-                    position[2] = float(lines[i][36:44]) * units.nanometers
+                    variables = (lines[i][20:]).split()
+                    position = np.zeros([3],float) * units.nanometers
+                    velocity = np.zeros([3],float) * units.nanometers / units.picoseconds
+                    if len(variables) >= 3:
+                        positionElements = variables[0:3]
+                        for k in range(3):
+                            position[k] = float(positionElements[k]) * units.nanometers
                     atom.setPosition(position[0], position[1], position[2])
-                    velocity = [None, None, None]
-                    try:
-                        velocity[0]=float(lines[i][44:52]) * units.nanometers / units.picoseconds
-                        velocity[1]=float(lines[i][52:60]) * units.nanometers / units.picoseconds
-                        velocity[2]=float(lines[i][60:68]) * units.nanometers / units.picoseconds
-                    except:
-                        velocity[0] = 0.0 * units.nanometers / units.picoseconds
-                        velocity[1] = 0.0 * units.nanometers / units.picoseconds
-                        velocity[2] = 0.0 * units.nanometers / units.picoseconds
+                    if len(variables) >= 6:
+                        velocityElements = variables[3:6]
+                        for k in range(3):
+                            velocity[k] = float(velocityElements[k]) * units.nanometers / units.picoseconds
                     atom.setVelocity(velocity[0], velocity[1], velocity[2])
                     i += 1
-
                 else:
                     sys.exit()
 
     rawBoxVector = lines[i].split()
-    v1x = None
-    v2x = None
-    v3x = None
-    v1y = None
-    v2y = None
-    v3y = None
-    v1z = None
-    v2z = None
-    v3z = None
+    v = np.zeros([3,3],float) * units.nanometers
     if len(rawBoxVector) == 3:
-        v1x = float(rawBoxVector[0]) * units.nanometers
-        v2x = 0.0 * units.nanometers
-        v3x = 0.0 * units.nanometers
-        v1y = 0.0 * units.nanometers
-        v2y = float(rawBoxVector[1]) * units.nanometers
-        v3y = 0.0 * units.nanometers
-        v1z = 0.0 * units.nanometers
-        v2z = 0.0 * units.nanometers
-        v3z = float(rawBoxVector[2]) * units.nanometers
+        for i in range(3):
+            v[i,i] = float(rawBoxVector[i]) * units.nanometers
 
     elif len(rawBoxVector) == 9:
-        v1x = float(rawBoxVector[0:10]) * units.nanometers
-        v2x = float(rawBoxVector[11:22]) * units.nanometers
-        v3x = float(rawBoxVector[23:34]) * units.nanometers
-        v1y = float(rawBoxVector[35:46]) * units.nanometers
-        v2y = float(rawBoxVector[47:58]) * units.nanometers
-        v3y = float(rawBoxVector[59:70]) * units.nanometers
-        v1z = float(rawBoxVector[71:82]) * units.nanometers
-        v2z = float(rawBoxVector[83:94]) * units.nanometers
-        v3z = float(rawBoxVector[95:106]) * units.nanometers
-    System._sys.setBoxVector(v1x, v2x, v3x, v1y, v2y, v3y, v1z, v2z, v3z)
+        n = -1
+        BoxVectorElements = split.rawBoxVector()
+        for i in range(3):
+            for j in range(3):
+                v[i,j] = float(BoxVectorElements[3*i+j]) * units.nanometers
+    # need to make this numpy sensitive so we can just pass the vector
+    System._sys.setBoxVector(v[0,0],v[0,1],v[0,2],v[1,0],v[1,1],v[1,2],v[2,0],v[2,1],v[2,2])
 
 def writeStructure(filename):
     """Write the system out  in a Gromacs 4.5.4 format
