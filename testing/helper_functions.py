@@ -24,9 +24,12 @@ def print_energy_summary(results):
     print "======================================================================="
     print "Summary statistics"
 
-    print "%20s %15s %15s %15s" % ("Type", "Input", "Output", "Diff")
+    print "%20s %18s %18s %18s" % ("Type", "Input", "Output", "Diff")
     for (name, values) in data.iteritems():
-        print "%20s %15.8f %15.8f %15.8f" % (name, values[0]._value, values[1]._value, values[2]._value)
+        print "%20s %18.8f %18.8f %18.8f" % (name,
+                values[0]._value,  # in
+                values[1]._value,  # out 
+                values[2]._value)  # diff
 
     print " "
-    print "RMS signed error: %10.5f" % (rms)
+    print "RMS signed error: %18.8f" % (rms)

@@ -2,6 +2,7 @@ import os.path
 from optparse import OptionParser
 
 import intermol.Driver as Driver
+from helper_functions import *
 
 
 #--- cmd line options ---

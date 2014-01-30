@@ -1,5 +1,5 @@
-Log file opened on Thu Jan 30 16:18:20 2014
-Host: Christophs-MacBook-Air.local  pid: 22258  nodeid: 0  nnodes:  1
+Log file opened on Thu Jan 30 16:22:23 2014
+Host: Christophs-MacBook-Air.local  pid: 22313  nodeid: 0  nnodes:  1
 Gromacs version:    VERSION 4.6.3
 Precision:          single
 Memory model:       64 bit
@@ -24,7 +24,7 @@ C compiler flags:   -mavx    -Wall -Wno-unused -Wunused-value -Wno-unknown-pragm
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                      GROwing Monsters And Cloning Shrimps
+              GROningen Mixture of Alchemy and Childrens' Stories
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -372,7 +372,7 @@ Constraining the starting coordinates (step 0)
 RMS relative constraint deviation after constraining: 0.00e+00
 Initial temperature: 299.901 K
 
-Started mdrun on node 0 Thu Jan 30 16:18:20 2014
+Started mdrun on node 0 Thu Jan 30 16:22:23 2014
 
            Step           Time         Lambda
               0        0.00000        0.00000
@@ -469,33 +469,33 @@ Started mdrun on node 0 Thu Jan 30 16:18:20 2014
  Computing:         Nodes   Th.     Count  Wall t (s)     G-Cycles       %
 -----------------------------------------------------------------------------
  Domain decomp.         4    1          1       0.001        0.005     2.3
- Neighbor search        4    1          1       0.001        0.010     4.7
- Comm. coord.           4    1          1       0.001        0.006     2.6
- Force                  4    1          1       0.001        0.011     5.1
- Wait + Comm. F         4    1          1       0.000        0.003     1.3
- PME mesh               4    1          1       0.006        0.059    27.8
- Write traj.            4    1          1       0.003        0.030    13.8
- Update                 4    1          1       0.000        0.000     0.2
+ Neighbor search        4    1          1       0.001        0.010     4.6
+ Comm. coord.           4    1          1       0.000        0.004     2.0
+ Force                  4    1          1       0.001        0.011     4.9
+ Wait + Comm. F         4    1          1       0.000        0.001     0.4
+ PME mesh               4    1          1       0.008        0.072    32.0
+ Write traj.            4    1          1       0.003        0.030    13.3
+ Update                 4    1          1       0.000        0.000     0.1
  Constraints            4    1          2       0.000        0.002     0.7
- Comm. energies         4    1          2       0.009        0.087    40.6
+ Comm. energies         4    1          2       0.009        0.087    38.8
  Rest                   4                       0.000        0.002     0.8
 -----------------------------------------------------------------------------
- Total                  4                       0.023        0.214   100.0
+ Total                  4                       0.024        0.224   100.0
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
- PME redist. X/F        4    1          2       0.004        0.033    15.3
- PME spread/gather      4    1          2       0.002        0.020     9.4
- PME 3D-FFT             4    1          2       0.000        0.002     0.8
- PME 3D-FFT Comm.       4    1          2       0.000        0.004     1.8
+ PME redist. X/F        4    1          2       0.004        0.037    16.3
+ PME spread/gather      4    1          2       0.003        0.029    12.8
+ PME 3D-FFT             4    1          2       0.000        0.002     0.7
+ PME 3D-FFT Comm.       4    1          2       0.000        0.004     1.7
  PME solve              4    1          1       0.000        0.001     0.5
 -----------------------------------------------------------------------------
 
-NOTE: 41 % of the run time was spent communicating energies,
+NOTE: 39 % of the run time was spent communicating energies,
       you might want to use the -gcom option of mdrun
 
 
                Core t (s)   Wall t (s)        (%)
-       Time:        0.054        0.023      233.5
+       Time:        0.054        0.024      222.1
                  (ns/day)    (hour/ns)
-Performance:        7.426        3.232
-Finished mdrun on node 0 Thu Jan 30 16:18:20 2014
+Performance:        7.084        3.388
+Finished mdrun on node 0 Thu Jan 30 16:22:23 2014
