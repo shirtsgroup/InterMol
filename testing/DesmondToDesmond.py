@@ -16,7 +16,7 @@ def desmond_to_desmond(name='2PPN', cms=None, despath=None,
     if not os.path.isfile(cms_in):
 	    raise Exception("File not found: {0}!".format(cms_in))
     
-    cms_out = os.path.join('Outputs/DesmondToDesmond/', name + '-converted.cms')
+    cms_out = os.path.join('Outputs/DesmondToDesmond/', name, 'desmond-converted.cms')
 
     #calc input energies
     if energy:

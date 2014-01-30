@@ -165,7 +165,7 @@ class DesmondParser():
 	    while not re.match(r'\s*[:::]',lines[i]):
 	      split = lines[i].split() 
 	      stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * 0.1 * units.nanometers #was in angstroms
-	      etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * 4.184 * units.kilojoules_per_mole #was in kilocal per mol
+	      etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * 4.184 * units.kilocalorie_per_mole #was in kilocal per mol
 
               if split[1] == "atom":
   	        if len(split) == 7: 
@@ -176,7 +176,7 @@ class DesmondParser():
 	        atom.setCharge(0, float(split[2])*units.elementary_charge) #NEED TO CONVERT TO ACTUAL UNITS
 	        atom.setMass(0, float(split[3]) * units.amu)
 		stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * 0.1 * units.nanometers #was in angstroms
-		etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * 4.184 * units.kilojoules_per_mole #was in kilocal per mol
+		etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * 4.184 * units.kilocalorie_per_mole #was in kilocal per mol
 	        atom.setSigma(0, stemp) 
 	        atom.setEpsilon(0, etemp) 
                 atom.cgnr = cgnr
@@ -194,8 +194,8 @@ class DesmondParser():
 		                  float(split[2]) * units.amu,      #mass
 		                  float(split[3]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
 		                  'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
-		                  sigma * units.kilojoules_per_mole * units.nanometers**(6),  
-		                  epsilon * units.kilojoules_per_mole * units.nanometers**(12))  
+		                  sigma * units.kilocalorie_per_mole * units.nanometers**(6),  
+		                  epsilon * units.kilocalorie_per_mole * units.nanometers**(12))  
 		  elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
 		    newAtomType = AtomCR23Type(split[4], #atomtype/name 
 		                  split[4],                 #bondtype
@@ -241,7 +241,7 @@ class DesmondParser():
                                 atomlist[int(split[2])-1].atomName,
                                 1,
                                 float(split[4]) * 0.1 * units.nanometers, #UNITS IN ANGSTROMS--CHECK
-                                float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2), #COME BACK TO THESE UNITS
+                                float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2), #COME BACK TO THESE UNITS
 				1)
  	        except:
 		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
@@ -254,7 +254,7 @@ class DesmondParser():
 	          newBondForce = Bond(int(split[1]),
 		                 int(split[2]),
                                  float(split[4]) * 0.1 * units.nanometers, #UNITS IN ANGSTROMS...CHECK
-                                 float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2),
+                                 float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2),
                                  None,
 				 1)
 	        except:
@@ -272,7 +272,7 @@ class DesmondParser():
                                 atomlist[int(split[2])-1].atomName,
                                 1,
                                 float(split[4]) * 0.1 * units.nanometers, #UNITS IN ANGSTROMS--CHECK
-                                float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2), #COME BACK TO THESE UNITS
+                                float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2), #COME BACK TO THESE UNITS
 				0)
  	        except:
 		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
@@ -285,7 +285,7 @@ class DesmondParser():
 	          newBondForce = Bond(int(split[1]),
 		                 int(split[2]),
                                  float(split[4]) * 0.1 * units.nanometers, #UNITS IN ANGSTROMS...CHECK
-                                 float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2),
+                                 float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2),
                                  None,
 				 0)
 	        except:
@@ -302,11 +302,11 @@ class DesmondParser():
 #                              atomlist[int(split[2])].atomName,
 #                              1,
 #                              float(split[4]) * 0.1 * units.nanometers,
-#                              float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2))
+#                              float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2))
 #	        newBondForce = Bond(int(split[1]),
 #		               int(split[2]),
 #                               float(split[4]) * 0.1 * units.nanometers,
-#                               float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2),
+#                               float(split[5]) * 4.184 * 100 * units.kilocalorie_per_mole * units.nanometers**(-2),
 #                               None,
 #			       0)
               if newBondForce:
@@ -382,14 +382,14 @@ class DesmondParser():
 #                newPairType = LJ1PairCR1Type(atomlist[a[0]-1].atomName,  #atom 1 and index
 #                                atomlist[a[1]-1].atomName,              #atom 2 and index
 #                                1,                                     #type
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(6),  #COME BACK
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(12)) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(6),  #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(12)) #COME BACK
 #	      elif System._sys._combinationRule == (2 or 3):
 #                newPairType = LJ1PairCR23Type(atomlist[a[0]-1].atomName,
 #                                atomlist[a[1]-1].atomName,
 #				 1,
 #                                float(0) * units.nanometers,          #COME BACK
-#                                float(0) * units.kilojoules_per_mole) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole) #COME BACK
 #	      self.pairtypes.add(newPairType)
 	   
 	    for a in funct1_cl: #PUT ALL PAIRS WITH ONLY CL INT LJ1
@@ -401,14 +401,14 @@ class DesmondParser():
 #                newPairType = LJ1PairCR1Type(atomlist[a[0]-1].atomName,  #atom 1 and index
 #                                atomlist[a[1]-1].atomName,               #atom 2 and index
 #                                1,                                     #type
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(6),  #COME BACK
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(12)) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(6),  #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(12)) #COME BACK
 #	      elif System._sys._combinationRule == (2 or 3):
 #                newPairType = LJ1PairCR23Type(atomlist[a[0]-1].atomName,
 #                                atomlist[a[1]-1].atomName,
 #				 1,
 #                                float(0) * units.nanometers,          #COME BACK
-#                                float(0) * units.kilojoules_per_mole) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole) #COME BACK
 #	      self.pairtypes.add(newPairType)
 	      
 	    for a in funct1_both: #PUT ALL PAIRS WITH BOTH LJ AND COULOMB INTO NB 
@@ -422,8 +422,8 @@ class DesmondParser():
 #                                2,                                     #type
 #				float(ljch) * units.elementary_charge, #UNITS CORRECT???
 #                                float(clomb) * units.elementary_charge, #UNITS CORRECT???
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(6),  #COME BACK
-#                                float(0) * units.kilojoules_per_mole * units.nanometers**(12)) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(6),  #COME BACK
+#                                float(0) * units.kilocalorie_per_mole * units.nanometers**(12)) #COME BACK
 #	      elif System._sys._combinationRule == (2 or 3):
 #                newPairType = LJNBPairCR23Type(atomlist[a[0]-1].atomName,
 #                                atomlist[a[1]-1].atomName,
@@ -431,7 +431,7 @@ class DesmondParser():
 #				float(ljch) * units.elementary_charge, #UNITS CORRECT???
 #                                float(clomb) * units.elementary_charge, #UNITS CORRECT???
 #                                float(0) * units.nanometers,          #COME BACK
-#                                float(0) * units.kilojoules_per_mole) #COME BACK
+#                                float(0) * units.kilocalorie_per_mole) #COME BACK
 #	      self.pairtypes.add(newPairType)
 
 	    
@@ -445,18 +445,12 @@ class DesmondParser():
 	      newAngleForce = None
 	      #Angle
 	      if re.match("Harm", split[4]):
-#	        newAngleType = AngleType(atomlist[int(split[1])-1],
-#		               atomlist[int(split[2])-1],
-#			       atomlist[int(split[3])-1],
-#			       1,
-#			       float(split[5]) * units.degrees,
-#			       float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)) #UNITS??
 		try:
 		  newAngleForce = Angle(int(split[1]),
 		                  int(split[2]),
 				  int(split[3]),
 				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilojoules_per_mole * units.radians **(-2)) #UNITS???
+				  float(split[6]) * units.kilocalorie_per_mole * units.degrees **(-2)) #UNITS???
                                   #0)
 		except:
 		  newAngleForce = Angle(int(split[1]),
@@ -466,18 +460,12 @@ class DesmondParser():
 				  float(split[6]))
 
               elif re.match("Harm_constrained",split[4]):
-#	        newAngleType = AngleType(atomlist[int(split[1])-1],
-#		               atomlist[int(split[2])-1],
-#			       atomlist[int(split[3])-1],
-#			       1,
-#			       float(split[5]) * units.degrees,
-#			       float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)) #UNITS??
 		try:
 		  newAngleForce = Angle(int(split[1]),
 		                  int(split[2]),
 				  int(split[3]),
 				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilojoules_per_mole * units.radians **(-2), #UNITS???
+				  float(split[6]) * units.kilocalorie_per_mole * units.degrees**(-2),
                                   1)
 		except:
 		  newAngleForce = Angle(int(split[1]),
@@ -487,13 +475,12 @@ class DesmondParser():
 				  float(split[6]),
                                   1)
 	      else:
-#	        print "NEW ANGLE TYPE AT LINE %d AND CALLED %s"%(i, split[4])
-                print "ERROR (readFile): found unsupported angle"
+                print "ERROR (readFile): found unsupported angle in: ",
+                print lines[i]
 
 	      if newAngleForce:
                 currentMoleculeType.angleForceSet.add(newAngleForce)
 	        System._sys._forces.add(newAngleForce)
-#	        self.angletypes.add(newAngleType)
 
 	      i+=1
 
@@ -510,22 +497,13 @@ class DesmondParser():
 	      newDihedralForce = None
 	      #Proper Diehdral 1 ---NOT SURE ABOUT MULTIPLICITY
               if re.match(split[5], "PROPER_HARM", re.IGNORECASE): 
-#		newDihedralType = ProperDihedral1Type(atomlist[int(split[1])-1],
-#		                  atomlist[int(split[2])-1],
-#				  atomlist[int(split[3])-1],
-#				  atomlist[int(split[4])-1],
-#				  1,
-#                                  float(split[6]) * units.degrees,
-#                                  float(split[7]) * 4.18 * units.kilojoules_per_mole * (0.01745 * units.radians) **(-2), #UNITS??? DESMOND SAYS UNITS IN ENERGY/DEGREE^2, GROMACS SAYS UNITS IN KJ/MOL / RADIAN ^2
-#				  2)
                 try:
                   newDihedralForce = ProperDihedral1(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
                                      float(split[6]) * units.degrees,
-                                     float(split[7]) * 4.184 * units.kilojoules_per_mole * ((0.01745 * units.radians) **(-2)), #UNITS??? DESMOND SAYS UNITS IN ENERGY/DEGREE^2, GROMACS SAYS UNITS IN KJ/MOL / RADIAN ^2
-                                     2)
+                                     float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
                 except:
                   newDihedralFroce = ProperDihedral1(int(split[1]),
                                      int(split[2]),
@@ -537,22 +515,15 @@ class DesmondParser():
               
 	      #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
               elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE): 
-#		newDihedralType = ImproperDihedral2Type(atomlist[int(split[1])-1],
-#		                  atomlist[int(split[2])-1],
-#				  atomlist[int(split[3])-1],
-#				  atomlist[int(split[4])-1],
-#				  1,
-#                                  float(split[6]) * units.degrees,
-#                                  float(split[7]) * 4.18 * units.kilojoules_per_mole * (0.01745 * units.radians) **(-2))
                 try:
                   newDihedralForce = ImproperDihedral2(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
                                      float(split[6]) * units.degrees,
-                                     float(split[7]) * 4.184 * units.kilojoules_per_mole * ((0.01745 * units.radians) **(-2)))
+                                     float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
                 except:
-                  newDihedralFroce = ImproperDihedral2(int(split[1]),
+                  newDihedralForce = ImproperDihedral2(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
@@ -561,28 +532,17 @@ class DesmondParser():
 	      
               #RB Dihedral (Assume for Improper trig and Proper trig for now)
 	      elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): # ASSUME IT CORRELATE TO RB DIHEDRAL (LAST PARAMETER IS ALWAYS 0)
-#		newDihedralType = RBDihedralType(atomlist[int(split[1])-1],
-#		                  atomlist[int(split[2])-1],
-#				  atomlist[int(split[3])-1],
-#				  atomlist[int(split[4])-1],
-#				  3,
-#                                  float(split[6]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[7]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[8]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[9]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[10]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[11]) * 4.184 * units.kilojoules_per_mole)
                 try:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[7]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[8]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[9]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[10]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[11]) * 4.184 * units.kilojoules_per_mole)
+                                     float(split[6]) *  units.kilocalorie_per_mole,
+                                     float(split[7]) *  units.kilocalorie_per_mole,
+                                     float(split[8]) *  units.kilocalorie_per_mole,
+                                     float(split[9]) *  units.kilocalorie_per_mole,
+                                     float(split[10]) *  units.kilocalorie_per_mole,
+                                     float(split[11]) *  units.kilocalorie_per_mole)
                 except:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
@@ -596,29 +556,17 @@ class DesmondParser():
                                      float(split[11]))
 
 	      elif re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE): #SAME TYPE AS PROPER
-#		newDihedralType = RBDihedralType(atomlist[int(split[1])-1],
-#		                  atomlist[int(split[2])-1],
-#				  atomlist[int(split[3])-1],
-#				  atomlist[int(split[4])-1],
-#				  3,
-#                                  float(split[6]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[7]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[8]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[9]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[10]) * 4.184 * units.kilojoules_per_mole,
-#                                  float(split[11]) * 4.184 * units.kilojoules_per_mole)
                 try:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[7]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[8]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[9]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[10]) * 4.184 * units.kilojoules_per_mole,
-                                     float(split[11]) * 4.184 * units.kilojoules_per_mole,
-				     1) #IMPROPER
+                                     float(split[6]) * units.kilocalorie_per_mole,
+                                     float(split[7]) * units.kilocalorie_per_mole,
+                                     float(split[8]) * units.kilocalorie_per_mole,
+                                     float(split[9]) * units.kilocalorie_per_mole,
+                                     float(split[10]) * units.kilocalorie_per_mole,
+                                     float(split[11]) * units.kilocalorie_per_mole)
                 except:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
@@ -629,16 +577,62 @@ class DesmondParser():
                                      float(split[8]),
                                      float(split[9]),
                                      float(split[10]),
-                                     float(split[11]),
-				     1) #IMPROPER
+                                     float(split[11]))
                 
+	      elif re.match(split[5], "OPLS_PROPER", re.IGNORECASE): 
+                try:
+                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
+                  newDihedralForce = RBDihedral(int(split[1]),
+                                     int(split[2]),
+                                     int(split[3]),
+                                     int(split[4]),
+                                     float(split[6]) * units.kilocalorie_per_mole,
+                                     float(split[7]) * units.kilocalorie_per_mole,
+                                     float(split[8]) * units.kilocalorie_per_mole,
+                                     float(split[9]) * units.kilocalorie_per_mole,
+                                     float(split[10]) * units.kilocalorie_per_mole,
+                                     float(split[11]) * units.kilocalorie_per_mole)
+                except:
+                  newDihedralForce = RBDihedral(int(split[1]),
+                                     int(split[2]),
+                                     int(split[3]),
+                                     int(split[4]),
+                                     float(split[6]),
+                                     float(split[7]),
+                                     float(split[8]),
+                                     float(split[9]),
+                                     float(split[10]),
+                                     float(split[11]))
+              elif re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE): 
+                try:
+                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
+                  newDihedralForce = RBDihedral(int(split[1]),
+                                     int(split[2]),
+                                     int(split[3]),
+                                     int(split[4]),
+                                     float(split[6]) * units.kilocalorie_per_mole,
+                                     float(split[7]) * units.kilocalorie_per_mole,
+                                     float(split[8]) * units.kilocalorie_per_mole,
+                                     float(split[9]) * units.kilocalorie_per_mole,
+                                     float(split[10]) * units.kilocalorie_per_mole,
+                                     float(split[11]) * units.kilocalorie_per_mole)
+                except:
+                  newDihedralForce = RBDihedral(int(split[1]),
+                                     int(split[2]),
+                                     int(split[3]),
+                                     int(split[4]),
+                                     float(split[6]),
+                                     float(split[7]),
+                                     float(split[8]),
+                                     float(split[9]),
+                                     float(split[10]),
+                                     float(split[11]))
               else:
-#	        print "NEW DIHEDRAL TYPE AT LINE %d AND CALLED %s"%(i, split[5])
-                print "ERROR (readFile): found unsupported dihedral"
+                print "ERROR (readFile): found unsupported dihedral in:",
+                print line[i]
 	      if newDihedralForce:
 	        currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                 System._sys._forces.add(newDihedralForce)		    
-#               self.dihedraltypes.add(newDihedralType)
 	      i+=1
 	    #9 proper dihedrals, funct = 1
 	    #3 improper dihedrals, funct = 2
@@ -676,7 +670,7 @@ class DesmondParser():
 	            tempatom.append(None)
 		for l in lenpos:
 	          if not re.search('<>',split[l]):
-	            templength.append(float(split[l])*0.1*units.nanometers)
+	            templength.append(float(split[l])*0.1*units.nanometers) # Check units?
 		  else:
 	            templength.append(None*units.nanometers)
 		if re.search('AH', split[funct_pos]):
@@ -684,28 +678,20 @@ class DesmondParser():
 		elif re.match('HOH', split[funct_pos]):
 		  templen = 2
 		if templen == 1: #THINK LENGTH IS ORIGINALLY IN ANGSTROMS...NOT SURE
-		  #newConstraint = Constraint2(tempatom[0],tempatom[1],templength[0])
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
 		elif templen == 2:
-		  #newConstraint = Constraint3(tempatom[0],tempatom[1],tempatom[2],templength[0],templength[1],templength[2],split[funct_pos]) #AH2 or HOH
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2]) #AH2 or HOH
                 elif templen == 3:
-		  #newConstraint = Constraint4(tempatom[0],tempatom[1],tempatom[2],tempatom[3],templength[0],templength[1],templength[2])
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
 		elif templen == 4:
-         	  #newConstraint = Constraint5(tempatom[0],tempatom[1],tempatom[2],tempatom[3],tempatom[4],templength[0],templength[1],templength[2],templength[3])
          	  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
 		elif templen == 5:
-                  #newConstraint = Constraint6(tempatom[0],tempatom[1],tempatom[2],tempatom[3],tempatom[4],tempatom[5],templength[0],templength[1],templength[2],templength[3],templength[4])
                   newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
 		elif templen == 6:
-		  #newConstraint = Constraint7(tempatom[0],tempatom[1],tempatom[2],tempatom[3],tempatom[4],tempatom[5],tempatom[6],templength[0],templength[1],templength[2],templength[3],templength[4],templength[5])
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
 		elif templen == 7:
-		  #newConstraint = Constraint8(tempatom[0],tempatom[1],tempatom[2],tempatom[3],tempatom[4],tempatom[5],tempatom[6],tempatom[7],templength[0],templength[1],templength[2],templength[3],templength[4],templength[5],templength[6])
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
 		elif templen == 8:
-		  #newConstraint = Constraint9(tempatom[0],tempatom[1],tempatom[2],tempatom[3],tempatom[4],tempatom[5],tempatom[6],tempatom[7],tempatom[8],templength[0],templength[1],templength[2],templength[3],templength[4],templength[5],templength[6],templength[7])
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
 	      else:
 	        print "ERROR (readFile): found unsupported constraint"
@@ -766,16 +752,11 @@ class DesmondParser():
 	if bg:
 	  split = lines[i].split()
 	 
-#         newBondType = BondType(atomlist[int(split[1])-1].atomName,
-#                                  atomlist[int(split[2])].atomName,
-#                                  1,
-#                                  float(split[4]) * 0.1 * units.nanometers,
-#                                  float(split[5]) * 4.184 * 100 * units.kilojoules_per_mole * units.nanometers**(-2))
 	  try:
 	    newBondForce = Bond(int(split[1]),
 	                   int(split[2]),
 			   float(0) * units.nanometers, #BOND ORDERS ARE DIFFERENT, SPLIT3 IS BOND ORDER. NOT ACCURATE CALCULATION
-			   float(0) * units.kilojoules_per_mole * units.nanometers**(-2),
+			   float(0) * units.kilocalorie_per_mole * units.nanometers**(-2),
 			   int(split[3]),
 			   0)
 	  except:
@@ -787,8 +768,6 @@ class DesmondParser():
 			   0)
 	bondForceSet.add(newBondForce)
 	forces.add(newBondForce)
-#	if newBondType not in self.bondtypes:
-#	  self.bondtypes.add(newBondType)
 	i+=1
 	
       return [bondForceSet, forces]
@@ -898,7 +877,6 @@ class DesmondParser():
             break  
           else:
             aline = shlex.split(lines[i])
-            #pdb.set_trace()
             atom.residueIndex = int(aline[rincol])
             atom.residueName = aline[rncol].strip()
 	    atom.atomIndex = int(aline[aicol])
@@ -1537,8 +1515,8 @@ class DesmondParser():
 	  
           for bond in moleculetype.bondForceSet.itervalues():
 	    try:
-	      length = float(bond.length._value * 10)
-	      k = float(bond.k._value / (4.184 * 100))
+	      length = float(bond.length._value * 10)   #Look at unit conversions here
+	      k = float(bond.k._value / ( 100))  # look at unit conversions here
             except:
 	      length = None
 	      k = None

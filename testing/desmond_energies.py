@@ -24,7 +24,6 @@ def desmond_energies(name, cms=None, in_out = 'DtoD', despath='/opt/schrodinger2
 
     os.environ['SCHRODINGER'] = despath
     # run desmond
-    pdb.set_trace()
     os.system('$SCHRODINGER/desmond' + " -WAIT -P 1 -in {cms} -JOBNAME {name} -c {cfg}".format(name = name, cms=cms,cfg=cfg))
 
     energrp =  name + '.enegrp.dat'
@@ -40,7 +39,7 @@ def desmond_energies(name, cms=None, in_out = 'DtoD', despath='/opt/schrodinger2
         file_out = os.path.join(base,name,file)
         if os.path.isfile(file_out):
             os.remove(file_out)
-        else:
+        elif os.path.isdir(file_out):
             shutil.rmtree(file_out)
         os.rename(file,file_out)
     # plus the extra .cms file that gets copied to the current directory
