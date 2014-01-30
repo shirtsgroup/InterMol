@@ -43,15 +43,20 @@ def gromacs_to_gromacs(name='2PPN', top=None, gro=None, gropath='', grosuff='',
     # delete gromacs backup files
     if clean:
         import glob
-        filelist = glob.glob("Inputs/Gromacs/#*#")
-        filelist += glob.glob("Outputs/GromacsToGromacs/#*#")
+        filelist = glob.glob("Inputs/Gromacs/{name}/#*#".format(name=name))
+        filelist += glob.glob("Outputs/GromacsToGromacs/{name}/#*#".format(name=name))
         for f in filelist:
             os.remove(f)
     if energy:
-        e_in = np.asarray(e_in)
-        e_out = np.asarray(e_out)
-        diff = e_out - e_in
-        rms = np.sqrt(np.mean(diff ** 2))
+        diff = dict()
+        for e_type, value in e_in.iteritems():
+            diff[e_type] = value - e_out[e_type]
+
+        diff_num = list()
+        for value in diff.values():
+            diff_num.append(value._value)
+        diff_num = np.asarray(diff_num)
+        rms = np.sqrt(np.mean(diff_num ** 2))
         return rms, e_in, e_out
 
 if __name__ == "__main__":
@@ -93,8 +98,8 @@ if __name__ == "__main__":
             'Kinetic En.', 'Total Energy', 'Temperature']
 
     print "%20s %12s %12s %12s" % ("Type", "Input", "Output", "Diff")
-    for name, i, o in zip(types, e_in, e_out):
-        print "%20s %15.8f %15.8f %15.8f" % (name, i, o, i-o)
+    for name, i, o in zip(types, e_in.values(), e_out.values()):
+        print "%20s %15.8f %15.8f %15.8f" % (name, i._value, o._value, (i-o)._value)
 
     print " "
     print "RMS signed error: %10.5f" % (rms)

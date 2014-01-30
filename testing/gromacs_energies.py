@@ -1,6 +1,8 @@
 import os
 import pdb
 
+import intermol.unit as units
+
 def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff=''):
     """
 
@@ -56,6 +58,14 @@ def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff='
         all_lines = f.readlines()
 
     # take last line
-    sec_last = all_lines[-1].split()
+    sec_last = all_lines[-1].split()[1:]
     data = map(float, sec_last)
-    return data
+
+    data = [value * units.kilojoules_per_mole for value in data[:-1]]
+    data[-1] *= units.kelvin
+
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
+            'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
+            'Kinetic En.', 'Total Energy', 'Temperature']
+    e_out = dict(zip(types, data))
+    return e_out
