@@ -24,13 +24,15 @@ all=['AbstractAtomType',
     'CrossBondAngleAngleType'
     'CrossBondBondAngleType'
     'QuarticAngleType'
-    'RBDihedralType'
     'UreyBradleyAngleType'
 
+    'RBDihedralType'
     'ProperDihedral1Type'
     'ImproperDihedral2Type'
     'ImproperDihedral4Type'
-    'ProperDihedral9Type']
+    'ProperDihedral9Type'
+    'ConvertOPLS'
+]
 
 from AbstractAtomType import AbstractAtomType
 from AbstractBondType import AbstractBondType
@@ -67,3 +69,5 @@ from ImproperDihedral2Type import ImproperDihedral2Type
 from ImproperDihedral4Type import ImproperDihedral4Type
 from ProperDihedral9Type import ProperDihedral9Type
 
+from ConvertOPLS import ConvertFromRBToOPLSDihedral
+from ConvertOPLS import ConvertFromOPLSToRBDihedral

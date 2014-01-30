@@ -514,7 +514,8 @@ class DesmondParser():
                                      2)
               
 	      #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
-              elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE): 
+              # These two should be the same function.  Check differences (polymer or protein defn, etc).
+              elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE):
                 try:
                   newDihedralForce = ImproperDihedral2(int(split[1]),
                                      int(split[2]),
@@ -581,52 +582,39 @@ class DesmondParser():
                 
 	      elif re.match(split[5], "OPLS_PROPER", re.IGNORECASE): 
                 try:
-                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) * units.kilocalorie_per_mole,
-                                     float(split[7]) * units.kilocalorie_per_mole,
-                                     float(split[8]) * units.kilocalorie_per_mole,
-                                     float(split[9]) * units.kilocalorie_per_mole,
-                                     float(split[10]) * units.kilocalorie_per_mole,
-                                     float(split[11]) * units.kilocalorie_per_mole)
+                  # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
+                  # terms, and the others are set to zero.
+                  f1,f2,f3,f4 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
+                                                            float(split[9]),float(split[10]))
                 except:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]))
-              elif re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE): 
+                    f1=0
+                    f2=0
+                    f3=0
+                    f4=0
+                    # do some additional error handling here.
+                    print "ERROR (readFile): OPLS_PROPER terms not found",
                 try:
-                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]) * units.kilocalorie_per_mole,
-                                     float(split[7]) * units.kilocalorie_per_mole,
-                                     float(split[8]) * units.kilocalorie_per_mole,
-                                     float(split[9]) * units.kilocalorie_per_mole,
-                                     float(split[10]) * units.kilocalorie_per_mole,
-                                     float(split[11]) * units.kilocalorie_per_mole)
+                                     0.0 * units.kilocalorie_per_mole,
+                                     f1 * units.kilocalorie_per_mole,
+                                     f2 * units.kilocalorie_per_mole,
+                                     f3 * units.kilocalorie_per_mole,
+                                     f4 * units.kilocalorie_per_mole,
+                                     0.0 * units.kilocalorie_per_mole)
                 except:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]))
+                                     0.0 * units.kilocalorie_per_mole,
+                                     f1 * units.kilocalorie_per_mole,
+                                     f2 * units.kilocalorie_per_mole,
+                                     f3 * units.kilocalorie_per_mole,
+                                     f4 * units.kilocalorie_per_mole,
+                                     0.0 * units.kilocalorie_per_mole)
               else:
                 print "ERROR (readFile): found unsupported dihedral in:",
                 print line[i]
