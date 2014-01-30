@@ -391,11 +391,12 @@ def writeData(filename, unit_set='real'):
         energy_terms = " ".join(['ebond',
                                  'eangle',
                                  'edihed',
+                                 'eimp',
                                  'epair',
                                  'evdwl',
                                  'ecoul',
-                                 #'epoten',
-                                 #'ekinet',
+                                 'pe',
+                                 'ke',
                                  'etotal',
                                  'temp'])
 

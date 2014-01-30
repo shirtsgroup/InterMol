@@ -5,7 +5,7 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 
-def gromacs_to_gromacs(name='2PPN', top=None, gro=None, gropath='', grosuff='',
+def gromacs_to_gromacs(name='system2_GMX', top=None, gro=None, gropath='', grosuff='',
         energy=True, clean=True):
     """Test gromacs to gromacs conversion
     """
@@ -24,8 +24,8 @@ def gromacs_to_gromacs(name='2PPN', top=None, gro=None, gropath='', grosuff='',
     if not os.path.isfile(top_in):
         raise Exception("File not found: {0}!".format(top_in))
 
-    top_out = os.path.join('Outputs/GromacsToGromacs/', name + '.top')
-    gro_out = os.path.join('Outputs/GromacsToGromacs/', name + '.gro')
+    top_out = os.path.join('Outputs/GromacsToGromacs/', name, 'topol.top')
+    gro_out = os.path.join('Outputs/GromacsToGromacs/', name, 'conf.gro')
 
     # calc input energies
     if energy:
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-n', type='str', dest='name', default='2PPN',
+    parser.add_option('-n', type='str', dest='name', default='system2_GMX',
             help="Name of system")
     parser.add_option('-p', type='str', dest='top', default=None,
             help="Topology .top file")

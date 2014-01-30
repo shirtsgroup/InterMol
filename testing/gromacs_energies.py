@@ -61,9 +61,12 @@ def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff='
     sec_last = all_lines[-1].split()[1:]
     data = map(float, sec_last)
 
+    # give everything units
+    temp = data[-1] * units.kelvin
     data = [value * units.kilojoules_per_mole for value in data[:-1]]
-    data[-1] *= units.kelvin
+    data.append(temp)
 
+    # pack it all up in a dictionary
     types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
             'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
             'Kinetic En.', 'Total Energy', 'Temperature']

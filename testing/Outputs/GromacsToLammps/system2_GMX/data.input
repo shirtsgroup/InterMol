@@ -8,9 +8,11 @@ pair_style lj/cut/coul/long 10.0
 pair_modify mix geometric
 kspace_style pppm 1.0e-4
 
+bond_style harmonic
+angle_style harmonic
 
-read_data system2_GMX.lmp
+read_data data.lmp
 
-thermo_style custom ebond eangle edihed epair evdwl ecoul etotal temp
+thermo_style custom ebond eangle edihed eimp epair evdwl ecoul pe ke etotal temp
 
 run 0
