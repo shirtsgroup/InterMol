@@ -5,6 +5,7 @@ import numpy as np
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
+from helper_functions import *
 
 def gromacs_to_lammps(name, gropath='', grosuff='', lmppath='', lmpbin='lmp_openmpi',
         energy=True, clean=True):
@@ -43,17 +44,7 @@ def gromacs_to_lammps(name, gropath='', grosuff='', lmppath='', lmpbin='lmp_open
             os.remove(f)
 
     if energy:
-        diff = dict()
-        for e_type, value in e_in.iteritems():
-            if e_type in e_out:
-                diff[e_type] = value - e_out[e_type]
-
-        diff_num = list()
-        for value in diff.values():
-            diff_num.append(value._value)
-        diff_num = np.asarray(diff_num)
-        rms = np.sqrt(np.mean(diff_num ** 2))
-        return rms, e_in, e_out
+       return combine_energy_results(e_in, e_out)
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -87,16 +78,4 @@ if __name__ == "__main__":
     results = gromacs_to_lammps(name, gropath, grosuff, lmppath, lmpbin, energy, clean)
 
     if energy:
-        rms, e_in, e_out = results
-        print "======================================================================="
-        print "Summary statistics"
-        types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
-                'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
-                'Kinetic En.', 'Total Energy', 'Temperature']
-
-        print "%20s %12s %12s %12s" % ("Type", "Input", "Output", "Diff")
-        for name, i, o in zip(types, e_in.values(), e_out.values()):
-            print "%20s %15.8f %15.8f %15.8f" % (name, i._value, o._value, (i-o)._value)
-
-        print " "
-        print "RMS signed error: %10.5f" % (rms)
+        print_energy_summary(results)

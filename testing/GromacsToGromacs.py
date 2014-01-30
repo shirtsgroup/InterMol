@@ -4,6 +4,7 @@ import numpy as np
 
 import intermol.Driver as Driver
 from gromacs_energies import gromacs_energies
+from helper_functions import *
 
 def gromacs_to_gromacs(name='system2_GMX', top=None, gro=None, gropath='', grosuff='',
         energy=True, clean=True):
@@ -48,16 +49,9 @@ def gromacs_to_gromacs(name='system2_GMX', top=None, gro=None, gropath='', grosu
         for f in filelist:
             os.remove(f)
     if energy:
-        diff = dict()
-        for e_type, value in e_in.iteritems():
-            diff[e_type] = value - e_out[e_type]
+       return combine_energy_results(e_in, e_out)
 
-        diff_num = list()
-        for value in diff.values():
-            diff_num.append(value._value)
-        diff_num = np.asarray(diff_num)
-        rms = np.sqrt(np.mean(diff_num ** 2))
-        return rms, e_in, e_out
+
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -89,17 +83,8 @@ if __name__ == "__main__":
     energy = options.energy
     clean = options.clean
 
-    rms, e_in, e_out = gromacs_to_gromacs(name,top, gro, gropath, grosuff, energy, clean)
+    results = gromacs_to_gromacs(name,top, gro, gropath, grosuff, energy, clean)
 
-    print "======================================================================="
-    print "Summary statistics"
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
-            'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
-            'Kinetic En.', 'Total Energy', 'Temperature']
+    if energy:
+        print_energy_summary(results)
 
-    print "%20s %12s %12s %12s" % ("Type", "Input", "Output", "Diff")
-    for name, i, o in zip(types, e_in.values(), e_out.values()):
-        print "%20s %15.8f %15.8f %15.8f" % (name, i._value, o._value, (i-o)._value)
-
-    print " "
-    print "RMS signed error: %10.5f" % (rms)
