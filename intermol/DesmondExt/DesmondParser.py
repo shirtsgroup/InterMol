@@ -584,37 +584,37 @@ class DesmondParser():
                 try:
                   # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
                   # terms, and the others are set to zero.
-                  f1,f2,f3,f4 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
-                                                            float(split[9]),float(split[10]))
+                  c0,c1,c2,c3,c4,c5 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
+                                                                  float(split[9]),float(split[10]))
                 except:
                     f1=0
                     f2=0
                     f3=0
                     f4=0
                     # do some additional error handling here.
-                    print "ERROR (readFile): OPLS_PROPER terms not found",
+                    print "ERROR (readFile): OPLS_PROPER terms not found"
                 try:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     0.0 * units.kilocalorie_per_mole,
-                                     f1 * units.kilocalorie_per_mole,
-                                     f2 * units.kilocalorie_per_mole,
-                                     f3 * units.kilocalorie_per_mole,
-                                     f4 * units.kilocalorie_per_mole,
-                                     0.0 * units.kilocalorie_per_mole)
+                                     c0 * units.kilocalorie_per_mole,
+                                     c1 * units.kilocalorie_per_mole,
+                                     c2 * units.kilocalorie_per_mole,
+                                     c3 * units.kilocalorie_per_mole,
+                                     c4 * units.kilocalorie_per_mole,
+                                     c5 * units.kilocalorie_per_mole)
                 except:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     0.0 * units.kilocalorie_per_mole,
-                                     f1 * units.kilocalorie_per_mole,
-                                     f2 * units.kilocalorie_per_mole,
-                                     f3 * units.kilocalorie_per_mole,
-                                     f4 * units.kilocalorie_per_mole,
-                                     0.0 * units.kilocalorie_per_mole)
+                                     c0 * units.kilocalorie_per_mole,
+                                     c1 * units.kilocalorie_per_mole,
+                                     c2 * units.kilocalorie_per_mole,
+                                     c3 * units.kilocalorie_per_mole,
+                                     c4 * units.kilocalorie_per_mole,
+                                     c5 * units.kilocalorie_per_mole)
               else:
                 print "ERROR (readFile): found unsupported dihedral in:",
                 print line[i]
@@ -922,29 +922,15 @@ class DesmondParser():
 
 	
       i = start
-      v1x = None
-      v2x = None
-      v3x = None
-      v1y = None
-      v2y = None
-      v3y = None
-      v1z = None
-      v2z = None
-      v3z = None
+      v = np.zeros([3,3])
       while i < end:
         if re.match(r'\s*[\d+]',lines[i]):
-          v1x = float(re.sub(r'\s', '', lines[i])) * units.nanometers
-          v1y = float(re.sub(r'\s', '', lines[i+1])) * units.nanometers
-          v1z = float(re.sub(r'\s', '', lines[i+2])) * units.nanometers
-          v2x = float(re.sub(r'\s', '', lines[i+3])) * units.nanometers
-          v2y = float(re.sub(r'\s', '', lines[i+4])) * units.nanometers
-          v2z = float(re.sub(r'\s', '', lines[i+5])) * units.nanometers
-          v3x = float(re.sub(r'\s', '', lines[i+6])) * units.nanometers
-          v3y = float(re.sub(r'\s', '', lines[i+7])) * units.nanometers
-          v3z = float(re.sub(r'\s', '', lines[i+8])) * units.nanometers
+          for j in range(3):
+              for k in range(3):
+                  v[j,k] = float(re.sub(r'\s', '', lines[i+3*j+k])) * units.nanometers
           i = end
         i+=1
-      System._sys.setBoxVector(v1x, v2x, v3x, v1y, v2y, v3y, v1z, v2z, v3z)
+      System._sys.setBoxVector(v)
       
     def readFile(self, filename):
 
@@ -1177,6 +1163,9 @@ class DesmondParser():
       i = 0
       nonecnt = 0
       for moleculetype in System._sys._molecules.values():
+        # why can't we do this below?
+        #bondlist = moleculetype.bondForceSet.itervalues()
+        #sortedlist = sorted(bondlist, key=lambda x: x.atom1)
         for bond in moleculetype.bondForceSet.itervalues():
           if bond and bond.order:
             i += 1
