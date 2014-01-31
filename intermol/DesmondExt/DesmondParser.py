@@ -4,6 +4,7 @@ import os
 import copy
 import string
 import re
+import numpy as np
 from collections import deque
 
 #import simtk.unit as units
@@ -920,16 +921,19 @@ class DesmondParser():
 #            start: starting position
 #            end: ending position
 
-	
       i = start
-      v = np.zeros([3,3])
-      while i < end:
-        if re.match(r'\s*[\d+]',lines[i]):
-          for j in range(3):
-              for k in range(3):
-                  v[j,k] = float(re.sub(r'\s', '', lines[i+3*j+k])) * units.nanometers
-          i = end
-        i+=1
+      v = np.zeros([3,3])*units.nanometers
+      nvec = 0
+      while (i<end):
+          if re.match(r'\s*[\d+]',lines[i]):
+              j = (nvec)/3
+              k = (nvec)%3
+              v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
+              nvec += 1
+              if nvec == 9:  # always 9 of them 
+                  break;
+          i +=1
+
       System._sys.setBoxVector(v)
       
     def readFile(self, filename):
@@ -1090,15 +1094,9 @@ class DesmondParser():
       #box vector
       bv = System._sys.getBoxVector()
       lines.append('  "full system"\n')
-      lines.append('%22s\n'%float(bv[0][0]._value))
-      lines.append('%22s\n'%float(bv[1][0]._value))
-      lines.append('%22s\n'%float(bv[2][0]._value))
-      lines.append('%22s\n'%float(bv[0][1]._value))
-      lines.append('%22s\n'%float(bv[1][1]._value))
-      lines.append('%22s\n'%float(bv[2][1]._value))
-      lines.append('%22s\n'%float(bv[0][2]._value))
-      lines.append('%22s\n'%float(bv[1][2]._value))
-      lines.append('%22s\n'%float(bv[2][2]._value))
+      for i in range(3):
+          for j in range(3):
+              lines.append('%22s\n'%float(bv[i][j]._value))
       lines.append('  full_system\n')
       
       #M_ATOM
