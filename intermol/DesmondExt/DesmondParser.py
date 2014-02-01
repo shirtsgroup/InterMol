@@ -715,12 +715,9 @@ class DesmondParser():
     def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
 	                  
 #        Loading in m_bonds in Desmond format
-	
 #        Args:
 #            lines: list of all data in CMS format
-	    
 #	    start: beginning of where m_bonds starts for each molecule
-	    
 #	    end: ending of where m_bondsends for each molecule
 
       if verbose:
@@ -740,7 +737,6 @@ class DesmondParser():
 	    i+=1
 	if bg:
 	  split = lines[i].split()
-	 
 	  try:
 	    newBondForce = Bond(int(split[1]),
 	                   int(split[2]),
@@ -755,8 +751,8 @@ class DesmondParser():
 			   float(0),
 			   int(split[3]),
 			   0)
-	bondForceSet.add(newBondForce)
-	forces.add(newBondForce)
+	  bondForceSet.add(newBondForce)
+	  forces.add(newBondForce)
 	i+=1
 	
       return [bondForceSet, forces]
@@ -1161,10 +1157,10 @@ class DesmondParser():
       i = 0
       nonecnt = 0
       for moleculetype in System._sys._molecules.values():
-        # why can't we do this below?
-        #bondlist = moleculetype.bondForceSet.itervalues()
-        #sortedlist = sorted(bondlist, key=lambda x: x.atom1)
-        for bond in moleculetype.bondForceSet.itervalues():
+        # sort the bondlist because Desmond requires the first time a bond is listed to have
+        # the atoms in ascending order
+        bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+        for bond in bondlist:
           if bond and bond.order:
             i += 1
             lines.append('    %d %d %d %d %d %d\n'
@@ -1321,7 +1317,8 @@ class DesmondParser():
       
           i = 0
           nonecnt = 0
-          for bond in moleculetype.bondForceSet.itervalues():
+          bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+          for bond in bondlist:
 	    if bond and bond.order:
               i += 1
               lines.append('    %d %d %d %d %d %d\n'

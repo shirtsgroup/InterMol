@@ -27,7 +27,9 @@ def desmond_energies(name, cms=None, in_out = 'DtoD', despath='/opt/schrodinger2
     os.system('$SCHRODINGER/desmond' + " -WAIT -P 1 -in {cms} -JOBNAME {name} -c {cfg}".format(name = name, cms=cms,cfg=cfg))
 
     energrp =  name + '.enegrp.dat'
-
+    # plus the extra .cms file that gets copied to the current directory
+    # will need to tweak this line to be properly general.
+    #os.remove('desmond.cms')
     # extract energy output and parse initial energies
     with open(energrp) as f:
         all_lines = f.readlines()
@@ -44,7 +46,7 @@ def desmond_energies(name, cms=None, in_out = 'DtoD', despath='/opt/schrodinger2
         os.rename(file,file_out)
     # plus the extra .cms file that gets copied to the current directory
     # will need to tweak this line to be properly general.
-    os.remove('desmond.cms')
+    #os.remove('desmond-converted.cms')
 
     zerolines = []
     for line in all_lines:
