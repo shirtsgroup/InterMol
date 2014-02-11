@@ -3,6 +3,7 @@ import sys
 import os
 import re
 import copy
+import warnings
 
 #import simtk.unit as units
 import intermol.unit as units
@@ -608,36 +609,42 @@ class GromacsTopologyParser(object):
                         if len(split) == 3:
                             # Searching for matching bondtype to pull values from
                             # Can't be this hard?
-                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
-                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
+                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
                             tempType = AbstractBondType(atomtype1, atomtype2, split[2])
                             bondType = self.bondtypes.get(tempType)
-                            if not (bondType):
+                            if not bondType:
                                 # we only have the reversed bond order stored, flip the atoms
                                 tempType = AbstractBondType(atomtype2, atomtype1, split[2])
                                 bondType = self.bondtypes.get(tempType)
+                            if not bondType:
+                                raise Exception("Bondtype lookup failed for '{0}'".format(" ".join(split)))
 
                             if isinstance(bondType, BondType):
                                 split.append(bondType.length)
                                 split.append(bondType.k)
 
-                            if isinstance(bondType, G96BondType):
+                            elif isinstance(bondType, G96BondType):
                                 split.append(bondType.length)
                                 split.append(bondType.l)
 
-                            if isinstance(bondType, CubicBondType):
+                            elif isinstance(bondType, CubicBondType):
                                 split.append(bondType.length)
                                 split.append(bondType.C2)
                                 split.append(bondType.C3)
 
-                            if isinstance(bondType, MorseBondType):
+                            elif isinstance(bondType, MorseBondType):
                                 split.append(bondType.length)
                                 split.append(bondType.D)
                                 split.append(bomdType.beta)
 
-                            if isinstance(bondType, HarmonicBondType):
+                            elif isinstance(bondType, HarmonicBondType):
                                 split.append(bondType.length)
                                 split.append(bondType.k)
+                            else:
+                                warnings.warn("Bondtype '{0}' is unsupported or something more complicated went wrong".format(bondType.type))
 
                         if int(split[2]) == 1:
                             try:
@@ -688,7 +695,7 @@ class GromacsTopologyParser(object):
                                 newBondForce = CubicBond(int(split[0]),
                                         int(split[1]),
                                         split[3],
-                                        split[4], 
+                                        split[4],
                                         split[5])
 
                         if int(split[2]) == 5:
@@ -733,9 +740,12 @@ class GromacsTopologyParser(object):
                         newAngleForce = None
 
                         if len(split) == 4:
-                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
-                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
-                            atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
+                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
+                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
+                            #atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
+                            atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
                             tempType = AbstractAngleType(atomtype1, atomtype2, atomtype3, split[3])
                             angleType = self.angletypes.get(tempType)
                             if not (angleType):
@@ -898,10 +908,14 @@ class GromacsTopologyParser(object):
                         newDihedralForce = None
 
                         if len(split) == 5:
-                            atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
-                            atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
-                            atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
-                            atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
+                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
+                            atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
+                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
+                            atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
+                            #atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
+                            atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
+                            #atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
+                            atomtype4 = currentMolecule._atoms[int(split[3])-1].bondtype
 
                             tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[4])
                             dihedralType = self.dihedraltypes.get(tempType)
