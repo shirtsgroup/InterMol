@@ -3,6 +3,7 @@
     :platform: UNIX
 """
 
+import numpy as np
 from intermol.OrderedDict import OrderedDict
 from intermol.Converter import *
 from intermol.MoleculeType import MoleculeType
@@ -24,16 +25,6 @@ class System(object):
         else:
             self._name = "Untitled"
 
-        self._v1x = 0.0
-        self._v2x = 0.0
-        self._v3x = 0.0
-        self._v1y = 0.0
-        self._v2y = 0.0
-        self._v3y = 0.0
-        self._v1z = 0.0
-        self._v2z = 0.0
-        self._v3z = 0.0
-
         self._nbFunc = 0
         self._combinationRule = 0
         self._genpairs = True
@@ -42,7 +33,7 @@ class System(object):
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._forces = OrderedSet()
-        self._boxVector = []
+        self._boxVector = np.zeros([3,3],float)
 
 
     def addMolecule(self, molecule):
@@ -68,19 +59,10 @@ class System(object):
         return self._boxVector
 
 
-    def setBoxVector(self, v1x, v2x, v3x, v1y, v2y, v3y, v1z, v2z, v3z):
+    def setBoxVector(self, v):
         """Sets the boxvector for the system. Assumes the box vector is in the correct form. [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
         """
-        self._v1x = v1x
-        self._v2x = v2x
-        self._v3x = v3x
-        self._v1y = v1y
-        self._v2y = v2y
-        self._v3y = v3y
-        self._v1z = v1z
-        self._v2z = v2z
-        self._v3z = v3z
-        self._boxVector = [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
+        self._boxVector = v
 
     def __str__(self):
         """String representation of a System object

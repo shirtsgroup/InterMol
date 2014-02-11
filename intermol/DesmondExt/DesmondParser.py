@@ -4,6 +4,7 @@ import os
 import copy
 import string
 import re
+import numpy as np
 from collections import deque
 
 #import simtk.unit as units
@@ -514,7 +515,8 @@ class DesmondParser():
                                      2)
               
 	      #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
-              elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE): 
+              # These two should be the same function.  Check differences (polymer or protein defn, etc).
+              elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE):
                 try:
                   newDihedralForce = ImproperDihedral2(int(split[1]),
                                      int(split[2]),
@@ -581,52 +583,39 @@ class DesmondParser():
                 
 	      elif re.match(split[5], "OPLS_PROPER", re.IGNORECASE): 
                 try:
-                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) * units.kilocalorie_per_mole,
-                                     float(split[7]) * units.kilocalorie_per_mole,
-                                     float(split[8]) * units.kilocalorie_per_mole,
-                                     float(split[9]) * units.kilocalorie_per_mole,
-                                     float(split[10]) * units.kilocalorie_per_mole,
-                                     float(split[11]) * units.kilocalorie_per_mole)
+                  # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
+                  # terms, and the others are set to zero.
+                  c0,c1,c2,c3,c4,c5 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
+                                                                  float(split[9]),float(split[10]))
                 except:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]))
-              elif re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE): 
+                    f1=0
+                    f2=0
+                    f3=0
+                    f4=0
+                    # do some additional error handling here.
+                    print "ERROR (readFile): OPLS_PROPER terms not found"
                 try:
-                  # MRS: this isn't quite right.  IT needs to have some conversions. see eq 4.64 of gromacs.  
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]) * units.kilocalorie_per_mole,
-                                     float(split[7]) * units.kilocalorie_per_mole,
-                                     float(split[8]) * units.kilocalorie_per_mole,
-                                     float(split[9]) * units.kilocalorie_per_mole,
-                                     float(split[10]) * units.kilocalorie_per_mole,
-                                     float(split[11]) * units.kilocalorie_per_mole)
+                                     c0 * units.kilocalorie_per_mole,
+                                     c1 * units.kilocalorie_per_mole,
+                                     c2 * units.kilocalorie_per_mole,
+                                     c3 * units.kilocalorie_per_mole,
+                                     c4 * units.kilocalorie_per_mole,
+                                     c5 * units.kilocalorie_per_mole)
                 except:
                   newDihedralForce = RBDihedral(int(split[1]),
                                      int(split[2]),
                                      int(split[3]),
                                      int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]))
+                                     c0 * units.kilocalorie_per_mole,
+                                     c1 * units.kilocalorie_per_mole,
+                                     c2 * units.kilocalorie_per_mole,
+                                     c3 * units.kilocalorie_per_mole,
+                                     c4 * units.kilocalorie_per_mole,
+                                     c5 * units.kilocalorie_per_mole)
               else:
                 print "ERROR (readFile): found unsupported dihedral in:",
                 print line[i]
@@ -726,12 +715,9 @@ class DesmondParser():
     def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
 	                  
 #        Loading in m_bonds in Desmond format
-	
 #        Args:
 #            lines: list of all data in CMS format
-	    
 #	    start: beginning of where m_bonds starts for each molecule
-	    
 #	    end: ending of where m_bondsends for each molecule
 
       if verbose:
@@ -751,7 +737,6 @@ class DesmondParser():
 	    i+=1
 	if bg:
 	  split = lines[i].split()
-	 
 	  try:
 	    newBondForce = Bond(int(split[1]),
 	                   int(split[2]),
@@ -766,8 +751,8 @@ class DesmondParser():
 			   float(0),
 			   int(split[3]),
 			   0)
-	bondForceSet.add(newBondForce)
-	forces.add(newBondForce)
+	  bondForceSet.add(newBondForce)
+	  forces.add(newBondForce)
 	i+=1
 	
       return [bondForceSet, forces]
@@ -932,31 +917,20 @@ class DesmondParser():
 #            start: starting position
 #            end: ending position
 
-	
       i = start
-      v1x = None
-      v2x = None
-      v3x = None
-      v1y = None
-      v2y = None
-      v3y = None
-      v1z = None
-      v2z = None
-      v3z = None
-      while i < end:
-        if re.match(r'\s*[\d+]',lines[i]):
-          v1x = float(re.sub(r'\s', '', lines[i])) * units.nanometers
-          v1y = float(re.sub(r'\s', '', lines[i+1])) * units.nanometers
-          v1z = float(re.sub(r'\s', '', lines[i+2])) * units.nanometers
-          v2x = float(re.sub(r'\s', '', lines[i+3])) * units.nanometers
-          v2y = float(re.sub(r'\s', '', lines[i+4])) * units.nanometers
-          v2z = float(re.sub(r'\s', '', lines[i+5])) * units.nanometers
-          v3x = float(re.sub(r'\s', '', lines[i+6])) * units.nanometers
-          v3y = float(re.sub(r'\s', '', lines[i+7])) * units.nanometers
-          v3z = float(re.sub(r'\s', '', lines[i+8])) * units.nanometers
-          i = end
-        i+=1
-      System._sys.setBoxVector(v1x, v2x, v3x, v1y, v2y, v3y, v1z, v2z, v3z)
+      v = np.zeros([3,3])*units.nanometers
+      nvec = 0
+      while (i<end):
+          if re.match(r'\s*[\d+]',lines[i]):
+              j = (nvec)/3
+              k = (nvec)%3
+              v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
+              nvec += 1
+              if nvec == 9:  # always 9 of them 
+                  break;
+          i +=1
+
+      System._sys.setBoxVector(v)
       
     def readFile(self, filename):
 
@@ -1116,15 +1090,9 @@ class DesmondParser():
       #box vector
       bv = System._sys.getBoxVector()
       lines.append('  "full system"\n')
-      lines.append('%22s\n'%float(bv[0][0]._value))
-      lines.append('%22s\n'%float(bv[1][0]._value))
-      lines.append('%22s\n'%float(bv[2][0]._value))
-      lines.append('%22s\n'%float(bv[0][1]._value))
-      lines.append('%22s\n'%float(bv[1][1]._value))
-      lines.append('%22s\n'%float(bv[2][1]._value))
-      lines.append('%22s\n'%float(bv[0][2]._value))
-      lines.append('%22s\n'%float(bv[1][2]._value))
-      lines.append('%22s\n'%float(bv[2][2]._value))
+      for i in range(3):
+          for j in range(3):
+              lines.append('%22s\n'%float(bv[i][j]._value))
       lines.append('  full_system\n')
       
       #M_ATOM
@@ -1189,7 +1157,10 @@ class DesmondParser():
       i = 0
       nonecnt = 0
       for moleculetype in System._sys._molecules.values():
-        for bond in moleculetype.bondForceSet.itervalues():
+        # sort the bondlist because Desmond requires the first time a bond is listed to have
+        # the atoms in ascending order
+        bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+        for bond in bondlist:
           if bond and bond.order:
             i += 1
             lines.append('    %d %d %d %d %d %d\n'
@@ -1346,7 +1317,8 @@ class DesmondParser():
       
           i = 0
           nonecnt = 0
-          for bond in moleculetype.bondForceSet.itervalues():
+          bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+          for bond in bondlist:
 	    if bond and bond.order:
               i += 1
               lines.append('    %d %d %d %d %d %d\n'

@@ -6,7 +6,19 @@ import intermol.Driver as Driver
 
 #Error file
 error = open("Errors.txt", "w")
-
+#programs = ['Gromacs','Desmond','LAMMPS']
+#
+#filenames['Gromacs'] = ['a2a_dppc', 'protein', 'Rilpivirine', 'simulated_annealing_example', 'lck_Me_Cl_complex_12_1', 'lck_Me_Cl_solvent_12_1']
+#
+#for program_in in programs:
+#    for file in program files
+#         read_in 
+#         get_energy_in
+#         for program_out in programs:
+#             write_out
+#             get_energy_out
+#             compare energies
+         
 #loop over all test cases for all x_to_y combinations
 #List of Desmond files to be converted
 filenames = ['a2a_dppc-out', 'protein', 'Rilpivirine', 'simulated_annealing_example', 'lck_Me_Cl_complex_12_1', 'lck_Me_Cl_solvent_12_1']
