@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 
 def combine_energy_results(e_in, e_out):
     """
@@ -23,7 +24,6 @@ def print_energy_summary(results):
     data, rms = results
     print "======================================================================="
     print "Summary statistics"
-
     print "%20s %18s %18s %18s" % ("Type", "Input", "Output", "Diff")
     for (name, values) in data.iteritems():
         print "%20s %18.8f %18.8f %18.8f" % (name,

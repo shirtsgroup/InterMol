@@ -104,6 +104,10 @@ def writeData(filename, unit_set='real'):
     angle_type_dict = dict()
     ang_type_i = 1
 
+    dihedral_style = 0
+    dihedral_type_dict = dict()
+    dih_type_i = 1
+
     # read all atom specific and FF information
     for moleculeType in System._sys._molecules.itervalues():
         # bond types
@@ -136,8 +140,8 @@ def writeData(filename, unit_set='real'):
                         bond_type_dict[temp] = b_type_i
                         bond_coeff_list.append('%d %18.8e %18.8e\n'
                                     % (b_type_i,
-                                       bond.length.in_units_of(DIST)._value,
-                                       0.5 * bond.k.in_units_of(ENERGY/(DIST*DIST * MOLE))._value))
+                                       0.5 * bond.k.in_units_of(ENERGY/(DIST*DIST * MOLE))._value,
+                                       bond.length.in_units_of(DIST)._value))
                         b_type_i += 1
                 else:
                     warnings.warn("Found unsupported bond type for LAMMPS!")
@@ -175,11 +179,66 @@ def writeData(filename, unit_set='real'):
                         angle_type_dict[temp] = ang_type_i
                         angle_coeff_list.append('%d %18.8e %18.8e\n'
                                     % (ang_type_i,
-                                       angle.theta._value,
-                                       0.5 * angle.k.in_units_of(ENERGY/(RAD*RAD * MOLE))._value))
+                                       0.5 * angle.k.in_units_of(ENERGY/(RAD*RAD * MOLE))._value,
+                                       angle.theta._value))
                         ang_type_i += 1
                 else:
                     warnings.warn("Found unsupported angle type for LAMMPS!")
+
+        # dihedral types
+        if moleculeType.dihedralForceSet:
+            for dihedral in moleculeType.dihedralForceSet.itervalues():
+                if isinstance(dihedral, RBDihedral):
+                    if dihedral_style == 0:
+                        dihedral_style = 'opls'
+                    elif dihedral_style != 'opls':
+                        # this may need to be an error
+                        # or require some form of conversion if possible
+                       warnings.warn("More than one dihedral style found!")
+
+                    atom1 = moleculeType.moleculeSet[0]._atoms[dihedral.atom1 - 1]
+                    atomtype1 = atom1.bondtype
+                    atom2 = moleculeType.moleculeSet[0]._atoms[dihedral.atom2 - 1]
+                    atomtype2 = atom2.bondtype
+                    atom3 = moleculeType.moleculeSet[0]._atoms[dihedral.atom3 - 1]
+                    atomtype3 = atom3.bondtype
+                    atom4 = moleculeType.moleculeSet[0]._atoms[dihedral.atom4 - 1]
+                    atomtype4 = atom4.bondtype
+
+                    temp = RBDihedralType(atomtype1,
+                            atomtype2,
+                            atomtype3,
+                            atomtype4,
+                            3,
+                            dihedral.C0,
+                            dihedral.C1,
+                            dihedral.C2,
+                            dihedral.C3,
+                            dihedral.C4,
+                            dihedral.C5,
+                            dihedral.C6)
+                    # NOTE: k includes the factor of 0.5 for harmonics in LAMMPS
+                    #       For now, I will assume that we always store it without internally
+                    #       since that's the way GROMACS does it.
+                    if temp not in dihedral_type_dict:
+                        Fs = ConvertFromRBToOPLSDihedral(dihedral.C0._value,
+                                dihedral.C1._value,
+                                dihedral.C2._value,
+                                dihedral.C3._value,
+                                dihedral.C4._value,
+                                dihedral.C5._value,
+                                dihedral.C6._value)
+                        Fs *= dihedral.C0.unit
+                        dihedral_type_dict[temp] = dih_type_i
+                        dihedral_coeff_list.append('%d %18.8e %18.8e %18.8e %18.8e\n'
+                                    % (dih_type_i,
+                                       Fs[0].in_units_of(ENERGY / MOLE)._value,
+                                       Fs[1].in_units_of(ENERGY / MOLE)._value,
+                                       Fs[2].in_units_of(ENERGY / MOLE)._value,
+                                       Fs[3].in_units_of(ENERGY / MOLE)._value))
+                        dih_type_i += 1
+                else:
+                    warnings.warn("Found unsupported dihedral type for LAMMPS!")
 
         # atom specific information
         x_min = y_min = z_min = np.inf
@@ -193,8 +252,8 @@ def writeData(filename, unit_set='real'):
                                    atom._mass[0].in_units_of(MASS)._value))
                     pair_coeff_list.append('%d %8.4f %8.4f\n'
                                 % (a_type_i,
-                                   atom._sigma[0].in_units_of(DIST)._value,
-                                   atom._epsilon[0].in_units_of(ENERGY/MOLE)._value))
+                                   atom._epsilon[0].in_units_of(ENERGY/MOLE)._value,
+                                   atom._sigma[0].in_units_of(DIST)._value))
                     a_type_i += 1
 
                 # box minima
@@ -276,6 +335,37 @@ def writeData(filename, unit_set='real'):
                                angle.atom1 + offset,
                                angle.atom2 + offset,
                                angle.atom3 + offset))
+
+            for j, dihedral in enumerate(moleculeType.dihedralForceSet.itervalues()):
+                atom1 = moleculeType.moleculeSet[0]._atoms[dihedral.atom1 - 1]
+                atomtype1 = atom1.bondtype
+                atom2 = moleculeType.moleculeSet[0]._atoms[dihedral.atom2 - 1]
+                atomtype2 = atom2.bondtype
+                atom3 = moleculeType.moleculeSet[0]._atoms[dihedral.atom3 - 1]
+                atomtype3 = atom3.bondtype
+                atom4 = moleculeType.moleculeSet[0]._atoms[dihedral.atom4 - 1]
+                atomtype4 = atom4.bondtype
+
+                temp = RBDihedralType(atomtype1,
+                            atomtype2,
+                            atomtype3,
+                            atomtype4,
+                            3,
+                            dihedral.C0,
+                            dihedral.C1,
+                            dihedral.C2,
+                            dihedral.C3,
+                            dihedral.C4,
+                            dihedral.C5,
+                            dihedral.C6)
+
+                dihedral_list.append('%-6d %6d %6d %6d %6d %6d\n'
+                            % (i + j + 1,
+                               dihedral_type_dict[temp],
+                               dihedral.atom1 + offset,
+                               dihedral.atom2 + offset,
+                               dihedral.atom3 + offset,
+                               dihedral.atom4 + offset))
 
     # actual data file writing
     with open(filename, 'w') as f:
@@ -376,7 +466,7 @@ def writeData(filename, unit_set='real'):
         f.write('\n')
 
         # non-bonded
-        f.write('pair_style lj/cut/coul/long 10.0\n')  # TODO: match mdp
+        f.write('pair_style lj/cut/coul/long 9.0 10.0\n')  # TODO: match mdp
         f.write('pair_modify mix geometric\n')  # TODO: match defaults
         f.write('kspace_style pppm 1.0e-4\n')  # TODO: match mdp
         f.write('\n')
@@ -388,12 +478,14 @@ def writeData(filename, unit_set='real'):
             f.write('angle_style {0}\n'.format(angle_style))
         if len(dihedral_coeff_list) > 3:
             f.write('dihedral_style {0}\n'.format(dihedral_style))
-            if dihedral_style == 'opls':
-                f.write('special_bonds 0 0 0.5\n')
-            else:
-                warnings.warn("Unknown special_bonds settings for dihedral_style '{0}'. Please adjust manually. ")
         if len(improper_coeff_list) > 3:
             f.write('improper_style {0}\n'.format(improper_style))
+        f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(0.0,
+                0.0,
+                System._sys._ljCorrection,
+                0.0,
+                0.0,
+                System._sys._coulombCorrection))
         f.write('\n')
 
         # read data
@@ -405,13 +497,13 @@ def writeData(filename, unit_set='real'):
                                  'eangle',
                                  'edihed',
                                  'eimp',
-                                 'epair',
-                                 'evdwl',
-                                 'ecoul',
-                                 'pe',
-                                 'ke',
-                                 'etotal',
-                                 'temp'])
+                                 #'epair',
+                                 #'evdwl',
+                                 #'ecoul',
+                                 'pe'])
+                                 #'ke',
+                                 #'etotal',
+                                 #'temp'])
 
         f.write('thermo_style custom {0}\n'.format(energy_terms))
         f.write('\n')
