@@ -50,7 +50,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-n', type='str', dest='name', default='system2_GMX',
+    parser.add_option('-n', type='str', dest='name', default='dihedral3',
             help="Name of system")
     parser.add_option('-g', type='str', dest='gropath', default='',
             help="path for GROMACS binary")
@@ -64,7 +64,6 @@ if __name__ == "__main__":
             help="Evaluate energies")
     parser.add_option('-x', type='int', dest='clean', default=1,
             help="Clean backup files produced by GROMACS")
- 
 
     (options, args) = parser.parse_args()
     name = options.name
