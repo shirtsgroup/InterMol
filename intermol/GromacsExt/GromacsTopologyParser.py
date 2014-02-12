@@ -463,8 +463,8 @@ class GromacsTopologyParser(object):
                                     float(split[7]) * units.kilojoules_per_mole,
                                     float(split[8]) * units.kilojoules_per_mole,
                                     float(split[9]) * units.kilojoules_per_mole,
-                                    float(split[10]) * units.kilojoules_per_mole
-                                    0 * units.kilojules_per_mol)
+                                    float(split[10]) * units.kilojoules_per_mole,
+                                    0 * units.kilojoules_per_mole)
 
                         else:
                             print "could not find dihedral type"
@@ -1010,7 +1010,7 @@ class GromacsTopologyParser(object):
                                         float(split[7]) * units.kilojoules_per_mole,
                                         float(split[8]) * units.kilojoules_per_mole,
                                         float(split[9]) * units.kilojoules_per_mole,
-                                        float(split[10]) * units.kilojoules_per_mole)
+                                        float(split[10]) * units.kilojoules_per_mole,
                                         0 * units.kilojoules_per_mole)
                             except:
                                 newDihedralForce = RBDihedral(int(split[0]),
@@ -1022,7 +1022,8 @@ class GromacsTopologyParser(object):
                                         split[7],
                                         split[8],
                                         split[9],
-                                        split[10],0)
+                                        split[10],
+                                        0 * units.kilojoules_per_mole)
 
                         # Improper Dihedral 4
                         elif int(split[4]) == 4:
