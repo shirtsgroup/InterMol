@@ -1,4 +1,4 @@
-def ConvertFromRBToOPLSDihedral(c0,c1,c2,c3,c4,c5):
+def ConvertFromRBToOPLSDihedral(c0,c1,c2,c3,c4,c5,c6):
 
     if (c5 !=0 and c1+c2+c3+c4 != 0):
         print "This RB dihedral is inconsistent with OPLS style",
@@ -20,5 +20,6 @@ def ConvertFromOPLSToRBDihedral(f1,f2,f3,f4):
     c3 = -2*f3
     c4 = -4*f4
     c5 = 0
-    return c0,c1,c2,c3,c4,c5
+    c6 = 0 
+    return c0,c1,c2,c3,c4,c5,c6
 

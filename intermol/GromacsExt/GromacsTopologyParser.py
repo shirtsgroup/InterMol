@@ -427,7 +427,8 @@ class GromacsTopologyParser(object):
                                     float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole,
                                     float(split[7]) * units.kilojoules_per_mole,
-                                    float(split[8]) * units.kilojoules_per_mole)
+                                    float(split[8]) * units.kilojoules_per_mole,
+                                    0 * units.kilojoules_per_mole)  # GROMACS only goes up through C5
                         elif split[4].isdigit():
                             # Proper Dihedral 1
                             if (int(split[4]) == 1) and (len(split) == 8):
@@ -462,7 +463,8 @@ class GromacsTopologyParser(object):
                                     float(split[7]) * units.kilojoules_per_mole,
                                     float(split[8]) * units.kilojoules_per_mole,
                                     float(split[9]) * units.kilojoules_per_mole,
-                                    float(split[10]) * units.kilojoules_per_mole)
+                                    float(split[10]) * units.kilojoules_per_mole
+                                    0 * units.kilojules_per_mol)
 
                         else:
                             print "could not find dihedral type"
@@ -1009,6 +1011,7 @@ class GromacsTopologyParser(object):
                                         float(split[8]) * units.kilojoules_per_mole,
                                         float(split[9]) * units.kilojoules_per_mole,
                                         float(split[10]) * units.kilojoules_per_mole)
+                                        0 * units.kilojoules_per_mole)
                             except:
                                 newDihedralForce = RBDihedral(int(split[0]),
                                         int(split[1]),
@@ -1019,7 +1022,7 @@ class GromacsTopologyParser(object):
                                         split[7],
                                         split[8],
                                         split[9],
-                                        split[10])
+                                        split[10],0)
 
                         # Improper Dihedral 4
                         elif int(split[4]) == 4:
