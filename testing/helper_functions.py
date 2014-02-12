@@ -7,7 +7,7 @@ def combine_energy_results(e_in, e_out):
     for e_type, value in e_in.iteritems():
         if e_type in e_out:
             data[e_type] = (value, 
-                    e_out[e_type], 
+                    e_out[e_type].in_units_of(value.unit), 
                     value - e_out[e_type])
 
     diff = list()
