@@ -39,13 +39,12 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
     data = map(float, energies.split())
 
     # give everything units
-    temp = data[-1] * units.kelvin
-    data = [value * units.kilocalories_per_mole for value in data[:-1]]
-    data.append(temp)
+    #temp = data[-1] * units.kelvin
+    data = [value * units.kilocalories_per_mole for value in data]
+    #data.append(temp)
 
     # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Pairs', 'vdW',
-            'Coulomb (SR)', 'Potential', 'Kinetic En.', 'Total Energy', 'Temperature']
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Potential']#'Pairs', 'vdW', #'Kinetic En.', 'Total Energy', 'Temperature']
 
     e_out = dict(zip(types, data))
     return e_out

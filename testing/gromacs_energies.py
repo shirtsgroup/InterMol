@@ -41,7 +41,7 @@ def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff='
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout}".format(mdp=mdp,
+    os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(mdp=mdp,
             top=top, gro=gro, tpr=tpr, mdout=mdout))
 
     # mdrunin'
