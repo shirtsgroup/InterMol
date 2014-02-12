@@ -478,10 +478,6 @@ def writeData(filename, unit_set='real'):
             f.write('angle_style {0}\n'.format(angle_style))
         if len(dihedral_coeff_list) > 3:
             f.write('dihedral_style {0}\n'.format(dihedral_style))
-            if dihedral_style == 'opls':
-                f.write('special_bonds 0 0 0.5\n')
-            else:
-                warnings.warn("Unknown special_bonds settings for dihedral_style '{0}'. Please adjust manually. ")
         if len(improper_coeff_list) > 3:
             f.write('improper_style {0}\n'.format(improper_style))
         f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(0.0,
