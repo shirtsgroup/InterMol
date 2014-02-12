@@ -118,9 +118,11 @@ def writeData(filename, unit_set='real'):
                        warnings.warn("More than one bond style found!")
 
                     atom1 = moleculeType.moleculeSet[0]._atoms[bond.atom1 - 1]
-                    atomtype1 = atom1.getAtomType()[0]
+                    #atomtype1 = atom1.getAtomType()[0]
+                    atomtype1 = atom1.bondtype
                     atom2 = moleculeType.moleculeSet[0]._atoms[bond.atom2 - 1]
-                    atomtype2 = atom2.getAtomType()[0]
+                    #atomtype2 = atom2.getAtomType()[0]
+                    atomtype2 = atom2.bondtype
 
                     temp = BondType(atomtype1,
                             atomtype2,
@@ -151,11 +153,14 @@ def writeData(filename, unit_set='real'):
                        warnings.warn("More than one angle style found!")
 
                     atom1 = moleculeType.moleculeSet[0]._atoms[angle.atom1 - 1]
-                    atomtype1 = atom1.getAtomType()[0]
+                    #atomtype1 = atom1.getAtomType()[0]
+                    atomtype1 = atom1.bondtype
                     atom2 = moleculeType.moleculeSet[0]._atoms[angle.atom2 - 1]
-                    atomtype2 = atom2.getAtomType()[0]
+                    #atomtype2 = atom2.getAtomType()[0]
+                    atomtype2 = atom2.bondtype
                     atom3 = moleculeType.moleculeSet[0]._atoms[angle.atom3 - 1]
-                    atomtype3 = atom3.getAtomType()[0]
+                    #atomtype3 = atom3.getAtomType()[0]
+                    atomtype3 = atom3.bondtype
 
                     temp = AngleType(atomtype1,
                             atomtype2,
@@ -229,9 +234,11 @@ def writeData(filename, unit_set='real'):
         for i, offset in enumerate(offsets):
             for j, bond in enumerate(moleculeType.bondForceSet.itervalues()):
                 atom1 = moleculeType.moleculeSet[0]._atoms[bond.atom1 - 1]
-                atomtype1 = atom1.getAtomType()[0]
+                #atomtype1 = atom1.getAtomType()[0]
+                atomtype1 = atom1.bondtype
                 atom2 = moleculeType.moleculeSet[0]._atoms[bond.atom2 - 1]
-                atomtype2 = atom2.getAtomType()[0]
+                #atomtype2 = atom2.getAtomType()[0]
+                atomtype2 = atom2.bondtype
 
                 temp = BondType(atomtype1,
                         atomtype2,
@@ -239,19 +246,22 @@ def writeData(filename, unit_set='real'):
                         bond.length,
                         bond.k)
 
-                bond_list.append('%6d %6d %6d %6d\n'
-                            % (i + j,
+                bond_list.append('%-6d %6d %6d %6d\n'
+                            % (i + j + 1,
                                bond_type_dict[temp],
                                bond.atom1 + offset,
                                bond.atom2 + offset))
 
             for j, angle in enumerate(moleculeType.angleForceSet.itervalues()):
                 atom1 = moleculeType.moleculeSet[0]._atoms[angle.atom1 - 1]
-                atomtype1 = atom1.getAtomType()[0]
+                #atomtype1 = atom1.getAtomType()[0]
+                atomtype1 = atom1.bondtype
                 atom2 = moleculeType.moleculeSet[0]._atoms[angle.atom2 - 1]
-                atomtype2 = atom2.getAtomType()[0]
+                #atomtype2 = atom2.getAtomType()[0]
+                atomtype2 = atom2.bondtype
                 atom3 = moleculeType.moleculeSet[0]._atoms[angle.atom3 - 1]
-                atomtype3 = atom3.getAtomType()[0]
+                #atomtype3 = atom3.getAtomType()[0]
+                atomtype3 = atom3.bondtype
 
                 temp = AngleType(atomtype1,
                         atomtype2,
@@ -260,8 +270,8 @@ def writeData(filename, unit_set='real'):
                         angle.theta,
                         angle.k)
 
-                angle_list.append('%6d %6d %6d %6d %6d\n'
-                            % (i + j,
+                angle_list.append('%-6d %6d %6d %6d %6d\n'
+                            % (i + j + 1,
                                angle_type_dict[temp],
                                angle.atom1 + offset,
                                angle.atom2 + offset,
@@ -301,17 +311,16 @@ def writeData(filename, unit_set='real'):
         if n_improper_types > 0:
             f.write('{0} improper types\n'.format(n_improper_types))
         f.write('\n')
-
         # shifting of box dimensions
         f.write('%10.6f %10.6f xlo xhi\n'
                 % (x_min,
-                   x_min + System._sys._v1x.in_units_of(DIST)._value))
+                   x_min + System._sys._boxVector[0][0].in_units_of(DIST)._value))
         f.write('%10.6f %10.6f ylo yhi\n'
                 % (y_min,
-                   y_min + System._sys._v2y.in_units_of(DIST)._value))
+                   y_min + System._sys._boxVector[0][0].in_units_of(DIST)._value))
         f.write('%10.6f %10.6f zlo zhi\n'
                 % (z_min,
-                   z_min + System._sys._v3z.in_units_of(DIST)._value))
+                   z_min + System._sys._boxVector[0][0].in_units_of(DIST)._value))
 
         # write masses
         for mass in mass_list:
@@ -379,6 +388,10 @@ def writeData(filename, unit_set='real'):
             f.write('angle_style {0}\n'.format(angle_style))
         if len(dihedral_coeff_list) > 3:
             f.write('dihedral_style {0}\n'.format(dihedral_style))
+            if dihedral_style == 'opls':
+                f.write('special_bonds 0 0 0.5\n')
+            else:
+                warnings.warn("Unknown special_bonds settings for dihedral_style '{0}'. Please adjust manually. ")
         if len(improper_coeff_list) > 3:
             f.write('improper_style {0}\n'.format(improper_style))
         f.write('\n')
