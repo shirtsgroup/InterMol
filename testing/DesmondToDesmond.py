@@ -26,6 +26,7 @@ def desmond_to_desmond(name='2PPN', cms=None, despath=None,
     Driver.load(cms_in)
     Driver.write(cms_out)
 
+    pdb.set_trace()
     # calc output energies
     if energy:
         elines_out = desmond_energies(name,cms_out,'DtoD',despath)    

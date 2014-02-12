@@ -18,7 +18,7 @@ def desmond_energies(name, cms=None, in_out = 'DtoD', despath='/opt/schrodinger2
     elif in_out == 'DtoD':
         base = 'Outputs/DesmondToDesmond'
         if cms == None:
-            base = os.path.join(base, name, 'desmond.cms')
+            base = os.path.join(base, name, 'desmond-converted.cms')
     else:
         raise Exception("Unknown flag: {0}".format(in_out))
 
