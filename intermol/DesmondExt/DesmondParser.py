@@ -7,7 +7,6 @@ import re
 import numpy as np
 from collections import deque
 
-#import simtk.unit as units
 import intermol.unit as units
 from intermol.Atom import *
 from intermol.Molecule import *
@@ -15,7 +14,6 @@ from intermol.System import System
 from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
-
 
 class DesmondParser():
     """
@@ -51,24 +49,51 @@ class DesmondParser():
       self.a_blockpos = []
       self.b_blockpos = []
       self.ffio_blockpos = []
-  
+
 #LOAD FFIO BLOCKS IN FIRST (CONTAINS TOPOLOGY)
 
+    def parse_ffio_block(self,lines,start):
+        # read in a ffio_block that isn't ffio_ff and split it into the
+        # commands and the values
+        # lots of room for additional error checking here, such as whether
+        # each entry has the correct number of data values, whether they are the correct type, etc.
+
+        # scroll to the next ffio entry
+        while not 'ffio_' in lines[start]:
+            if '{' in lines[start] and 'ffio_' not in lines[start]:   # this is not an ffio block! End now.
+                return 'Done with ffio', 0, 0, 0, start 
+            start+=1
+
+        lines[start].split()[1]
+        components = re.split('\W', lines[start].split()[0]) # get rid of whitespace, split on nonword      
+        ff_type = components[0]
+        ff_number = int(components[1])
+        i = start+1
+        entry_data = []
+        while not re.match(r'\s*[:::]',lines[i]):
+            entry_data.append(lines[i].split()[0])
+            i+=1
+        i+=1 # skip the separator we just found
+        entry_values = []
+        while not re.match(r'\s*[:::]',lines[i]):
+            if lines[i].strip():  # skip the blank spaces.
+                entry_values.append(lines[i])
+            i+=1        
+        while '}' not in lines[i]:  # wait until we hit an end to the block
+            i+=1
+        i+=1 # step past the end of the block     
+
+        return ff_type,ff_number,entry_data,entry_values,i 
+        
     def loadFfio(self, lines, moleculeName, start, end, sysDirective, sysDirectiveAtm, verbose = False):
 	                  
 #        Loading in ffio blocks from Desmond format
-	
 #        Args:
 #            lines: list of all data in CMS format	
-	    
 #	     moleculeName: name of current molecule
-	    
 #	     start: beginning of where ffio_ff starts for each molecule
-	    
 #	     end: ending of where ffio_ff ends for each molecule
-	    
 #	    sysDirective: help locate positions of specific data in ffio blocks
-	    
 #	    sysDirectiveAtm: help locate positions of specific data in m_atoms
       i = start
       j = start
@@ -77,7 +102,7 @@ class DesmondParser():
       split = []
       constraints = []
       temp = []
-      #moleculeName = None 
+
       currentMolecule = None
       currentMoleculeType = None
       newAtomType = None
@@ -100,10 +125,6 @@ class DesmondParser():
       #DEFAULT VALUES WHEN CONVERTING TO GROMACS
       System._sys._nbFunc = 1
       System._sys._genpairs = 'yes'
-
-      if re.search("TIP3P", moleculeName):
-        moleculeName = "H2O"
-	#return
 
       if verbose:
 	print 'Parsing [ molecule %s]'%(moleculeName)
@@ -141,30 +162,29 @@ class DesmondParser():
 	  i+=1
 
         currentMolecule = Molecule(moleculeName)
-        match = sysDirective.match(lines[i])
+        ff_type, ff_number, entry_data, entry_values, endnumber = self.parse_ffio_block(lines,i)
+        i = endnumber
+        if 'fepio_fep' in lines[i]:  # just skip for now!
+            i = end
 
+        match = sysDirective.match(ff_type)
         if match:
 
           if match.group('vdwtypes'): #molecule name is at sites, but vdwtypes comes before sites. So we store info in vdwtypes and edit it later at sites
+
             if verbose:
               print "Parsing [ vdwtypes]..."
-	    i+=6 #ASSUMING ALL COLUMNS AT VDWTYPES ARE THE SAME
-	    while not re.match(r'\s*[:::]',lines[i]):
-  	      vdwtypes.append(lines[i].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE LJ12_6_SIG_EPSILON
-	      vdwtypeskeys.append(lines[i].split()[1])
-	      i+=1
+            for j in range(ff_number):
+                vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
+                vdwtypeskeys.append(entry_values[j].split()[1])
 
           elif match.group('sites'):   #correlate with atomtypes and atoms in GROMACS
             if verbose:                #also edit vdwtypes
-              print "Parsing [ sites]..." 
-	    length =  lines[i][(lines[i].find('[', None, None) + 1):(lines[i].find(']', None, None))]
-	    i+=1
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      i+=1
-	    cgnr = 1
-	    i+=1
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      split = lines[i].split() 
+              print "Parsing [ sites]..."
+
+            cgnr = 0
+            for j in range(ff_number):
+	      split = entry_values[j].split() 
 	      stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * units.angstroms #was in angstroms
 	      etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * units.kilocalorie_per_mole #was in kilocal per mol
 
@@ -207,19 +227,17 @@ class DesmondParser():
 		                  stemp,
 		                  etemp) 
 		  System._sys._atomtypes.add(newAtomType)
-	      i+=1 
 
 	    if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
 	      if self.a_blockpos[0] < start:
-		currentMolecule._atoms = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, (int)(length), sysDirectiveAtm, verbose)
+		currentMolecule._atoms = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, sysDirectiveAtm, verbose)
 		self.a_blockpos.pop(0)
             
             System._sys.addMolecule(currentMolecule)
             currentMoleculeType = System._sys._molecules[moleculeName]
-	    currentMoleculeType.nrexcl = 3 #PLACEHOLDER FOR NREXCL....FIND OUT WHERE IT IS
+	    currentMoleculeType.nrexcl = 3 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
 	    
 	    atomlist = copy.deepcopy(currentMolecule._atoms)
-
 
 	  elif match.group('bonds'): #add more stuff to this later once you have more samples to work with
             forces = []
@@ -232,9 +250,8 @@ class DesmondParser():
 		self.b_blockpos.pop(0)
 	    if verbose:
               print "Parsing [ bonds]..."
-	    i+=7
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      split = lines[i].split()
+            for j in range(ff_number):  
+	      split = entry_values[j].split()
 	      newBondForce = None
 	      if re.match("Harm_constrained", split[3]):
                 try:
@@ -242,7 +259,7 @@ class DesmondParser():
                                 atomlist[int(split[2])-1].atomName,
                                 1,
                                 float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
-                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2), #COME BACK TO THESE UNITS
+                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
 				1)
  	        except:
 		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
@@ -267,13 +284,12 @@ class DesmondParser():
 				 1)
 				 
 	      elif re.match("Harm",split[3]):
-	        #print "LOCATED HARM"
                 try:
     		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                 atomlist[int(split[2])-1].atomName,
                                 1,
-                                float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
-                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2), #COME BACK TO THESE UNITS
+                                float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS
+                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
 				0)
  	        except:
 		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
@@ -285,7 +301,7 @@ class DesmondParser():
 		try:
 	          newBondForce = Bond(int(split[1]),
 		                 int(split[2]),
-                                 float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS...CHECK
+                                 float(split[4]) * units.angstroms, 
                                  float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                  None,
 				 0)
@@ -298,18 +314,7 @@ class DesmondParser():
 				 0)
 	      else:
 		print "ERROR (readFile): found unsupported bond"
-#	        print "FOUND NEW BOND TYPE AT LINE %d AND CALLED %s"%(i, split[3])
-#		newBondType = BondType(atomlist[int(split[1])-1].atomName,
-#                              atomlist[int(split[2])].atomName,
-#                              1,
-#                              float(split[4]) * units.angstroms,
-#                              float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2))
-#	        newBondForce = Bond(int(split[1]),
-#		               int(split[2]),
-#                               float(split[4]) * units.angstroms,
-#                               float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-#                               None,
-#			       0)
+
               if newBondForce:
                 if newBondForce in currentMoleculeType.bondForceSet: #bondForceSet already contains i,j, bond order
 	          oldBondForce = currentMoleculeType.bondForceSet.get(newBondForce)
@@ -319,14 +324,10 @@ class DesmondParser():
 	        System._sys._forces.add(newBondForce)
 	      if newBondType and newBondType not in self.bondtypes:
 	        self.bondtypes.add(newBondType)
-		
-	      i+=1
-	      
 
           elif match.group('pairs'): #GromacsTopology didn't fix this, so fix this when changes are made
             if verbose:
               print "Parsing [ pairs]..."
-	    i+=6 #ASSUMING ALL COLUMNS OF PAIRS ARE THE SAME
 	    funct1_lj = []
 	    funct1_cl = []
 	    funct1_both = []
@@ -335,8 +336,8 @@ class DesmondParser():
 	    lj = False
 	    cl = False
             tempcnt = 0
-	    while not re.match(r'\s*[:::]',lines[i]): #organzies pair data into 4 types above
-	      split = lines[i].split()
+            for j in range(ff_number):
+	      split = entry_values[j].split()
 	      if int(split[0]) == 1:
 	        if re.match(split[3], "LJ"):
 		  ljch = float(split[4])
@@ -370,7 +371,7 @@ class DesmondParser():
 		    funct1_lj.append([int(split[1]),int(split[2])])
 		  else:
 		    funct1_cl.append([int(split[1]),int(split[2])])	
-              i+=1
+
 	    System._sys._ljCorrection = float(ljch)
             System._sys._coulombCorrection = float(clomb)
 	    	    
@@ -379,20 +380,6 @@ class DesmondParser():
               currentMoleculeType.pairForceSet.add(newPairForce)
 	      System._sys._forces.add(newPairForce)
 	      
-#	      if System._sys._combinationRule == 1:
-#                newPairType = LJ1PairCR1Type(atomlist[a[0]-1].atomName,  #atom 1 and index
-#                                atomlist[a[1]-1].atomName,              #atom 2 and index
-#                                1,                                     #type
-#                                float(0) * units.kilocalorie_per_mole * units.angstroms**(6),  #COME BACK
-#                                float(0) * units.kilocalorie_per_mole * units.angstroms**(12)) #COME BACK
-#	      elif System._sys._combinationRule == (2 or 3):
-#                newPairType = LJ1PairCR23Type(atomlist[a[0]-1].atomName,
-#                                atomlist[a[1]-1].atomName,
-#				 1,
-#                                float(0) * units.angstroms,          #COME BACK
-#                                float(0) * units.kilocalorie_per_mole) #COME BACK
-#	      self.pairtypes.add(newPairType)
-	   
 	    for a in funct1_cl: #PUT ALL PAIRS WITH ONLY CL INT LJ1
 	      newPairForce = AbstractPair(a[0], a[1], "Coulomb") 
               currentMoleculeType.pairForceSet.add(newPairForce)
@@ -439,19 +426,16 @@ class DesmondParser():
           elif match.group('angles'): #add more stuff later once you have more samples to work with
             if verbose:
               print "Parsing [ angles]..."
-            #print "angles at line %d"%i
-	    i+=8 #ASSUMING ALL ANGLE COLUMNS HAVE SAME 6
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      split = lines[i].split()
+            for j in range(ff_number):
+	      split = entry_values[j].split()
 	      newAngleForce = None
-	      #Angle
 	      if re.match("Harm", split[4]):
 		try:
 		  newAngleForce = Angle(int(split[1]),
 		                  int(split[2]),
 				  int(split[3]),
 				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilocalorie_per_mole * units.degrees **(-2)) #UNITS???
+				  float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
                                   #0)
 		except:
 		  newAngleForce = Angle(int(split[1]),
@@ -466,7 +450,7 @@ class DesmondParser():
 		                  int(split[2]),
 				  int(split[3]),
 				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilocalorie_per_mole * units.degrees**(-2),
+				  float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
                                   1)
 		except:
 		  newAngleForce = Angle(int(split[1]),
@@ -483,18 +467,11 @@ class DesmondParser():
                 currentMoleculeType.angleForceSet.add(newAngleForce)
 	        System._sys._forces.add(newAngleForce)
 
-	      i+=1
-
           elif match.group('dihedrals'):
             if verbose:
               print "Parsing [ dihedrals]..."
-	    dtype = 0
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      i+=1
-	      dtype+=1
-	    i+=1
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      split = lines[i].split()
+            for j in range(ff_number):
+	      split = entry_values[j].split()
 	      newDihedralForce = None
 	      #Proper Diehdral 1 ---NOT SURE ABOUT MULTIPLICITY
               if re.match(split[5], "PROPER_HARM", re.IGNORECASE): 
@@ -627,7 +604,7 @@ class DesmondParser():
 	      if newDihedralForce:
 	        currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                 System._sys._forces.add(newDihedralForce)		    
-	      i+=1
+
 	    #9 proper dihedrals, funct = 1
 	    #3 improper dihedrals, funct = 2
 	    #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
@@ -635,25 +612,24 @@ class DesmondParser():
           elif match.group('constraints'):
             if verbose:
               print "Parsing [ constraints]..."
-	    ctype = 0
+	    ctype = 1
 	    funct_pos = 0
 	    atompos = [] #position of atoms in constraints; spread all over the place
 	    lenpos = [] #position of atom length; spread all over the place
             tempatom = []
             templength = []
 	    templen = 0
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      if re.match(r'\s*s_ffio_funct', lines[i]):
+            for j in range(len(entry_data)):
+	      if entry_data[j] == 's_ffio_funct':
 	        funct_pos = ctype
-	      elif re.search('i_ffio', lines[i]):
+	      elif 'i_ffio' in entry_data[j]:
                 atompos.append(ctype)
-	      elif re.search('r_ffio', lines[i]):
+	      elif 'r_ffio' in entry_data[j]:
 	        lenpos.append(ctype)
-	      i+=1
 	      ctype+=1
-	    i+=1
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      split = lines[i].split()
+
+            for j in range(ff_number):  
+	      split = entry_values[j].split()
 	      if re.match('HOH', split[funct_pos]) or re.search('AH', split[funct_pos]):
                 tempatom = []
                 templength = []
@@ -670,11 +646,11 @@ class DesmondParser():
 		if re.search('AH', split[funct_pos]):
                   templen = int(list(split[funct_pos])[-1])
 		elif re.match('HOH', split[funct_pos]):
-		  templen = 2
+		  templen = 2    # Different desmond files have different options here.
 		if templen == 1: 
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
 		elif templen == 2:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2]) #AH2 or HOH
+		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
                 elif templen == 3:
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
 		elif templen == 4:
@@ -692,31 +668,21 @@ class DesmondParser():
 	      if newConstraint:
 	        currentMoleculeType.constraints.add(newConstraint)
 	        System._sys._forces.add(newConstraint)
-	      i+=1
-
+ 
           elif match.group('exclusions'):
             if verbose:
               print "Parsing [ exclusions]..."
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      i+=1
-	    i+=1
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      temp = lines[i].split()
+            for j in range(ff_number):  
+	      temp = entry_values[j].split()
 	      temp.remove(temp[0])
 	      newExclusion = Exclusions(temp)
 	      currentMoleculeType.exclusions.add(newExclusion)
 	      System._sys._forces.add(newExclusion)
-	      i+=1
 
           elif match.group('restraints'):
             if verbose:
               print "Parsing [ restraints]..."
-	    while not re.match(r'\s*[:::]',lines[i]):
-	      i+=1
 
-        else:
-          i+=1  
-   
     def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
 	                  
 #        Loading in m_bonds in Desmond format
@@ -765,18 +731,12 @@ class DesmondParser():
     def loadMAtoms(self, lines, start, end, currentMolecule, slength, sysDirective, verbose = False): #adds positions and such to atoms in each molecule in System
               
 #        Loading in m_atoms from Desmond format
-	
 #        Args:
 #            lines: list of all data in CMS format
-	    
 #	    start: beginning of where m_atoms starts for each molecule
-	    
 #	    end: ending of where m_atoms ends for each molecule
-	    
 #	    currentMolecule
-	    
 #	    slength: number of unique atoms in m_atoms, used to calculate repetitions
-	    
 #	    sysDirective: help locate positions of specific data in m_atoms
 
       if verbose:
@@ -796,9 +756,9 @@ class DesmondParser():
       bg = False
       aline1 = ""
       aline2 = ""
-      
-      mult = (int)((int)(lines[i][(lines[i].find('[', None, None) + 1):(lines[i].find(']', None, None))])/slength) #how many times the atoms repeat
-      
+
+      mult = int(re.split('\W',lines[start].split()[0])[1])/slength
+
       while i < end:
         if re.match(r'\s*[:::]',lines[i]):
           i+=1
@@ -855,7 +815,7 @@ class DesmondParser():
         i+=1
       
       atom = None     
- 
+
       newMoleculeAtoms = []
       j = 0
       if verbose:
@@ -913,10 +873,8 @@ class DesmondParser():
 
     def loadBoxVector(self, lines, start, end, verbose = False):
 	    
- #       Loading Box Vector
- 
- #       Create a Box Vector to load into the System
- 
+#       Loading Box Vector
+#       Create a Box Vector to load into the System
 #        Args:
 #            lines: all the lines of the file stored in an array
 #            start: starting position
@@ -981,26 +939,26 @@ class DesmondParser():
       self.a_blockpos.append(i)
       self.b_blockpos.append(i)
       self.ffio_blockpos.append(i)
-      verbose = False 
+      verbose = True
       
       sysDirectiveTop = re.compile(r"""
-        ((?P<vdwtypes>\s*ffio_vdwtypes\[[\d+]+\])
+        ((?P<vdwtypes>\s*ffio_vdwtypes)
         |
-        (?P<sites>\s*ffio_sites\[[\d+]+\])
+        (?P<sites>\s*ffio_sites)
         |
-        (?P<bonds>\s*ffio_bonds\[[\d+]+\])
+        (?P<bonds>\s*ffio_bonds)
         |
-        (?P<pairs>\s*ffio_pairs\[[\d+]+\])
+        (?P<pairs>\s*ffio_pairs)
         |
-        (?P<angles>\s*ffio_angles\[[\d+]+\])
+        (?P<angles>\s*ffio_angles)
         |
-        (?P<dihedrals>\s*ffio_dihedrals\[[\d+]+\])
+        (?P<dihedrals>\s*ffio_dihedrals)
         |
-        (?P<constraints>\s*ffio_constraints\[[\d+]+\])
+        (?P<constraints>\s*ffio_constraints)
         |
-        (?P<exclusions>\s*ffio_exclusions\[[\d+]+\])
+        (?P<exclusions>\s*ffio_exclusions)
         |
-        (?P<restraints>\s*ffio_restraints\[[\d+]+\]))
+        (?P<restraints>\s*ffio_restraints))
       """, re.VERBOSE)
 
       sysDirectiveStr = re.compile(r"""
@@ -1032,6 +990,7 @@ class DesmondParser():
       #LOADING Ffio blocks
       
       print "Reading Ffio Block..."
+      #MRS: warning -- currently no check to avoid duplicated molecule names. Investigate.
       i = 0
       j = 0
       while i < (len(self.ffio_blockpos)-1):
@@ -1355,7 +1314,6 @@ class DesmondParser():
             lines.append('  }\n')
 
           #FFIO 
-        
           if verbose:
             print "  Writing ffio..."
           lines.append('  ffio_ff {\n')
@@ -1391,9 +1349,8 @@ class DesmondParser():
 	  stemp = None
 	  etemp = None
 	  combRule = System._sys._combinationRule
-          if re.search("solute", moleculetype.name): #ALL ATOMS
-            for atom in molecule._atoms:
-              if atom.residueIndex:
+          for atom in molecule._atoms:
+              if atom.residueIndex:   # duplicates all the waters; whereas the original does not. How does Desmond actually handle this?
                 sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0],atom.residueIndex,atom.residueName)) 
               else:
                 sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0]))
@@ -1408,36 +1365,6 @@ class DesmondParser():
               if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
                 vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
               i+=1
-          elif re.search("H2O", moleculetype.name): #FOR WATER
-            for k in range(0,3):
-              if molecule._atoms[k].residueIndex:
-                sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0].in_units_of(units.elementary_charge)._value),float(molecule._atoms[k]._mass[0].in_units_of(units.atomic_mass_unit)._value),molecule._atoms[k]._atomtype[0],molecule._atoms[k].residueIndex,molecule._atoms[k].residueName)) 
-              else:
-                sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (k+1,'atom',float(molecule._atoms[k]._charge[0].in_units_of(units.elementary_charge)._value),float(molecule._atoms[k]._mass[0].in_units_of(units.atomic_mass_unit)._value),molecule._atoms[k]._atomtype[0]))
-	      sig = float(molecule._atoms[k]._sigma[0].in_units_of(units.angstroms)._value)
-	      ep = float(molecule._atoms[k]._epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
-	      if combRule == 1:
-	        stemp = ep * (4 * (sig**6))
-	        etemp = stemp * (sig**6)
-	      elif combRule == 2 or combRule == 3:
-	        stemp = sig
-		etemp = ep
-              if ' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
-                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[k]._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
-          else: #FOR OTHERS WITH CL-, Na+, AND SUCH--MAY HAVE TO EDIT TO FIT OTHERS
-            if molecule._atoms[0].residueIndex:
-              sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (1,'atom',float(molecule._atoms[0]._charge[0].in_units_of(units.elementary_charge)._value),float(molecule._atoms[0]._mass[0].in_units_of(units.atomic_mass_unit)._value),molecule._atoms[0]._atomtype[0],molecule._atoms[0].residueIndex,molecule._atoms[0].residueName)) 
-            else:
-              sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (1,'atom',float(molecule._atoms[0]._charge[0].in_units_of(elementary_charge)._value),float(molecule._atoms[0]._mass[0].in_units_of(units.atomic_mass_unit)._value),molecule._atoms[0]._atomtype[0]))
-	    sig = float(molecule._atoms[0]._sigma[0].in_units_of(units.angstroms)._value)
-	    ep = float(molecule._atoms[0]._epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
-	    if combRule == 1:
-	      stemp = ep * (4 * (sig**6))
-	      etemp = stemp * (sig**6)
-	    elif combRule == 2 or combRule == 3:
-	      stemp = sig
-	      etemp = ep
-            vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (molecule._atoms[0]._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
         
           if verbose:
             print "   -Writing vdwtypes..."
@@ -1498,7 +1425,7 @@ class DesmondParser():
           for bond in moleculetype.bondForceSet.itervalues():
 	    try:
 	      length = float(bond.length.in_units_of(units.angstroms)._value)   #Look at unit conversions here
-	      k = float(bond.k._value / ( 100))  # look at unit conversions here
+	      k = float(bond.k._value)  # look at unit conversions here
             except:
 	      length = None
 	      k = None
@@ -1688,14 +1615,16 @@ class DesmondParser():
           atomlst = []
           lenlst = []
 	  lines.append("    ffio_constraints\n")
-	  for constraint in moleculetype.constraints.itervalues(): #calculate the max number of atoms in constraint
+	  for constraint in moleculetype.constraints.itervalues(): 
             if re.search('AH',constraint.type):
 	      alen = int(list(constraint.type)[-1])
             elif re.match('HOH',constraint.type):
 	      alen = 2
 	    if alen_max < alen:
 	      alen_max = alen
-	  for constraint in moleculetype.constraints.itervalues(): 
+          # not sure we need to sort these, but makes it easier to debug
+          constraintlist = sorted(moleculetype.constraints.itervalues(),key=lambda x: x.atom1)
+	  for constraint in constraintlist: #calculate the max number of atoms in constraint
             if re.search('AH',constraint.type):
 	      alen = int(list(constraint.type)[-1])
             elif re.match('HOH',constraint.type):
