@@ -60,8 +60,8 @@ if __name__ == "__main__":
             help="path for LAMMPS binary")
     parser.add_option('-b', type='str', dest='lmpbin', default='lmp_openmpi',
             help="name of for LAMMPS binary")
-    parser.add_option('-e', type='int', dest='energy', default=1,
-            help="Evaluate energies")
+    parser.add_option('-e', dest='energy', action="store_true",
+            help="Evaluate energies",default=False)
     parser.add_option('-x', type='int', dest='clean', default=1,
             help="Clean backup files produced by GROMACS")
 

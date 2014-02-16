@@ -69,10 +69,8 @@ if __name__ == "__main__":
             help="suffix for GROMACS binary")
     parser.add_option('-x', type='int', dest='clean', default=1,
             help="Clean backup files produced by GROMACS")
-    parser.add_option('-e', type='int', dest='energy', default=1,
-            help="Evaluate energies")
-
-
+    parser.add_option('-e', dest='energy', action="store_true",
+            help="Evaluate energies",default=False)
 
     (options, args) = parser.parse_args()
     name = options.name
