@@ -52,7 +52,7 @@ class DesmondParser():
 
 #LOAD FFIO BLOCKS IN FIRST (CONTAINS TOPOLOGY)
 
-    def parse_ffio_block(self,lines,start):
+    def parse_ffio_block(self,lines,start,end):
         # read in a ffio_block that isn't ffio_ff and split it into the
         # commands and the values
         # lots of room for additional error checking here, such as whether
@@ -60,7 +60,8 @@ class DesmondParser():
 
         # scroll to the next ffio entry
         while not 'ffio_' in lines[start]:
-            if '{' in lines[start] and 'ffio_' not in lines[start]:   # this is not an ffio block! End now.
+            # this is not an ffio block! or, we have reached the end of the file
+            if ('{' in lines[start] and 'ffio_' not in lines[start]) or start >= end:
                 return 'Done with ffio', 0, 0, 0, start 
             start+=1
 
@@ -70,12 +71,12 @@ class DesmondParser():
         ff_number = int(components[1])
         i = start+1
         entry_data = []
-        while not re.match(r'\s*[:::]',lines[i]):
+        while not ':::' in lines[i]:
             entry_data.append(lines[i].split()[0])
             i+=1
         i+=1 # skip the separator we just found
         entry_values = []
-        while not re.match(r'\s*[:::]',lines[i]):
+        while not ':::' in lines[i]:
             if lines[i].strip():  # skip the blank spaces.
                 entry_values.append(lines[i])
             i+=1        
@@ -133,7 +134,7 @@ class DesmondParser():
       while i < end:
 
 	if i == start:
-          while not re.match(r'\s*[:::]',lines[i]):
+          while not ':::' in lines[i]:
 	    if re.match('\s*s_ffio_name',lines[i]):
 	      namecol = i-start
 	    elif re.match('\s*s_ffio_comb_rule',lines[i]):
@@ -162,10 +163,8 @@ class DesmondParser():
 	  i+=1
 
         currentMolecule = Molecule(moleculeName)
-        ff_type, ff_number, entry_data, entry_values, endnumber = self.parse_ffio_block(lines,i)
-        i = endnumber
-        if 'fepio_fep' in lines[i]:  # just skip for now!
-            i = end
+        ff_type, ff_number, entry_data, entry_values, i = self.parse_ffio_block(lines,i,end)
+        #i = endnumber
 
         match = sysDirective.match(ff_type)
         if match:
@@ -372,8 +371,11 @@ class DesmondParser():
 		  else:
 		    funct1_cl.append([int(split[1]),int(split[2])])	
 
-	    System._sys._ljCorrection = float(ljch)
-            System._sys._coulombCorrection = float(clomb)
+            # Logic below can't be right, since this value will be written over.
+            if ljch:
+                System._sys._ljCorrection = float(ljch)
+            if clomb:
+                System._sys._coulombCorrection = float(clomb)
 	    	    
 	    for a in funct1_lj:     #PUT ALL PAIRS WITH ONLY LJ INTO LJ1
 	      newPairForce = AbstractPair(a[0], a[1], "LJ") 
@@ -629,23 +631,23 @@ class DesmondParser():
 	      ctype+=1
 
             for j in range(ff_number):  
-	      split = entry_values[j].split()
-	      if re.match('HOH', split[funct_pos]) or re.search('AH', split[funct_pos]):
+	      if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
+                split = entry_values[j].split()
                 tempatom = []
                 templength = []
 		for a in atompos:
-	          if not re.search('<>',split[a]):
+	          if not '<>' in split[a]:
 	            tempatom.append(int(split[a]))
 		  else:
 	            tempatom.append(None)
 		for l in lenpos:
-	          if not re.search('<>',split[l]):
+	          if not '<>' in split[l]:
 	            templength.append(float(split[l])*units.angstroms) # Check units?
 		  else:
 	            templength.append(None*units.angstroms)
-		if re.search('AH', split[funct_pos]):
+		if 'AH' in split[funct_pos]:
                   templen = int(list(split[funct_pos])[-1])
-		elif re.match('HOH', split[funct_pos]):
+		elif 'HOH' in split[funct_pos]:
 		  templen = 2    # Different desmond files have different options here.
 		if templen == 1: 
 		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
@@ -668,7 +670,7 @@ class DesmondParser():
 	      if newConstraint:
 	        currentMoleculeType.constraints.add(newConstraint)
 	        System._sys._forces.add(newConstraint)
- 
+
           elif match.group('exclusions'):
             if verbose:
               print "Parsing [ exclusions]..."
@@ -682,6 +684,9 @@ class DesmondParser():
           elif match.group('restraints'):
             if verbose:
               print "Parsing [ restraints]..."
+        else:  # no matches
+            while '}' not in lines[i]:
+                i+=1   # not the most robust if there is nesting in a particular pattern
 
     def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
 	                  
@@ -700,7 +705,7 @@ class DesmondParser():
       bondForceSet = HashMap()
       forces = OrderedSet()
       while i < end:
-        if re.match(r'\s*[:::]',lines[i]):
+        if ':::' in lines[i]:
           if bg:
 	    break
           else:
@@ -760,7 +765,7 @@ class DesmondParser():
       mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
       while i < end:
-        if re.match(r'\s*[:::]',lines[i]):
+        if ':::' in lines[i]:
           i+=1
           break
         else:
@@ -823,7 +828,7 @@ class DesmondParser():
  
       while j < mult:
         for atom in currentMolecule._atoms:
-          if re.match(r'\s*[:::]',lines[i]):  
+          if ':::' in lines[i]:
             break  
           else:
             aline = shlex.split(lines[i])
@@ -1393,7 +1398,7 @@ class DesmondParser():
             lines.append("      r_ffio_charge\n")
             lines.append("      r_ffio_mass\n")
             lines.append("      s_ffio_vdwtype\n")
-            if len(sites[0]) > 4:
+            if len(sites[0].split()) > 5:
               lines.append("      i_ffio_resnr\n")
               lines.append("      s_ffio_residue\n")    
             lines.append("      :::\n")

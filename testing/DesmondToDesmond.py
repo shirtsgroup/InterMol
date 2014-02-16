@@ -26,23 +26,26 @@ def desmond_to_desmond(name='2PPN', cms=None, despath=None,
     Driver.load(cms_in)
     Driver.write(cms_out)
 
-    pdb.set_trace()
     # calc output energies
     if energy:
         elines_out = desmond_energies(name,cms_out,'DtoD',despath)    
 
-    e_in  = np.zeros([len(elines_in)],float)
-    e_out = np.zeros([len(elines_out)],float)
-    for i, e in enumerate(elines_in): 
-        eins  = elines_in[i].split() 
-        eouts = elines_out[i].split()
-        e_in[i] = float(eins[1])
-        e_out[i] = float(eouts[1])
-        enames.append()
+        #MRS: this comparison is not working yet.
 
-    diff = e_in - e_out
-    rms = np.sqrt(np.mean(diff ** 2))
-    return rms, enames, e_in, e_out
+        e_in  = np.zeros([len(elines_in)],float)
+        e_out = np.zeros([len(elines_out)],float)
+        for i, e in enumerate(elines_in):
+            eins  = elines_in[i].split()
+            eouts = elines_out[i].split()
+            e_in[i] = float(eins[1])
+            e_out[i] = float(eouts[1])
+            enames.append()
+
+        diff = e_in - e_out
+        rms = np.sqrt(np.mean(diff ** 2))
+        return rms, enames, e_in, e_out
+    else:
+        return 0,0,0,0
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -54,10 +57,10 @@ if __name__ == "__main__":
             help="Struture/Topology .cms file")
     parser.add_option('-d', type='str', dest='despath', default='/opt/schrodinger2013/',
             help="path for DESMOND binary")
-    parser.add_option('-x', type='int', dest='clean', default=1,
-            help="Clean backup files produced by DESMOND")
-    parser.add_option('-e', type='int', dest='energy', default=1,
-            help="Evaluate energies")
+    parser.add_option('-x', dest='clean', action ="store_true",
+            help="Clean backup files produced by DESMOND (default true)")
+    parser.add_option('-e', dest='energy', action="store_true",
+            help="Evaluate energies",default=False)
 
     (options, args) = parser.parse_args()
     name = options.name
