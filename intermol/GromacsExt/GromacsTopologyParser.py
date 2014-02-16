@@ -360,9 +360,9 @@ class GromacsTopologyParser(object):
                                     split[2],
                                     split[3],
                                     float(split[4]) * units.degrees,
-                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[5]) * units.kilojoules_per_mole * units.nanometers**(-2),
                                     float(split[6]) * units.nanometers,
-                                    float(split[7]) * units.kilojoules_per_mole)
+                                    float(split[7]) * units.kilojoules_per_mole * units.nanometers**(-2))
 
                         # Quartic
                         elif int(split[3]) == 6:
@@ -466,6 +466,16 @@ class GromacsTopologyParser(object):
                                     float(split[10]) * units.kilojoules_per_mole,
                                     0 * units.kilojoules_per_mole)
 
+                            # periodic improper dihedral
+                            elif (int(split[4]) == 4) and (len(split) == 8):
+                                newDihedralType = ImproperDihedral4Type(split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    float(split[5]) * units.degrees,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    int(split[7]))
                         else:
                             print "could not find dihedral type"
 
@@ -904,19 +914,14 @@ class GromacsTopologyParser(object):
                     if verbose:
                         print "Parsing [ dihedrals ]..."
                     expanded.pop(i)
-
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newDihedralForce = None
 
                         if len(split) == 5:
-                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
-                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
-                            #atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
-                            #atomtype4 = currentMolecule._atoms[int(split[3])-1].getAtomType()[0]
                             atomtype4 = currentMolecule._atoms[int(split[3])-1].bondtype
 
                             tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[4])
@@ -973,7 +978,7 @@ class GromacsTopologyParser(object):
                                         float(split[6]) * units.kilojoules_per_mole,
                                         int(split[7]))
                             except:
-                                newDihedralFroce = ProperDihedral1(int(split[0]),
+                                newDihedralForce = ProperDihedral1(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -991,7 +996,7 @@ class GromacsTopologyParser(object):
                                         float(split[5]) * units.degrees,
                                         float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
                             except:
-                                newDihedralFroce = ImproperDihedral2(int(split[0]),
+                                newDihedralForce = ImproperDihedral2(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1036,7 +1041,7 @@ class GromacsTopologyParser(object):
                                         float(split[6]) * units.kilojoules_per_mole,
                                         int(split[7]))
                             except:
-                                newDihedralFroce = ImproperDihedral4(int(split[0]),
+                                newDihedralForce = ImproperDihedral4(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1055,7 +1060,7 @@ class GromacsTopologyParser(object):
                                         float(split[6]) * units.kilojoules_per_mole,
                                         int(split[7]))
                             except:
-                                newDihedralFroce = ProperDihedral9(int(split[0]),
+                                newDihedralForce = ProperDihedral9(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1361,11 +1366,11 @@ class GromacsTopologyParser(object):
                     % (atomtype.atomtype,
                        atomtype.bondtype,
                        atomtype.Z,
-                       atomtype.mass._value,
-                       atomtype.charge._value,
+                       atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
+                       atomtype.charge.in_units_of(units.elementary_charge)._value,
                        atomtype.ptype,
-                       atomtype.sigma._value,
-                       atomtype.epsilon._value))
+                       atomtype.sigma.in_units_of(units.nanometers)._value,
+                       atomtype.epsilon.in_units_of(units.kilojoules_per_mole)._value))
         lines.append('\n')
 
         # [ moleculetype]
@@ -1384,26 +1389,26 @@ class GromacsTopologyParser(object):
                 try:
                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
                             % (count,
-                               atom._atomtype[0], 
-                               atom.residueIndex, 
-                               atom.residueName, 
-                               atom.atomName, 
-                               atom.cgnr, 
-                               atom._charge[0]._value, 
-                               atom._mass[0]._value, 
-                               atom._atomtype[1], 
-                               atom._charge[1]._value, 
-                               atom._mass[1]._value))
+                               atom._atomtype[0],
+                               atom.residueIndex,
+                               atom.residueName,
+                               atom.atomName,
+                               atom.cgnr,
+                               atom._charge[0].in_units_of(units.elementary_charge)._value,
+                               atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                               atom._atomtype[1],
+                               atom._charge[1].in_units_of(units.elementary_charge)._value,
+                               atom._mass[1].in_units_of(units.atomic_mass_unit)._value))
                 except:
                      lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'
-                             % (count, 
-                                atom._atomtype[0], 
-                                atom.residueIndex, 
-                                atom.residueName, 
-                                atom.atomName, 
-                                atom.cgnr, 
-                                atom._charge[0]._value, 
-                                atom._mass[0]._value))
+                             % (count,
+                                atom._atomtype[0],
+                                atom.residueIndex,
+                                atom.residueName,
+                                atom.atomName,
+                                atom.cgnr,
+                                atom._charge[0].in_units_of(units.elementary_charge)._value,
+                                atom._mass[0].in_units_of(units.atomic_mass_unit)._value))
 
                 count +=1
             lines.append('\n')
@@ -1420,16 +1425,16 @@ class GromacsTopologyParser(object):
                                 % (bond.atom1,
                                    bond.atom2,
                                    b_type,
-                                   bond.length._value,
-                                   bond.k._value))
+                                   bond.length.in_units_of(units.nanometers)._value,
+                                   bond.k.in_units_of(units.kilojoules_per_mole*units.nanometers**(-2))._value))
                     elif isinstance(bond, G96Bond):
                         b_type = 2
                         lines.append('%6d%7d%4d%5.8f%5.8f\n'
                                 % (bond.atom1,
                                    bond.atom2,
                                    b_type,
-                                   bond.length._value,
-                                   bond.k._value))
+                                   bond.length.in_units_of(units.nanometers)._value,
+                                   bond.k.in_units_of(units.kilojoules_per_mole*units.nanometers**(-2))._value))
                     else:
                         print "ERROR (writeTopology): found unsupported bond type"
                 lines.append('\n')
@@ -1463,8 +1468,8 @@ class GromacsTopologyParser(object):
                                    angle.atom2,
                                    angle.atom3,
                                    a_type,
-                                   angle.theta._value,
-                                   angle.k._value))
+                                   angle.theta.in_units_of(units.degrees)._value,
+                                   angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
                     else:
                         print "ERROR (writeTopology): found unsupported angle type"
                 lines.append('\n')
@@ -1477,15 +1482,15 @@ class GromacsTopologyParser(object):
             for pair  in moleculeType.pairForceSet.itervalues():
                 if isinstance(pair, LJ1PairCR1) or isinstance(pair, LJ1PairCR23)
                     type = 1
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value)
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value)
 
                 elif isinstance(pair, LJ2PairCR1) or isinstance(pair, LJ2PairCR23):
                     type = 2
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V._value, pair.W._value))
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value))
 
                 elif isinstance(pair, LJNBCR1) or isinstance( pair, LJNBCR23):
                     type = 1
-                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi._value, pair.qj._value, pair.V._value, pair.W._value))
+                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi.in_units_of(units.XXX)._value, pair.qj.in_units_of(units.XXX)._value, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value))
                 else:
                     print "Could not identify pair!"
             """
@@ -1504,8 +1509,8 @@ class GromacsTopologyParser(object):
                                    dihedral.atom3,
                                    dihedral.atom4,
                                    d_type,
-                                   dihedral.phi._value,
-                                   dihedral.k._value,
+                                   dihedral.phi.in_units_of(units.degrees)._value,
+                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.multiplicity))
 
                     elif isinstance(dihedral, ImproperDihedral2):
@@ -1516,8 +1521,8 @@ class GromacsTopologyParser(object):
                                    dihedral.atom3,
                                    dihedral.atom4,
                                    d_type,
-                                   dihedral.xi._value,
-                                   dihedral.k._value))
+                                   dihedral.xi.in_units_of(units.degrees)._value,
+                                   dihedral.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
 
                     elif isinstance(dihedral, RBDihedral):
                         d_type = 3
@@ -1527,12 +1532,12 @@ class GromacsTopologyParser(object):
                                    dihedral.atom3,
                                    dihedral.atom4,
                                    d_type,
-                                   dihedral.C0._value,
-                                   dihedral.C1._value,
-                                   dihedral.C2._value,
-                                   dihedral.C3._value,
-                                   dihedral.C4._value,
-                                   dihedral.C5._value))
+                                   dihedral.C0.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.C1.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.C2.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.C3.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.C4.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.C5.in_units_of(units.kilojoules_per_mole)._value))
 
                     elif isinstance(dihedral, ImproperDihedral4):
                         d_type = 4
@@ -1542,8 +1547,8 @@ class GromacsTopologyParser(object):
                                    dihedral.atom3,
                                    dihedral.atom4,
                                    d_type,
-                                   dihedral.phi._value,
-                                   dihedral.k._value,
+                                   dihedral.phi.in_units_of(units.degrees)._value,
+                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.multiplicity))
 
                     elif isinstance(dihedral, ProperDihedral9):
@@ -1554,10 +1559,9 @@ class GromacsTopologyParser(object):
                                    dihedral.atom3,
                                    dihedral.atom4,
                                    d_type,
-                                   dihedral.phi._value,
-                                   dihedral.k._value,
+                                   dihedral.phi.in_units_of(units.degrees)._value,
+                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.multiplicity))
-
                     else:
                         print "ERROR (writeTopology): found unsupported  dihedral type"
                 lines.append('\n')
@@ -1567,12 +1571,12 @@ class GromacsTopologyParser(object):
             # [ settles ]
             lines.append('[ settles ]\n')
             lines.append('; i  funct   dOH  dHH\n')
-            s_type = 1 
+            s_type = 1
             lines.append('%6d%6d%18.8f%18.8f\n'
-                    % (settles.atom1, 
-                       s_type, 
-                       settles.dOH._value, 
-                       settles.dHH._value))
+                    % (settles.atom1,
+                       s_type,
+                       settles.dOH.in_units_of(units.nanometers)._value,
+                       settles.dHH.in_units_of(units.nanometers)._value))
             lines.append('\n')
 
         if moleculeType.exclusions:
@@ -1580,16 +1584,16 @@ class GromacsTopologyParser(object):
             lines.append('[ exclusions ]\n')
             for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
                 if len(exclusion.exclusions) == 2:
-                    lines.append('%6s%6s%6s\n' 
-                            %(i+1, 
-                              exclusion.exclusions[0], 
+                    lines.append('%6s%6s%6s\n'
+                            %(i+1,
+                              exclusion.exclusions[0],
                               exclusion.exclusions[1]))
                 else:
-                    lines.append('%6s%6s%6s\n' 
-                            % (exclusion.exclusions[0], 
-                               exclusion.exclusions[1], 
+                    lines.append('%6s%6s%6s\n'
+                            % (exclusion.exclusions[0],
+                               exclusion.exclusions[1],
                                exclusion.exclusions[2]))
-                    lines.append('\n') 
+                    lines.append('\n')
 
         # [ system ]
         lines.append('[ system ]\n')
@@ -1602,7 +1606,7 @@ class GromacsTopologyParser(object):
         lines.append('; Compound        nmols\n')
         for molType in System._sys._molecules:
             lines.append('%-15s%8d\n'
-                    % (molType, 
+                    % (molType,
                       len(System._sys._molecules[molType].moleculeSet)))
 
         fout = open(filename, 'w')
