@@ -566,7 +566,7 @@ class GromacsTopologyParser(object):
                                 int(split[2]),              # resNum
                                 split[3].strip(),           # resName
                                 split[4].strip())           # atomName
-                        atom.setAtomType(0,split[1].strip())
+                        atom.setAtomType(0, split[1].strip())
                         atom.cgnr = int(split[5])
                         atom.setCharge(0, float(split[6]) * units.elementary_charge)
                         try:
@@ -619,11 +619,7 @@ class GromacsTopologyParser(object):
                         newBondForce = None
 
                         if len(split) == 3:
-                            # Searching for matching bondtype to pull values from
-                            # Can't be this hard?
-                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
-                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
                             tempType = AbstractBondType(atomtype1, atomtype2, split[2])
                             bondType = self.bondtypes.get(tempType)

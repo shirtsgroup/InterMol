@@ -62,14 +62,7 @@ epsilon_surface          = 0
 optimize_fft             = no
 
 ; OPTIONS FOR BONDS     = 
-constraints              = hbonds ; constrain bonds to hydrogen
-; Type of constraint algorithm = 
-constraint-algorithm     = lincs
-; Highest order in the expansion of the constraint coupling matrix = 
-lincs-order              = 8
-; Lincs will write a warning to the stderr if in one step a bond = 
-; rotates over more degrees than = 
-lincs-warnangle          = 90
+constraints              = none
 
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = yes

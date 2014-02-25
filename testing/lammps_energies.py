@@ -17,6 +17,8 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
         base = 'Inputs/Lammps'
     elif in_out == 'GtoL':
         base = 'Outputs/GromacsToLammps'
+    elif in_out == 'LtoL':
+        base = 'Outputs/LammpsToLammps'
     else:
         raise Exception("Unknown flag: {0}".format(in_out))
 
@@ -28,6 +30,7 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
     saved_path = os.getcwd()
     os.chdir(sim_dir)
     run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
+    #run_lammps = "{lmpbin} < input_file.out".format(lmpbin=lmpbin)
     os.system(run_lammps)
     os.chdir(saved_path)
 
@@ -44,7 +47,7 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
     #data.append(temp)
 
     # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Potential']#'Pairs', 'vdW', #'Kinetic En.', 'Total Energy', 'Temperature']
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Pairs', 'vdW', 'Coulomb', 'Potential']
 
     e_out = dict(zip(types, data))
     return e_out

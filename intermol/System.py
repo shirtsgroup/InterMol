@@ -27,13 +27,13 @@ class System(object):
 
         self._nbFunc = 0
         self._combinationRule = 0
-        self._genpairs = True
+        self._genpairs = 'yes' 
         self._ljCorrection = 0
         self._coulombCorrection = 0
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._forces = OrderedSet()
-        self._boxVector = np.zeros([3,3],float)
+        self._boxVector = np.zeros([3,3])
 
 
     def addMolecule(self, molecule):

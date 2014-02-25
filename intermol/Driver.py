@@ -45,6 +45,13 @@ def load(*files):
             DesmondParser.readFile(filename)
             print "Sructure loaded\n"
 
+        elif extension == '.lmp':
+            import intermol.LammpsExt.LammpsParser as LammpsParser
+            print "Reading LAMMPS data & input files..."
+            input_name = splitext(filename)[0] + '.input'
+            LammpsParser.readData(filename, input_name)
+            print "Data loaded\n"
+
         else:
             pdb.set_trace()
             raise Exception("{0} is not a supported file format".format(extension))
@@ -68,6 +75,8 @@ def write(*files):
         elif extension == '.top':
             from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
             print "Writing Gromacs topology file..."
+            if not GromacsTopologyParser._GroTopParser:
+                GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
             GromacsTopologyParser._GroTopParser.writeTopology(filename)
 
         elif extension == '.cms':

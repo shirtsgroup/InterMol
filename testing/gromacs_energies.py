@@ -24,6 +24,12 @@ def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff='
             base = os.path.join(base, name, 'topol.top')
         if gro == None:
             base = os.path.join(base, name, 'conf.gro')
+    elif in_out == 'LtoG':
+        base = 'Outputs/LammpsToGromacs'
+        if top == None:
+            base = os.path.join(base, name, 'topol.top')
+        if gro == None:
+            base = os.path.join(base, name, 'conf.gro')
     else:
         raise Exception("Unknown flag: {0}".format(in_out))
 

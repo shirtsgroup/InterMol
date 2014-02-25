@@ -15,10 +15,10 @@ def ConvertFromRBToOPLSDihedral(c0,c1,c2,c3,c4,c5,c6):
 def ConvertFromOPLSToRBDihedral(f1,f2,f3,f4):
 
     c0 = f2 + 0.5*(f1+f3)
-    c1 = 0.5*(-f1+3*f3)
-    c2 = -f2 + 4*f4
-    c3 = -2*f3
-    c4 = -4*f4
+    c1 = 0.5 * (-f1 + 3.0 * f3)
+    c2 = -f2 + 4.0 * f4
+    c3 = -2.0 * f3
+    c4 = -4.0 * f4
     c5 = 0.0
     c6 = 0.0
     return c0,c1,c2,c3,c4,c5,c6

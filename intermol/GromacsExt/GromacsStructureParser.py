@@ -42,7 +42,7 @@ def readStructure(filename):
                     sys.exit()
 
     rawBoxVector = lines[i].split()
-    v = np.zeros([3,3],float) * units.nanometers
+    v = np.zeros([3,3], float) * units.nanometers
     if len(rawBoxVector) == 3:
         for i in range(3):
             v[i,i] = float(rawBoxVector[i]) * units.nanometers
