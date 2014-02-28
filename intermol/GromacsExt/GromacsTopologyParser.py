@@ -5,7 +5,6 @@ import re
 import copy
 import warnings
 
-#import simtk.unit as units
 import intermol.unit as units
 from collections import deque
 from intermol.Atom import Atom
@@ -15,11 +14,13 @@ from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
 
+
 class GromacsTopologyParser(object):
     """
     A class containing methods required to read in a Gromacs(4.5.4) Topology File
     """
     _GroTopParser = None
+
     def __init__(self, defines=None):
         """
         Initializes a GromacsTopologyParse object which serves to read in a Gromacs
@@ -44,7 +45,7 @@ class GromacsTopologyParser(object):
             self.defines["FLEX_SPC"] = None
             self.defines["POSRE"] = None
 
-    def parseTopology(self, topfile, verbose = False):
+    def parseTopology(self, topfile, verbose=False):
         """
         Parses a Gromacs topology reading into the abstract
 
@@ -54,10 +55,9 @@ class GromacsTopologyParser(object):
         """
         lines = self.preprocess(topfile, verbose)
         if lines:
-             self.readTopology(lines, verbose)
- 
-    def readTopology(self, expanded, verbose = False):
- #  def readTopology(self, expanded, verbose = True):
+            self.readTopology(lines, verbose)
+
+    def readTopology(self, expanded, verbose=False):
         """
         Read in a previously preprocessed Gromacs topology file
 
@@ -117,10 +117,9 @@ class GromacsTopologyParser(object):
 
                         if len(split) == 7:
                             if System._sys._combinationRule == 1:
-
                                 # TODO: double check the following equations
-                                sigma = (float(split[6])/float(split[5]))**(1/6)
-                                epsilon = float(split[5])/(4*sigma**6)
+                                sigma = (float(split[6]) / float(split[5])) ** (1/6)
+                                epsilon = float(split[5]) / (4*sigma**6)
 
                                 newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
                                         split[1].strip(),                           # bondtype
@@ -132,22 +131,20 @@ class GromacsTopologyParser(object):
                                         epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
 
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
-                                newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
-                                        split[1].strip(),                           # bondtype
-                                        -1,                                         # Z
-                                        float(split[2]) * units.amu,                # mass
-                                        float(split[3]) * units.elementary_charge,  # charge
-                                        split[4],                                   # ptype
-                                        float(split[5]) * units.nanometers ,        # sigma
-                                        float(split[6]) * units.kilojoules_per_mole)# epsilon
+                                newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
+                                        split[1].strip(),                             # bondtype
+                                        -1,                                           # Z
+                                        float(split[2]) * units.amu,                  # mass
+                                        float(split[3]) * units.elementary_charge,    # charge
+                                        split[4],                                     # ptype
+                                        float(split[5]) * units.nanometers,           # sigma
+                                        float(split[6]) * units.kilojoules_per_mole)  # epsilon
 
                         if len(split) == 8:
                             if System._sys._combinationRule == 1:
-
                                 # TODO: double check the following equations
-                                sigma = (float(split[7])/float(split[6]))**(1/6)
-                                epsilon = float(split[6])/(4*sigma**6)
-
+                                sigma = (float(split[7]) / float(split[6]))**(1/6)
+                                epsilon = float(split[6]) / (4*sigma**6)
                                 newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
                                         split[1].strip(),                           # bondtype
                                         split[2],                                   # Z
@@ -158,15 +155,14 @@ class GromacsTopologyParser(object):
                                         epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
 
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
-                                newAtomType = AtomCR23Type(split[0].strip(),        # atomtype or name
-                                        split[1].strip(),                           # bondtype
-                                        split[2],                                   # Z
-                                        float(split[3]) * units.amu,                # mass
-                                        float(split[4]) * units.elementary_charge,  # charge
-                                        split[5],                                   # ptype
-                                        float(split[6]) * units.nanometers ,        # sigma
-                                        float(split[7]) * units.kilojoules_per_mole)# epsilon
-
+                                newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
+                                        split[1].strip(),                             # bondtype
+                                        split[2],                                     # Z
+                                        float(split[3]) * units.amu,                  # mass
+                                        float(split[4]) * units.elementary_charge,    # charge
+                                        split[5],                                     # ptype
+                                        float(split[6]) * units.nanometers,           # sigma
+                                        float(split[7]) * units.kilojoules_per_mole)  # epsilon
 
                         System._sys._atomtypes.add(newAtomType)
 
@@ -203,7 +199,6 @@ class GromacsTopologyParser(object):
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole,
                                         float(split[5]) * units.nanometers**(-1))
-
 
                         # Cubic
                         elif int(split[2]) == 4:
@@ -274,7 +269,6 @@ class GromacsTopologyParser(object):
                                             float(split[5]) * units.nanometers,
                                             float(split[6]) * units.kilojoules_per_mole)
 
-
                         # LJ/Coul. 1-4 (Type 2)
                         elif int(split[2]) == 2:
                             if System._sys._combinationRule == 1:
@@ -288,14 +282,14 @@ class GromacsTopologyParser(object):
                                         float(split[7]) * units.kilojoules_per_mole * units.nanometers**(12))
 
                             elif System._sys._combinationRule == (2 or 3):
-                                 newPairType = LJ1PairCR1Type(split[0],
-                                        split[1],
-                                        split[2],
-                                        split[3],
-                                        float(split[4]) * units.elementary_charge,
-                                        float(split[5]) * units.elementary_charge,
-                                        float(split[6]) * units.nanometers,
-                                        float(split[7]) * units.kilojoules_per_mole)
+                                newPairType = LJ1PairCR1Type(split[0],
+                                         split[1],
+                                         split[2],
+                                         split[3],
+                                         float(split[4]) * units.elementary_charge,
+                                         float(split[5]) * units.elementary_charge,
+                                         float(split[6]) * units.nanometers,
+                                         float(split[7]) * units.kilojoules_per_mole)
 
                         else:
                             # TODO: need better error handling
@@ -341,7 +335,6 @@ class GromacsTopologyParser(object):
                                     float(split[5]) * units.nanometers,
                                     float(split[6]) * units.kilojoules_per_mole * units.nanometers**(-2))
 
-
                         # Cross bond-angle
                         elif int(split[3]) == 4:
                             newAngleType = CrossBondAngleAngleType(split[0],
@@ -376,7 +369,6 @@ class GromacsTopologyParser(object):
                                     float(split[7]) * units.kilojoules_per_mole * units.radians*(-2),
                                     float(split[8]) * units.kilojoules_per_mole * units.radians*(-3),
                                     float(split[9]) * units.kilojoules_per_mole * units.radians*(-4))
-
 
                         else:
                             print "could not find angle type"
@@ -491,14 +483,14 @@ class GromacsTopologyParser(object):
                         #newPairType = PairType(expanded.pop(i).split())
                         #self.pairtypes.add(newPairType)
                         expanded.pop(i)
- 
+
                 elif match.group('nonbond_params'):
                     if verbose:
                         print "Parsing [ nonbond_params ]..."
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                       expanded.pop(i)
+                        expanded.pop(i)
 
                 elif match.group('system'):
                     if verbose:
@@ -579,7 +571,6 @@ class GromacsTopologyParser(object):
                             atom.setCharge(1, float(split[9]) * units.elementary_charge)
                             atom.setMass(1, float(split[10]) * units.amu)
 
-
                         index = 0
                         for atomType in atom._atomtype:
                             # Searching for a matching atomType to pull values from
@@ -605,7 +596,7 @@ class GromacsTopologyParser(object):
 
                             else:
                                 sys.stderr.write("Warning: A corresponding AtomType was not found. Insert missing values yourself.\n")
-                            index +=1
+                            index += 1
 
                         currentMolecule.addAtom(atom)
 
@@ -794,8 +785,7 @@ class GromacsTopologyParser(object):
                                 split.append(angleType.C3)
                                 split.append(angleType.C4)
 
-
-                        # Angle 
+                        # Angle
                         if int(split[3]) == 1:
                             try:
                                 newAngleForce = Angle(int(split[0]),
@@ -1083,7 +1073,7 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newSettlesForce = None
-            
+
                         if len(split) == 4:
                             newSettlesForce = Settles(int(split[0]),
                                     float(split[2]) * units.nanometers,
@@ -1092,17 +1082,16 @@ class GromacsTopologyParser(object):
                         currentMoleculeType.settles = newSettlesForce
                         System._sys._forces.add(newSettlesForce)
 
-
-                elif match.group('exclusions'): 
+                elif match.group('exclusions'):
                     if verbose:
                         print "Parsing [ exclusions ]..."
                     expanded.pop(i)
-               
+
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         newExclusion = Exclusions(expanded.pop(i).split())
-                        
+
                         currentMoleculeType.exclusions.add(newExclusion)
-                        System._sys._forces.add(newExclusion)   
+                        System._sys._forces.add(newExclusion)
 
                 elif match.group('molecules'):
                     if verbose:
@@ -1122,12 +1111,12 @@ class GromacsTopologyParser(object):
             else:
                 i += 1
 
-    def preprocess(self, filename, verbose = False):
+    def preprocess(self, filename, verbose=False):
         """
         Preprocess a topology file
-        
+
         Preprocesses for #include, #define, #ifdef directives and handles them
-        
+
         Args:
             filename: the filename to preprocess
             verbose: verbose output
@@ -1145,7 +1134,7 @@ class GromacsTopologyParser(object):
           (?:"|<)
           (?P<include>.+\.itp|.+\.top)
           (?:"|>)
-         |  
+         |
          (?:\#define[ ]+)
           (?P<defineLiteral>[\S]+)
           (?P<defineData>[ ]+.+)?
@@ -1164,17 +1153,17 @@ class GromacsTopologyParser(object):
          (?P<endif>\#endif)
         """, re.VERBOSE)
         condDepth = 0
-        write = [True]  
+        write = [True]
         fd = self.open(filename)
-        if fd != None:
+        if fd is not None:
             lines = deque(fd)   # initial read of root file
             fd.close()
             while(lines):       # while the queue isn't empty continue preprocessing
                 line = lines.popleft()
                 if verbose:
-                    print "=========================" 
+                    print "========================="
                     print "Original line:", line
-                match = lineReg.match(line) # ensure that the line matches what we expect!
+                match = lineReg.match(line)   # ensure that the line matches what we expect!
                 if match:
                     line = match.group('directive')
                     comment = match.group('comment')
@@ -1183,7 +1172,8 @@ class GromacsTopologyParser(object):
                         print "Comment:", comment
                     while True:     # expand the lines
                         if match.group('ignore_newline'):
-                            if verbose: print "Ignore newline found"
+                            if verbose:
+                                print "Ignore newline found"
                             if lines:
                                 temp = lines.popleft()
                                 match = lineReg.match(temp)
@@ -1193,10 +1183,10 @@ class GromacsTopologyParser(object):
                                 break   # EOF so we can't loop again
                         else:
                             break   # line terminates
-                    line = line.strip() # just in case theres whitespace we missed
+                    line = line.strip()  # just in case theres whitespace we missed
 
                     match = preReg.match(line)
-                    if match != None:
+                    if match is not None:
                         if match.group('ifdef') and write[condDepth]:
                             if verbose:
                                 print 'Found an ifdef:', match.group('ifdef')
@@ -1236,7 +1226,7 @@ class GromacsTopologyParser(object):
                                     print "Found a include:", line
                                 include = match.group('include')
                                 fd = self.open(include)
-                                if fd != None:
+                                if fd is not None:
                                     tempList = list(fd)
                                     tempList.reverse()
                                     lines.extendleft(tempList)
@@ -1286,7 +1276,7 @@ class GromacsTopologyParser(object):
             file descriptor of the file to be openend
 
         Raises:
-            IOError when the file cannot be opened for any reason 
+            IOError when the file cannot be opened for any reason
         """
         if filename in self.includes:
             print "WARNING: Omitting file ", filename, ". It has already been included!"
@@ -1299,36 +1289,36 @@ class GromacsTopologyParser(object):
                 sys.stderr.write("Local instance of topology file '%s' used\n" % (filename))
                 return fd
             except IOError, (errno, strerror):
-                sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno,strerror,filename))
-        # if we can't find it, check for the pathname in GMXLIB. 
+                sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno, strerror, filename))
+        # if we can't find it, check for the pathname in GMXLIB.
         filename = os.path.join(os.environ['GMXLIB'], temp)
         try:
             fd = open(filename)
             self.includes.add(filename)
-            sys.stderr.write("version in GMXLIB = %s used for topology file '%s'\n" % (os.environ['GMXLIB'],temp))
+            sys.stderr.write("version in GMXLIB = %s used for topology file '%s'\n" % (os.environ['GMXLIB'], temp))
             return fd
         except:
             pass
 
-        # if we can't include the file locally or from GMXLIB, 
+        # if we can't include the file locally or from GMXLIB,
         # let's look for it in the directory of one of the previous files.
-        # NOTE: could be dangerous if multiple files with the same name are 
+        # NOTE: could be dangerous if multiple files with the same name are
         # found in different directories!
         found = False
-        for parentfile in self.includes:       
-            parentdir,oldfile = os.path.split(parentfile)
-            filename = os.path.join(parentdir,temp)
+        for parentfile in self.includes:
+            parentdir, oldfile = os.path.split(parentfile)
+            filename = os.path.join(parentdir, temp)
             if os.path.exists(filename):
                 found = True
                 break
         try:
             fd = open(filename)
             self.includes.add(temp)
-            sys.stderr.write("version in %s used for topology file '%s'\n" % (parentdir,filename))
+            sys.stderr.write("version in %s used for topology file '%s'\n" % (parentdir, filename))
             return fd
 
         except IOError, (errno, strerror):
-            sys.stderr.write("Unrecoverable I/O error(%d): %s: '%s'\n" %(errno, strerror,filename))
+            sys.stderr.write("Unrecoverable I/O error(%d): %s: '%s'\n" % (errno, strerror, filename))
             sys.exit()
 
     def writeTopology(self, filename):
@@ -1352,7 +1342,6 @@ class GromacsTopologyParser(object):
                    System._sys._ljCorrection,
                    System._sys._coulombCorrection))
         lines.append('\n')
-
 
         # [ atomtypes ]
         lines.append('[ atomtypes ]\n')
@@ -1396,17 +1385,16 @@ class GromacsTopologyParser(object):
                                atom._charge[1].in_units_of(units.elementary_charge)._value,
                                atom._mass[1].in_units_of(units.atomic_mass_unit)._value))
                 except:
-                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'
-                             % (count,
-                                atom._atomtype[0],
-                                atom.residueIndex,
-                                atom.residueName,
-                                atom.atomName,
-                                atom.cgnr,
-                                atom._charge[0].in_units_of(units.elementary_charge)._value,
-                                atom._mass[0].in_units_of(units.atomic_mass_unit)._value))
-
-                count +=1
+                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'
+                                 % (count,
+                                    atom._atomtype[0],
+                                    atom.residueIndex,
+                                    atom.residueName,
+                                    atom.atomName,
+                                    atom.cgnr,
+                                    atom._charge[0].in_units_of(units.elementary_charge)._value,
+                                    atom._mass[0].in_units_of(units.atomic_mass_unit)._value))
+                count += 1
             lines.append('\n')
 
             if moleculeType.bondForceSet:
@@ -1581,7 +1569,7 @@ class GromacsTopologyParser(object):
             for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
                 if len(exclusion.exclusions) == 2:
                     lines.append('%6s%6s%6s\n'
-                            %(i+1,
+                            % (i+1,
                               exclusion.exclusions[0],
                               exclusion.exclusions[1]))
                 else:
@@ -1595,7 +1583,6 @@ class GromacsTopologyParser(object):
         lines.append('[ system ]\n')
         lines.append('%s\n' % (System._sys._name))
         lines.append('\n')
-
 
         # [ molecules ]
         lines.append('[ molecules ]\n')
@@ -1615,7 +1602,7 @@ class GromacsTopologyParser(object):
         Get comments
         """
         return self.comments
-    
+
     def getExpanded(self):
         """
         Get expanded list of directives
@@ -1627,7 +1614,7 @@ class GromacsTopologyParser(object):
         Get list of includes
         """
         return self.includes
-    
+
     def getDefines(self):
         """
         Get list of defines
