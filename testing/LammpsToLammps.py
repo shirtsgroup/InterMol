@@ -3,10 +3,12 @@ import os
 import numpy as np
 
 import intermol.Driver as Driver
+#import intermol.convert_md as Driver
 from lammps_energies import lammps_energies
 from helper_functions import *
 
-def lammps_to_lammps(name, lmppath='', lmpbin='lmp_openmpi', energy=True):
+def lammps_to_lammps(name, lmppath='', lmpbin='lmp_openmpi', energy=True,
+        verbose=False):
     """Test lammps to lammps conversion
     """
 
@@ -18,7 +20,7 @@ def lammps_to_lammps(name, lmppath='', lmpbin='lmp_openmpi', energy=True):
 
     # calc input energies
     if energy:
-        e_in = lammps_energies(name, 'in', lmppath, lmpbin)
+        e_in = lammps_energies(name, 'in', lmppath, lmpbin, verbose)
 
     # where the magic happens
     Driver.initSystem(name)
@@ -44,6 +46,9 @@ if __name__ == "__main__":
             help="name of for LAMMPS binary")
     parser.add_option('-e', dest='energy', action="store_true",
             help="Evaluate energies",default=False)
+    parser.add_option('-v', dest='verbose', action="store_true",
+            help="Write LAMMPS output to screen",default=False)
+
 
 
     (options, args) = parser.parse_args()
@@ -51,8 +56,9 @@ if __name__ == "__main__":
     lmppath = options.lmppath
     lmpbin = options.lmpbin
     energy = options.energy
+    verbose = options.verbose
 
-    results = lammps_to_lammps(name, lmppath, lmpbin, energy)
+    results = lammps_to_lammps(name, lmppath, lmpbin, energy, verbose)
 
     if energy:
         print_energy_summary(results)

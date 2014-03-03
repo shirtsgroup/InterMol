@@ -5,7 +5,8 @@ import intermol.unit as units
 
 import pdb
 
-def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
+def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi',
+        verbose=False):
     """Evaluate energies of LAMMPS files
 
     Args:
@@ -29,7 +30,10 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
     # mdrunin'
     saved_path = os.getcwd()
     os.chdir(sim_dir)
-    run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
+    if verbose:
+        run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
+    else:
+        run_lammps = "{lmpbin} < data.input > /dev/null".format(lmpbin=lmpbin)
     #run_lammps = "{lmpbin} < input_file.out".format(lmpbin=lmpbin)
     os.system(run_lammps)
     os.chdir(saved_path)

@@ -46,14 +46,15 @@ def load(*files):
             print "Sructure loaded\n"
 
         elif extension == '.lmp':
-            import intermol.LammpsExt.LammpsParser as LammpsParser
-            print "Reading LAMMPS data & input files..."
             input_name = splitext(filename)[0] + '.input'
-            LammpsParser.readData(filename, input_name)
+            from intermol.lammps_extension.lammps_parser import LammpsParser
+            print "Reading LAMMPS data & input files..."
+            lammps_parser = LammpsParser()
+            lammps_parser.read_input(input_name)
+            lammps_parser.read_data(filename)
             print "Data loaded\n"
 
         else:
-            pdb.set_trace()
             raise Exception("{0} is not a supported file format".format(extension))
 
 def write(*files):
@@ -86,10 +87,11 @@ def write(*files):
             DesmondParser.writeFile(filename)
 
         elif extension == '.lmp':
-            import intermol.LammpsExt.LammpsParser as LammpsParser
-            print "Writing LAMMPS data & input files..."
-            LammpsParser.writeData(filename)
             input_name = splitext(filename)[0] + '.input'
+            from intermol.lammps_extension.lammps_parser import LammpsParser
+            print "Writing LAMMPS data & input files..."
+            lammps_parser = LammpsParser()
+            lammps_parser.write(filename)
             print "Finished writing '{0}'".format(input_name)
 
         else:
