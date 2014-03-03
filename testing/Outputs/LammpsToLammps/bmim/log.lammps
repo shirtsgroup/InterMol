@@ -46,7 +46,7 @@ WARNING: System is not charge neutral, net charge = 1 (pppm.cpp:256)
 Memory usage per processor = 11.3354 Mbytes
 E_bond E_angle E_dihed E_impro E_pair E_vdwl E_coul PotEng 
    7.1985075    12.472607    1.1307927            0    37.361269    -1.171732    22.776173    58.163176 
-Loop time of 0 on 1 procs for 0 steps with 25 atoms
+Loop time of 1.19209e-06 on 1 procs for 0 steps with 25 atoms
 
 Pair  time (%) = 0 (0)
 Bond  time (%) = 0 (0)
@@ -54,7 +54,7 @@ Kspce time (%) = 0 (0)
 Neigh time (%) = 0 (0)
 Comm  time (%) = 0 (0)
 Outpt time (%) = 0 (0)
-Other time (%) = 0 (0)
+Other time (%) = 1.19209e-06 (100)
 
 FFT time (% of Kspce) = 0 (0)
 FFT Gflps 3d (1d only) = 0 0
