@@ -17,56 +17,56 @@ from intermol.HashMap import *
 
 class DesmondParser():
     """
-    A class containing methods required to read in Desmond CMS File   
+    A class containing methods required to read in Desmond CMS File
     """
 
     def __init__(self,defines=None):
-      """
-      Initializes a DesmondParse object which serves to read in a CMS file
-      into the abstract representation.
-    
-      Args:
-      defines: Sets of default defines to use while parsing.
-      """
-      self.includes = set()       # set storing includes
-      self.defines = dict()        # list of defines
-      self.comments = list()      # list of comments
-        
-      self.atomtypes = HashMap()
-      self.bondtypes = HashMap()
-      self.pairtypes = HashMap()
-      self.angletypes = HashMap()
-      self.dihedraltypes = HashMap()
-      self.constrainttypes = HashMap()
-        
-      if defines:
-        self.defines.union(defines)
-      self.defines["FLEX_SPC"] = None
-      self.defines["POSRE"] = None 
-      self.viparr = 1
-      
-      self.fblockpos = []
-      self.a_blockpos = []
-      self.b_blockpos = []
-      self.ffio_blockpos = []
+        """
+        Initializes a DesmondParse object which serves to read in a CMS file
+        into the abstract representation.
+
+        Args:
+        defines: Sets of default defines to use while parsing.
+        """
+        self.includes = set()       # set storing includes
+        self.defines = dict()        # list of defines
+        self.comments = list()      # list of comments
+
+        self.atomtypes = HashMap()
+        self.bondtypes = HashMap()
+        self.pairtypes = HashMap()
+        self.angletypes = HashMap()
+        self.dihedraltypes = HashMap()
+        self.constrainttypes = HashMap()
+
+        if defines:
+            self.defines.union(defines)
+        self.defines["FLEX_SPC"] = None
+        self.defines["POSRE"] = None
+        self.viparr = 1
+
+        self.fblockpos = []
+        self.a_blockpos = []
+        self.b_blockpos = []
+        self.ffio_blockpos = []
 
 #LOAD FFIO BLOCKS IN FIRST (CONTAINS TOPOLOGY)
 
     def parse_ffio_block(self,lines,start,end):
-        # read in a ffio_block that isn't ffio_ff and split it into the
-        # commands and the values
-        # lots of room for additional error checking here, such as whether
-        # each entry has the correct number of data values, whether they are the correct type, etc.
+            # read in a ffio_block that isn't ffio_ff and split it into the
+            # commands and the values
+            # lots of room for additional error checking here, such as whether
+            # each entry has the correct number of data values, whether they are the correct type, etc.
 
-        # scroll to the next ffio entry
+            # scroll to the next ffio entry
         while not 'ffio_' in lines[start]:
             # this is not an ffio block! or, we have reached the end of the file
             if ('{' in lines[start] and 'ffio_' not in lines[start]) or start >= end:
-                return 'Done with ffio', 0, 0, 0, start 
+                return 'Done with ffio', 0, 0, 0, start
             start+=1
 
         lines[start].split()[1]
-        components = re.split('\W', lines[start].split()[0]) # get rid of whitespace, split on nonword      
+        components = re.split('\W', lines[start].split()[0]) # get rid of whitespace, split on nonword
         ff_type = components[0]
         ff_number = int(components[1])
         i = start+1
@@ -79,805 +79,805 @@ class DesmondParser():
         while not ':::' in lines[i]:
             if lines[i].strip():  # skip the blank spaces.
                 entry_values.append(lines[i])
-            i+=1        
+            i+=1
         while '}' not in lines[i]:  # wait until we hit an end to the block
             i+=1
-        i+=1 # step past the end of the block     
+        i+=1 # step past the end of the block
 
-        return ff_type,ff_number,entry_data,entry_values,i 
-        
+        return ff_type,ff_number,entry_data,entry_values,i
+
     def loadFfio(self, lines, moleculeName, start, end, sysDirective, sysDirectiveAtm, verbose = False):
-	                  
+
 #        Loading in ffio blocks from Desmond format
 #        Args:
-#            lines: list of all data in CMS format	
-#	     moleculeName: name of current molecule
-#	     start: beginning of where ffio_ff starts for each molecule
-#	     end: ending of where ffio_ff ends for each molecule
-#	    sysDirective: help locate positions of specific data in ffio blocks
-#	    sysDirectiveAtm: help locate positions of specific data in m_atoms
-      i = start
-      j = start
-      vdwtypeskeys = []
-      vdwtypes = []
-      split = []
-      constraints = []
-      temp = []
+#            lines: list of all data in CMS format
+#            moleculeName: name of current molecule
+#            start: beginning of where ffio_ff starts for each molecule
+#            end: ending of where ffio_ff ends for each molecule
+#           sysDirective: help locate positions of specific data in ffio blocks
+#           sysDirectiveAtm: help locate positions of specific data in m_atoms
+        i = start
+        j = start
+        vdwtypeskeys = []
+        vdwtypes = []
+        split = []
+        constraints = []
+        temp = []
 
-      currentMolecule = None
-      currentMoleculeType = None
-      newAtomType = None
-      newBondForce = None
-      newBondType = None
-      newPairType = None
-      newPairForce = None
-      newAngleType = None
-      newAngleForce = None
-      newDihedralType = None
-      newDihedralForce = None
-      stemp = None
-      etemp = None
-      sigma = None
-      epsilon = None
-      atomlist = None
-      namecol = 0
-      combrcol = 0
-      
-      #DEFAULT VALUES WHEN CONVERTING TO GROMACS
-      System._sys._nbFunc = 1
-      System._sys._genpairs = 'yes'
+        currentMolecule = None
+        currentMoleculeType = None
+        newAtomType = None
+        newBondForce = None
+        newBondType = None
+        newPairType = None
+        newPairForce = None
+        newAngleType = None
+        newAngleForce = None
+        newDihedralType = None
+        newDihedralForce = None
+        stemp = None
+        etemp = None
+        sigma = None
+        epsilon = None
+        atomlist = None
+        namecol = 0
+        combrcol = 0
 
-      if verbose:
-	print 'Parsing [ molecule %s]'%(moleculeName)
-        print "Parsing [ ffio]"
+        #DEFAULT VALUES WHEN CONVERTING TO GROMACS
+        System._sys._nbFunc = 1
+        System._sys._genpairs = 'yes'
 
-      while i < end:
+        if verbose:
+            print 'Parsing [ molecule %s]'%(moleculeName)
+            print "Parsing [ ffio]"
 
-	if i == start:
-          while not ':::' in lines[i]:
-	    if re.match('\s*s_ffio_name',lines[i]):
-	      namecol = i-start
-	    elif re.match('\s*s_ffio_comb_rule',lines[i]):
-	      combrcol = i-start
-            i+=1
-	    j+=1
-	  i+=1
-          while (i-j) < (j-start-1):
-	   # if namecol == i-j:
-	   #   if re.match('\s*"Generated by viparr"',lines[i]): #If a CMS Ffio block is generated by Viparr, then the name changes to "Generated by Viparr"
-	   #     moleculeName = "Viparr%d"%self.viparr              #This replaces the name of molecule with Viparr
-	   #     self.viparr+=1
-	   #     #print "VIPARR GENERATED" 
-	   #   else:
-	   #     moleculeName = lines[i].split()
-	   #     #print "Molecule Name there"
-            if combrcol == i-j:
-	      if re.search("Geometric", lines[i], re.IGNORECASE):
-		if re.search("Arithmetic", lines[i], re.IGNORECASE):
-	          System._sys._combinationRule = 3
-		else:
-	          System._sys._combinationRule = 2
-              elif re.search("Arithmetic", lines[i], re.IGNORECASE):
-	        System._sys._combinationRule = 1
-	    i+=1
-	  i+=1
+        while i < end:
 
-        currentMolecule = Molecule(moleculeName)
-        ff_type, ff_number, entry_data, entry_values, i = self.parse_ffio_block(lines,i,end)
-        #i = endnumber
+            if i == start:
+                while not ':::' in lines[i]:
+                    if re.match('\s*s_ffio_name',lines[i]):
+                        namecol = i-start
+                    elif re.match('\s*s_ffio_comb_rule',lines[i]):
+                        combrcol = i-start
+                    i+=1
+                    j+=1
+                i+=1
+                while (i-j) < (j-start-1):
+                 # if namecol == i-j:
+                 #   if re.match('\s*"Generated by viparr"',lines[i]): #If a CMS Ffio block is generated by Viparr, then the name changes to "Generated by Viparr"
+                 #     moleculeName = "Viparr%d"%self.viparr              #This replaces the name of molecule with Viparr
+                 #     self.viparr+=1
+                 #     #print "VIPARR GENERATED"
+                 #   else:
+                 #     moleculeName = lines[i].split()
+                 #     #print "Molecule Name there"
+                    if combrcol == i-j:
+                        if re.search("Geometric", lines[i], re.IGNORECASE):
+                            if re.search("Arithmetic", lines[i], re.IGNORECASE):
+                                System._sys._combinationRule = 3
+                            else:
+                                System._sys._combinationRule = 2
+                        elif re.search("Arithmetic", lines[i], re.IGNORECASE):
+                            System._sys._combinationRule = 1
+                    i+=1
+                i+=1
 
-        match = sysDirective.match(ff_type)
-        if match:
+            currentMolecule = Molecule(moleculeName)
+            ff_type, ff_number, entry_data, entry_values, i = self.parse_ffio_block(lines,i,end)
+            #i = endnumber
 
-          if match.group('vdwtypes'): #molecule name is at sites, but vdwtypes comes before sites. So we store info in vdwtypes and edit it later at sites
+            match = sysDirective.match(ff_type)
+            if match:
 
-            if verbose:
-              print "Parsing [ vdwtypes]..."
-            for j in range(ff_number):
-                vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
-                vdwtypeskeys.append(entry_values[j].split()[1])
+                if match.group('vdwtypes'): #molecule name is at sites, but vdwtypes comes before sites. So we store info in vdwtypes and edit it later at sites
 
-          elif match.group('sites'):   #correlate with atomtypes and atoms in GROMACS
-            if verbose:                #also edit vdwtypes
-              print "Parsing [ sites]..."
+                    if verbose:
+                        print "Parsing [ vdwtypes]..."
+                    for j in range(ff_number):
+                        vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
+                        vdwtypeskeys.append(entry_values[j].split()[1])
 
-            cgnr = 0
-            for j in range(ff_number):
-	      split = entry_values[j].split() 
-	      stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * units.angstroms #was in angstroms
-	      etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * units.kilocalorie_per_mole #was in kilocal per mol
+                elif match.group('sites'):   #correlate with atomtypes and atoms in GROMACS
+                    if verbose:                #also edit vdwtypes
+                        print "Parsing [ sites]..."
 
-              if split[1] == "atom":
-  	        if len(split) == 7: 
- 	          atom = Atom(int(split[0]), split[4], int(split[5]), split[6]) #adding in index, vdwtype, resnr, residue
-	        else:
-	          atom = Atom(int(split[0]), split[4], 0, '') # IS PLACEHOLDER FOR ANYTHING WITH NO RESIDUE NUMBER
-	        atom.setAtomType(0, split[4])
-	        atom.setCharge(0, float(split[2])*units.elementary_charge) #NEED TO CONVERT TO ACTUAL UNITS
-	        atom.setMass(0, float(split[3]) * units.amu)
-		stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * units.angstroms #was in angstroms
-		etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * units.kilocalorie_per_mole #was in kilocal per mol
-	        atom.setSigma(0, stemp) 
-	        atom.setEpsilon(0, etemp) 
-                atom.cgnr = cgnr
-                cgnr+=1
-		
-		currentMolecule.addAtom(atom)
+                    cgnr = 0
+                    for j in range(ff_number):
+                        split = entry_values[j].split()
+                        stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * units.angstroms #was in angstroms
+                        etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * units.kilocalorie_per_mole #was in kilocal per mol
 
-		if not System._sys._atomtypes.get(AbstractAtomType(atom.getAtomType().get(0))): #if atomtype not in System, add it
-	          if System._sys._combinationRule == 1:
-		    sigma = (etemp/stemp)**(1/6)
-		    epsilon = (stemp)/(4*sigma**6)
-		    newAtomType = AtomCR1Type(split[4],             #atomtype/name 
-		                  split[4],                             #bondtype
-		                  -1,                               #Z
-		                  float(split[2]) * units.amu,      #mass
-		                  float(split[3]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
-		                  'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
-		                  sigma * units.kilocalorie_per_mole * angstroms**(6),  
-		                  epsilon * units.kilocalorie_per_mole * unit.angstro,s**(12))  
-		  elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
-		    newAtomType = AtomCR23Type(split[4], #atomtype/name 
-		                  split[4],                 #bondtype
-		                  -1,                   #Z
-               	                  float(split[2]) * units.amu,  #mass--NEED TO CONVERT TO ACTUAL UNITS
-		                  float(split[3]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
-		                  'A',                  #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
-		                  stemp,
-		                  etemp) 
-		  System._sys._atomtypes.add(newAtomType)
+                        if split[1] == "atom":
+                            if len(split) == 7:
+                                atom = Atom(int(split[0]), split[4], int(split[5]), split[6]) #adding in index, vdwtype, resnr, residue
+                            else:
+                                atom = Atom(int(split[0]), split[4], 0, '') # IS PLACEHOLDER FOR ANYTHING WITH NO RESIDUE NUMBER
+                            atom.setAtomType(0, split[4])
+                            atom.setCharge(0, float(split[2])*units.elementary_charge) #NEED TO CONVERT TO ACTUAL UNITS
+                            atom.setMass(0, float(split[3]) * units.amu)
+                            stemp = float(vdwtypes[vdwtypeskeys.index(split[4])][0]) * units.angstroms #was in angstroms
+                            etemp = float(vdwtypes[vdwtypeskeys.index(split[4])][1]) * units.kilocalorie_per_mole #was in kilocal per mol
+                            atom.setSigma(0, stemp)
+                            atom.setEpsilon(0, etemp)
+                            atom.cgnr = cgnr
+                            cgnr+=1
 
-	    if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
-	      if self.a_blockpos[0] < start:
-		currentMolecule._atoms = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, sysDirectiveAtm, verbose)
-		self.a_blockpos.pop(0)
-            
-            System._sys.addMolecule(currentMolecule)
-            currentMoleculeType = System._sys._molecules[moleculeName]
-	    currentMoleculeType.nrexcl = 3 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
-	    
-	    atomlist = copy.deepcopy(currentMolecule._atoms)
+                            currentMolecule.addAtom(atom)
 
-	  elif match.group('bonds'): #add more stuff to this later once you have more samples to work with
-            forces = []
-	    if len(self.b_blockpos) > 1:  #LOADING M_BONDS
-	      #print 'LENGTH OF B_BLOCKPOS: %d'%len(self.b_blockpos)
-	      if self.b_blockpos[0] < start:
-		forces = self.loadMBonds(lines,self.b_blockpos[0], i, verbose)
-		currentMoleculeType.bondForceSet = forces[0]
-		System._sys._forces = forces[1]
-		self.b_blockpos.pop(0)
-	    if verbose:
-              print "Parsing [ bonds]..."
-            for j in range(ff_number):  
-	      split = entry_values[j].split()
-	      newBondForce = None
-	      if re.match("Harm_constrained", split[3]):
-                try:
-    		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
-                                atomlist[int(split[2])-1].atomName,
-                                1,
-                                float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
-                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-				1)
- 	        except:
-		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
-                                atomlist[int(split[2])-1].atomName,
-                                1,
-                                float(split[4]), 
-                                float(split[5]),
-				1)		
-		try:
-	          newBondForce = Bond(int(split[1]),
-		                 int(split[2]),
-                                 float(split[4]) * units.angstroms, 
-                                 float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-                                 None,
-				 1)
-	        except:
-	          newBondForce = Bond(int(split[1]),
-		                 int(split[2]),
-                                 float(split[4]),
-                                 float(split[5]),
-                                 None,
-				 1)
-				 
-	      elif re.match("Harm",split[3]):
-                try:
-    		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
-                                atomlist[int(split[2])-1].atomName,
-                                1,
-                                float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS
-                                float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-				0)
- 	        except:
-		  newBondType = BondType(atomlist[int(split[1])-1].atomName,
-                                atomlist[int(split[2])-1].atomName,
-                                1,
-                                float(split[4]), 
-                                float(split[5]),
-				0)		
-		try:
-	          newBondForce = Bond(int(split[1]),
-		                 int(split[2]),
-                                 float(split[4]) * units.angstroms, 
-                                 float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-                                 None,
-				 0)
-	        except:
-	          newBondForce = Bond(int(split[1]),
-		                 int(split[2]),
-                                 float(split[4]),
-                                 float(split[5]),
-                                 None,
-				 0)
-	      else:
-		print "ERROR (readFile): found unsupported bond"
+                            if not System._sys._atomtypes.get(AbstractAtomType(atom.getAtomType().get(0))): #if atomtype not in System, add it
+                                if System._sys._combinationRule == 1:
+                                    sigma = (etemp/stemp)**(1/6)
+                                    epsilon = (stemp)/(4*sigma**6)
+                                    newAtomType = AtomCR1Type(split[4],             #atomtype/name
+                                                  split[4],                             #bondtype
+                                                  -1,                               #Z
+                                                  float(split[2]) * units.amu,      #mass
+                                                  float(split[3]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
+                                                  'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
+                                                  sigma * units.kilocalorie_per_mole * angstroms**(6),
+                                                  epsilon * units.kilocalorie_per_mole * unit.angstro,s**(12))
+                                elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
+                                    newAtomType = AtomCR23Type(split[4], #atomtype/name
+                                                  split[4],                 #bondtype
+                                                  -1,                   #Z
+                                                  float(split[2]) * units.amu,  #mass--NEED TO CONVERT TO ACTUAL UNITS
+                                                  float(split[3]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
+                                                  'A',                  #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
+                                                  stemp,
+                                                  etemp)
+                                System._sys._atomtypes.add(newAtomType)
 
-              if newBondForce:
-                if newBondForce in currentMoleculeType.bondForceSet: #bondForceSet already contains i,j, bond order
-	          oldBondForce = currentMoleculeType.bondForceSet.get(newBondForce)
-		  currentMoleculeType.bondForceSet.remove(newBondForce)
-		  newBondForce.order = oldBondForce.order
-	        currentMoleculeType.bondForceSet.add(newBondForce)
-	        System._sys._forces.add(newBondForce)
-	      if newBondType and newBondType not in self.bondtypes:
-	        self.bondtypes.add(newBondType)
+                    if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
+                        if self.a_blockpos[0] < start:
+                            currentMolecule._atoms = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, sysDirectiveAtm, verbose)
+                            self.a_blockpos.pop(0)
 
-          elif match.group('pairs'): #GromacsTopology didn't fix this, so fix this when changes are made
-            if verbose:
-              print "Parsing [ pairs]..."
-	    funct1_lj = []
-	    funct1_cl = []
-	    funct1_both = []
-	    ljch=None
-	    clomb=None
-	    lj = False
-	    cl = False
-            tempcnt = 0
-            for j in range(ff_number):
-	      split = entry_values[j].split()
-	      if int(split[0]) == 1:
-	        if re.match(split[3], "LJ"):
-		  ljch = float(split[4])
-		  lj = True
-		  funct1_lj.append([int(split[1]),int(split[2])])
-		else:
-		  clomb = float(split[4])
-		  cl = True
-		  funct1_cl.append([int(split[1]),int(split[2])])
-	      elif lj:
-		if re.match(split[3], "Coulomb"):
-	          if not clomb:
-                    clomb = float(split[4])
-		  cl = True
-		  lj = False 
-	      elif cl:
-		if re.match(split[3], "LJ"):
-	          if not ljch:
-                    ljch = float(split[4])
-		  cl = False
-		  lj = True
-	      if not int(split[0]) == 1:
-	        if lj and [int(split[1]), int(split[2])] in funct1_cl:
-	  	  funct1_cl.remove([int(split[1]), int(split[2])])
-		  funct1_both.append([int(split[1]), int(split[2])])
-	        elif cl and [int(split[1]), int(split[2])] in funct1_lj:
-	          funct1_lj.remove([int(split[1]), int(split[2])])
-		  funct1_both.append([int(split[1]), int(split[2])])
-	        else:
-		  if lj:
-		    funct1_lj.append([int(split[1]),int(split[2])])
-		  else:
-		    funct1_cl.append([int(split[1]),int(split[2])])	
+                    System._sys.addMolecule(currentMolecule)
+                    currentMoleculeType = System._sys._molecules[moleculeName]
+                    currentMoleculeType.nrexcl = 3 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
 
-            # Logic below can't be right, since this value will be written over.
-            if ljch:
-                System._sys._ljCorrection = float(ljch)
-            if clomb:
-                System._sys._coulombCorrection = float(clomb)
-	    	    
-	    for a in funct1_lj:     #PUT ALL PAIRS WITH ONLY LJ INTO LJ1
-	      newPairForce = AbstractPair(a[0], a[1], "LJ") 
-              currentMoleculeType.pairForceSet.add(newPairForce)
-	      System._sys._forces.add(newPairForce)
-	      
-	    for a in funct1_cl: #PUT ALL PAIRS WITH ONLY CL INT LJ1
-	      newPairForce = AbstractPair(a[0], a[1], "Coulomb") 
-              currentMoleculeType.pairForceSet.add(newPairForce)
-	      System._sys._forces.add(newPairForce)
-	      
-#	      if System._sys._combinationRule == 1:
+                    atomlist = copy.deepcopy(currentMolecule._atoms)
+
+                elif match.group('bonds'): #add more stuff to this later once you have more samples to work with
+                    forces = []
+                    if len(self.b_blockpos) > 1:  #LOADING M_BONDS
+                        #print 'LENGTH OF B_BLOCKPOS: %d'%len(self.b_blockpos)
+                        if self.b_blockpos[0] < start:
+                            forces = self.loadMBonds(lines,self.b_blockpos[0], i, verbose)
+                            currentMoleculeType.bondForceSet = forces[0]
+                            System._sys._forces = forces[1]
+                            self.b_blockpos.pop(0)
+                    if verbose:
+                        print "Parsing [ bonds]..."
+                    for j in range(ff_number):
+                        split = entry_values[j].split()
+                        newBondForce = None
+                        if re.match("Harm_constrained", split[3]):
+                            try:
+                                newBondType = BondType(atomlist[int(split[1])-1].atomName,
+                                              atomlist[int(split[2])-1].atomName,
+                                              1,
+                                              float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
+                                              float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                              1)
+                            except:
+                                newBondType = BondType(atomlist[int(split[1])-1].atomName,
+                                              atomlist[int(split[2])-1].atomName,
+                                              1,
+                                              float(split[4]),
+                                              float(split[5]),
+                                              1)
+                            try:
+                                newBondForce = Bond(int(split[1]),
+                                               int(split[2]),
+                                               float(split[4]) * units.angstroms,
+                                               float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                               None,
+                                               1)
+                            except:
+                                newBondForce = Bond(int(split[1]),
+                                               int(split[2]),
+                                               float(split[4]),
+                                               float(split[5]),
+                                               None,
+                                               1)
+
+                        elif re.match("Harm",split[3]):
+                            try:
+                                newBondType = BondType(atomlist[int(split[1])-1].atomName,
+                                              atomlist[int(split[2])-1].atomName,
+                                              1,
+                                              float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS
+                                              float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                              0)
+                            except:
+                                newBondType = BondType(atomlist[int(split[1])-1].atomName,
+                                              atomlist[int(split[2])-1].atomName,
+                                              1,
+                                              float(split[4]),
+                                              float(split[5]),
+                                              0)
+                            try:
+                                newBondForce = Bond(int(split[1]),
+                                               int(split[2]),
+                                               float(split[4]) * units.angstroms,
+                                               float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                               None,
+                                               0)
+                            except:
+                                newBondForce = Bond(int(split[1]),
+                                               int(split[2]),
+                                               float(split[4]),
+                                               float(split[5]),
+                                               None,
+                                               0)
+                        else:
+                            print "ERROR (readFile): found unsupported bond"
+
+                        if newBondForce:
+                            if newBondForce in currentMoleculeType.bondForceSet: #bondForceSet already contains i,j, bond order
+                                oldBondForce = currentMoleculeType.bondForceSet.get(newBondForce)
+                                currentMoleculeType.bondForceSet.remove(newBondForce)
+                                newBondForce.order = oldBondForce.order
+                            currentMoleculeType.bondForceSet.add(newBondForce)
+                            System._sys._forces.add(newBondForce)
+                        if newBondType and newBondType not in self.bondtypes:
+                            self.bondtypes.add(newBondType)
+
+                elif match.group('pairs'): #GromacsTopology didn't fix this, so fix this when changes are made
+                    if verbose:
+                        print "Parsing [ pairs]..."
+                    funct1_lj = []
+                    funct1_cl = []
+                    funct1_both = []
+                    ljch=None
+                    clomb=None
+                    lj = False
+                    cl = False
+                    tempcnt = 0
+                    for j in range(ff_number):
+                        split = entry_values[j].split()
+                        if int(split[0]) == 1:
+                            if re.match(split[3], "LJ"):
+                                ljch = float(split[4])
+                                lj = True
+                                funct1_lj.append([int(split[1]),int(split[2])])
+                            else:
+                                clomb = float(split[4])
+                                cl = True
+                                funct1_cl.append([int(split[1]),int(split[2])])
+                        elif lj:
+                            if re.match(split[3], "Coulomb"):
+                                if not clomb:
+                                    clomb = float(split[4])
+                                cl = True
+                                lj = False
+                        elif cl:
+                            if re.match(split[3], "LJ"):
+                                if not ljch:
+                                    ljch = float(split[4])
+                                cl = False
+                                lj = True
+                        if not int(split[0]) == 1:
+                            if lj and [int(split[1]), int(split[2])] in funct1_cl:
+                                funct1_cl.remove([int(split[1]), int(split[2])])
+                                funct1_both.append([int(split[1]), int(split[2])])
+                            elif cl and [int(split[1]), int(split[2])] in funct1_lj:
+                                funct1_lj.remove([int(split[1]), int(split[2])])
+                                funct1_both.append([int(split[1]), int(split[2])])
+                            else:
+                                if lj:
+                                    funct1_lj.append([int(split[1]),int(split[2])])
+                                else:
+                                    funct1_cl.append([int(split[1]),int(split[2])])
+
+                    # Logic below can't be right, since this value will be written over.
+                    if ljch:
+                        System._sys._ljCorrection = float(ljch)
+                    if clomb:
+                        System._sys._coulombCorrection = float(clomb)
+
+                    for a in funct1_lj:     #PUT ALL PAIRS WITH ONLY LJ INTO LJ1
+                        newPairForce = AbstractPair(a[0], a[1], "LJ")
+                        currentMoleculeType.pairForceSet.add(newPairForce)
+                        System._sys._forces.add(newPairForce)
+
+                    for a in funct1_cl: #PUT ALL PAIRS WITH ONLY CL INT LJ1
+                        newPairForce = AbstractPair(a[0], a[1], "Coulomb")
+                        currentMoleculeType.pairForceSet.add(newPairForce)
+                        System._sys._forces.add(newPairForce)
+
+#             if System._sys._combinationRule == 1:
 #                newPairType = LJ1PairCR1Type(atomlist[a[0]-1].atomName,  #atom 1 and index
 #                                atomlist[a[1]-1].atomName,               #atom 2 and index
 #                                1,                                     #type
 #                                float(0) * units.kilocalorie_per_mole * units.angstroms**(6),  #COME BACK
 #                                float(0) * units.kilocalorie_per_mole * units.angstroms**(12)) #COME BACK
-#	      elif System._sys._combinationRule == (2 or 3):
+#             elif System._sys._combinationRule == (2 or 3):
 #                newPairType = LJ1PairCR23Type(atomlist[a[0]-1].atomName,
 #                                atomlist[a[1]-1].atomName,
-#				 1,
+#                                1,
 #                                float(0) * units.angstroms,          #COME BACK
 #                                float(0) * units.kilocalorie_per_mole) #COME BACK
-#	      self.pairtypes.add(newPairType)
-	      
-	    for a in funct1_both: #PUT ALL PAIRS WITH BOTH LJ AND COULOMB INTO NB 
-	      newPairForce = AbstractPair(a[0], a[1], "Both")
-              currentMoleculeType.pairForceSet.add(newPairForce)
-	      System._sys._forces.add(newPairForce)
-	      
-#	      if System._sys._combinationRule == 1:
+#             self.pairtypes.add(newPairType)
+
+                    for a in funct1_both: #PUT ALL PAIRS WITH BOTH LJ AND COULOMB INTO NB
+                        newPairForce = AbstractPair(a[0], a[1], "Both")
+                        currentMoleculeType.pairForceSet.add(newPairForce)
+                        System._sys._forces.add(newPairForce)
+
+#             if System._sys._combinationRule == 1:
 #                newPairType = LJNBPairCR1Type(atomlist[a[0]-1].atomName, #atom 1 and index
 #                                atomlist[a[1]-1].atomName,               #atom 2 and index
 #                                2,                                     #type
-#				float(ljch) * units.elementary_charge, #UNITS CORRECT???
+#                               float(ljch) * units.elementary_charge, #UNITS CORRECT???
 #                                float(clomb) * units.elementary_charge, #UNITS CORRECT???
 #                                float(0) * units.kilocalorie_per_mole * units.angstroms**(6),  #COME BACK
 #                                float(0) * units.kilocalorie_per_mole * units.angstroms**(12)) #COME BACK
-#	      elif System._sys._combinationRule == (2 or 3):
+#             elif System._sys._combinationRule == (2 or 3):
 #                newPairType = LJNBPairCR23Type(atomlist[a[0]-1].atomName,
 #                                atomlist[a[1]-1].atomName,
 #                                2,
-#				float(ljch) * units.elementary_charge, #UNITS CORRECT???
+#                               float(ljch) * units.elementary_charge, #UNITS CORRECT???
 #                                float(clomb) * units.elementary_charge, #UNITS CORRECT???
 #                                float(0) * units.angstroms,          #COME BACK
 #                                float(0) * units.kilocalorie_per_mole) #COME BACK
-#	      self.pairtypes.add(newPairType)
+#             self.pairtypes.add(newPairType)
 
-	    
-          elif match.group('angles'): #add more stuff later once you have more samples to work with
-            if verbose:
-              print "Parsing [ angles]..."
-            for j in range(ff_number):
-	      split = entry_values[j].split()
-	      newAngleForce = None
-	      if re.match("Harm", split[4]):
-		try:
-		  newAngleForce = Angle(int(split[1]),
-		                  int(split[2]),
-				  int(split[3]),
-				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
-                                  #0)
-		except:
-		  newAngleForce = Angle(int(split[1]),
-		                  int(split[2]),
-				  int(split[3]),
-				  float(split[5]),
-				  float(split[6]))
 
-              elif re.match("Harm_constrained",split[4]):
-		try:
-		  newAngleForce = Angle(int(split[1]),
-		                  int(split[2]),
-				  int(split[3]),
-				  float(split[5]) * units.degrees,
-				  float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
-                                  1)
-		except:
-		  newAngleForce = Angle(int(split[1]),
-		                  int(split[2]),
-				  int(split[3]),
-				  float(split[5]),
-				  float(split[6]),
-                                  1)
-	      else:
-                print "ERROR (readFile): found unsupported angle in: ",
-                print lines[i]
+                elif match.group('angles'): #add more stuff later once you have more samples to work with
+                    if verbose:
+                        print "Parsing [ angles]..."
+                    for j in range(ff_number):
+                        split = entry_values[j].split()
+                        newAngleForce = None
+                        if re.match("Harm", split[4]):
+                            try:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]) * units.degrees,
+                                                float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
+                                                #0)
+                            except:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]),
+                                                float(split[6]))
 
-	      if newAngleForce:
-                currentMoleculeType.angleForceSet.add(newAngleForce)
-	        System._sys._forces.add(newAngleForce)
+                        elif re.match("Harm_constrained",split[4]):
+                            try:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]) * units.degrees,
+                                                float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
+                                                1)
+                            except:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]),
+                                                float(split[6]),
+                                                1)
+                        else:
+                            print "ERROR (readFile): found unsupported angle in: ",
+                            print lines[i]
 
-          elif match.group('dihedrals'):
-            if verbose:
-              print "Parsing [ dihedrals]..."
-            for j in range(ff_number):
-	      split = entry_values[j].split()
-	      newDihedralForce = None
-	      #Proper Diehdral 1 ---NOT SURE ABOUT MULTIPLICITY
-              if re.match(split[5], "PROPER_HARM", re.IGNORECASE): 
-                try:
-                  newDihedralForce = ProperDihedral1(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) * units.degrees,
-                                     float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
-                except:
-                  newDihedralFroce = ProperDihedral1(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     split[6],
-                                     split[7],
-                                     2)
-              
-	      #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
-              # These two should be the same function.  Check differences (polymer or protein defn, etc).
-              elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
-                try:
-                  newDihedralForce = ImproperDihedral2(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) * units.radians,
-                                     float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
-                except:
-                  newDihedralForce = ImproperDihedral2(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     split[6],
-                                     split[7])
-	      
-              #RB Dihedral (Assume for Improper trig and Proper trig for now)
-	      elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): # ASSUME IT CORRELATE TO RB DIHEDRAL (LAST PARAMETER IS ALWAYS 0)
-                try:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) *  units.kilocalorie_per_mole,
-                                     float(split[7]) *  units.kilocalorie_per_mole,
-                                     float(split[8]) *  units.kilocalorie_per_mole,
-                                     float(split[9]) *  units.kilocalorie_per_mole,
-                                     float(split[10]) *  units.kilocalorie_per_mole,
-                                     float(split[11]) *  units.kilocalorie_per_mole,
-                                     float(split[12]) *  units.kilocalorie_per_mole)
-                except:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]),
-                                     float(split[12]))
-	      elif re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE):
-                try:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]) * units.kilocalorie_per_mole,
-                                     float(split[7]) * units.kilocalorie_per_mole,
-                                     float(split[8]) * units.kilocalorie_per_mole,
-                                     float(split[9]) * units.kilocalorie_per_mole,
-                                     float(split[10]) * units.kilocalorie_per_mole,
-                                     float(split[11]) * units.kilocalorie_per_mole,
-                                     float(split[12]) * units.kilocalorie_per_mole)
-                except:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     float(split[6]),
-                                     float(split[7]),
-                                     float(split[8]),
-                                     float(split[9]),
-                                     float(split[10]),
-                                     float(split[11]),
-                                     float(split[12]))
-                
-	      elif (re.match(split[5], "OPLS_PROPER", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE)):
-                try:
-                  # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
-                  # terms, and the others are set to zero.
-                  c0,c1,c2,c3,c4,c5,c6 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
-                                                                     float(split[9]),float(split[10]))
-                except:
-                    f1=0
-                    f2=0
-                    f3=0
-                    f4=0
-                    # do some additional error handling here.
-                    print "ERROR (readFile): OPLS_PROPER terms not found"
-                try:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     c0 * units.kilocalorie_per_mole,
-                                     c1 * units.kilocalorie_per_mole,
-                                     c2 * units.kilocalorie_per_mole,
-                                     c3 * units.kilocalorie_per_mole,
-                                     c4 * units.kilocalorie_per_mole,
-                                     c5 * units.kilocalorie_per_mole,
-                                     0 * units.kilocalorie_per_mole) 
-                except:
-                  newDihedralForce = RBDihedral(int(split[1]),
-                                     int(split[2]),
-                                     int(split[3]),
-                                     int(split[4]),
-                                     c0 * units.kilocalorie_per_mole,
-                                     c1 * units.kilocalorie_per_mole,
-                                     c2 * units.kilocalorie_per_mole,
-                                     c3 * units.kilocalorie_per_mole,
-                                     c4 * units.kilocalorie_per_mole,
-                                     c5 * units.kilocalorie_per_mole,
-                                     c6 * units.kilocalorie_per_mole) 
-              else:
-                print "ERROR (readFile): found unsupported dihedral in:",
-                print line[i]
-	      if newDihedralForce:
-	        currentMoleculeType.dihedralForceSet.add(newDihedralForce)
-                System._sys._forces.add(newDihedralForce)		    
+                        if newAngleForce:
+                            currentMoleculeType.angleForceSet.add(newAngleForce)
+                            System._sys._forces.add(newAngleForce)
 
-	    #9 proper dihedrals, funct = 1
-	    #3 improper dihedrals, funct = 2
-	    #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
+                elif match.group('dihedrals'):
+                    if verbose:
+                        print "Parsing [ dihedrals]..."
+                    for j in range(ff_number):
+                        split = entry_values[j].split()
+                        newDihedralForce = None
+                        #Proper Diehdral 1 ---NOT SURE ABOUT MULTIPLICITY
+                        if re.match(split[5], "PROPER_HARM", re.IGNORECASE):
+                            try:
+                                newDihedralForce = ProperDihedral1(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]) * units.degrees,
+                                                   float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
+                            except:
+                                newDihedralFroce = ProperDihedral1(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   split[6],
+                                                   split[7],
+                                                   2)
 
-          elif match.group('constraints'):
-            if verbose:
-              print "Parsing [ constraints]..."
-	    ctype = 1
-	    funct_pos = 0
-	    atompos = [] #position of atoms in constraints; spread all over the place
-	    lenpos = [] #position of atom length; spread all over the place
-            tempatom = []
-            templength = []
-	    templen = 0
-            for j in range(len(entry_data)):
-	      if entry_data[j] == 's_ffio_funct':
-	        funct_pos = ctype
-	      elif 'i_ffio' in entry_data[j]:
-                atompos.append(ctype)
-	      elif 'r_ffio' in entry_data[j]:
-	        lenpos.append(ctype)
-	      ctype+=1
+                        #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
+                        # These two should be the same function.  Check differences (polymer or protein defn, etc).
+                        elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
+                            try:
+                                newDihedralForce = ImproperDihedral2(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]) * units.radians,
+                                                   float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
+                            except:
+                                newDihedralForce = ImproperDihedral2(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   split[6],
+                                                   split[7])
 
-            for j in range(ff_number):  
-	      if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
-                split = entry_values[j].split()
-                tempatom = []
-                templength = []
-		for a in atompos:
-	          if not '<>' in split[a]:
-	            tempatom.append(int(split[a]))
-		  else:
-	            tempatom.append(None)
-		for l in lenpos:
-	          if not '<>' in split[l]:
-	            templength.append(float(split[l])*units.angstroms) # Check units?
-		  else:
-	            templength.append(None*units.angstroms)
-		if 'AH' in split[funct_pos]:
-                  templen = int(list(split[funct_pos])[-1])
-		elif 'HOH' in split[funct_pos]:
-		  templen = 2    # Different desmond files have different options here.
-		if templen == 1: 
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
-		elif templen == 2:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
-                elif templen == 3:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
-		elif templen == 4:
-         	  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
-		elif templen == 5:
-                  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
-		elif templen == 6:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
-		elif templen == 7:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
-		elif templen == 8:
-		  newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
-	      else:
-	        print "ERROR (readFile): found unsupported constraint"
-	      if newConstraint:
-	        currentMoleculeType.constraints.add(newConstraint)
-	        System._sys._forces.add(newConstraint)
+                        #RB Dihedral (Assume for Improper trig and Proper trig for now)
+                        elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): # ASSUME IT CORRELATE TO RB DIHEDRAL (LAST PARAMETER IS ALWAYS 0)
+                            try:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]) *  units.kilocalorie_per_mole,
+                                                   float(split[7]) *  units.kilocalorie_per_mole,
+                                                   float(split[8]) *  units.kilocalorie_per_mole,
+                                                   float(split[9]) *  units.kilocalorie_per_mole,
+                                                   float(split[10]) *  units.kilocalorie_per_mole,
+                                                   float(split[11]) *  units.kilocalorie_per_mole,
+                                                   float(split[12]) *  units.kilocalorie_per_mole)
+                            except:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]),
+                                                   float(split[7]),
+                                                   float(split[8]),
+                                                   float(split[9]),
+                                                   float(split[10]),
+                                                   float(split[11]),
+                                                   float(split[12]))
+                        elif re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE):
+                            try:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]) * units.kilocalorie_per_mole,
+                                                   float(split[7]) * units.kilocalorie_per_mole,
+                                                   float(split[8]) * units.kilocalorie_per_mole,
+                                                   float(split[9]) * units.kilocalorie_per_mole,
+                                                   float(split[10]) * units.kilocalorie_per_mole,
+                                                   float(split[11]) * units.kilocalorie_per_mole,
+                                                   float(split[12]) * units.kilocalorie_per_mole)
+                            except:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   float(split[6]),
+                                                   float(split[7]),
+                                                   float(split[8]),
+                                                   float(split[9]),
+                                                   float(split[10]),
+                                                   float(split[11]),
+                                                   float(split[12]))
 
-          elif match.group('exclusions'):
-            if verbose:
-              print "Parsing [ exclusions]..."
-            for j in range(ff_number):  
-	      temp = entry_values[j].split()
-	      temp.remove(temp[0])
-	      newExclusion = Exclusions(temp)
-	      currentMoleculeType.exclusions.add(newExclusion)
-	      System._sys._forces.add(newExclusion)
+                        elif (re.match(split[5], "OPLS_PROPER", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE)):
+                            try:
+                                # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
+                                # terms, and the others are set to zero.
+                                c0,c1,c2,c3,c4,c5,c6 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
+                                                                                   float(split[9]),float(split[10]))
+                            except:
+                                f1=0
+                                f2=0
+                                f3=0
+                                f4=0
+                                # do some additional error handling here.
+                                print "ERROR (readFile): OPLS_PROPER terms not found"
+                            try:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   c0 * units.kilocalorie_per_mole,
+                                                   c1 * units.kilocalorie_per_mole,
+                                                   c2 * units.kilocalorie_per_mole,
+                                                   c3 * units.kilocalorie_per_mole,
+                                                   c4 * units.kilocalorie_per_mole,
+                                                   c5 * units.kilocalorie_per_mole,
+                                                   0 * units.kilocalorie_per_mole)
+                            except:
+                                newDihedralForce = RBDihedral(int(split[1]),
+                                                   int(split[2]),
+                                                   int(split[3]),
+                                                   int(split[4]),
+                                                   c0 * units.kilocalorie_per_mole,
+                                                   c1 * units.kilocalorie_per_mole,
+                                                   c2 * units.kilocalorie_per_mole,
+                                                   c3 * units.kilocalorie_per_mole,
+                                                   c4 * units.kilocalorie_per_mole,
+                                                   c5 * units.kilocalorie_per_mole,
+                                                   c6 * units.kilocalorie_per_mole)
+                        else:
+                            print "ERROR (readFile): found unsupported dihedral in:",
+                            print line[i]
+                        if newDihedralForce:
+                            currentMoleculeType.dihedralForceSet.add(newDihedralForce)
+                            System._sys._forces.add(newDihedralForce)
 
-          elif match.group('restraints'):
-            if verbose:
-              print "Parsing [ restraints]..."
-        else:  # no matches
-            while '}' not in lines[i]:
-                i+=1   # not the most robust if there is nesting in a particular pattern
+                    #9 proper dihedrals, funct = 1
+                    #3 improper dihedrals, funct = 2
+                    #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
+
+                elif match.group('constraints'):
+                    if verbose:
+                        print "Parsing [ constraints]..."
+                    ctype = 1
+                    funct_pos = 0
+                    atompos = [] #position of atoms in constraints; spread all over the place
+                    lenpos = [] #position of atom length; spread all over the place
+                    tempatom = []
+                    templength = []
+                    templen = 0
+                    for j in range(len(entry_data)):
+                        if entry_data[j] == 's_ffio_funct':
+                            funct_pos = ctype
+                        elif 'i_ffio' in entry_data[j]:
+                            atompos.append(ctype)
+                        elif 'r_ffio' in entry_data[j]:
+                            lenpos.append(ctype)
+                        ctype+=1
+
+                    for j in range(ff_number):
+                        if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
+                            split = entry_values[j].split()
+                            tempatom = []
+                            templength = []
+                            for a in atompos:
+                                if not '<>' in split[a]:
+                                    tempatom.append(int(split[a]))
+                                else:
+                                    tempatom.append(None)
+                            for l in lenpos:
+                                if not '<>' in split[l]:
+                                    templength.append(float(split[l])*units.angstroms) # Check units?
+                                else:
+                                    templength.append(None*units.angstroms)
+                            if 'AH' in split[funct_pos]:
+                                templen = int(list(split[funct_pos])[-1])
+                            elif 'HOH' in split[funct_pos]:
+                                templen = 2    # Different desmond files have different options here.
+                            if templen == 1:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
+                            elif templen == 2:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
+                            elif templen == 3:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
+                            elif templen == 4:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
+                            elif templen == 5:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
+                            elif templen == 6:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
+                            elif templen == 7:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
+                            elif templen == 8:
+                                newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
+                        else:
+                            print "ERROR (readFile): found unsupported constraint"
+                        if newConstraint:
+                            currentMoleculeType.constraints.add(newConstraint)
+                            System._sys._forces.add(newConstraint)
+
+                elif match.group('exclusions'):
+                    if verbose:
+                        print "Parsing [ exclusions]..."
+                    for j in range(ff_number):
+                        temp = entry_values[j].split()
+                        temp.remove(temp[0])
+                        newExclusion = Exclusions(temp)
+                        currentMoleculeType.exclusions.add(newExclusion)
+                        System._sys._forces.add(newExclusion)
+
+                elif match.group('restraints'):
+                    if verbose:
+                        print "Parsing [ restraints]..."
+            else:  # no matches
+                while '}' not in lines[i]:
+                    i+=1   # not the most robust if there is nesting in a particular pattern
 
     def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
-	                  
+
 #        Loading in m_bonds in Desmond format
 #        Args:
 #            lines: list of all data in CMS format
-#	    start: beginning of where m_bonds starts for each molecule
-#	    end: ending of where m_bondsends for each molecule
+#           start: beginning of where m_bonds starts for each molecule
+#           end: ending of where m_bondsends for each molecule
 
-      if verbose:
-        print "Parsing [ m_bonds]..."
-      bg = False
-      newBondForce = None
-      split = []
-      i = start
-      bondForceSet = HashMap()
-      forces = OrderedSet()
-      while i < end:
-        if ':::' in lines[i]:
-          if bg:
-	    break
-          else:
-            bg = True
-	    i+=1
-	if bg:
-	  split = lines[i].split()
-	  try:
-	    newBondForce = Bond(int(split[1]),
-	                   int(split[2]),
-			   float(0) * units.angstroms, #BOND ORDERS ARE DIFFERENT, SPLIT3 IS BOND ORDER. NOT ACCURATE CALCULATION
-			   float(0) * units.kilocalorie_per_mole * units.angstroms**(-2),
-			   int(split[3]),
-			   0)
-	  except:
-	    newBondForce = Bond(int(split[1]),
-	                   int(split[2]),
-			   float(0), 
-			   float(0),
-			   int(split[3]),
-			   0)
-	  bondForceSet.add(newBondForce)
-	  forces.add(newBondForce)
-	i+=1
-	
-      return [bondForceSet, forces]
+        if verbose:
+            print "Parsing [ m_bonds]..."
+        bg = False
+        newBondForce = None
+        split = []
+        i = start
+        bondForceSet = HashMap()
+        forces = OrderedSet()
+        while i < end:
+            if ':::' in lines[i]:
+                if bg:
+                    break
+                else:
+                    bg = True
+                    i+=1
+            if bg:
+                split = lines[i].split()
+                try:
+                    newBondForce = Bond(int(split[1]),
+                                   int(split[2]),
+                                   float(0) * units.angstroms, #BOND ORDERS ARE DIFFERENT, SPLIT3 IS BOND ORDER. NOT ACCURATE CALCULATION
+                                   float(0) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                   int(split[3]),
+                                   0)
+                except:
+                    newBondForce = Bond(int(split[1]),
+                                   int(split[2]),
+                                   float(0),
+                                   float(0),
+                                   int(split[3]),
+                                   0)
+                bondForceSet.add(newBondForce)
+                forces.add(newBondForce)
+            i+=1
+
+        return [bondForceSet, forces]
 
     def loadMAtoms(self, lines, start, end, currentMolecule, slength, sysDirective, verbose = False): #adds positions and such to atoms in each molecule in System
-              
+
 #        Loading in m_atoms from Desmond format
 #        Args:
 #            lines: list of all data in CMS format
-#	    start: beginning of where m_atoms starts for each molecule
-#	    end: ending of where m_atoms ends for each molecule
-#	    currentMolecule
-#	    slength: number of unique atoms in m_atoms, used to calculate repetitions
-#	    sysDirective: help locate positions of specific data in m_atoms
+#           start: beginning of where m_atoms starts for each molecule
+#           end: ending of where m_atoms ends for each molecule
+#           currentMolecule
+#           slength: number of unique atoms in m_atoms, used to calculate repetitions
+#           sysDirective: help locate positions of specific data in m_atoms
 
-      if verbose:
-        print "Parsing [ m_atoms]..."
-      i = start
-      xcol = None
-      ycol = None
-      zcol = None
-      rincol = None
-      rncol = None
-      aicol = None
-      an1col = None
-      an2col = None
-      vxcol = None
-      vycol = None
-      vzcol = None
-      bg = False
-      aline1 = ""
-      aline2 = ""
+        if verbose:
+            print "Parsing [ m_atoms]..."
+        i = start
+        xcol = None
+        ycol = None
+        zcol = None
+        rincol = None
+        rncol = None
+        aicol = None
+        an1col = None
+        an2col = None
+        vxcol = None
+        vycol = None
+        vzcol = None
+        bg = False
+        aline1 = ""
+        aline2 = ""
 
-      mult = int(re.split('\W',lines[start].split()[0])[1])/slength
+        mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
-      while i < end:
-        if ':::' in lines[i]:
-          i+=1
-          break
-        else:
-          match = sysDirective.match(lines[i])
-          if match:
-            if match.group('First'):
-              start+=1
-            if match.group('xcoord'):
-              if verbose:
-                print "   Parsing [ xcoord]..."
-              xcol = i - start
-            elif match.group('ycoord'):   
-              if verbose:
-                print "   Parsing [ ycoord]..."
-              ycol = i - start
-            elif match.group('zcoord'):
-              if verbose:
-                print "   Parsing [ zcoord]..."
-              zcol = i - start
-            elif match.group('rindex'):
-              if verbose:
-                print "   Parsing [ rindex]..."
-              rincol = i - start
-            elif match.group('rname'):
-              if verbose:
-                print "   Parsing [ rname]..."
-	      rncol = i - start
-            elif match.group('aindex'):
-              if verbose:
-                print "   Parsing [ aindex]..."
-	      aicol = i - start
-            elif match.group('aname1'):
-              if verbose:
-                print "   Parsing [ aname1]..."
-              an1col = i - start
-            elif match.group('aname2'):
-              if verbose:
-                print "   Parsing [ aname2]..."
-              an2col = i - start
-            elif match.group('xvelocity'):
-              if verbose:
-                print "   Parsing [ xvelocity]..."
-              vxcol = i - start
-            elif match.group('yvelocity'):
-              if verbose:
-                print "   Parsing [ yvelocity]..."
-              vycol = i - start
-            elif match.group('zvelocity'):
-              if verbose:
-                print "   Parsing [ zvelocity]..."
-   	      vzcol = i - start
-        i+=1
-      
-      atom = None     
-
-      newMoleculeAtoms = []
-      j = 0
-      if verbose:
-        print "   Parsing atoms..."
- 
-      while j < mult:
-        for atom in currentMolecule._atoms:
-          if ':::' in lines[i]:
-            break  
-          else:
-            aline = shlex.split(lines[i])
-            atom.residueIndex = int(aline[rincol])
-            atom.residueName = aline[rncol].strip()
-	    atom.atomIndex = int(aline[aicol])
-            atom.setPosition(float(aline[xcol]) * units.angstroms, 
-                             float(aline[ycol]) * units.angstroms,
-	                     float(aline[zcol]) * units.angstroms)
-	    if vxcol == vycol == vzcol == None:
-	      atom.setVelocity(0.0 * units.angstroms * units.picoseconds**(-1),
-	                      (0.0 * units.angstroms) * units.picoseconds**(-1),
-	                      (0.0 * units.angstroms) * units.picoseconds**(-1))
+        while i < end:
+            if ':::' in lines[i]:
+                i+=1
+                break
             else:
-              atom.setVelocity(float(aline[vxcol]) * units.angstroms * units.picoseconds**(-1),
-                              float(aline[vycol]) * units.angstroms * units.picoseconds**(-1),
-		               float(aline[vzcol]) * units.angstroms * units.picoseconds**(-1))
-            aline1 = aline[an1col].strip()
-            aline2 = aline[an2col].strip()
-            if re.match('$^',aline1) and not re.match('$^',aline2):
-	      atom.atomName = aline2
-	    elif re.match('$^',aline2) and not re.match('$^',aline1):
-	      atom.atomName = aline1
-            elif re.search("\d+",aline1) and not re.search("\d+",aline2):
-	      if re.search("\D+",aline1) and re.search("\w+",aline1):
-                atom.atomName = aline1
-              else:
-                atom.atomName = aline2 
-	    elif re.search("\d+",aline2) and not re.search("\d+",aline1):
-	      if re.search("\D+",aline2) and re.search("\w+",aline2):
-                atom.atomName = aline2
-              else:
-                atom.atomName = aline1
-	    elif re.match('$^',aline1) and re.match('$^',aline2):
-	      atom.atomName = "None"
-            else:
-	      atom.atomName = aline2  #doesn't matter which we choose, so we'll go with atom name instead of pdb
-            if mult == 1:
-              newMoleculeAtoms.append(atom)
-            else:
-              newMoleculeAtoms.append(copy.deepcopy(atom))
-	    i+=1
-        j+=1
-	
-      return newMoleculeAtoms
+                match = sysDirective.match(lines[i])
+                if match:
+                    if match.group('First'):
+                        start+=1
+                    if match.group('xcoord'):
+                        if verbose:
+                            print "   Parsing [ xcoord]..."
+                        xcol = i - start
+                    elif match.group('ycoord'):
+                        if verbose:
+                            print "   Parsing [ ycoord]..."
+                        ycol = i - start
+                    elif match.group('zcoord'):
+                        if verbose:
+                            print "   Parsing [ zcoord]..."
+                        zcol = i - start
+                    elif match.group('rindex'):
+                        if verbose:
+                            print "   Parsing [ rindex]..."
+                        rincol = i - start
+                    elif match.group('rname'):
+                        if verbose:
+                            print "   Parsing [ rname]..."
+                        rncol = i - start
+                    elif match.group('aindex'):
+                        if verbose:
+                            print "   Parsing [ aindex]..."
+                        aicol = i - start
+                    elif match.group('aname1'):
+                        if verbose:
+                            print "   Parsing [ aname1]..."
+                        an1col = i - start
+                    elif match.group('aname2'):
+                        if verbose:
+                            print "   Parsing [ aname2]..."
+                        an2col = i - start
+                    elif match.group('xvelocity'):
+                        if verbose:
+                            print "   Parsing [ xvelocity]..."
+                        vxcol = i - start
+                    elif match.group('yvelocity'):
+                        if verbose:
+                            print "   Parsing [ yvelocity]..."
+                        vycol = i - start
+                    elif match.group('zvelocity'):
+                        if verbose:
+                            print "   Parsing [ zvelocity]..."
+                        vzcol = i - start
+            i+=1
+
+        atom = None
+
+        newMoleculeAtoms = []
+        j = 0
+        if verbose:
+            print "   Parsing atoms..."
+
+        while j < mult:
+            for atom in currentMolecule._atoms:
+                if ':::' in lines[i]:
+                    break
+                else:
+                    aline = shlex.split(lines[i])
+                    atom.residueIndex = int(aline[rincol])
+                    atom.residueName = aline[rncol].strip()
+                    atom.atomIndex = int(aline[aicol])
+                    atom.setPosition(float(aline[xcol]) * units.angstroms,
+                                     float(aline[ycol]) * units.angstroms,
+                                     float(aline[zcol]) * units.angstroms)
+                    if vxcol == vycol == vzcol == None:
+                        atom.setVelocity(0.0 * units.angstroms * units.picoseconds**(-1),
+                                        (0.0 * units.angstroms) * units.picoseconds**(-1),
+                                        (0.0 * units.angstroms) * units.picoseconds**(-1))
+                    else:
+                        atom.setVelocity(float(aline[vxcol]) * units.angstroms * units.picoseconds**(-1),
+                                        float(aline[vycol]) * units.angstroms * units.picoseconds**(-1),
+                                         float(aline[vzcol]) * units.angstroms * units.picoseconds**(-1))
+                    aline1 = aline[an1col].strip()
+                    aline2 = aline[an2col].strip()
+                    if re.match('$^',aline1) and not re.match('$^',aline2):
+                        atom.atomName = aline2
+                    elif re.match('$^',aline2) and not re.match('$^',aline1):
+                        atom.atomName = aline1
+                    elif re.search("\d+",aline1) and not re.search("\d+",aline2):
+                        if re.search("\D+",aline1) and re.search("\w+",aline1):
+                            atom.atomName = aline1
+                        else:
+                            atom.atomName = aline2
+                    elif re.search("\d+",aline2) and not re.search("\d+",aline1):
+                        if re.search("\D+",aline2) and re.search("\w+",aline2):
+                            atom.atomName = aline2
+                        else:
+                            atom.atomName = aline1
+                    elif re.match('$^',aline1) and re.match('$^',aline2):
+                        atom.atomName = "None"
+                    else:
+                        atom.atomName = aline2  #doesn't matter which we choose, so we'll go with atom name instead of pdb
+                    if mult == 1:
+                        newMoleculeAtoms.append(atom)
+                    else:
+                        newMoleculeAtoms.append(copy.deepcopy(atom))
+                    i+=1
+            j+=1
+
+        return newMoleculeAtoms
 
 
     def loadBoxVector(self, lines, start, end, verbose = False):
-	    
+
 #       Loading Box Vector
 #       Create a Box Vector to load into the System
 #        Args:
@@ -885,932 +885,932 @@ class DesmondParser():
 #            start: starting position
 #            end: ending position
 
-      i = start
-      v = np.zeros([3,3])*units.angstroms
-      while (i<end):
-          if 'r_chorus_box_ax' in lines[i]:
-              startboxlabel = i-start
-          if ':::' in lines[i]:
-              endlabel = i
-              break
-          i+=1
-      startbox = startboxlabel+endlabel    
-      nvec = 0
-      for i in range(startbox,startbox+9):
-          j = (nvec)/3
-          k = (nvec)%3
-          v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
-          nvec += 1
+        i = start
+        v = np.zeros([3,3])*units.angstroms
+        while (i<end):
+            if 'r_chorus_box_ax' in lines[i]:
+                startboxlabel = i-start
+            if ':::' in lines[i]:
+                endlabel = i
+                break
+            i+=1
+        startbox = startboxlabel+endlabel
+        nvec = 0
+        for i in range(startbox,startbox+9):
+            j = (nvec)/3
+            k = (nvec)%3
+            v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
+            nvec += 1
 
-      System._sys.setBoxVector(v)
-      
+        System._sys.setBoxVector(v)
+
     def readFile(self, filename):
 
 #        Load in data from file
-	
-#	Read data in Desmond format
-        
+
+#       Read data in Desmond format
+
 #        Args:
 #            filename: the name of the file to write out to
 
-      lines = list()
+        lines = list()
 
-      fl = open(filename, 'r')
-      lines = list(fl)
-      fl.close()
-      i,j=0,0
+        fl = open(filename, 'r')
+        lines = list(fl)
+        fl.close()
+        i,j=0,0
 
-      for line in lines:
-        if re.search("f_m_ct",line,re.VERBOSE):
-          if j > 0:
-            self.fblockpos.append(i)
-          j+=1
-        if re.search("m_atom",line,re.VERBOSE) and not (re.search("i_m",line)
-        or re.search("s_m",line)):
-          if j > 1:
-            self.a_blockpos.append(i) 
-          j+=1
-        if re.search("m_bond",line,re.VERBOSE):
-          if j > 2:
-            self.b_blockpos.append(i)
-          j+=1
-        if re.search("ffio_ff",line,re.VERBOSE):
-          if j > 2:
-            self.ffio_blockpos.append(i)
-          j+=1
-        i+=1
-      i-=1
-      self.fblockpos.append(i)
-      self.a_blockpos.append(i)
-      self.b_blockpos.append(i)
-      self.ffio_blockpos.append(i)
-      verbose = True
-      
-      sysDirectiveTop = re.compile(r"""
-        ((?P<vdwtypes>\s*ffio_vdwtypes)
-        |
-        (?P<sites>\s*ffio_sites)
-        |
-        (?P<bonds>\s*ffio_bonds)
-        |
-        (?P<pairs>\s*ffio_pairs)
-        |
-        (?P<angles>\s*ffio_angles)
-        |
-        (?P<dihedrals>\s*ffio_dihedrals)
-        |
-        (?P<constraints>\s*ffio_constraints)
-        |
-        (?P<exclusions>\s*ffio_exclusions)
-        |
-        (?P<restraints>\s*ffio_restraints))
-      """, re.VERBOSE)
+        for line in lines:
+            if re.search("f_m_ct",line,re.VERBOSE):
+                if j > 0:
+                    self.fblockpos.append(i)
+                j+=1
+            if re.search("m_atom",line,re.VERBOSE) and not (re.search("i_m",line)
+            or re.search("s_m",line)):
+                if j > 1:
+                    self.a_blockpos.append(i)
+                j+=1
+            if re.search("m_bond",line,re.VERBOSE):
+                if j > 2:
+                    self.b_blockpos.append(i)
+                j+=1
+            if re.search("ffio_ff",line,re.VERBOSE):
+                if j > 2:
+                    self.ffio_blockpos.append(i)
+                j+=1
+            i+=1
+        i-=1
+        self.fblockpos.append(i)
+        self.a_blockpos.append(i)
+        self.b_blockpos.append(i)
+        self.ffio_blockpos.append(i)
+        verbose = True
 
-      sysDirectiveStr = re.compile(r"""
-        ((?P<xcoord>\s*r_m_x_coord)
-        |
-        (?P<ycoord>\s*r_m_y_coord)
-        |
-        (?P<zcoord>\s*r_m_z_coord)
-        |
-        (?P<rindex>\s*i_m_residue_number)
-        |
-        (?P<rname>\s*s_m_pdb_residue_name)
-        |
-        (?P<aindex>\s*i_m_atomic_number)
-        |
-        (?P<aname1>\s*s_m_pdb_atom_name) 
-        |
-        (?P<aname2>\s*s_m_atom_name)
-        |
-        (?P<xvelocity>\s*r_ffio_x_vel)
-        |
-        (?P<yvelocity>\s*r_ffio_y_vel)
-        |
-        (?P<zvelocity>\s*r_ffio_z_vel)
-	|
-	(?P<First>\s*[#][\s+]First[\s+]column[\s+]is[\s+]atom[\s+]index[\s+][#]))
-      """, re.VERBOSE)
+        sysDirectiveTop = re.compile(r"""
+          ((?P<vdwtypes>\s*ffio_vdwtypes)
+          |
+          (?P<sites>\s*ffio_sites)
+          |
+          (?P<bonds>\s*ffio_bonds)
+          |
+          (?P<pairs>\s*ffio_pairs)
+          |
+          (?P<angles>\s*ffio_angles)
+          |
+          (?P<dihedrals>\s*ffio_dihedrals)
+          |
+          (?P<constraints>\s*ffio_constraints)
+          |
+          (?P<exclusions>\s*ffio_exclusions)
+          |
+          (?P<restraints>\s*ffio_restraints))
+        """, re.VERBOSE)
 
-      #LOADING Ffio blocks
-      
-      print "Reading Ffio Block..."
-      #MRS: warning -- currently no check to avoid duplicated molecule names. Investigate.
-      i = 0
-      j = 0
-      while i < (len(self.ffio_blockpos)-1):
-        j = self.fblockpos[i]
-        while not re.match(r'\s*[:::]',lines[j]):
-          j+=1
-        self.loadFfio(lines, lines[j+1].strip(), self.ffio_blockpos[i], self.fblockpos[i+1]-1, sysDirectiveTop, sysDirectiveStr,  verbose)
-        i+=1
-      i = 0
+        sysDirectiveStr = re.compile(r"""
+          ((?P<xcoord>\s*r_m_x_coord)
+          |
+          (?P<ycoord>\s*r_m_y_coord)
+          |
+          (?P<zcoord>\s*r_m_z_coord)
+          |
+          (?P<rindex>\s*i_m_residue_number)
+          |
+          (?P<rname>\s*s_m_pdb_residue_name)
+          |
+          (?P<aindex>\s*i_m_atomic_number)
+          |
+          (?P<aname1>\s*s_m_pdb_atom_name)
+          |
+          (?P<aname2>\s*s_m_atom_name)
+          |
+          (?P<xvelocity>\s*r_ffio_x_vel)
+          |
+          (?P<yvelocity>\s*r_ffio_y_vel)
+          |
+          (?P<zvelocity>\s*r_ffio_z_vel)
+          |
+          (?P<First>\s*[#][\s+]First[\s+]column[\s+]is[\s+]atom[\s+]index[\s+][#]))
+        """, re.VERBOSE)
 
-      #LOAD RAW BOX VECTOR-Same throughout cms
+        #LOADING Ffio blocks
 
-      print "Reading Box Vector..."
-      self.loadBoxVector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
+        print "Reading Ffio Block..."
+        #MRS: warning -- currently no check to avoid duplicated molecule names. Investigate.
+        i = 0
+        j = 0
+        while i < (len(self.ffio_blockpos)-1):
+            j = self.fblockpos[i]
+            while not re.match(r'\s*[:::]',lines[j]):
+                j+=1
+            self.loadFfio(lines, lines[j+1].strip(), self.ffio_blockpos[i], self.fblockpos[i+1]-1, sysDirectiveTop, sysDirectiveStr,  verbose)
+            i+=1
+        i = 0
+
+        #LOAD RAW BOX VECTOR-Same throughout cms
+
+        print "Reading Box Vector..."
+        self.loadBoxVector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
 
 
-      
+
     def writeFile(self, filename, verbose=True):
-       
+
 #        Write this topology to file
 #        Write out this topology in Desmond format
 #        Args:
 #            filename: the name of the file to write out to
-              
-      lines = list()
-      vdwtypes = []
-      sites = []
-      pos = 0
-      name = ''
-      sig = None 
-      ep = None
-      stemp = None
-      etemp = None
 
-      print "WARNING: MacroModel atom type is set to 7 for all cases."
-      
-      # for all CMS files
-      lines.append('{\n')
-      lines.append('  s_m_m2io_version\n')
-      lines.append('  :::\n')
-      lines.append('  2.0.0\n')
-      lines.append('}\n')
-      
-      #FIRST F_M_CT BLOCK
-      
-      if verbose:
-        print "Writing first f_m_ct..."
-      lines.append('f_m_ct {\n')
-      lines.append('  s_m_title\n')
-      lines.append('  r_chorus_box_ax\n')
-      lines.append('  r_chorus_box_ay\n')
-      lines.append('  r_chorus_box_az\n')
-      lines.append('  r_chorus_box_bx\n')
-      lines.append('  r_chorus_box_by\n')
-      lines.append('  r_chorus_box_bz\n')
-      lines.append('  r_chorus_box_cx\n')
-      lines.append('  r_chorus_box_cy\n')
-      lines.append('  r_chorus_box_cz\n')
-      lines.append('  s_ffio_ct_type\n')
-      lines.append('  :::\n')
-      
-      #box vector
-      bv = System._sys.getBoxVector()
-      lines.append('  "full system"\n')
-      for bi in range(3):
-          for bj in range(3):
-              lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
-      lines.append('  full_system\n')
-      
-      #M_ATOM
-      apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
-      lines.append('m_atom\n')
-      lines.append('    # First column is atom index #\n')
-      lines.append('    i_m_mmod_type\n')
-      lines.append('    r_m_x_coord\n')
-      lines.append('    r_m_y_coord\n')
-      lines.append('    r_m_z_coord\n')
-      lines.append('    i_m_residue_number\n')
-      lines.append('    s_m_pdb_residue_name\n')
-      lines.append('    i_m_atomic_number\n')
-      lines.append('    s_m_atom_name\n')
-      lines.append('    r_ffio_x_vel\n')
-      lines.append('    r_ffio_y_vel\n')
-      lines.append('    r_ffio_z_vel\n')
-      lines.append('    :::\n')
+        lines = list()
+        vdwtypes = []
+        sites = []
+        pos = 0
+        name = ''
+        sig = None
+        ep = None
+        stemp = None
+        etemp = None
 
-      i = 0
-      nmol = 0
-      totalatoms = []
-      totalatoms.append(0)
-      for moleculetype in System._sys._molecules.values():
-        for molecule in moleculetype.moleculeSet:
-          for atom in molecule._atoms:
-            i += 1
-	    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s    %11.8f %11.8f %11.8f\n'
-                        %(i,
-			7, #NOT SURE WHAT TO PUT FOR MMOD TYPE
-			float(atom._position[0].in_units_of(units.angstroms)._value),
-                        float(atom._position[1].in_units_of(units.angstroms)._value),
-                        float(atom._position[2].in_units_of(units.angstroms)._value),
-			atom.residueIndex,
-                        '"%s"'%atom.residueName,
-			atom.atomIndex,
-			'"%s"'%atom.atomName,
-                        float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
-                        float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
-                        float(atom._velocity[2].in_units_of(units.angstroms/units.picoseconds)._value)))
-        totalatoms.append(i)
+        print "WARNING: MacroModel atom type is set to 7 for all cases."
 
-      if i == 0:
-        j = 1
-	if verbose:
-	  print "REMOVING M_ATOMS FROM BEGINNING"
-        while j <= 13:
-	  del lines[-1]
-	  j+=1
-      else:
-        lines[apos] = '  m_atom[%d] {\n'%(i)
-        lines.append('    :::\n')
-        lines.append('  }\n')
-      
-      bpos = len(lines) 
-      i = 0
-      
-      #M_BOND
-      lines.append('  m_bond\n')
-      lines.append('    i_m_from\n')
-      lines.append('    i_m_to\n')
-      lines.append('    i_m_order\n')
-      lines.append('    i_m_from_rep\n')
-      lines.append('    i_m_to_rep\n')
-      lines.append('    :::\n')
-      
-      i = 0
-      nonecnt = 0
-      nmol = 0
-      for moleculetype in System._sys._molecules.values():
-        # sort the bondlist because Desmond requires the first time a bond is listed to have
-        # the atoms in ascending order
-        bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
-        for bond in bondlist:
-          if bond and bond.order:
-            i += 1
-            lines.append('    %d %d %d %d %d %d\n'
-                          %(i,
-		  	  bond.atom1 + totalatoms[nmol],
-                          bond.atom2 + totalatoms[nmol],
-                          int(bond.order),
-			  1,
-			  1))
-          elif not bond:
-            nonecnt+=1
-        nmol +=1
-      if nonecnt > 0 and verbose:
-        print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
-      if i == 0:
-	if verbose:
-	  print "REMOVING M_BONDS FROM BEGINNING"
-        j = 1
-        while j <= 7:
-	  del lines[-1]
-	  j+=1
-      else:
-        lines[bpos] = '  m_bond[%d] {\n'%i
-        lines.append('    :::\n')
-        lines.append('  }\n')
+        # for all CMS files
+        lines.append('{\n')
+        lines.append('  s_m_m2io_version\n')
+        lines.append('  :::\n')
+        lines.append('  2.0.0\n')
         lines.append('}\n')
 
-      solute = True
-      endline = ''
-      resName = ''
+        #FIRST F_M_CT BLOCK
 
-      #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
+        if verbose:
+            print "Writing first f_m_ct..."
+        lines.append('f_m_ct {\n')
+        lines.append('  s_m_title\n')
+        lines.append('  r_chorus_box_ax\n')
+        lines.append('  r_chorus_box_ay\n')
+        lines.append('  r_chorus_box_az\n')
+        lines.append('  r_chorus_box_bx\n')
+        lines.append('  r_chorus_box_by\n')
+        lines.append('  r_chorus_box_bz\n')
+        lines.append('  r_chorus_box_cx\n')
+        lines.append('  r_chorus_box_cy\n')
+        lines.append('  r_chorus_box_cz\n')
+        lines.append('  s_ffio_ct_type\n')
+        lines.append('  :::\n')
 
-      for moleculetype in System._sys._molecules.values():
-        for molecule in moleculetype.moleculeSet:
-          if verbose:
-            print 'Writing molecule %s...'%moleculetype.name
+        #box vector
+        bv = System._sys.getBoxVector()
+        lines.append('  "full system"\n')
+        for bi in range(3):
+            for bj in range(3):
+                lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+        lines.append('  full_system\n')
 
-          #BEGINNING BLOCK
-                 
-          if verbose:
-            print "  Writing f_m_ct..."
-          lines.append('f_m_ct {\n')
-          lines.append('  s_m_title\n')
-          bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
-	  lines.append('  s_m_entry_name\n')
-          lines.append('  i_ffio_num_component\n')  
-	  lines.append('  r_chorus_box_ax\n')
-          lines.append('  r_chorus_box_ay\n')
-          lines.append('  r_chorus_box_az\n')
-          lines.append('  r_chorus_box_bx\n')
-          lines.append('  r_chorus_box_by\n')
-          lines.append('  r_chorus_box_bz\n')
-          lines.append('  r_chorus_box_cx\n')
-          lines.append('  r_chorus_box_cy\n')
-          lines.append('  r_chorus_box_cz\n')
-          lines.append('  s_ffio_ct_type\n')
-          lines.append('  :::\n')
-          
-          if solute:
-            lines.append('  solute\n')
-            endline = '  solute\n'
-            solute = False
-	    del lines[bpos]
-            del lines[bpos]
-          else:
-            for atom in molecule._atoms:
-              resName = atom.residueName
-	      break
-            if re.match("T3P", resName) or re.search("WAT", resName):
-	      #lines[bpos] = ('  s_m_entry_name\n')
-              lines.append('  "TIP3P water box"\n')
-              lines.append('  "TIP3P water box"\n')
-              lines.append('  1\n')
-              endline = '  solvent\n'
-            else:
-              lines.append('  %s\n'%(moleculetype.name))
-              endline = '  ion\n'
-	      del lines[bpos]
-              del lines[bpos] #deletes line for num component (only in TIP3)
-      
-          for bi in range(3):
-              for bj in range(3):
-                  lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
-          lines.append(endline)
-          
-          #M_ATOMS
-          
-          if verbose:
-            print "  Writing m_atoms..."
-          apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
-          lines.append('m_atom\n')
-          lines.append('    # First column is atom index #\n')
-          lines.append('    i_m_mmod_type\n')
-          lines.append('    r_m_x_coord\n')
-          lines.append('    r_m_y_coord\n')
-          lines.append('    r_m_z_coord\n')
-          lines.append('    i_m_residue_number\n')
-          lines.append('    s_m_pdb_residue_name\n')
-	  lines.append('    i_m_atomic_number\n')
-          lines.append('    s_m_atom_name\n')
-          lines.append('    r_ffio_x_vel\n')
-          lines.append('    r_ffio_y_vel\n')
-          lines.append('    r_ffio_z_vel\n')
-          lines.append('    :::\n')
+        #M_ATOM
+        apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
+        lines.append('m_atom\n')
+        lines.append('    # First column is atom index #\n')
+        lines.append('    i_m_mmod_type\n')
+        lines.append('    r_m_x_coord\n')
+        lines.append('    r_m_y_coord\n')
+        lines.append('    r_m_z_coord\n')
+        lines.append('    i_m_residue_number\n')
+        lines.append('    s_m_pdb_residue_name\n')
+        lines.append('    i_m_atomic_number\n')
+        lines.append('    s_m_atom_name\n')
+        lines.append('    r_ffio_x_vel\n')
+        lines.append('    r_ffio_y_vel\n')
+        lines.append('    r_ffio_z_vel\n')
+        lines.append('    :::\n')
 
-          i = 0
-          for atom in molecule._atoms:
-            i += 1
-            #NOT SURE WHAT TO PUT FOR MMOD TYPE; 7 is currently used.
-            #This can't be determined currently from the information provided,
-            # unless it is stored previous, nor is it used by desmond
-	    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s   %11.8f %11.8f %11.8f\n'
-                        %(i,
-			7,
-			float(atom._position[0].in_units_of(units.angstroms)._value),
-                        float(atom._position[1].in_units_of(units.angstroms)._value),
-                        float(atom._position[2].in_units_of(units.angstroms)._value),
-			atom.residueIndex,
-                        '"%s"'%atom.residueName,
-			atom.atomIndex,
-			'"%s"'%atom.atomName,
-                        float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
-                        float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
-                        float(atom._velocity[2].in_units_of(units.angstroms/units.picoseconds)._value)))
-	  if i == 0:
+        i = 0
+        nmol = 0
+        totalatoms = []
+        totalatoms.append(0)
+        for moleculetype in System._sys._molecules.values():
+            for molecule in moleculetype.moleculeSet:
+                for atom in molecule._atoms:
+                    i += 1
+                    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s    %11.8f %11.8f %11.8f\n'
+                                %(i,
+                                7, #NOT SURE WHAT TO PUT FOR MMOD TYPE
+                                float(atom._position[0].in_units_of(units.angstroms)._value),
+                                float(atom._position[1].in_units_of(units.angstroms)._value),
+                                float(atom._position[2].in_units_of(units.angstroms)._value),
+                                atom.residueIndex,
+                                '"%s"'%atom.residueName,
+                                atom.atomIndex,
+                                '"%s"'%atom.atomName,
+                                float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
+                                float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
+                                float(atom._velocity[2].in_units_of(units.angstroms/units.picoseconds)._value)))
+            totalatoms.append(i)
+
+        if i == 0:
             j = 1
-	    if verbose:
-	      print "REMOVING M_ATOMS FROM BEGINNING"
-            while j <=13: 
-	      del lines[-1]
-	      j+=1
-          else:
+            if verbose:
+                print "REMOVING M_ATOMS FROM BEGINNING"
+            while j <= 13:
+                del lines[-1]
+                j+=1
+        else:
             lines[apos] = '  m_atom[%d] {\n'%(i)
             lines.append('    :::\n')
             lines.append('  }\n')
 
-          #M_BONDS
-      
-          if verbose:
-            print "  Writing m_bonds..."
-          bpos = len(lines) 
-          i = 0
-      
-          lines.append('  m_bond\n')
-          lines.append('    i_m_from\n')
-          lines.append('    i_m_to\n')
-          lines.append('    i_m_order\n')
-          lines.append('    i_m_from_rep\n')
-          lines.append('    i_m_to_rep\n')
-          lines.append('    :::\n')
-      
-          i = 0
-          nonecnt = 0
-          bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
-          for bond in bondlist:
-	    if bond and bond.order:
-              i += 1
-              lines.append('    %d %d %d %d %d %d\n'
-                          %(i,
-                           bond.atom1,
-                           bond.atom2,
-                           int(bond.order),
-			   1,
-			   1))
-            else:
-              nonecnt+=1
-          if nonecnt > 0 and verbose:
+        bpos = len(lines)
+        i = 0
+
+        #M_BOND
+        lines.append('  m_bond\n')
+        lines.append('    i_m_from\n')
+        lines.append('    i_m_to\n')
+        lines.append('    i_m_order\n')
+        lines.append('    i_m_from_rep\n')
+        lines.append('    i_m_to_rep\n')
+        lines.append('    :::\n')
+
+        i = 0
+        nonecnt = 0
+        nmol = 0
+        for moleculetype in System._sys._molecules.values():
+            # sort the bondlist because Desmond requires the first time a bond is listed to have
+            # the atoms in ascending order
+            bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+            for bond in bondlist:
+                if bond and bond.order:
+                    i += 1
+                    lines.append('    %d %d %d %d %d %d\n'
+                                  %(i,
+                                  bond.atom1 + totalatoms[nmol],
+                                  bond.atom2 + totalatoms[nmol],
+                                  int(bond.order),
+                                  1,
+                                  1))
+                elif not bond:
+                    nonecnt+=1
+            nmol +=1
+        if nonecnt > 0 and verbose:
             print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
-          if i == 0:
-	    if verbose:
-	      print "REMOVING M_BONDS FROM BEGINNING"
+        if i == 0:
+            if verbose:
+                print "REMOVING M_BONDS FROM BEGINNING"
             j = 1
             while j <= 7:
-	      del lines[-1]
-	      j+=1
-          else:
+                del lines[-1]
+                j+=1
+        else:
             lines[bpos] = '  m_bond[%d] {\n'%i
             lines.append('    :::\n')
             lines.append('  }\n')
+            lines.append('}\n')
 
-          #FFIO 
-          if verbose:
-            print "  Writing ffio..."
-          lines.append('  ffio_ff {\n')
-          lines.append('    s_ffio_name\n')
-          lines.append('    s_ffio_comb_rule\n')
-          lines.append('    i_ffio_version\n')
-          lines.append('    :::\n')
-        
-          #Adding Molecule Name
-          if re.search("Viparr", moleculetype.name): 
-            lines.append('    Generated by Viparr\n') 
-          else:
-            #print moleculetype.name
-            lines.append('    %s\n' % moleculetype.name)
+        solute = True
+        endline = ''
+        resName = ''
 
-          #Adding Combination Rule
-          if System._sys._combinationRule == 1:
-            lines.append('    ARITHMETIC\n') #NOT SURE WHAT TO PUT HERE...COME BACK TO THIS
-          elif System._sys._combinationRule == 2:
-            lines.append('    GEOMETRIC\n')    
-	  elif System._sys._combinationRule == 3:
-	    lines.append('    ARITHMETIC/GEOMETRIC\n') 
-        
-          #Adding Version
-          lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
+        #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
-          #-ADDING VDWTYPES AND SITES
-          i = 1
-          vdwtypes = []
-          sites = []
-	  sig = None
-	  ep = None
-	  stemp = None
-	  etemp = None
-	  combRule = System._sys._combinationRule
-          for atom in molecule._atoms:
-              if atom.residueIndex:   # duplicates all the waters; whereas the original does not. How does Desmond actually handle this?
-                sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0],atom.residueIndex,atom.residueName)) 
-              else:
-                sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0]))
-	      sig = float(atom._sigma[0].in_units_of(units.angstroms)._value)
-	      ep = float(atom._epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
-	      if combRule == 1:   #MRS: seems like this should be automated more?
-	        stemp = ep * (4 * (sig**6))
-	        etemp = stemp * (sig**6)
-	      elif combRule == 2 or combRule == 3:
-	        stemp = sig
-		etemp = ep
-              if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
-                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
-              i+=1
-        
-          if verbose:
-            print "   -Writing vdwtypes..."
-	  if len(vdwtypes) > 0:
-	    lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
-            lines.append("      s_ffio_name\n")
-            lines.append("      s_ffio_funct\n")
-            lines.append("      r_ffio_c1\n")
-            lines.append("      r_ffio_c2\n")
-            lines.append("      :::\n")
-	    i = 1
-            for v in vdwtypes:
-              lines.append('      %d%2s'%(i,v))
-	      i+=1
-            lines.append("      :::\n")
-            lines.append("    }\n")
-	  else:
-	    if verbose:
-              print "REMOVING VDWTYPES"
-          
-          if verbose:
-            print "   -Writing sites..."
-	  if len(sites) > 0:
-            lines.append("    ffio_sites[%d] {\n"%(len(sites)))
-            lines.append("      s_ffio_type\n")
-            lines.append("      r_ffio_charge\n")
-            lines.append("      r_ffio_mass\n")
-            lines.append("      s_ffio_vdwtype\n")
-            if len(sites[0].split()) > 5:
-              lines.append("      i_ffio_resnr\n")
-              lines.append("      s_ffio_residue\n")    
-            lines.append("      :::\n")
-            for s in sites:
-              lines.append('   %s'%(s))
-            lines.append("      :::\n")
-            lines.append("    }\n")
-	  else:
-	    if verbose:
-              print "REMOVING SITES"
-	  
-	  #-ADDING BONDS
-          if verbose:
-            print "   -Writing bonds..."
-	  bpos = len(lines)
-          lines.append("    ffio_bonds\n")
-          lines.append("      i_ffio_ai\n")
-          lines.append("      i_ffio_aj\n")
-          lines.append("      s_ffio_funct\n")
-          lines.append("      r_ffio_c1\n")
-          lines.append("      r_ffio_c2\n")
-          lines.append("      :::\n")
-	  i = 0
-	  nonecnt = 0
-	  name = ''
-	  length = None
-	  k = None
-	  
-          for bond in moleculetype.bondForceSet.itervalues():
-	    try:
-	      length = float(bond.length.in_units_of(units.angstroms)._value)   #Look at unit conversions here
-	      k = float(bond.k._value)  # look at unit conversions here
-            except:
-	      length = None
-	      k = None
-	    if bond and (length and not length == float(0)) and (k and not k == float(0)):  #Probably a better way to sort sites from m_bond
-              i += 1
-	      if bond.c == 1:
-	        name = 'Harm_constrained'
-	      else:
-	        name = 'Harm'
-              lines.append('      %d %d %d %s %10.8f %10.8f\n'
-                          %(i,
-                           bond.atom1,
-                           bond.atom2,
-                           name,
-			   length,
-			   k))
-            elif not bond:
-              nonecnt+=1
-          if nonecnt > 0 and verbose:
-            print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
-	  if i == 0:
-	    if verbose:
-	      print "REMOVING FFIO_BONDS FROM BEGINNING"
-            j = 1
-            while j <= 7:
-	      del (lines[-1])
-	      j+=1
-          else:
-	    lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_bonds[%d] {\n"%(i))
+        for moleculetype in System._sys._molecules.values():
+            for molecule in moleculetype.moleculeSet:
+                if verbose:
+                    print 'Writing molecule %s...'%moleculetype.name
 
-          #-ADDING ANGLES 
-          if verbose:
-            print "   -Writing angles..."
-	  bpos = len(lines) #storing position for angles instead of bonds
-          lines.append("    ffio_angles\n")
-          lines.append("      i_ffio_ai\n")
-          lines.append("      i_ffio_aj\n")
-          lines.append("      i_ffio_ak\n")
-          lines.append("      s_ffio_funct\n")
-          lines.append("      r_ffio_c1\n")
-          lines.append("      r_ffio_c2\n")
-          lines.append("      :::\n")
-	  i = 1
-          for angle in moleculetype.angleForceSet.itervalues():
-            if angle.c == 0:
-              lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-            elif angle.c == 1:
-              lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-            i+=1
-	  if i == 1:
-	    if verbose:
-	      print "REMOVING FFIO_ANGLES FROM BEGINNING"
-            j = 1
-            while j <= 8:
-	      del lines[-1]
-	      j+=1
-          else:
-            lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_angles[%d] {\n"%(i-1))
+                #BEGINNING BLOCK
 
-          #-ADDING DIHEDRALS
-          if verbose:
-            print "   -Writing dihedrals..."
-          bpos = len(lines) #storing position for dihedrals instead of bonds
-          lines.append("    ffio_dihedrals\n")
-          lines.append("      i_ffio_ai\n")
-          lines.append("      i_ffio_aj\n")
-          lines.append("      i_ffio_ak\n")
-          lines.append("      i_ffio_al\n")
-          lines.append("      s_ffio_funct\n")
-	  i = 1
-          for dihedral in moleculetype.dihedralForceSet.itervalues():
-            if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
-              if i == 1:
-                lines.append("      r_ffio_c0\n")
+                if verbose:
+                    print "  Writing f_m_ct..."
+                lines.append('f_m_ct {\n')
+                lines.append('  s_m_title\n')
+                bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
+                lines.append('  s_m_entry_name\n')
+                lines.append('  i_ffio_num_component\n')
+                lines.append('  r_chorus_box_ax\n')
+                lines.append('  r_chorus_box_ay\n')
+                lines.append('  r_chorus_box_az\n')
+                lines.append('  r_chorus_box_bx\n')
+                lines.append('  r_chorus_box_by\n')
+                lines.append('  r_chorus_box_bz\n')
+                lines.append('  r_chorus_box_cx\n')
+                lines.append('  r_chorus_box_cy\n')
+                lines.append('  r_chorus_box_cz\n')
+                lines.append('  s_ffio_ct_type\n')
+                lines.append('  :::\n')
+
+                if solute:
+                    lines.append('  solute\n')
+                    endline = '  solute\n'
+                    solute = False
+                    del lines[bpos]
+                    del lines[bpos]
+                else:
+                    for atom in molecule._atoms:
+                        resName = atom.residueName
+                        break
+                    if re.match("T3P", resName) or re.search("WAT", resName):
+                        #lines[bpos] = ('  s_m_entry_name\n')
+                        lines.append('  "TIP3P water box"\n')
+                        lines.append('  "TIP3P water box"\n')
+                        lines.append('  1\n')
+                        endline = '  solvent\n'
+                    else:
+                        lines.append('  %s\n'%(moleculetype.name))
+                        endline = '  ion\n'
+                        del lines[bpos]
+                        del lines[bpos] #deletes line for num component (only in TIP3)
+
+                for bi in range(3):
+                    for bj in range(3):
+                        lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                lines.append(endline)
+
+                #M_ATOMS
+
+                if verbose:
+                    print "  Writing m_atoms..."
+                apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
+                lines.append('m_atom\n')
+                lines.append('    # First column is atom index #\n')
+                lines.append('    i_m_mmod_type\n')
+                lines.append('    r_m_x_coord\n')
+                lines.append('    r_m_y_coord\n')
+                lines.append('    r_m_z_coord\n')
+                lines.append('    i_m_residue_number\n')
+                lines.append('    s_m_pdb_residue_name\n')
+                lines.append('    i_m_atomic_number\n')
+                lines.append('    s_m_atom_name\n')
+                lines.append('    r_ffio_x_vel\n')
+                lines.append('    r_ffio_y_vel\n')
+                lines.append('    r_ffio_z_vel\n')
+                lines.append('    :::\n')
+
+                i = 0
+                for atom in molecule._atoms:
+                    i += 1
+                    #NOT SURE WHAT TO PUT FOR MMOD TYPE; 7 is currently used.
+                    #This can't be determined currently from the information provided,
+                    # unless it is stored previous, nor is it used by desmond
+                    lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s   %11.8f %11.8f %11.8f\n'
+                                %(i,
+                                7,
+                                float(atom._position[0].in_units_of(units.angstroms)._value),
+                                float(atom._position[1].in_units_of(units.angstroms)._value),
+                                float(atom._position[2].in_units_of(units.angstroms)._value),
+                                atom.residueIndex,
+                                '"%s"'%atom.residueName,
+                                atom.atomIndex,
+                                '"%s"'%atom.atomName,
+                                float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
+                                float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
+                                float(atom._velocity[2].in_units_of(units.angstroms/units.picoseconds)._value)))
+                if i == 0:
+                    j = 1
+                    if verbose:
+                        print "REMOVING M_ATOMS FROM BEGINNING"
+                    while j <=13:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines[apos] = '  m_atom[%d] {\n'%(i)
+                    lines.append('    :::\n')
+                    lines.append('  }\n')
+
+                #M_BONDS
+
+                if verbose:
+                    print "  Writing m_bonds..."
+                bpos = len(lines)
+                i = 0
+
+                lines.append('  m_bond\n')
+                lines.append('    i_m_from\n')
+                lines.append('    i_m_to\n')
+                lines.append('    i_m_order\n')
+                lines.append('    i_m_from_rep\n')
+                lines.append('    i_m_to_rep\n')
+                lines.append('    :::\n')
+
+                i = 0
+                nonecnt = 0
+                bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+                for bond in bondlist:
+                    if bond and bond.order:
+                        i += 1
+                        lines.append('    %d %d %d %d %d %d\n'
+                                    %(i,
+                                     bond.atom1,
+                                     bond.atom2,
+                                     int(bond.order),
+                                     1,
+                                     1))
+                    else:
+                        nonecnt+=1
+                if nonecnt > 0 and verbose:
+                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+                if i == 0:
+                    if verbose:
+                        print "REMOVING M_BONDS FROM BEGINNING"
+                    j = 1
+                    while j <= 7:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines[bpos] = '  m_bond[%d] {\n'%i
+                    lines.append('    :::\n')
+                    lines.append('  }\n')
+
+                #FFIO
+                if verbose:
+                    print "  Writing ffio..."
+                lines.append('  ffio_ff {\n')
+                lines.append('    s_ffio_name\n')
+                lines.append('    s_ffio_comb_rule\n')
+                lines.append('    i_ffio_version\n')
+                lines.append('    :::\n')
+
+                #Adding Molecule Name
+                if re.search("Viparr", moleculetype.name):
+                    lines.append('    Generated by Viparr\n')
+                else:
+                    #print moleculetype.name
+                    lines.append('    %s\n' % moleculetype.name)
+
+                #Adding Combination Rule
+                if System._sys._combinationRule == 1:
+                    lines.append('    ARITHMETIC\n') #NOT SURE WHAT TO PUT HERE...COME BACK TO THIS
+                elif System._sys._combinationRule == 2:
+                    lines.append('    GEOMETRIC\n')
+                elif System._sys._combinationRule == 3:
+                    lines.append('    ARITHMETIC/GEOMETRIC\n')
+
+                #Adding Version
+                lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
+
+                #-ADDING VDWTYPES AND SITES
+                i = 1
+                vdwtypes = []
+                sites = []
+                sig = None
+                ep = None
+                stemp = None
+                etemp = None
+                combRule = System._sys._combinationRule
+                for atom in molecule._atoms:
+                    if atom.residueIndex:   # duplicates all the waters; whereas the original does not. How does Desmond actually handle this?
+                        sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0],atom.residueIndex,atom.residueName))
+                    else:
+                        sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0]))
+                    sig = float(atom._sigma[0].in_units_of(units.angstroms)._value)
+                    ep = float(atom._epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
+                    if combRule == 1:   #MRS: seems like this should be automated more?
+                        stemp = ep * (4 * (sig**6))
+                        etemp = stemp * (sig**6)
+                    elif combRule == 2 or combRule == 3:
+                        stemp = sig
+                        etemp = ep
+                    if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
+                        vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
+                    i+=1
+
+                if verbose:
+                    print "   -Writing vdwtypes..."
+                if len(vdwtypes) > 0:
+                    lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
+                    lines.append("      s_ffio_name\n")
+                    lines.append("      s_ffio_funct\n")
+                    lines.append("      r_ffio_c1\n")
+                    lines.append("      r_ffio_c2\n")
+                    lines.append("      :::\n")
+                    i = 1
+                    for v in vdwtypes:
+                        lines.append('      %d%2s'%(i,v))
+                        i+=1
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                else:
+                    if verbose:
+                        print "REMOVING VDWTYPES"
+
+                if verbose:
+                    print "   -Writing sites..."
+                if len(sites) > 0:
+                    lines.append("    ffio_sites[%d] {\n"%(len(sites)))
+                    lines.append("      s_ffio_type\n")
+                    lines.append("      r_ffio_charge\n")
+                    lines.append("      r_ffio_mass\n")
+                    lines.append("      s_ffio_vdwtype\n")
+                    if len(sites[0].split()) > 5:
+                        lines.append("      i_ffio_resnr\n")
+                        lines.append("      s_ffio_residue\n")
+                    lines.append("      :::\n")
+                    for s in sites:
+                        lines.append('   %s'%(s))
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                else:
+                    if verbose:
+                        print "REMOVING SITES"
+
+                #-ADDING BONDS
+                if verbose:
+                    print "   -Writing bonds..."
+                bpos = len(lines)
+                lines.append("    ffio_bonds\n")
+                lines.append("      i_ffio_ai\n")
+                lines.append("      i_ffio_aj\n")
+                lines.append("      s_ffio_funct\n")
                 lines.append("      r_ffio_c1\n")
                 lines.append("      r_ffio_c2\n")
                 lines.append("      :::\n")
-	      lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), int(dihedral.multiplicity)))
-            elif isinstance(dihedral, ImproperDihedral2): 
-              if i == 1:
-                lines.append("      r_ffio_c0\n")
-                lines.append("      r_ffio_c1\n")
-                lines.append("      :::\n")
-              lines.append('      %d %d %d %d %d %s %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-	    elif isinstance(dihedral, RBDihedral):
-	      if i == 1:
-                lines.append("      r_ffio_c0\n")
+                i = 0
+                nonecnt = 0
+                name = ''
+                length = None
+                k = None
+
+                for bond in moleculetype.bondForceSet.itervalues():
+                    try:
+                        length = float(bond.length.in_units_of(units.angstroms)._value)   #Look at unit conversions here
+                        k = float(bond.k._value)  # look at unit conversions here
+                    except:
+                        length = None
+                        k = None
+                    if bond and (length and not length == float(0)) and (k and not k == float(0)):  #Probably a better way to sort sites from m_bond
+                        i += 1
+                        if bond.c == 1:
+                            name = 'Harm_constrained'
+                        else:
+                            name = 'Harm'
+                        lines.append('      %d %d %d %s %10.8f %10.8f\n'
+                                    %(i,
+                                     bond.atom1,
+                                     bond.atom2,
+                                     name,
+                                     length,
+                                     k))
+                    elif not bond:
+                        nonecnt+=1
+                if nonecnt > 0 and verbose:
+                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+                if i == 0:
+                    if verbose:
+                        print "REMOVING FFIO_BONDS FROM BEGINNING"
+                    j = 1
+                    while j <= 7:
+                        del (lines[-1])
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_bonds[%d] {\n"%(i))
+
+                #-ADDING ANGLES
+                if verbose:
+                    print "   -Writing angles..."
+                bpos = len(lines) #storing position for angles instead of bonds
+                lines.append("    ffio_angles\n")
+                lines.append("      i_ffio_ai\n")
+                lines.append("      i_ffio_aj\n")
+                lines.append("      i_ffio_ak\n")
+                lines.append("      s_ffio_funct\n")
                 lines.append("      r_ffio_c1\n")
                 lines.append("      r_ffio_c2\n")
-                lines.append("      r_ffio_c3\n")
-                lines.append("      r_ffio_c4\n")
-                lines.append("      r_ffio_c5\n")
-                lines.append("      r_ffio_c6\n")
                 lines.append("      :::\n")
-	      if dihedral.i == 1:
-	        name = 'Improper_Trig'
-	      else:
-	        name = 'Proper_Trig'
-	      lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(dihedral.C0.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C1.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C2.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C3.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C4.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C5.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C6.in_units_of(units.kilocalories_per_mole)._value)))
-            else:
-	      print "ERROR (writeFile): found unsupported dihedral"
-	    i+=1
-          if i == 1:
-	    if verbose:
-	      print "REMOVING FFIO_DIHEDRALS FROM BEGINNING"
-            j = 1
-            while j <= 6:
-	      del lines[-1]
-	      j+=1
-          else:
-	    lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_dihedrals[%d] {\n"%(i-1))
-	
-	 #ADDING EXCLUSIONS
-          i = 1
-          if verbose:
-            print "   -Writing exclusions..."
-          bpos = len(lines) #storing position for exclusions instead of bonds
-          lines.append("    ffio_exclusions\n")
-          lines.append("      i_ffio_ai\n")
-          lines.append("      i_ffio_aj\n")
-	  lines.append("      :::\n")
-	  for exclusion in moleculetype.exclusions.itervalues():
-            lines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
-	    i+=1
-          if i == 1:
-	    if verbose:
-	      print "REMOVING FFIO_EXCLUSIONS FROM BEGINNING"
-            j = 1
-            while j <= 4:
-	      del lines[-1]
-	      j+=1
-	  else:
-            lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_exclusions[%d] {\n"%(i-1))
+                i = 1
+                for angle in moleculetype.angleForceSet.itervalues():
+                    if angle.c == 0:
+                        lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    elif angle.c == 1:
+                        lines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    i+=1
+                if i == 1:
+                    if verbose:
+                        print "REMOVING FFIO_ANGLES FROM BEGINNING"
+                    j = 1
+                    while j <= 8:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_angles[%d] {\n"%(i-1))
 
-          #-ADDING PAIRS
-          if verbose:
-            print "   -Writing pairs..."
-	  bpos = len(lines) #storing position for pairs instead of bonds
-          lines.append("    ffio_pairs\n")
-          lines.append("      i_ffio_ai\n")
-          lines.append("      i_ffio_aj\n")
-          lines.append("      s_ffio_funct\n")
-          lines.append("      r_ffio_c1\n")
-          lines.append("      :::\n")
-	  i = 1
-          for pair in moleculetype.pairForceSet.itervalues():
-            if re.match("LJ", pair.type):
-              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
-            elif re.match("Coulomb", pair.type):
-              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._coulombCorrection))
-            elif re.match("Both", pair.type):
-              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
-              i+=1
-              lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
-            i+=1
-          if i == 1:
-	    if verbose:
-	      print "REMOVING FFIO_PAIRS FROM BEGINNING"
-            j = 1
-            while j <= 6:
-	      del lines[-1]
-	      j+=1
-	  else:
-            lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_pairs[%d] {\n"%(i-1))
-	  
-	  #ADDING RESTRAINTS
-	  
-	  #ADDING CONSTRAINTS
-          i = 1
-	  j = 0
-          if verbose:
-            print "   -Writing constraints..."
-          bpos = len(lines) #storing position for constraints instead of bonds
-          isHOH = False
-          alen = 0
-	  alen_max = 0
-          atomlst = []
-          lenlst = []
-	  lines.append("    ffio_constraints\n")
-	  for constraint in moleculetype.constraints.itervalues(): 
-            if re.search('AH',constraint.type):
-	      alen = int(list(constraint.type)[-1])
-            elif re.match('HOH',constraint.type):
-	      alen = 2
-	    if alen_max < alen:
-	      alen_max = alen
-          # not sure we need to sort these, but makes it easier to debug
-          constraintlist = sorted(moleculetype.constraints.itervalues(),key=lambda x: x.atom1)
-	  for constraint in constraintlist: #calculate the max number of atoms in constraint
-            if re.search('AH',constraint.type):
-	      alen = int(list(constraint.type)[-1])
-            elif re.match('HOH',constraint.type):
-	      alen = 2
-              isHOH = True
-	    lines.append('      ')
-	    if alen == 1:
-	      lines.append('%d %d %d '%(i,int(constraint.atom1),int(constraint.atom2)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH1')
-	      lines.append('%10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 2:
-	      lines.append('%d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%(constraint.type))
-	      if re.match('HOH',constraint.type):
-	        lines.append('%10.8f %10.8f %10.8f\n'%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value)))
-	      else:
-		lines.append('%10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value)))
-	        if alen_max > alen:
-	          j = alen
-		  while j < alen_max:
-		    lines.append('%s '%'<>')
-		    j+=1
-	        lines.append('\n')
-            #NOTE: This can't be the best way to do this section!  WAY too much duplication. Figure out logic and fix!!!!!    
-	    elif alen == 3:
-	      lines.append('%d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH3')
-	      lines.append('%10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 4:
-	      lines.append('%d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH4')
-	      lines.append('%10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 5:
-	      lines.append('%d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH5')
-	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 6:
-	      lines.append('%d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH6')
-	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 7:
-	      lines.append('%d %d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7),int(constraint.atom8)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH7')
-	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value),float(constraint.length7.in_units_of(units.angstroms)._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    elif alen == 8:
-	      lines.append('%d %d %d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7),int(constraint.atom8),int(constraint.atom9)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-              lines.append('%s '%'AH8')
-	      lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value),float(constraint.length7.in_units_of(units.angstroms)._value),float(constraint.length8._value)))
-	      if alen_max > alen:
-	        j = alen
-		while j < alen_max:
-		  lines.append('%s '%'<>')
-		  j+=1
-	      lines.append('\n')
-	    i+=1
-	  if i == 1:
-	    if verbose:
-	      print "REMOVING FFIO_CONSTRAINTS FROM BEGINNING"
-            j = 1
-            while j <= 1:
-	      del lines[-1]
-	      j+=1
-	  else:
-            lines.append("      :::\n")
-            lines.append("    }\n")
-            lines[bpos] = ("    ffio_constraints[%d] {\n"%(i-1))
-	    bpos+=1
-	    lines.insert(bpos,"      :::\n")
-	    j = alen_max
-            if isHOH:
-              j+=1
-	    while j >=1:
-              lines.insert(bpos,'      r_ffio_c%d\n'%j)
-              j-=1
-	    lines.insert(bpos,"      s_ffio_funct\n")
-	    if alen_max >= 1: 
-  	      lines.insert(bpos,"      i_ffio_ai\n")
-	      bpos+=1
-              lines.insert(bpos,"      i_ffio_aj\n")
-	    if alen_max >= 2:
-  	      bpos+=1
-              lines.insert(bpos,"      i_ffio_ak\n")
-	    if alen_max>= 3:
-	      bpos+=1
-              lines.insert(bpos,"      i_ffio_al\n")
-	    if alen_max >= 4:
-              bpos+=1
-              lines.insert(bpos,"      i_ffio_am\n")
-	    if alen_max >= 5:
-  	      bpos+=1
-              lines.insert(bpos,"      i_ffio_an\n")
-	    if alen_max >= 6:
-	      bpos+=1
-	      lines.insert(bpos,"      i_ffio_ao\n")
-            if alen_max >= 7:
-              bpos+=1
-              lines.insert(bpos,"      i_ffio_ap\n")
-            if alen_max == 8:
-              bpos+=1
-              lines.insert(bpos,"      i_ffio_aq\n")
+                #-ADDING DIHEDRALS
+                if verbose:
+                    print "   -Writing dihedrals..."
+                bpos = len(lines) #storing position for dihedrals instead of bonds
+                lines.append("    ffio_dihedrals\n")
+                lines.append("      i_ffio_ai\n")
+                lines.append("      i_ffio_aj\n")
+                lines.append("      i_ffio_ak\n")
+                lines.append("      i_ffio_al\n")
+                lines.append("      s_ffio_funct\n")
+                i = 1
+                for dihedral in moleculetype.dihedralForceSet.itervalues():
+                    if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
+                        if i == 1:
+                            lines.append("      r_ffio_c0\n")
+                            lines.append("      r_ffio_c1\n")
+                            lines.append("      r_ffio_c2\n")
+                            lines.append("      :::\n")
+                        lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), int(dihedral.multiplicity)))
+                    elif isinstance(dihedral, ImproperDihedral2):
+                        if i == 1:
+                            lines.append("      r_ffio_c0\n")
+                            lines.append("      r_ffio_c1\n")
+                            lines.append("      :::\n")
+                        lines.append('      %d %d %d %d %d %s %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    elif isinstance(dihedral, RBDihedral):
+                        if i == 1:
+                            lines.append("      r_ffio_c0\n")
+                            lines.append("      r_ffio_c1\n")
+                            lines.append("      r_ffio_c2\n")
+                            lines.append("      r_ffio_c3\n")
+                            lines.append("      r_ffio_c4\n")
+                            lines.append("      r_ffio_c5\n")
+                            lines.append("      r_ffio_c6\n")
+                            lines.append("      :::\n")
+                        if dihedral.i == 1:
+                            name = 'Improper_Trig'
+                        else:
+                            name = 'Proper_Trig'
+                        lines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(dihedral.C0.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C1.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C2.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C3.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C4.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C5.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C6.in_units_of(units.kilocalories_per_mole)._value)))
+                    else:
+                        print "ERROR (writeFile): found unsupported dihedral"
+                    i+=1
+                if i == 1:
+                    if verbose:
+                        print "REMOVING FFIO_DIHEDRALS FROM BEGINNING"
+                    j = 1
+                    while j <= 6:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_dihedrals[%d] {\n"%(i-1))
 
-	  lines.append("  }\n")
-          lines.append("}\n")
+                 #ADDING EXCLUSIONS
+                i = 1
+                if verbose:
+                    print "   -Writing exclusions..."
+                bpos = len(lines) #storing position for exclusions instead of bonds
+                lines.append("    ffio_exclusions\n")
+                lines.append("      i_ffio_ai\n")
+                lines.append("      i_ffio_aj\n")
+                lines.append("      :::\n")
+                for exclusion in moleculetype.exclusions.itervalues():
+                    lines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+                    i+=1
+                if i == 1:
+                    if verbose:
+                        print "REMOVING FFIO_EXCLUSIONS FROM BEGINNING"
+                    j = 1
+                    while j <= 4:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_exclusions[%d] {\n"%(i-1))
 
-      fout = open(filename, 'w')
-      for line in lines:
-        fout.write(line)
-      fout.close() 
+                #-ADDING PAIRS
+                if verbose:
+                    print "   -Writing pairs..."
+                bpos = len(lines) #storing position for pairs instead of bonds
+                lines.append("    ffio_pairs\n")
+                lines.append("      i_ffio_ai\n")
+                lines.append("      i_ffio_aj\n")
+                lines.append("      s_ffio_funct\n")
+                lines.append("      r_ffio_c1\n")
+                lines.append("      :::\n")
+                i = 1
+                for pair in moleculetype.pairForceSet.itervalues():
+                    if re.match("LJ", pair.type):
+                        lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
+                    elif re.match("Coulomb", pair.type):
+                        lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._coulombCorrection))
+                    elif re.match("Both", pair.type):
+                        lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
+                        i+=1
+                        lines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                    i+=1
+                if i == 1:
+                    if verbose:
+                        print "REMOVING FFIO_PAIRS FROM BEGINNING"
+                    j = 1
+                    while j <= 6:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_pairs[%d] {\n"%(i-1))
+
+                #ADDING RESTRAINTS
+
+                #ADDING CONSTRAINTS
+                i = 1
+                j = 0
+                if verbose:
+                    print "   -Writing constraints..."
+                bpos = len(lines) #storing position for constraints instead of bonds
+                isHOH = False
+                alen = 0
+                alen_max = 0
+                atomlst = []
+                lenlst = []
+                lines.append("    ffio_constraints\n")
+                for constraint in moleculetype.constraints.itervalues():
+                    if re.search('AH',constraint.type):
+                        alen = int(list(constraint.type)[-1])
+                    elif re.match('HOH',constraint.type):
+                        alen = 2
+                    if alen_max < alen:
+                        alen_max = alen
+                # not sure we need to sort these, but makes it easier to debug
+                constraintlist = sorted(moleculetype.constraints.itervalues(),key=lambda x: x.atom1)
+                for constraint in constraintlist: #calculate the max number of atoms in constraint
+                    if re.search('AH',constraint.type):
+                        alen = int(list(constraint.type)[-1])
+                    elif re.match('HOH',constraint.type):
+                        alen = 2
+                        isHOH = True
+                    lines.append('      ')
+                    if alen == 1:
+                        lines.append('%d %d %d '%(i,int(constraint.atom1),int(constraint.atom2)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH1')
+                        lines.append('%10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 2:
+                        lines.append('%d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%(constraint.type))
+                        if re.match('HOH',constraint.type):
+                            lines.append('%10.8f %10.8f %10.8f\n'%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value)))
+                        else:
+                            lines.append('%10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value)))
+                            if alen_max > alen:
+                                j = alen
+                                while j < alen_max:
+                                    lines.append('%s '%'<>')
+                                    j+=1
+                            lines.append('\n')
+                    #NOTE: This can't be the best way to do this section!  WAY too much duplication. Figure out logic and fix!!!!!
+                    elif alen == 3:
+                        lines.append('%d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH3')
+                        lines.append('%10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 4:
+                        lines.append('%d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH4')
+                        lines.append('%10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 5:
+                        lines.append('%d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH5')
+                        lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 6:
+                        lines.append('%d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH6')
+                        lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 7:
+                        lines.append('%d %d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7),int(constraint.atom8)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH7')
+                        lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value),float(constraint.length7.in_units_of(units.angstroms)._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    elif alen == 8:
+                        lines.append('%d %d %d %d %d %d %d %d %d %d '%(i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3),int(constraint.atom4),int(constraint.atom5),int(constraint.atom6),int(constraint.atom7),int(constraint.atom8),int(constraint.atom9)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('%s '%'AH8')
+                        lines.append('%10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f '%(float(constraint.length1.in_units_of(units.angstroms)._value),float(constraint.length2.in_units_of(units.angstroms)._value),float(constraint.length3.in_units_of(units.angstroms)._value),float(constraint.length4.in_units_of(units.angstroms)._value),float(constraint.length5.in_units_of(units.angstroms)._value),float(constraint.length6.in_units_of(units.angstroms)._value),float(constraint.length7.in_units_of(units.angstroms)._value),float(constraint.length8._value)))
+                        if alen_max > alen:
+                            j = alen
+                            while j < alen_max:
+                                lines.append('%s '%'<>')
+                                j+=1
+                        lines.append('\n')
+                    i+=1
+                if i == 1:
+                    if verbose:
+                        print "REMOVING FFIO_CONSTRAINTS FROM BEGINNING"
+                    j = 1
+                    while j <= 1:
+                        del lines[-1]
+                        j+=1
+                else:
+                    lines.append("      :::\n")
+                    lines.append("    }\n")
+                    lines[bpos] = ("    ffio_constraints[%d] {\n"%(i-1))
+                    bpos+=1
+                    lines.insert(bpos,"      :::\n")
+                    j = alen_max
+                    if isHOH:
+                        j+=1
+                    while j >=1:
+                        lines.insert(bpos,'      r_ffio_c%d\n'%j)
+                        j-=1
+                    lines.insert(bpos,"      s_ffio_funct\n")
+                    if alen_max >= 1:
+                        lines.insert(bpos,"      i_ffio_ai\n")
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_aj\n")
+                    if alen_max >= 2:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_ak\n")
+                    if alen_max>= 3:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_al\n")
+                    if alen_max >= 4:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_am\n")
+                    if alen_max >= 5:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_an\n")
+                    if alen_max >= 6:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_ao\n")
+                    if alen_max >= 7:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_ap\n")
+                    if alen_max == 8:
+                        bpos+=1
+                        lines.insert(bpos,"      i_ffio_aq\n")
+
+                lines.append("  }\n")
+                lines.append("}\n")
+
+        fout = open(filename, 'w')
+        for line in lines:
+            fout.write(line)
+        fout.close()
