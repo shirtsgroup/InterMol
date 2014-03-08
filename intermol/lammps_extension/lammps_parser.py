@@ -17,15 +17,15 @@ from intermol.System import System
 from intermol.Types import *
 from intermol.Force import *
 
+
 class LammpsParser(object):
-    """A class containing methods to read and write LAMMPS files.
-    """
+    """A class containing methods to read and write LAMMPS files."""
 
     def __init__(self):
         """
         """
-        self.box_vector = np.zeros([3, 3], float)
 
+        self.box_vector = np.zeros(shape=(3, 3), dtype=float)
     def read_input(self, input_file):
         """Reads a LAMMPS input file.
 
@@ -52,35 +52,25 @@ class LammpsParser(object):
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](line.split())
 
+        self.RAD = units.radians
+        self.DEGREE = units.degrees
+        if self.unit_set == 'real':
+            self.DIST = units.angstroms
+            self.VEL = units.angstroms / units.femtosecond
+            self.ENERGY = units.kilocalorie / units.mole
+            self.MASS = units.grams / units.mole
+            self.CHARGE = units.elementary_charge
+            self.MOLE = units.mole
+        else:
+            raise Exception("Unsupported unit set specified in input file: "
+                    "{0}".format(unit_set))
+
     def read_data(self, data_file):
         """Reads a LAMMPS data file.
 
         :param data_file: name of LAMMPS data file to read in.
         :type data_file: str.
         """
-        global RAD
-        RAD = units.radians
-        global DEGREE
-        DEGREE = units.degrees
-        if self.unit_set == 'real':
-            global DIST
-            DIST = units.angstroms
-            global VEL
-            VEL = units.angstroms / units.femtosecond
-            global ENERGY
-            ENERGY = units.kilocalorie / units.mole
-            global MASS
-            MASS = units.grams / units.mole
-            global CHARGE
-            CHARGE = units.elementary_charge
-            global MOLE
-            MOLE = units.mole
-        else:
-            # NOTE: This exception should eventually be moved to read_input
-            #       once we support more unit sets.
-            raise Exception("Unsupported unit set specified in input file: "
-                    "{0}".format(unit_set))
-
         # Read box, masses and forcefield info from data file.
         parsable_keywords = {'Masses': self.parse_masses,
                 'Pair Coeffs': self.parse_pair_coeffs,
@@ -92,12 +82,10 @@ class LammpsParser(object):
             self.molecule_name = next(data_lines).strip()
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
-            global current_mol
-            current_mol = Molecule(self.molecule_name)
-            System._sys.addMolecule(current_mol)
-            global current_mol_type
-            current_mol_type = System._sys._molecules[self.molecule_name]
-            current_mol_type.nrexcl = 3  # TODO: automate determination
+            self.current_mol = Molecule(self.molecule_name)
+            System._sys.addMolecule(self.current_mol)
+            self.current_mol_type = System._sys._molecules[self.molecule_name]
+            self.current_mol_type.nrexcl = 3  # TODO: automate determination
 
             for line in data_lines:
                 if line.strip():
@@ -116,7 +104,6 @@ class LammpsParser(object):
                         keyword = line.strip()
                         if keyword in parsable_keywords:
                             parsable_keywords[keyword](data_lines)
-        System._sys.setBoxVector(self.box_vector * DIST)
 
         # Read atoms, velocities and connectivity information from data file.
         parsable_keywords = {'Atoms': self.parse_atoms,
@@ -134,7 +121,7 @@ class LammpsParser(object):
     def parse_units(self, line):
         """
         """
-        assert(len(line) == 2)
+        assert(len(line) == 2), "Invalid units specified in input file."
         self.unit_set = line[1]
 
     def parse_atom_style(self, line):
@@ -150,7 +137,7 @@ class LammpsParser(object):
         """
         self.dimension = int(line[1])
         if self.dimension not in [2, 3]:
-            raise Exception("Invalid dimension specified in input file"
+            raise ValueError("Invalid dimension specified in input file"
                     " (must be 2 or 3).")
 
     def parse_boundary(self, line):
@@ -158,7 +145,7 @@ class LammpsParser(object):
         """
         self.boundaries = [line[1], line[2], line[3]]
         if len(self.boundaries) != self.dimension:
-            raise Exception("Boundaries do not match specified dimension "
+            raise ValueError("Boundaries do not match specified dimension "
                     "in input file")
 
     def parse_pair_style(self, line):
@@ -166,7 +153,7 @@ class LammpsParser(object):
         """
         self.pair_style = []
         if line[1] == 'hybrid':
-             raise Exception("Hybrid pair styles not yet implemented.")
+            warn("Hybrid pair styles not yet implemented.")
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
             System._sys._nbFunc = 1
@@ -201,7 +188,7 @@ class LammpsParser(object):
             for style in line[2:]:
                 self.bond_style.append(style)
         else:
-            raise Exception("Invalid bond_style in input file!")
+            raise ValueError("Invalid bond_style in input file!")
 
     def parse_angle_style(self, line):
         """
@@ -213,7 +200,7 @@ class LammpsParser(object):
             for style in line[2:]:
                 self.angle_style.append(style)
         else:
-            raise Exception("Invalid angle_style in input file!")
+            raise ValueError("Invalid angle_style in input file!")
 
     def parse_dihedral_style(self, line):
         """
@@ -229,7 +216,7 @@ class LammpsParser(object):
             for style in line[2:]:
                 self.dihedral_style.append(style)
         else:
-            raise Exception("Invalid dihedral_style in input file!")
+            raise ValueError("Invalid dihedral_style in input file!")
 
     def parse_improper_style(self, line):
         """
@@ -242,7 +229,7 @@ class LammpsParser(object):
             for style in line[2:]:
                 self.improper_style.append(style)
         else:
-            raise Exception("Invalid improper_style in input file!")
+            raise ValueError("Invalid improper_style in input file!")
 
     def parse_special_bonds(self, line):
         """
@@ -271,7 +258,8 @@ class LammpsParser(object):
         if box_length > 0:
             self.box_vector[dim, dim] = box_length
         else:
-            raise Exception("Negative box length specified in data file.")
+            raise ValueError("Negative box length specified in data file.")
+        System._sys.setBoxVector(self.box_vector * self.DIST)
 
     def parse_masses(self, data_lines):
         """Read masses from data file
@@ -283,7 +271,7 @@ class LammpsParser(object):
             if not line.strip():
                 break  # found another blank line
             fields = line.split()
-            self.mass_dict[int(fields[0])] = float(fields[1]) * MASS
+            self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
         """Read pair coefficients from data file
@@ -298,8 +286,8 @@ class LammpsParser(object):
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
                 if System._sys._nbFunc == 1:
-                    self.nb_types[int(fields[0])] = [fields[1] * ENERGY,
-                                                     fields[2] * DIST]
+                    self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
+                                                     fields[2] * self.DIST]
                 else:
                     warn("Unsupported pair coeff formatting in data file!")
             else:
@@ -318,8 +306,8 @@ class LammpsParser(object):
             if len(self.bond_style) == 1:
                 if 'harmonic' in self.bond_style:
                     self.bond_types[int(fields[0])] = [
-                            2 * fields[1] * ENERGY / (DIST*DIST),
-                            fields[2] * DIST]
+                            2 * fields[1] * self.ENERGY / (self.DIST*self.DIST),
+                            fields[2] * self.DIST]
                 else:
                     warn("Unsupported bond coeff formatting in data file!")
             else:
@@ -338,8 +326,8 @@ class LammpsParser(object):
             if len(self.angle_style) == 1:
                 if 'harmonic' in self.angle_style:
                     self.angle_types[int(fields[0])] = [
-                            2 * fields[1] * ENERGY / (RAD*RAD),
-                            fields[2] * DEGREE]
+                            2 * fields[1] * self.ENERGY / (self.RAD*self.RAD),
+                            fields[2] * self.DEGREE]
                 else:
                     warn("Unsupported angle coeff formatting in data file!")
             else:
@@ -358,10 +346,10 @@ class LammpsParser(object):
             if len(self.dihedral_style) == 1:
                 if 'opls' in self.dihedral_style:
                     self.dihedral_types[int(fields[0])] = [
-                            fields[1] * ENERGY,
-                            fields[2] * ENERGY,
-                            fields[3] * ENERGY,
-                            fields[4] * ENERGY]
+                            fields[1] * self.ENERGY,
+                            fields[2] * self.ENERGY,
+                            fields[3] * self.ENERGY,
+                            fields[4] * self.ENERGY]
                 else:
                     warn("Unsupported dihedral coeff formatting in data file!")
             else:
@@ -383,13 +371,13 @@ class LammpsParser(object):
                     pass
                 new_atom_type = None
                 if System._sys._combinationRule == 1:
-                    raise Exception("Combination rule '1' not yet implemented")
+                    warn("Combination rule '1' not yet implemented")
                 elif System._sys._combinationRule in [2, 3]:
                     new_atom_type = AtomCR23Type(fields[2],    # atomtype
                             fields[2],                         # bondtype
                             -1,                                # Z
                             self.mass_dict[int(fields[2])],    # mass
-                            float(fields[3]) * CHARGE,         # charge
+                            float(fields[3]) * self.CHARGE,         # charge
                             'A',                               # ptype
                             self.nb_types[int(fields[2])][1],  # sigma
                             self.nb_types[int(fields[2])][0])  # epsilon
@@ -402,11 +390,11 @@ class LammpsParser(object):
                         fields[1])           # resName (molNum)
                 atom.setAtomType(0, fields[2])  # atomNum for LAMMPS
                 atom.cgnr = 0  # TODO: look into alternatives
-                atom.setCharge(0, float(fields[3]) * CHARGE)
+                atom.setCharge(0, float(fields[3]) * self.CHARGE)
                 atom.setMass(0, self.mass_dict[int(fields[2])])
-                atom.setPosition(float(fields[4]) * DIST,
-                        float(fields[5]) * DIST,
-                        float(fields[6]) * DIST)
+                atom.setPosition(float(fields[4]) * self.DIST,
+                        float(fields[5]) * self.DIST,
+                        float(fields[6]) * self.DIST)
 
                 for ab_state, atom_type in enumerate(atom._atomtype):
                     # Searching for a matching atom_type
@@ -419,8 +407,7 @@ class LammpsParser(object):
                     else:
                         warn("Corresponding AtomType was not found. "
                                 "Insert missing values yourself.")
-            current_mol.addAtom(atom)
-
+            self.current_mol.addAtom(atom)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file
@@ -442,8 +429,8 @@ class LammpsParser(object):
                             fields[2], fields[3],
                             r, k)
             else:
-                raise Exception("Hybrid bond styles not yet implemented")
-            current_mol_type.bondForceSet.add(new_bond_force)
+                warn("Hybrid bond styles not yet implemented")
+            self.current_mol_type.bondForceSet.add(new_bond_force)
             System._sys._forces.add(new_bond_force)
 
     def parse_angles(self, data_lines):
@@ -465,8 +452,8 @@ class LammpsParser(object):
                             fields[2], fields[3], fields[4],
                             theta, k)
             else:
-                raise Exception("Hybrid angle styles not yet implemented")
-            current_mol_type.angleForceSet.add(new_angle_force)
+                warn("Hybrid angle styles not yet implemented")
+            self.current_mol_type.angleForceSet.add(new_angle_force)
             System._sys._forces.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
@@ -496,9 +483,8 @@ class LammpsParser(object):
                             fields[2], fields[3], fields[4], fields[5],
                             Cs[0], Cs[1], Cs[2], Cs[3], Cs[4], Cs[5], Cs[6])
             else:
-                raise Exception("Hybrid dihedral styles not yet implemented")
-
-            current_mol_type.dihedralForceSet.add(new_dihed_force)
+                warn("Hybrid dihedral styles not yet implemented")
+            self.current_mol_type.dihedralForceSet.add(new_dihed_force)
             System._sys._forces.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real'):
@@ -509,26 +495,19 @@ class LammpsParser(object):
         :param unit_set: LAMMPS unit set for output file.
         :type unit_set: str.
         """
-        global RAD
-        RAD = units.radians
-        global DEGREE
-        DEGREE = units.degrees
+        self.RAD = units.radians
+        self.DEGREE = units.degrees
         if unit_set == 'real':
-            global DIST
-            DIST = units.angstroms
-            global VEL
-            VEL = units.angstroms / units.femtosecond
-            global ENERGY
-            ENERGY = units.kilocalorie / units.mole
-            global MASS
-            MASS = units.grams / units.mole
-            global CHARGE
-            CHARGE = units.elementary_charge
-            global MOLE
-            MOLE = units.mole
+            self.DIST = units.angstroms
+            self.VEL = units.angstroms / units.femtosecond
+            self.ENERGY = units.kilocalorie / units.mole
+            self.MASS = units.grams / units.mole
+            self.CHARGE = units.elementary_charge
+            self.MOLE = units.mole
         else:
             raise Exception("Unsupported unit set specified: {0}".format(unit_set))
 
+        # Containers for lines which are ultimately written to output files.
         mass_list = list()
         mass_list.append('\n')
         mass_list.append('Masses\n')
@@ -618,8 +597,6 @@ class LammpsParser(object):
                         if 'harmonic' not in bond_style:
                             bond_style.append('harmonic')
                         if len(bond_style) > 1:
-                            # this may need to be an error
-                            # or require some form of conversion if possible
                             warn("More than one bond style found!")
 
                         atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
@@ -638,8 +615,8 @@ class LammpsParser(object):
                             bond_type_dict[temp] = b_type_i
                             bond_coeffs.append('{0:d} {1:18.8f} {2:18.8f}\n'.format(
                                     b_type_i,
-                                    0.5 * bond.k.in_units_of(ENERGY / (DIST*DIST))._value,
-                                    bond.length.in_units_of(DIST)._value))
+                                    0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
+                                    bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
                     else:
                         warn("Found unsupported bond type for LAMMPS!")
@@ -650,8 +627,6 @@ class LammpsParser(object):
                         if 'harmonic' not in angle_style:
                             angle_style.append('harmonic')
                         if len(angle_style) > 1:
-                            # this may need to be an error
-                            # or require some form of conversion if possible
                             warn("More than one angle style found!")
 
                         atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
@@ -672,8 +647,8 @@ class LammpsParser(object):
                             angle_type_dict[temp] = ang_type_i
                             angle_coeffs.append('{0:d} {1:18.8f} {2:18.8f}\n'.format(
                                     ang_type_i,
-                                    0.5 * angle.k.in_units_of(ENERGY / (RAD*RAD))._value,
-                                    angle.theta.in_units_of(DEGREE)._value))
+                                    0.5 * angle.k.in_units_of(self.ENERGY / (self.RAD*self.RAD))._value,
+                                    angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
                         warn("Found unsupported angle type for LAMMPS!")
@@ -726,10 +701,10 @@ class LammpsParser(object):
                             dihedral_type_dict[temp] = dih_type_i
                             dihedral_coeffs.append('{0:d} {1:18.8f} {2:18.8f} {3:18.8f} {4:18.8f}\n'.format(
                                     dih_type_i,
-                                    Fs[0].in_units_of(ENERGY)._value,
-                                    Fs[1].in_units_of(ENERGY)._value,
-                                    Fs[2].in_units_of(ENERGY)._value,
-                                    Fs[3].in_units_of(ENERGY)._value))
+                                    Fs[0].in_units_of(self.ENERGY)._value,
+                                    Fs[1].in_units_of(self.ENERGY)._value,
+                                    Fs[2].in_units_of(self.ENERGY)._value,
+                                    Fs[3].in_units_of(self.ENERGY)._value))
                             dih_type_i += 1
                     else:
                         warn("Found unsupported dihedral type for LAMMPS!")
@@ -743,17 +718,17 @@ class LammpsParser(object):
                         atom_type_dict[atom._atomtype[0]] = a_type_i
                         mass_list.append('%d %8.4f\n'
                                     % (a_type_i,
-                                       atom._mass[0].in_units_of(MASS)._value))
+                                       atom._mass[0].in_units_of(self.MASS)._value))
                         pair_coeff_list.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
                                        a_type_i,
-                                       atom._epsilon[0].in_units_of(ENERGY)._value,
-                                       atom._sigma[0].in_units_of(DIST)._value))
+                                       atom._epsilon[0].in_units_of(self.ENERGY)._value,
+                                       atom._sigma[0].in_units_of(self.DIST)._value))
                         a_type_i += 1
 
                     # box minima
-                    x_coord = atom._position[0].in_units_of(DIST)._value
-                    y_coord = atom._position[1].in_units_of(DIST)._value
-                    z_coord = atom._position[2].in_units_of(DIST)._value
+                    x_coord = atom._position[0].in_units_of(self.DIST)._value
+                    y_coord = atom._position[1].in_units_of(self.DIST)._value
+                    z_coord = atom._position[2].in_units_of(self.DIST)._value
                     if x_coord < x_min:
                         x_min = x_coord
                     if y_coord < y_min:
@@ -766,16 +741,16 @@ class LammpsParser(object):
                             atom.atomIndex,
                             atom.residueIndex,
                             atom_type_dict[atom._atomtype[0]],
-                            atom._charge[0].in_units_of(CHARGE)._value,
+                            atom._charge[0].in_units_of(self.CHARGE)._value,
                             x_coord,
                             y_coord,
                             z_coord))
                     # velocity
                     vel_list.append('{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                             atom.atomIndex,
-                            atom._velocity[0].in_units_of(VEL)._value,
-                            atom._velocity[1].in_units_of(VEL)._value,
-                            atom._velocity[2].in_units_of(VEL)._value))
+                            atom._velocity[0].in_units_of(self.VEL)._value,
+                            atom._velocity[1].in_units_of(self.VEL)._value,
+                            atom._velocity[2].in_units_of(self.VEL)._value))
 
         # read all connectivity information
         for mol_type in System._sys._molecules.itervalues():
@@ -858,8 +833,9 @@ class LammpsParser(object):
                             dihedral.atom3 + offset,
                             dihedral.atom4 + offset))
 
-        # actual data file writing
+        # Write the actual data file.
         with open(data_file, 'w') as f:
+            # front matter
             f.write(System._sys._name + '\n')
             f.write('\n')
 
@@ -892,22 +868,23 @@ class LammpsParser(object):
             if n_improper_types > 0:
                 f.write('{0} improper types\n'.format(n_improper_types))
             f.write('\n')
+
             # shifting of box dimensions
             f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
                     x_min,
-                    x_min + System._sys._boxVector[0][0].in_units_of(DIST)._value))
+                    x_min + System._sys._boxVector[0][0].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
                     y_min,
-                    y_min + System._sys._boxVector[1][1].in_units_of(DIST)._value))
+                    y_min + System._sys._boxVector[1][1].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
                     z_min,
-                    z_min + System._sys._boxVector[2][2].in_units_of(DIST)._value))
+                    z_min + System._sys._boxVector[2][2].in_units_of(self.DIST)._value))
 
-            # write masses
+            # masses
             for mass in mass_list:
                 f.write(mass)
 
-            # write coefficients
+            # forcefield coefficients
             if len(pair_coeff_list) > 3:
                 for pair in pair_coeff_list:
                     f.write(pair)
@@ -924,13 +901,13 @@ class LammpsParser(object):
                 for improper in improper_coeffs:
                     f.write(improper)
 
-            # write atoms and velocities
+            # atoms and velocities
             for atom in atom_list:
                 f.write(atom)
             for vel in vel_list:
                 f.write(vel)
 
-            # write connectivity
+            # topology
             if len(bond_list) > 3:
                 for bond in bond_list:
                     f.write(bond)
@@ -944,9 +921,9 @@ class LammpsParser(object):
                 for improper in improper_list:
                     f.write(improper)
 
-        # write the corresponding input file
+        # Write the corresponding input file.
         basename = os.path.splitext(data_file)[0]
-        input_filename = basename + '.input'
+        input_filename = '{0}.input'.format(basename)
         with open(input_filename, 'w') as f:
             f.write('units {0}\n'.format(unit_set))
             f.write('atom_style full\n')  # TODO
@@ -1019,6 +996,3 @@ class LammpsParser(object):
             f.write('\n')
 
             f.write('run 0\n')
-
-            # special bonds? CHARMM?
-            # multiple types in one category?
