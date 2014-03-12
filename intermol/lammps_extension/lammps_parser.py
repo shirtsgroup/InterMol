@@ -26,11 +26,12 @@ class LammpsParser(object):
         """
 
         self.box_vector = np.zeros(shape=(3, 3), dtype=float)
+
     def read_input(self, input_file):
         """Reads a LAMMPS input file.
 
-        :param input_file: name of LAMMPS input file to read in.
-        :type input_file: str.
+        Args:
+            input_file (str): Name of LAMMPS input file to read in.
         """
         parsable_keywords = {'units': self.parse_units,
                 'atom_style': self.parse_atom_style,
@@ -68,8 +69,8 @@ class LammpsParser(object):
     def read_data(self, data_file):
         """Reads a LAMMPS data file.
 
-        :param data_file: name of LAMMPS data file to read in.
-        :type data_file: str.
+        Args:
+            data_file (str): name of LAMMPS data file to read in.
         """
         # Read box, masses and forcefield info from data file.
         parsable_keywords = {'Masses': self.parse_masses,
@@ -119,38 +120,35 @@ class LammpsParser(object):
                         parsable_keywords[keyword](data_lines)
 
     def parse_units(self, line):
-        """
-        """
+        """ """
         assert(len(line) == 2), "Invalid units specified in input file."
         self.unit_set = line[1]
 
     def parse_atom_style(self, line):
         """
-        .. note:: assuming 'full' as default for everything else
+        Note:
+            Assuming 'full' as default for everything else.
         """
         self.atom_style = line[1]
         if len(line) > 2:
             warn("Unsupported atom_style in input file.")
 
     def parse_dimension(self, line):
-        """
-        """
+        """ """
         self.dimension = int(line[1])
         if self.dimension not in [2, 3]:
             raise ValueError("Invalid dimension specified in input file"
                     " (must be 2 or 3).")
 
     def parse_boundary(self, line):
-        """
-        """
+        """ """
         self.boundaries = [line[1], line[2], line[3]]
         if len(self.boundaries) != self.dimension:
             raise ValueError("Boundaries do not match specified dimension "
                     "in input file")
 
     def parse_pair_style(self, line):
-        """
-        """
+        """ """
         self.pair_style = []
         if line[1] == 'hybrid':
             warn("Hybrid pair styles not yet implemented.")
@@ -160,7 +158,8 @@ class LammpsParser(object):
 
     def parse_kspace_style(self, line):
         """
-        .. note:: currently ignored
+        Note:
+            Currently ignored.
         """
         if line[1] == 'pppm':
             pass
@@ -179,8 +178,7 @@ class LammpsParser(object):
             warn("Unsupported pair_modify style in input file!")
 
     def parse_bond_style(self, line):
-        """
-        """
+        """ """
         self.bond_style = []
         if len(line) == 2:
             self.bond_style.append(line[1])
@@ -191,8 +189,7 @@ class LammpsParser(object):
             raise ValueError("Invalid bond_style in input file!")
 
     def parse_angle_style(self, line):
-        """
-        """
+        """ """
         self.angle_style = []
         if len(line) == 2:
             self.angle_style.append(line[1])
@@ -203,8 +200,7 @@ class LammpsParser(object):
             raise ValueError("Invalid angle_style in input file!")
 
     def parse_dihedral_style(self, line):
-        """
-        """
+        """ """
         self.dihedral_style = []
         if len(line) == 2:
             self.dihedral_style.append(line[1])
@@ -219,8 +215,7 @@ class LammpsParser(object):
             raise ValueError("Invalid dihedral_style in input file!")
 
     def parse_improper_style(self, line):
-        """
-        """
+        """ """
         self.improper_style = []
         if len(line) == 2:
             self.improper_style.append(line[1])
@@ -232,8 +227,7 @@ class LammpsParser(object):
             raise ValueError("Invalid improper_style in input file!")
 
     def parse_special_bonds(self, line):
-        """
-        """
+        """ """
         if 'lj/coul' in line:
             System._sys._ljCorrection = float(
                     line[line.index('lj/coul') + 3])
@@ -249,9 +243,11 @@ class LammpsParser(object):
             warn("Unsupported special_bonds in input file.")
 
     def parse_box(self, line, dim):
-        """Read box information from data file
+        """Read box information from data file.
 
-        .. todo:: support for non-orthogonal boxes
+        Args:
+            line (str): Current line in input file.
+            dim (int): Dimension specified in line.
         """
         fields = [float(field) for field in line[:2]]
         box_length = fields[1] - fields[0]
@@ -262,9 +258,7 @@ class LammpsParser(object):
         System._sys.setBoxVector(self.box_vector * self.DIST)
 
     def parse_masses(self, data_lines):
-        """Read masses from data file
-
-        """
+        """Read masses from data file."""
         next(data_lines)  # toss out blank line
         self.mass_dict = dict()
         for line in data_lines:
@@ -274,9 +268,7 @@ class LammpsParser(object):
             self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
-        """Read pair coefficients from data file
-
-        """
+        """Read pair coefficients from data file."""
         next(data_lines)  # toss out blank line
         self.nb_types = dict()
         for line in data_lines:
@@ -294,9 +286,7 @@ class LammpsParser(object):
                 warn("Unsupported pair coeff formatting in data file!")
 
     def parse_bond_coeffs(self, data_lines):
-        """Read bond coefficients from data file
-
-        """
+        """Read bond coefficients from data file."""
         next(data_lines)  # toss out blank line
         self.bond_types = dict()
         for line in data_lines:
@@ -314,9 +304,7 @@ class LammpsParser(object):
                 warn("Unsupported bond coeff formatting in data file!")
 
     def parse_angle_coeffs(self, data_lines):
-        """Read angle coefficients from data file
-
-        """
+        """Read angle coefficients from data file."""
         next(data_lines)  # toss out blank line
         self.angle_types = dict()
         for line in data_lines:
@@ -334,9 +322,7 @@ class LammpsParser(object):
                 warn("Unsupported angle coeff formatting in data file!")
 
     def parse_dihedral_coeffs(self, data_lines):
-        """Read dihedral coefficients from data file
-
-        """
+        """Read dihedral coefficients from data file."""
         next(data_lines)  # toss out blank line
         self.dihedral_types = dict()
         for line in data_lines:
@@ -356,9 +342,7 @@ class LammpsParser(object):
                 warn("Unsupported dihedral coeff formatting in data file!")
 
     def parse_atoms(self, data_lines):
-        """Read atoms from data file
-
-        """
+        """Read atoms from data file."""
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -410,9 +394,7 @@ class LammpsParser(object):
             self.current_mol.addAtom(atom)
 
     def parse_bonds(self, data_lines):
-        """Read bonds from data file
-
-        """
+        """Read bonds from data file."""
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -434,9 +416,7 @@ class LammpsParser(object):
             System._sys._forces.add(new_bond_force)
 
     def parse_angles(self, data_lines):
-        """Read angles from data file
-
-        """
+        """Read angles from data file."""
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -457,9 +437,7 @@ class LammpsParser(object):
             System._sys._forces.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
-        """Read dihedrals from data file
-
-        """
+        """Read dihedrals from data file."""
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -490,10 +468,9 @@ class LammpsParser(object):
     def write(self, data_file, unit_set='real'):
         """Reads a LAMMPS data file.
 
-        :param data_file: name of LAMMPS data file to write to.
-        :type data_file: str.
-        :param unit_set: LAMMPS unit set for output file.
-        :type unit_set: str.
+        Args:
+            data_file (str): Name of LAMMPS data file to write to.
+            unit_set (str): LAMMPS unit set for output file.
         """
         self.RAD = units.radians
         self.DEGREE = units.degrees
