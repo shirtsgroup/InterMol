@@ -64,7 +64,7 @@ class LammpsParser(object):
             self.MOLE = units.mole
         else:
             raise Exception("Unsupported unit set specified in input file: "
-                    "{0}".format(unit_set))
+                    "{0}".format(self.unit_set))
 
     def read_data(self, data_file):
         """Reads a LAMMPS data file.

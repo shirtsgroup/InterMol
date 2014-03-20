@@ -7,8 +7,8 @@ def combine_energy_results(e_in, e_out):
     data = dict()
     for e_type, value in e_in.iteritems():
         if e_type in e_out:
-            data[e_type] = (value, 
-                    e_out[e_type].in_units_of(value.unit), 
+            data[e_type] = (value,
+                    e_out[e_type].in_units_of(value.unit),
                     value - e_out[e_type])
 
     diff = list()
@@ -28,7 +28,7 @@ def print_energy_summary(results):
     for (name, values) in data.iteritems():
         print "%20s %18.8f %18.8f %18.8f" % (name,
                 values[0]._value,  # in
-                values[1]._value,  # out 
+                values[1]._value,  # out
                 values[2]._value)  # diff
 
     print " "

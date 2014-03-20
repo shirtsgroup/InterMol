@@ -1322,10 +1322,7 @@ class GromacsTopologyParser(object):
             sys.exit()
 
     def writeTopology(self, filename):
-        """
-        Write this topology to file
-
-        Write out this topology in Gromacs format
+        """Write this topology in GROMACS file format.
 
         Args:
             filename: the name of the file to write out to
@@ -1347,6 +1344,10 @@ class GromacsTopologyParser(object):
         lines.append('[ atomtypes ]\n')
         lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
         for atomtype in System._sys._atomtypes.itervalues():
+            if atomtype.atomtype.isdigit():
+                atomtype.atomtype = "LMP_" + atomtype.atomtype
+            if atomtype.bondtype.isdigit():
+                atomtype.bondtype = "LMP_" + atomtype.bondtype
             lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                     % (atomtype.atomtype,
                        atomtype.bondtype,
@@ -1371,6 +1372,11 @@ class GromacsTopologyParser(object):
             molecule = moleculeType.moleculeSet[0]
             count = 1
             for atom in molecule._atoms:
+                if atom.atomName.isdigit():
+                    atom.atomName = "LMP_" + atom.atomName
+                if atom._atomtype[0].isdigit():
+                    atom._atomtype[0] = "LMP_" + atom._atomtype[0]
+
                 try:
                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
                             % (count,
