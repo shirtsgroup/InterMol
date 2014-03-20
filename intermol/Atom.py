@@ -6,14 +6,16 @@
 Lee <ctl4f@virginia.edu>
 """
 import intermol.unit as units
-from Converter import *
+
+from Converter import convert_units
+
 
 class Atom(object):
     def __init__(self,
                 atomIndex,
-                atomName = None,
-                residueIndex = -1,
-                residueName = None):
+                atomName=None,
+                residueIndex=-1,
+                residueName=None):
         """Create an Atom object
 
         Args:
@@ -36,7 +38,7 @@ class Atom(object):
                         0 * units.kilojoules_per_mole / units.nanometers,
                         0 * units.kilojoules_per_mole / units.nanometers]
 
-        # These will be added after the ctools is read in and come from [ atomtypes ]
+        # These are added after data is read in and come from [ atomtypes ]
         self._atomtype = dict()
         self.bondtype = None
         self.Z = None
@@ -54,9 +56,9 @@ class Atom(object):
             sigma (float): sigma of the atom
             index (int): index to insert at
         """
-        self._sigma[index] = sigma   
+        self._sigma[index] = sigma
 
-    def getSigma(self, index = None):
+    def getSigma(self, index=None):
         """
         """
         if index:
@@ -72,7 +74,7 @@ class Atom(object):
         """
         self._epsilon[index] = epsilon
 
-    def getEpsilon(self, index = None):
+    def getEpsilon(self, index=None):
         """
         """
         if index:
@@ -89,14 +91,15 @@ class Atom(object):
         """
         self._cgnr[index] = cgnr
 
-    def getCgnr(self, index = None):
+    def getCgnr(self, index=None):
         """Gets the Cgnr
 
         Args:
             index (int): the index to retrieve, defaults to None
 
         Returns:
-            cngr (dict, int): returns the index or the dictionary depending on if index is set
+            cngr (dict, int): returns the index or the dictionary depending
+                              on if index is set
         """
         if index:
             return self._cgnr[index]
@@ -118,7 +121,8 @@ class Atom(object):
             index (str): the value corresponding with type precedence (A Type, B Type)
 
         Returns:
-            atomtype (list, str): Returns the atomtype list or the value at index if index is specified
+            atomtype (list, str): Returns the atomtype list or the value at
+                                  index if index is specified
         """
         if index:
             return self._atomtype[index]
@@ -174,7 +178,7 @@ class Atom(object):
         Args:
             fx (float): x force
             fy (float): y force
-            fz (float): z force 
+            fz (float): z force
         """
         unit = units.kilojoules_per_mole * units.nanometers**(-1)
         fx = convert_units(fx, unit)
@@ -200,7 +204,7 @@ class Atom(object):
         unit = units.amu
         self._mass[index] = convert_units(mass, unit)
 
-    def getMass(self, index = None):
+    def getMass(self, index=None):
         """Gets the mass of the atom
 
         Returns:
@@ -221,7 +225,7 @@ class Atom(object):
         unit = units.elementary_charge
         self._charge[index] = convert_units(charge, unit)
 
-    def getCharge(self, index = None):
+    def getCharge(self, index=None):
         """Gets the charge of the atom
 
         Args:
@@ -235,21 +239,13 @@ class Atom(object):
         return self._charge
 
     def __repr__(self):
-        """
-        """
-        return ('Atom(' + str(self.atomIndex) + ", " +  str(self.atomName) + ")")
+        return 'Atom({0}, {1})'.format(self.atomIndex, self.atomName)
 
     def __cmp__(self, other):
-        """
-        """
         return self.atomIndex - other.atomIndex
 
     def __eq__(self, other):
-        """
-        """
         return self.atomIndex == other.atomIndex
 
     def __hash__(self):
-        """
-        """
         return hash(self.atomIndex)

@@ -1,37 +1,33 @@
 import intermol.unit as units
 
-#=============================================================================================
+#=============================================================================
 # EXCEPTIONS
-#=============================================================================================
+#=============================================================================
+
 
 class UnitsException(Exception):
-    """
-    Exception denoting that an argument has the incorrect units.
-
-    """
+    """Exception denoting that an argument has the incorrect units."""
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return repr(self.value)
+
 
 class ValueException(Exception):
-    """
-    Exception denoting that an argument has the incorrect value.
-
-    """
+    """Exception denoting that an argument has the incorrect value."""
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return repr(self.value)
 
-#=============================================================================================
-# DECORATORS
-#=============================================================================================
+#=============================================================================
+# DECORATOR
+#=============================================================================
+
 
 #TODO: Do we need to use 'from functools import wraps' to help us here?
-
 def accepts(*types):
     """
     Decorator for class methods that should accept only specified types.
@@ -44,17 +40,22 @@ def accepts(*types):
 
     """
     def check_accepts(f):
-        nargs = (f.func_code.co_argcount - 1) # exclude self
-        assert len(types) == nargs, "incorrect number of args supplied in @accepts decorator for class method %s" % (f.func_name)
+        nargs = (f.func_code.co_argcount - 1)  # exclude self
+        assert len(types) == nargs, ("Incorrect number of args supplied in "
+                "@accepts decorator for class method %s" % (f.func_name))
+
         def new_f(*args, **kwds):
             for (a, t) in zip(args[1:], types):
                 if a is not None:
-                    assert isinstance(a, t), "arg %r does not match %s" % (a,t)
+                    assert isinstance(a, t), "arg %r does not match %s" % (a, t)
             return f(*args, **kwds)
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
+
+        new_f.func_name = f.func_name  # copy function name
+        new_f.func_doc = f.func_doc  # copy docstring
         return new_f
+
     return check_accepts
+
 
 def accepts_compatible_units(*units):
     """

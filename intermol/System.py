@@ -2,18 +2,21 @@
 .. module:: System
     :platform: UNIX
 """
-
+from collections import OrderedDict
 import numpy as np
-from intermol.OrderedDict import OrderedDict
-from intermol.Converter import *
+
 from intermol.MoleculeType import MoleculeType
 from intermol.OrderedSet import OrderedSet
 from intermol.HashMap import HashMap
 
+
 class System(object):
     _sys = None
-    def __init__(self, name = None):
-        """Initialize a new System object. This must be run before the system can be used.
+
+    def __init__(self, name=None):
+        """Initialize a new System object.
+
+        This must be run before the system can be used.
 
         Args:
             name (str): The name of the system
@@ -27,14 +30,13 @@ class System(object):
 
         self._nbFunc = 0
         self._combinationRule = 0
-        self._genpairs = 'yes' 
+        self._genpairs = 'yes'
         self._ljCorrection = 0
         self._coulombCorrection = 0
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._forces = OrderedSet()
-        self._boxVector = np.zeros([3,3])
-
+        self._boxVector = np.zeros([3, 3])
 
     def addMolecule(self, molecule):
         """Append a molecule into the System.
@@ -42,8 +44,10 @@ class System(object):
         Args:
             molecule (Molecule): The molecule object to be appended
         """
-        # if key is in the dictionary, return its value. If not, insert key with a value of default and return default.
-        self._molecules.setdefault(molecule.name,MoleculeType(molecule.name)).addMolecule(molecule)
+        # If key is in the dictionary, return its value.
+        # If not, insert key with a value of default and return default.
+        self._molecules.setdefault(molecule.name,
+                MoleculeType(molecule.name)).addMolecule(molecule)
 
     def removeMoleculeType(self, molecule):
         """Remove a molecule from the System.
@@ -58,9 +62,11 @@ class System(object):
         """
         return self._boxVector
 
-
     def setBoxVector(self, v):
-        """Sets the boxvector for the system. Assumes the box vector is in the correct form. [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
+        """Sets the boxvector for the system.
+
+        Assumes the box vector is in the correct form:
+            [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
         """
         self._boxVector = v
 
