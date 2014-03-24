@@ -143,12 +143,12 @@ class Atom(object):
         self._position = [x, y, z]
 
     def getPosition(self):
-        """Gets the position fo the atom
+        """Gets the position for the atom
 
         Returns:
             Tuple [x, y, z]
         """
-        return self.position
+        return self._position
 
     def setVelocity(self, vx, vy, vz):
         """Sets the velocity of the atom
