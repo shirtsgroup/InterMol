@@ -15,7 +15,7 @@ def ConvertDihedralFromRBToOPLS(c0,c1,c2,c3,c4,c5,c6):
 
 def ConvertDihedralFromOPLSToRB(f1,f2,f3,f4):
 
-    % Note: c1 and c3 are the negative of what is defined on equation 4.64 of Gromacs Manual 4.6.1
+    # Note: c1 and c3 are the negative of what is defined on equation 4.64 of Gromacs Manual 4.6.1
     c0 = f2 + 0.5*(f1+f3)
     c1 = 0.5 * (f1 - 3.0 * f3)
     c2 = -f2 + 4.0 * f4
