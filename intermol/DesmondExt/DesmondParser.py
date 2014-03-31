@@ -552,9 +552,16 @@ class DesmondParser():
 
                         elif (re.match(split[5], "OPLS_PROPER", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE)):
                             try:
-                                # as far as I can tell, Desmond the inner four terms to define the four opls dihedral
-                                # terms, and the others are set to zero.
-                                c0,c1,c2,c3,c4,c5,c6 = ConvertFromOPLSToRBDihedral(float(split[7]),float(split[8]),
+                                # Internal desmond formatting for OPLS_PROPER
+                                #
+                                # r_ffio_c0 = f0 (always 0)  split(6)
+                                # r_ffio_c1 = f1             split(7)
+                                # r_ffio_c2 = f2             split(8)
+                                # r_ffio_c3 = f3             split(9)
+                                # r_ffio_c4 = f4             split(10)
+                                # r_ffio_c5 = f5 (always 0)  split(11)
+                                # r_ffio_c6 = f6 (always 0)  split(12)
+                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(float(split[7]),float(split[8]),
                                                                                    float(split[9]),float(split[10]))
                             except:
                                 f1=0
@@ -1493,8 +1500,11 @@ class DesmondParser():
                         name = 'Improper_Trig'
                     else:
                         name = 'Proper_Trig'
-                        #MRS: why do we need this hard coded in the next line?   
-                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(dihedral.C0.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C1.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C2.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C3.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C4.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C5.in_units_of(units.kilocalories_per_mole)._value), float(dihedral.C6.in_units_of(units.kilocalories_per_mole)._value)))
+                    # convert to the     
+                    c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromRBToProperTrig(dihedral.C0,dihedral.C1,dihedral.C2,
+                                                                             dihedral.C3,dihedral.C4,dihedral.C5,
+                                                                             dihedral.C6)
+                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(c0.in_units_of(units.kilocalories_per_mole)._value), float(c1.in_units_of(units.kilocalories_per_mole)._value), float(c2.in_units_of(units.kilocalories_per_mole)._value), float(c3.in_units_of(units.kilocalories_per_mole)._value), float(c4.in_units_of(units.kilocalories_per_mole)._value), float(c5.in_units_of(units.kilocalories_per_mole)._value), float(c6.in_units_of(units.kilocalories_per_mole)._value)))
                 else:
                     print "ERROR (writeFile): found unsupported dihedral"
                 i+=1

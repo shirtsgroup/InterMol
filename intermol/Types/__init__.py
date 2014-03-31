@@ -69,5 +69,7 @@ from ImproperDihedral2Type import ImproperDihedral2Type
 from ImproperDihedral4Type import ImproperDihedral4Type
 from ProperDihedral9Type import ProperDihedral9Type
 
-from ConvertOPLS import ConvertFromRBToOPLSDihedral
-from ConvertOPLS import ConvertFromOPLSToRBDihedral
+from ConvertDihedrals import ConvertDihedralFromRBToOPLS
+from ConvertDihedrals import ConvertDihedralFromOPLSToRB
+from ConvertDihedrals import ConvertDihedralFromRBToProperTrig
+from ConvertDihedrals import ConvertDihedralFromProperTrigToRB
