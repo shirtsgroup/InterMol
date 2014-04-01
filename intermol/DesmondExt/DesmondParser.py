@@ -498,12 +498,17 @@ class DesmondParser():
                                                    split[6],
                                                    split[7])
 
-                        #RB Dihedral (Assume for Improper trig and Proper trig for now)
-                        elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): 
+                        #RB Dihedral (Assume for Improper_trig and Proper_trig for now)
+                        elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE) or re.match(split[5],"IMPROPER_TRIG", re.IGNORECASE) or re.match(split[5], "DIHEDRAL_TRIG", re.IGNORECASE):
+                            # currently, I can't see a difference in Proper_trig and improper_trig angles.
                             try:
-                                # we might be missing an offset angle here?
-                                # will have to think carefully how to include if so.
-                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromProperTrigToRB(float(split[7]),float(split[8]),
+                                if float(split[6]) == 0:
+                                    sign = 1
+                                elif float(split[6]) == 180:
+                                    sign = -1
+                                else:
+                                    print("Currently, can't handle a phase angle that is not 0 or 180 in %s" % (split[5]))
+                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromProperTrigToRB(sign,float(split[7]),float(split[8]),
                                                                                          float(split[9]),float(split[10]),
                                                                                          float(split[11]),float(split[12]),
                                                                                          float(split[13]))
@@ -516,6 +521,7 @@ class DesmondParser():
                                 c5 = 0
                                 c6 = 0
                                 # do some additional error handling here?
+                                pdb.set_trace()
                                 print "ERROR (readFile): PROPER_TRIG terms not found"
                             try:    
                                 newDihedralForce = RBDihedral(int(split[1]),
@@ -541,32 +547,6 @@ class DesmondParser():
                                                    c4,
                                                    c5,
                                                    c6)
-                        elif re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE):
-                            try:
-                                newDihedralForce = RBDihedral(int(split[1]),
-                                                   int(split[2]),
-                                                   int(split[3]),
-                                                   int(split[4]),
-                                                   float(split[6]) * units.kilocalorie_per_mole,
-                                                   float(split[7]) * units.kilocalorie_per_mole,
-                                                   float(split[8]) * units.kilocalorie_per_mole,
-                                                   float(split[9]) * units.kilocalorie_per_mole,
-                                                   float(split[10]) * units.kilocalorie_per_mole,
-                                                   float(split[11]) * units.kilocalorie_per_mole,
-                                                   float(split[12]) * units.kilocalorie_per_mole)
-                            except:
-                                newDihedralForce = RBDihedral(int(split[1]),
-                                                   int(split[2]),
-                                                   int(split[3]),
-                                                   int(split[4]),
-                                                   float(split[6]),
-                                                   float(split[7]),
-                                                   float(split[8]),
-                                                   float(split[9]),
-                                                   float(split[10]),
-                                                   float(split[11]),
-                                                   float(split[12]))
-
                         elif (re.match(split[5], "OPLS_PROPER", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE)):
                             try:
                                 # Internal desmond formatting for OPLS_PROPER
@@ -1488,7 +1468,10 @@ class DesmondParser():
             hlines.append("      s_ffio_funct\n")
 
             i = 1
-            for dihedral in moleculetype.dihedralForceSet.itervalues():
+            # sorting for now to make it easier to debug
+            #for dihedral in moleculetype.dihedralForceSet.itervalues():
+            dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
+            for dihedral in dihedrallist:
                 if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
                     if i == 1:
                         hlines.append("      r_ffio_c0\n")

@@ -6,7 +6,7 @@ def ConvertDihedralFromRBToOPLS(c0,c1,c2,c3,c4,c5,c6):
         print " (should be 0) and c1+c2+c3+c4 = ",c1+c2+c3+c4,
         print " (should be 0)"
         # REALLY SHOULD ADD SOME SORT OF EXCEPTION HERE.
-    # note - f1 and f3 are opposite sign as expected in DESMOND -- see below notes.    
+    # note - f1 and f3 are opposite sign as expected in GROMACS, probably because of angle conventions.
     f1 = 2.0 * c1 + 3.0 * c3 / 2.0
     f2 = -c2 - c4
     f3 = c3 / 2.0
@@ -25,10 +25,17 @@ def ConvertDihedralFromOPLSToRB(f1,f2,f3,f4):
     c6 = 0.0
     return c0, c1, c2, c3, c4, c5, c6
 
-def ConvertDihedralFromProperTrigToRB(f0,f1,f2,f3,f4,f5,f6):
+def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):
 
+    # sign is -1 or 1
     # RB is \sum_n=0^6 cos(x)^n
     # ProperTrig is f_0 + \sum_n=1^6 cos(nx-phi)
+    # we restrict to phi = 0 or 180 (might need to generalize later), so we can write as 
+    #               f_0 + \sum_n=1^6 cos(nx)cos(phi) + sin(nx)sin(phi)
+    #               f_0 + \sum_n=1^6 cos(nx)  (phi = 0)
+    #               f_0 + \sum_n=1^6 -cos(nx)  (phi = 180)
+    # phi corresponds to a sign of -1 on everything but f_0.  Easier to multiply f_0 by sign, and
+    # then multiply by everything by sign at the end. 
     # cos(2x) = 2cos^2(x)-1
     # cos(3x) = 4cos^3(x)-3cos(x)
     # cos(4x) = 8cos^4(X)-8cos^2(x)+1
@@ -46,14 +53,14 @@ def ConvertDihedralFromProperTrigToRB(f0,f1,f2,f3,f4,f5,f6):
     # c5 = 16f5
     # c6 = 32f6
 
-    c0 = f0 - f2 + f4 - f6
+    c0 = sign*f0 - f2 + f4 - f6
     c1 = f1 - 3.0*f3 + 5.0*f5
     c2 = 2.0*f2 - 8.0*f4 + 18.0*f6
     c3 = 4.0*f3 - 20.0*f5
     c4 = 8.0*f4 - 48.0*f6
     c5 = 16.0*f5
     c6 = 32.0*f6
-    return c0, c1, c2, c3, c4, c5, c6
+    return sign*c0, sign*c1, sign*c2, sign*c3, sign*c4, sign*c5, sign*c6
 
 def ConvertDihedralFromRBToProperTrig(c0,c1,c2,c3,c4,c5,c6):
 
