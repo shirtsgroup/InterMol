@@ -499,31 +499,48 @@ class DesmondParser():
                                                    split[7])
 
                         #RB Dihedral (Assume for Improper trig and Proper trig for now)
-                        elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): # ASSUME IT CORRELATE TO RB DIHEDRAL (LAST PARAMETER IS ALWAYS 0)
+                        elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE): 
                             try:
+                                # we might be missing an offset angle here?
+                                # will have to think carefully how to include if so.
+                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromProperTrigToRB(float(split[7]),float(split[8]),
+                                                                                         float(split[9]),float(split[10]),
+                                                                                         float(split[11]),float(split[12]),
+                                                                                         float(split[13]))
+                            except:
+                                c0 = 0
+                                c1 = 0
+                                c2 = 0
+                                c3 = 0
+                                c4 = 0
+                                c5 = 0
+                                c6 = 0
+                                # do some additional error handling here?
+                                print "ERROR (readFile): PROPER_TRIG terms not found"
+                            try:    
                                 newDihedralForce = RBDihedral(int(split[1]),
                                                    int(split[2]),
                                                    int(split[3]),
                                                    int(split[4]),
-                                                   float(split[6]) *  units.kilocalorie_per_mole,
-                                                   float(split[7]) *  units.kilocalorie_per_mole,
-                                                   float(split[8]) *  units.kilocalorie_per_mole,
-                                                   float(split[9]) *  units.kilocalorie_per_mole,
-                                                   float(split[10]) *  units.kilocalorie_per_mole,
-                                                   float(split[11]) *  units.kilocalorie_per_mole,
-                                                   float(split[12]) *  units.kilocalorie_per_mole)
+                                                   c0 * units.kilocalorie_per_mole,
+                                                   c1 * units.kilocalorie_per_mole,
+                                                   c2 * units.kilocalorie_per_mole,
+                                                   c3 * units.kilocalorie_per_mole,
+                                                   c4 * units.kilocalorie_per_mole,
+                                                   c5 * units.kilocalorie_per_mole,
+                                                   c6 * units.kilocalorie_per_mole)
                             except:
                                 newDihedralForce = RBDihedral(int(split[1]),
                                                    int(split[2]),
                                                    int(split[3]),
                                                    int(split[4]),
-                                                   float(split[6]),
-                                                   float(split[7]),
-                                                   float(split[8]),
-                                                   float(split[9]),
-                                                   float(split[10]),
-                                                   float(split[11]),
-                                                   float(split[12]))
+                                                   c0,
+                                                   c1,
+                                                   c2,
+                                                   c3,
+                                                   c4,
+                                                   c5,
+                                                   c6)
                         elif re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE):
                             try:
                                 newDihedralForce = RBDihedral(int(split[1]),
