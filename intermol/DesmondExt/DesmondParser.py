@@ -272,7 +272,8 @@ class DesmondParser():
                     for j in range(ff_number):
                         split = entry_values[j].split()
                         newBondForce = None
-                        if re.match("Harm_constrained", split[3]):
+                        # integrate validation of harm_constrained and constraints better.
+                        if re.match("HARM_CONSTRAINED", split[3], re.IGNORECASE):
                             try:
                                 newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                               atomlist[int(split[2])-1].atomName,
@@ -302,7 +303,7 @@ class DesmondParser():
                                                None,
                                                1)
 
-                        elif re.match("Harm",split[3]):
+                        elif re.match("HARM",split[3], re.IGNORECASE):
                             try:
                                 newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                               atomlist[int(split[2])-1].atomName,
@@ -418,22 +419,8 @@ class DesmondParser():
                     for j in range(ff_number):
                         split = entry_values[j].split()
                         newAngleForce = None
-                        if re.match("Harm", split[4]):
-                            try:
-                                newAngleForce = Angle(int(split[1]),
-                                                int(split[2]),
-                                                int(split[3]),
-                                                float(split[5]) * units.degrees,
-                                                float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
-                                                #0)
-                            except:
-                                newAngleForce = Angle(int(split[1]),
-                                                int(split[2]),
-                                                int(split[3]),
-                                                float(split[5]),
-                                                float(split[6]))
-
-                        elif re.match("Harm_constrained",split[4]):
+                        # todo: integrate constraints and angle constraint description together better.
+                        if re.match("HARM_CONSTRAINED",split[4],re.IGNORECASE):  # this needs to go first because HARM is a substring
                             try:
                                 newAngleForce = Angle(int(split[1]),
                                                 int(split[2]),
@@ -448,6 +435,21 @@ class DesmondParser():
                                                 float(split[5]),
                                                 float(split[6]),
                                                 1)
+                        elif re.match("HARM", split[4],re.IGNORECASE):
+                            try:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]) * units.degrees,
+                                                float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
+                            except:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]),
+                                                float(split[6]))
+
+
                         else:
                             print "ERROR (readFile): found unsupported angle in: ",
                             print lines[i]
