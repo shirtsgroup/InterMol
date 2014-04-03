@@ -8,14 +8,45 @@ import intermol.Driver as Driver
 import evaluate
 
 def parse_args():
-    parser = argparse.ArgumentParser(description = 'testing file conversions')
-    parser.add_argument('-i', '--in', dest='infile', help="input struture/topology .cms file")
-    parser.add_argument('-o', '--out', dest='outfile', help="output structure/topology .cms file")
-    parser.add_argument('--cfg', dest='cfgfile', default='Inputs/Desmond/onepoint.cfg', help="input .cfg file (for DESMOND)")
-    parser.add_argument('-d', dest='despath', default='/opt/schrodinger2013/', help="path for DESMOND binary")
+    parser = argparse.ArgumentParser(description = 'Perform a file conversion')
+
+    # input arguments
+#    subparsers = parser.add_subparsers(help='choose conversion types')
+
+    parser_des_in = parser.add_argument_group('from_desmond', 'conversion from desmond file format')
+    parser_des_in.add_argument('--cms_in', dest='cms_in', help="input .cms file (for DESMOND)")
+    parser_des_in.add_argument('--cfg_in', dest='cfg_in', default='Inputs/Desmond/onepoint.cfg', help="input .cfg file (for DESMOND)")
+
+    parser_gro_in = parser.add_argument_group('from_gromacs', 'conversion from gromacs file format')
+    parser_gro_in.add_argument('--top_in', dest='top_in', help="input .top file (for GROMACS)")
+    parser_gro_in.add_argument('--gro_in', dest='gro_in', help="input .gro file (for GROMACS)")
+
+    parser_lam_in = parser.add_argument_group('from_lammps', 'conversion from lammps file format')
+    parser_lam_in.add_argument('--lmp_in', dest='lmp_in', help="input .lmp file (for LAMMPS)")
+    parser_lam_in.add_argument('--input_in', dest='input_in', help="input .input file (for LAMMPS)")
+
+    parser_des_out = parser.add_argument_group('to_desmond', 'conversion to desmond file format')
+    parser_des_out.add_argument('--cms_out', dest='cms_out', help="output .cms file (for DESMOND)")
+
+    parser_gro_out = parser.add_argument_group('to_gromacs', 'conversion to gromacs file format')
+    parser_gro_out.add_argument('--top_out', dest='top_out', help="output .top file (for GROMACS)")
+    parser_gro_out.add_argument('--gro_out', dest='gro_out', help="output .gro file (for GROMACS)")
+
+    parser_lam_out = parser.add_argument_group('to_lammps', 'conversion to lammps file format')
+    parser_lam_out.add_argument('--lmp_out', dest='lmp_out', help="output .lmp file (for LAMMPS)")
+
+
+#    parser.add_argument('-f', '--from', dest='from', choices=['desmond','gromacs','lammps'])
+#    parser.add_argument('-i', '--in', dest='infile', nargs='+', help="input file name")
+#    parser.add_argument('-t', '--to', dest='to', choices=['desmond','gromacs','lammps'])
+#    parser.add_argument('-o', '--out', dest='outfile', nargs='+', help="output file name")
+
+    # other
     parser.add_argument('-e', dest='energy', action="store_true", help="evaluate energies",default=False)
-    args = parser.parse_args()
-    return args
+    # is this argument needed? gromacs/lammps path missing right now
+    parser.add_argument('-d', dest='despath', default='/opt/schrodinger2013/', help="path for DESMOND binary")
+
+    return parser.parse_args()
 
 def main():
     args = parse_args()
@@ -25,9 +56,10 @@ def main():
 	    raise Exception("File not found: {0}!".format(args.infile))
     outdir = os.path.dirname(args.outfile)
     if not os.path.exists(outdir):
-	    raise Exception("Output directory not found: {0}!".format(outdir))
+        raise Exception("Output directory not found: {0}!".format(outdir))
 
-    # perform conversion
+
+    # perform conversion - only DtoD for now....
     try:
         print 'Performing InterMol conversion:'
         print '    From: {0}'.format(args.infile)
@@ -35,7 +67,9 @@ def main():
 
         name = 'system'
         Driver.initSystem(name) # what does this name do?
+
         Driver.load(args.infile)
+
         Driver.write(args.outfile)
     except:
         print 'Failed at InterMol conversion'
