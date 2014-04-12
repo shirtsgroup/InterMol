@@ -27,6 +27,27 @@ def get_desmond_energy_from_file(energy_file):
                 break
     return tot_energy
 
+def get_gromacs_energy_from_file(energy_file):
+    # extract g_energy output and parse initial energies
+    with open(energy_file) as f:
+        all_lines = f.readlines()
+
+    # take last line
+    sec_last = all_lines[-1].split()[1:]
+    data = map(float, sec_last)
+
+    # give everything units
+    temp = data[-1] * units.kelvin
+    data = [value * units.kilojoules_per_mole for value in data[:-1]]
+    data.append(temp)
+
+    # pack it all up in a dictionary
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
+            'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
+            'Kinetic En.', 'Total Energy', 'Temperature']
+    e_out = dict(zip(types, data))
+    return e_out
+ 
 def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
     """
     Evalutes energies of DESMOND files
@@ -72,80 +93,59 @@ def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
 #--------GROMACS energy evaluation methods---------#
 # to do: clean up
 
-def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff=''):
-    """
+def gromacs_energies(top, gro, mdp, gropath, grosuff):
+     """
 
     gropath = path to gromacs binaries
     grosuff = suffix of gromacs binaries, usually '' or '_d'
 
     """
-    mdp = 'Inputs/Gromacs/grompp.mdp'
+    direc, _  =  os.path.split(top) # intermediate and energy files will be in the same directory as .top file
 
-    if in_out == 'in':
-        base = 'Inputs/Gromacs'
-        if top == None:
-            top = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            gro = os.path.join(base, name, 'conf.gro')
-    elif in_out == 'GtoG':
-        base = 'Outputs/GromacsToGromacs'
-        if top == None:
-            base = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            base = os.path.join(base, name, 'conf.gro')
-    elif in_out == 'LtoG':
-        base = 'Outputs/LammpsToGromacs'
-        if top == None:
-            base = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            base = os.path.join(base, name, 'conf.gro')
-    else:
-        raise Exception("Unknown flag: {0}".format(in_out))
-
-    tpr  = os.path.join(base, name, 'topol.tpr')
-    ener  = os.path.join(base, name, 'ener.edr')
-    ener_xvg  = os.path.join(base, name, 'energy.xvg')
-    conf  = os.path.join(base, name, 'confout.gro')
-    mdout = os.path.join(base, name, 'mdout.mdp')
-    state  = os.path.join(base, name, 'state.cpt')
-    traj  = os.path.join(base, name, 'traj.trr')
-    log  = os.path.join(base, name, 'md.log')
+    tpr = os.path.join(direc, 'topol.tpr')
+    ener = os.path.join(direc, 'ener.edr')
+    ener_xvg = os.path.join(direc, 'energy.xvg')
+    conf = os.path.join(direc, 'confout.gro')
+    mdout = os.path.join(direc, 'mdout.mdp')
+    state = os.path.join(direc, 'state.cpt')
+    traj = os.path.join(direc, 'traj.trr')
+    log = os.path.join(direc, 'md.log')
 
     grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
     mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(mdp=mdp,
-            top=top, gro=gro, tpr=tpr, mdout=mdout))
+    cmd = "{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(grompp_bin=grompp_bin,
+            mdp=mdp, top=top, gro=gro, tpr=tpr, mdout=mdout)
+    print 'Running GROMACS with command'
+    print cmd
+    exit = os.system(cmd)
+    if exit:
+        print 'Failed at evaluating energy of {0}'.format(top)
+        sys.exit(1)
+
 
     # mdrunin'
-    os.system(mdrun_bin + " -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(tpr=tpr,
-            traj=traj, state=state, conf=conf, ener=ener, log=log))
+    cmd = "{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(mdrun_bin=mdrun_bin
+            tpr=tpr, traj=traj, state=state, conf=conf, ener=ener, log=log)
+    print cmd
+    exit = os.system(cmd)
+    if exit:
+        print 'Failed at evaluating energy of {0}'.format(top)
+        sys.exit(1)
 
     # energizin'
     select = " ".join(map(str, range(1, 15))) + " 0 "
-    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_xvg} -dp".format(ener=ener,
-            ener_xvg=ener_xvg))
+    cmd = "echo {select} | {genergy_bin} -f {ener} -o {ener_xvg} -dp".format(select=select, genergy_bin=genergy_bin,
+            ener=ener,ener_xvg=ener_xvg)
+    print cmd
+    exit = os.system(cmd)
+    if exit:
+        print 'Failed at evaluating energy of {0}'.format(top)
+        sys.exit(1)
 
-    # extract g_energy output and parse initial energies
-    with open(ener_xvg) as f:
-        all_lines = f.readlines()
-
-    # take last line
-    sec_last = all_lines[-1].split()[1:]
-    data = map(float, sec_last)
-
-    # give everything units
-    temp = data[-1] * units.kelvin
-    data = [value * units.kilojoules_per_mole for value in data[:-1]]
-    data.append(temp)
-
-    # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
-            'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
-            'Kinetic En.', 'Total Energy', 'Temperature']
-    e_out = dict(zip(types, data))
+    e_out = get_gromacs_energy_from_file(ener_xvg)
     return e_out
 
 #--------LAMMPS energy evaluation methods---------#
@@ -169,7 +169,7 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
         raise Exception("Unknown flag: {0}".format(in_out))
 
     lmpbin = os.path.join(lmppath, lmpbin)
-    sim_dir = os.path.join(base, name)
+    sim_dir = os.path.join( direc)
     log = os.path.join(sim_dir, 'log.lammps')
 
     # mdrunin'
