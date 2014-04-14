@@ -8,9 +8,18 @@ import subprocess
 
 #--------DESMOND energy evaluation methods---------#
 def parse_args():
-    parser = argparse.ArgumentParser(description = 'testing file conversions')
-    parser.add_argument('-i', '--in', dest='infile', help="input struture/topology .cms file")
-    parser.add_argument('--cfg', dest='cfgfile', default='Inputs/Desmond/onepoint.cfg', help="input .cfg file (for DESMOND)")
+    parser = argparse.ArgumentParser(description = 'Evaluate energy of file')
+    group_in = parser.add_argument_group('Choose input format')
+    group_in.add_argument('--des_in', nargs=1, metavar='file', help='.cms file for conversion from DESMOND file format')
+    group_in.add_argument('--gro_in', nargs=2, metavar='file', help='.gro and .top file for conversion from GROMACS file format')
+    group_in.add_argument('--lmp_in', nargs=1, metavar='file', help='.lmp file for conversion from LAMMPS file format')
+
+    group_misc = parser.add_argument_group('Other optional arguments')
+    group_misc.add_argument('--cfg', default='Inputs/Desmond/onepoint.cfg', help="input .cfg file (for DESMOND)")
+    group_misc.add_argument('--mdp', default='Inputs/Gromacs/grompp.mdp', help="input .mdp file (for GROMACS)")
+    group_misc.add_argument('-d', '--despath', dest='despath', metavar='path', default='', help='path for DESMOND binary, needed for energy evaluation')
+    group_misc.add_argument('-g', '--gropath', dest='gropath', metavar='path', default='', help='path for GROMACS binary, needed for energy evaluation')
+    group_misc.add_argument('-l', '--lmppath', dest='lmppath', metavar='path', default='', help='path for LAMMPS binary, needed for energy evaluation')
     # to do: add arguments for other file types
     args = parser.parse_args()
     return args
@@ -48,7 +57,7 @@ def get_gromacs_energy_from_file(energy_file):
     e_out = dict(zip(types, data))
     return e_out
  
-def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
+def desmond_energies(cms, cfg, despath):
     """
     Evalutes energies of DESMOND files
     Args:
@@ -63,6 +72,7 @@ def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
     cwd = os.getcwd()
     name = 'system'
     energy_file = '%s/%s.enegrp.dat' % (direc, name)
+    desmond_bin = os.path.join(despath,'desmond')
 
     # first see if the file already exists
     if os.path.exists(energy_file):
@@ -76,7 +86,7 @@ def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
     os.chdir(direc)   
     if os.path.exists('trj'):
         shutil.rmtree('trj')
-    cmd = '{despath}/desmond -WAIT -P 1 -in {cms} -JOBNAME {name} -c {cfg}'.format(despath = despath, name = name, cms = cms, cfg = cfg)
+    cmd = '{desmond_bin} -WAIT -P 1 -in {cms} -JOBNAME {name} -c {cfg}'.format(desmond_bin=desmond_bin, name=name, cms=cms, cfg=cfg)
     print 'Running DESMOND with command'
     print cmd
     exit = os.system(cmd)
@@ -94,7 +104,7 @@ def desmond_energies(cms, cfg, despath='/opt/schrodinger2013'):
 # to do: clean up
 
 def gromacs_energies(top, gro, mdp, gropath, grosuff):
-     """
+    """
 
     gropath = path to gromacs binaries
     grosuff = suffix of gromacs binaries, usually '' or '_d'
@@ -127,7 +137,7 @@ def gromacs_energies(top, gro, mdp, gropath, grosuff):
 
 
     # mdrunin'
-    cmd = "{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(mdrun_bin=mdrun_bin
+    cmd = "{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(mdrun_bin=mdrun_bin,
             tpr=tpr, traj=traj, state=state, conf=conf, ener=ener, log=log)
     print cmd
     exit = os.system(cmd)
@@ -146,12 +156,13 @@ def gromacs_energies(top, gro, mdp, gropath, grosuff):
         sys.exit(1)
 
     e_out = get_gromacs_energy_from_file(ener_xvg)
-    return e_out
+    return e_out, ener_xvg
 
 #--------LAMMPS energy evaluation methods---------#
 #to do: clean up
 
-def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
+def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi',
+        verbose=False):
     """Evaluate energies of LAMMPS files
 
     Args:
@@ -169,13 +180,16 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
         raise Exception("Unknown flag: {0}".format(in_out))
 
     lmpbin = os.path.join(lmppath, lmpbin)
-    sim_dir = os.path.join( direc)
+    sim_dir = os.path.join(base, name)
     log = os.path.join(sim_dir, 'log.lammps')
 
     # mdrunin'
     saved_path = os.getcwd()
     os.chdir(sim_dir)
-    run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
+    if verbose:
+        run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
+    else:
+        run_lammps = "{lmpbin} < data.input > /dev/null".format(lmpbin=lmpbin)
     #run_lammps = "{lmpbin} < input_file.out".format(lmpbin=lmpbin)
     os.system(run_lammps)
     os.chdir(saved_path)
@@ -200,9 +214,20 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi'):
 
 def main():
     args = parse_args()
-    energy, energy_file = desmond_energies(args.infile, args.cfgfile)
-    print 'Total energy from %s:' % energy_file
-    print energy
+    if args.des_in:
+        energy, energy_file = desmond_energies(args.des_in[0], args.cfg, args.despath)
+        print 'Total energy from %s:' % energy_file
+        print energy
+    elif args.gro_in:
+        top = [x for x in args.gro_in if x.endswith('.top')] # filter out the top
+        gro = [x for x in args.gro_in if x.endswith('.gro')] # filter out the gro
+        e_out, energy_file = gromacs_energies(top[0], gro[0], args.mdp, args.gropath, '')
+        print 'Energy from %s:' % energy_file
+        print e_out
+    elif args.lmp_in:
+        pass
+    else:
+        print 'no file given'
     
 if __name__ == '__main__':
     main()

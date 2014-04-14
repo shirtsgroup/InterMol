@@ -84,29 +84,56 @@ def main():
     Driver.load(*files)
 
     # output
-    oname = args.oname
-    if not args.oname:
+    if not args.oname: # default is to append _converted to the input prefix
         oname = '%s_converted' % prefix
+    else:
+        oname = args.oname
+    oname = '%s/%s' %(args.odir, oname) # prepend output directory to oname
     if args.desmond:
-        outfile = '%s/%s.cms' % ( args.odir, oname)
-        print 'Converting to Desmond...writing %s...' % outfile
-        Driver.write(outfile)
+        print 'Converting to Desmond...writing %s.cms...' % oname
+        Driver.write('%s.cms' % oname)
     if args.gromacs:
-        print 'Converting to Gromacs...writing %s/%s.gro, %s/%s.top...' % (args.odir, oname, args.odir, oname)
-        Driver.write('%s/%s.gro' % (args.odir, oname))
-        Driver.write('%s/%s.top' % (args.odir, oname))
+        print 'Converting to Gromacs...writing %s.gro, %s.top...' % (oname, oname)
+        Driver.write('%s.gro' % oname)
+        Driver.write('%s.top' % oname)
     if args.lammps:
-        print 'Converting to Lammps...writing %s/%s.lmp...' % (args.odir, oname)
-        Driver.write('%s/%s.lmp' % (args.odir, oname))
+        print 'Converting to Lammps...writing %s.lmp...' % oname
+        Driver.write('%s.lmp' % oname)
     
-    # calc input energies -- only desmond for now
+    # calculate energy of input and output files to compare
+    # to do: remove hardcoded parmeter filenames
+    #        add lammps
+    #        format printing of energy dictionary
     if args.energy:
-        e_in, e_infile = evaluate.desmond_energies(args.des_in[0], 'Inputs/Desmond/onepoint.cfg')
-        print 'Total energy from %s:' % e_infile
-        print e_in
-        e_out, e_outfile = evaluate.desmond_energies(outfile, 'Inputs/Desmond/onepoint.cfg')    
-        print 'Total energy from %s:' % e_outfile
-        print e_out
+        # input
+        if args.des_in:
+            e_in, e_infile = evaluate.desmond_energies(args.des_in[0], 'Inputs/Desmond/onepoint.cfg', args.despath)
+            print 'Total energy from %s:' % e_infile
+            print e_in
+        elif args.gro_in:
+            top = [x for x in args.gro_in if x.endswith('.top')]
+            gro = [x for x in args.gro_in if x.endswith('.gro')]
+            e_in, e_infile = evaluate.gromacs_energies(top[0], gro[0], 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+            print 'Total energy from %s:' % e_infile
+            print e_in
+        elif args.lmp_in:
+            pass
+        else:
+            pass # should never reach here
+        
+        # output
+        if args.desmond:
+            e_out, e_outfile = evaluate.desmond_energies('%s.cms' % oname, 'Inputs/Desmond/onepoint.cfg', args.despath) 
+            print 'Total energy from %s:' % e_outfile
+            print e_out
+        if args.gromacs:
+            e_out, e_outfile = evaluate.gromacs_energies('%s.top' % oname, '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')   
+            print 'Total energy from %s:' % e_outfile
+            print e_out
+        if args.lammps:
+            pass
+
+
 
 if __name__ == '__main__':
     main()
