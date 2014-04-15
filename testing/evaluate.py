@@ -27,14 +27,20 @@ def parse_args():
 def get_desmond_energy_from_file(energy_file):
     ''' 
     parses the desmond energy file
-    for now, returns just the total energy
     '''
     with open(energy_file, 'r') as f:
+        data = []
+        types = []
         for line in f:
-            if 'Total' in line:
-                tot_energy = line.split()[-1]
-                break
-    return tot_energy
+            if '(0.000000)' in line:
+                words = line.split()
+                if words[-1] == 'total':
+                    continue
+                types.append(words[0])
+                data.append(words[-1])
+    data = [float(value) * units.kilocalories_per_mole for value in data]
+    e_out = dict(zip(types, data))
+    return e_out
 
 def get_gromacs_energy_from_file(energy_file):
     # extract g_energy output and parse initial energies
