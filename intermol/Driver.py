@@ -24,6 +24,7 @@ def load(*files):
 
         extension = splitext(filename)[1].lower()
 
+        # TODO: remove reliance on all extensions
         if extension == '.gro':
             import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
             print "Reading in Gromacs structure '{0}'...".format(filename)
@@ -46,6 +47,7 @@ def load(*files):
             print "Sructure loaded\n"
 
         elif extension == '.lmp':
+            # TODO: remove reliance on matching .input file
             input_name = splitext(filename)[0] + '.input'
             from intermol.lammps_extension.lammps_parser import LammpsParser
             print "Reading LAMMPS data & input files..."

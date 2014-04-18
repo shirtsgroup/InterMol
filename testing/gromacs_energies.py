@@ -3,61 +3,57 @@ import pdb
 
 import intermol.unit as units
 
-def gromacs_energies(name, top=None, gro=None, in_out='in', gropath='',grosuff=''):
+def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     """
 
     gropath = path to gromacs binaries
     grosuff = suffix of gromacs binaries, usually '' or '_d'
 
     """
-    mdp = 'Inputs/Gromacs/grompp.mdp'
+    directory, _ = os.path.split(top)
 
-    if in_out == 'in':
-        base = 'Inputs/Gromacs'
-        if top == None:
-            top = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            gro = os.path.join(base, name, 'conf.gro')
-    elif in_out == 'GtoG':
-        base = 'Outputs/GromacsToGromacs'
-        if top == None:
-            base = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            base = os.path.join(base, name, 'conf.gro')
-    elif in_out == 'LtoG':
-        base = 'Outputs/LammpsToGromacs'
-        if top == None:
-            base = os.path.join(base, name, 'topol.top')
-        if gro == None:
-            base = os.path.join(base, name, 'conf.gro')
-    else:
-        raise Exception("Unknown flag: {0}".format(in_out))
-
-    tpr  = os.path.join(base, name, 'topol.tpr')
-    ener  = os.path.join(base, name, 'ener.edr')
-    ener_xvg  = os.path.join(base, name, 'energy.xvg')
-    conf  = os.path.join(base, name, 'confout.gro')
-    mdout = os.path.join(base, name, 'mdout.mdp')
-    state  = os.path.join(base, name, 'state.cpt')
-    traj  = os.path.join(base, name, 'traj.trr')
-    log  = os.path.join(base, name, 'md.log')
+    tpr  = os.path.join(directory , 'topol.tpr')
+    ener  = os.path.join(directory , 'ener.edr')
+    ener_xvg  = os.path.join(directory , 'energy.xvg')
+    conf  = os.path.join(directory , 'confout.gro')
+    mdout = os.path.join(directory , 'mdout.mdp')
+    state  = os.path.join(directory , 'state.cpt')
+    traj  = os.path.join(directory , 'traj.trr')
+    log  = os.path.join(directory , 'md.log')
 
     grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
     mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    os.system(grompp_bin + " -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(mdp=mdp,
-            top=top, gro=gro, tpr=tpr, mdout=mdout))
+    cmd = ("{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} "
+            + "-maxwarn 1".format(grompp_bin=grompp_bin, mdp=mdp,
+            top=top, gro=gro, tpr=tpr, mdout=mdout)))
+    print 'Running GROMACS with command:'
+    print cmd
+    exit = os.system(cmd)
+    if exit:
+        print 'grompp failed for {0}'.format(top)
+        sys.exit(1)
 
     # mdrunin'
-    os.system(mdrun_bin + " -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(tpr=tpr,
+    cmd = ("{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} "
+            + "-g {log}".format(mdrun_bin=mdrun_bin, tpr=tpr,
             traj=traj, state=state, conf=conf, ener=ener, log=log))
+    print cmd
+    exit = os.system(cmd)
+    if exit:
+        print 'mdrun failed for {0}'.format(top)
+        sys.exit(1)
 
     # energizin'
-    select = " ".join(map(str, range(1, 15))) + " 0 "
-    os.system("echo {select} | ".format(select=select) + genergy_bin + " -f {ener} -o {ener_xvg} -dp".format(ener=ener,
-            ener_xvg=ener_xvg))
+    select = " ".join(map(str, range(1, 20))) + " 0 "
+    cmd = ("echo {select} | ".format(select=select)
+           + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
+            genergy_bin=ener=ener, ener_xvg=ener_xvg))
+    if exit:
+        print 'g_energy failed for {0}'.format(top)
+        sys.exit(1)
 
     # extract g_energy output and parse initial energies
     with open(ener_xvg) as f:
