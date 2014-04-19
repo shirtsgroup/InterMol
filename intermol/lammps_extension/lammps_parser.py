@@ -451,7 +451,7 @@ class LammpsParser(object):
                           self.dihedral_types[int(fields[1])][1],
                           self.dihedral_types[int(fields[1])][2],
                           self.dihedral_types[int(fields[1])][3]]
-                    Cs_temp = ConvertFromOPLSToRBDihedral(
+                    Cs_temp = ConvertDihedralFromOPLSToRB(
                             Fs[0]._value,
                             Fs[1]._value,
                             Fs[2]._value,
@@ -666,7 +666,7 @@ class LammpsParser(object):
                                 dihedral.C5,
                                 dihedral.C6)
                         if temp not in dihedral_type_dict:
-                            Fs_temp = ConvertFromRBToOPLSDihedral(
+                            Fs_temp = ConvertDihedralFromRBToOPLS(
                                     dihedral.C0._value,
                                     dihedral.C1._value,
                                     dihedral.C2._value,

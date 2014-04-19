@@ -1,3 +1,4 @@
+import sys
 import os
 import pdb
 
@@ -26,9 +27,8 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    cmd = ("{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} "
-            + "-maxwarn 1".format(grompp_bin=grompp_bin, mdp=mdp,
-            top=top, gro=gro, tpr=tpr, mdout=mdout)))
+    cmd = ("{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(
+        grompp_bin=grompp_bin, mdp=mdp, top=top, gro=gro, tpr=tpr, mdout=mdout))
     print 'Running GROMACS with command:'
     print cmd
     exit = os.system(cmd)
@@ -37,9 +37,9 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
         sys.exit(1)
 
     # mdrunin'
-    cmd = ("{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} "
-            + "-g {log}".format(mdrun_bin=mdrun_bin, tpr=tpr,
-            traj=traj, state=state, conf=conf, ener=ener, log=log))
+    cmd = ("{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(
+        mdrun_bin=mdrun_bin, tpr=tpr, traj=traj, state=state,
+        conf=conf, ener=ener, log=log))
     print cmd
     exit = os.system(cmd)
     if exit:
@@ -48,9 +48,8 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
 
     # energizin'
     select = " ".join(map(str, range(1, 20))) + " 0 "
-    cmd = ("echo {select} | ".format(select=select)
-           + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
-            genergy_bin=ener=ener, ener_xvg=ener_xvg))
+    cmd = ("echo {select} | ".format(select=select) + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
+            genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg))
     if exit:
         print 'g_energy failed for {0}'.format(top)
         sys.exit(1)
@@ -59,18 +58,37 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     with open(ener_xvg) as f:
         all_lines = f.readlines()
 
+    types = []
+    for line in all_lines:
+        if line[:3] == '@ s':
+            types.append(line.split('"')[1])
+
     # take last line
-    sec_last = all_lines[-1].split()[1:]
-    data = map(float, sec_last)
+    data = map(float, all_lines[-1].split()[1:])  # what is [0] of that line?
 
     # give everything units
-    temp = data[-1] * units.kelvin
-    data = [value * units.kilojoules_per_mole for value in data[:-1]]
-    data.append(temp)
+    data = [value * units.kilojoules_per_mole for value in data]
 
-    # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Ryckaert-Bell.', 'LJ-14', 'Coulomb-14',
-            'LJ (SR)', 'Disper. corr.', 'Coulomb (SR)', 'Coul. recip.', 'Potential',
-            'Kinetic En.', 'Total Energy', 'Temperature']
+    # pack it up in a dictionary
     e_out = dict(zip(types, data))
-    return e_out
+    # fix temperature unit (or we could just toss it...)
+    e_out['Temperature'] = e_out['Temperature']._value * units.kelvin
+
+    # dispersive energies - do buckingham energies also get dumped here?
+    dispersive = ['LJ (SR)', 'LJ-14', 'Disper.corr.']
+    e_out['Dispersive'] = 0 * units.kilojoules_per_mole
+    for group in dispersive:
+        if group in e_out:
+            e_out['Dispersive'] += e_out[group]
+
+    # electrostatic energies
+    electrostatic = ['Coulomb (SR)', 'Coulomb-14', 'Coul. recip.']
+    e_out['Electrostatic'] = 0 * units.kilojoules_per_mole
+    for group in electrostatic:
+        if group in e_out:
+            e_out['Electrostatic'] += e_out[group]
+
+    # non-bonded energies
+    e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
+
+    return e_out, ener_xvg

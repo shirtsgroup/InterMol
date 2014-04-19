@@ -8,7 +8,9 @@ import numpy as np
 
 import intermol.Driver as Driver
 import evaluate
-import helper_functions
+from gromacs_energies import gromacs_energies
+from lammps_energies import lammps_energies
+from helper_functions import combine_energy_results, print_energy_summary
 
 def parse_args():
     # TODO:
@@ -143,7 +145,7 @@ def main():
         elif args.gro_in:
             top = [x for x in args.gro_in if x.endswith('.top')]
             gro = [x for x in args.gro_in if x.endswith('.gro')]
-            e_in, e_infile = evaluate.gromacs_energies(top[0], gro[0],
+            e_in, e_infile = gromacs_energies(top[0], gro[0],
                     'Inputs/Gromacs/grompp.mdp', args.gropath, '')
         elif args.lmp_in:
             pass
@@ -156,14 +158,15 @@ def main():
             e_out, e_outfile = evaluate.desmond_energies('%s.cms' % oname,
                     'Inputs/Desmond/onepoint.cfg', args.despath) 
         if args.gromacs:
-            e_out, e_outfile = evaluate.gromacs_energies('%s.top' % oname,
+            pdb.set_trace()
+            e_out, e_outfile = gromacs_energies('%s.top' % oname,
                     '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '') 
         if args.lammps:
             pass
         print 'Input energy file:', e_infile
         print 'Output energy file:', e_outfile
-        results = helper_functions.combine_energy_results(e_in, e_out)
-        helper_functions.print_energy_summary(results)
+        results = combine_energy_results(e_in, e_out)
+        print_energy_summary(results)
 
 if __name__ == '__main__':
     main()
