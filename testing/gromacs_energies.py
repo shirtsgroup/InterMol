@@ -50,6 +50,8 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     select = " ".join(map(str, range(1, 20))) + " 0 "
     cmd = ("echo {select} | ".format(select=select) + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
             genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg))
+
+    exit = os.system(cmd)
     if exit:
         print 'g_energy failed for {0}'.format(top)
         sys.exit(1)
