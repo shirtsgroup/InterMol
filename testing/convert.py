@@ -158,7 +158,6 @@ def main():
             e_out, e_outfile = evaluate.desmond_energies('%s.cms' % oname,
                     'Inputs/Desmond/onepoint.cfg', args.despath) 
         if args.gromacs:
-            pdb.set_trace()
             e_out, e_outfile = gromacs_energies('%s.top' % oname,
                     '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '') 
         if args.lammps:
