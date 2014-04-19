@@ -5,36 +5,25 @@ import intermol.unit as units
 
 import pdb
 
-def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi',
+def lammps_energies(input_file, lmppath='lmp_openmpi',
         verbose=False):
     """Evaluate energies of LAMMPS files
 
     Args:
+        input_file = path to input file (expects data file in same folder)
         lmppath = path to LAMMPS binaries
-        lmpbin = name of LAMMPS binary
     """
 
-    if in_out == 'in':
-        base = 'Inputs/Lammps'
-    elif in_out == 'GtoL':
-        base = 'Outputs/GromacsToLammps'
-    elif in_out == 'LtoL':
-        base = 'Outputs/LammpsToLammps'
-    else:
-        raise Exception("Unknown flag: {0}".format(in_out))
-
-    lmpbin = os.path.join(lmppath, lmpbin)
-    sim_dir = os.path.join(base, name)
-    log = os.path.join(sim_dir, 'log.lammps')
+    directory, input_file = os.path.split(input_file)
+    log = os.path.join(directory, 'log.lammps')
 
     # mdrunin'
     saved_path = os.getcwd()
-    os.chdir(sim_dir)
-    if verbose:
-        run_lammps = "{lmpbin} < data.input".format(lmpbin=lmpbin)
-    else:
-        run_lammps = "{lmpbin} < data.input > /dev/null".format(lmpbin=lmpbin)
-    #run_lammps = "{lmpbin} < input_file.out".format(lmpbin=lmpbin)
+    os.chdir(directory)
+
+    run_lammps = "{lmppath} < {input_file}".format(
+            lmppath=lmppath, input_file=input_file)
+
     os.system(run_lammps)
     os.chdir(saved_path)
 
@@ -42,16 +31,21 @@ def lammps_energies(name, in_out='in', lmppath='', lmpbin='lmp_openmpi',
     proc = subprocess.Popen(["awk '/E_bond/{getline; print}' %s" % (log)],
             stdout=subprocess.PIPE, shell=True)
     (energies, err) = proc.communicate()
+    if not energies:
+        raise Exception("Unable to read LAMMPS energy output")
 
-    data = map(float, energies.split())
 
     # give everything units
-    #temp = data[-1] * units.kelvin
+    data = map(float, energies.split())
     data = [value * units.kilocalories_per_mole for value in data]
-    #data.append(temp)
 
     # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Pairs', 'vdW', 'Coulomb', 'Potential']
-
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
+            'Dispersive', 'Electrostatic', 'Coul. recip.', 'Disper. corr.',
+            'Potential']
     e_out = dict(zip(types, data))
-    return e_out
+
+    #groupings
+    #e_out['Electrostatic'] += e_out['Coul. recip.']
+    e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
+    return e_out, log

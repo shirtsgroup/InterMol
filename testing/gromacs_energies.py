@@ -50,8 +50,6 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     select = " ".join(map(str, range(1, 20))) + " 0 "
     cmd = ("echo {select} | ".format(select=select) + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
             genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg))
-
-    exit = os.system(cmd)
     if exit:
         print 'g_energy failed for {0}'.format(top)
         sys.exit(1)
@@ -90,7 +88,12 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
         if group in e_out:
             e_out['Electrostatic'] += e_out[group]
 
-    # non-bonded energies
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
+
+    all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper']
+    e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
+    for group in all_dihedrals:
+        if group in e_out:
+            e_out['All dihedrals'] += e_out[group]
 
     return e_out, ener_xvg

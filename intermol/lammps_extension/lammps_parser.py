@@ -967,6 +967,8 @@ class LammpsParser(object):
                                      'epair',
                                      'evdwl',
                                      'ecoul',
+                                     'elong',
+                                     'etail',
                                      'pe'])
 
             f.write('thermo_style custom {0}\n'.format(energy_terms))

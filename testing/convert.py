@@ -32,6 +32,8 @@ def parse_args():
     #       -need to somehow enforce that top gets parsed before gro
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
+    # TODO: change functionality so that input file is read and expects
+    #       call to appropriate data file within itself
     group_in.add_argument('--lmp_in', nargs=1, metavar='file',
             help='.lmp file for conversion from LAMMPS file format '
                     + '(expects matching .input file)')
@@ -63,7 +65,7 @@ def parse_args():
             metavar='path', default='', 
             help='path for GROMACS binary, needed for energy evaluation')
     group_misc.add_argument('-l', '--lmppath', dest='lmppath',
-            metavar='path', default='',
+            metavar='path', default='lmp_openmpi',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-f', '--force', action='store_true',
             help='ignore warnings')
@@ -121,7 +123,7 @@ def main():
         oname = '%s_converted' % prefix
     else:
         oname = args.oname
-    oname = '%s/%s' %(args.odir, oname) # prepend output directory to oname
+    oname = os.path.join(args.odir, oname) # prepend output directory to oname
     if args.desmond:
         print 'Converting to Desmond...writing %s.cms...' % oname
         Driver.write('%s.cms' % oname)
@@ -148,9 +150,11 @@ def main():
             e_in, e_infile = gromacs_energies(top[0], gro[0],
                     'Inputs/Gromacs/grompp.mdp', args.gropath, '')
         elif args.lmp_in:
-            pass
+            # TODO: fix this when --lmp_in gets changed to read input files
+            temp = args.lmp_in[0].split('.')[0] + '.input'
+            e_in, e_infile = lammps_energies(temp, args.lmppath) 
         else:
-            warning
+            warn('Something weird went wrong! Code should have never made it here.')
             pass # should never reach here
         
         # output
@@ -161,7 +165,8 @@ def main():
             e_out, e_outfile = gromacs_energies('%s.top' % oname,
                     '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '') 
         if args.lammps:
-            pass
+            e_out, e_outfile = lammps_energies('%s.input' % oname,
+                    args.lmppath) 
         print 'Input energy file:', e_infile
         print 'Output energy file:', e_outfile
         results = combine_energy_results(e_in, e_out)
