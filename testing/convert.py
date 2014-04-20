@@ -8,6 +8,7 @@ import numpy as np
 
 import intermol.Driver as Driver
 import evaluate
+from desmond_energies import desmond_energies
 from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
 from helper_functions import combine_energy_results, print_energy_summary
@@ -28,8 +29,6 @@ def parse_args():
     group_in = parser.add_argument_group('Choose input conversion format')
     group_in.add_argument('--des_in', nargs=1, metavar='file',
             help='.cms file for conversion from DESMOND file format')
-    # TODO: ORDER OF GROMACS FILES MATTERS
-    #       -need to somehow enforce that top gets parsed before gro
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
     # TODO: change functionality so that input file is read and expects
@@ -89,7 +88,13 @@ def main():
         for f in args.gro_in: # 2 arguments for top and gro file
             if not os.path.isfile(f):
                 raise Exception('File not found: {0}'.format(f))
-        files = args.gro_in
+        top_in = [x for x in args.gro_in if x.endswith('.top')]
+        assert(len(top_in)==1)
+        top_in = top_in[0] # now just string instead of list
+        gro_in = [x for x in args.gro_in if x.endswith('.gro')]
+        assert(len(gro_in)==1)
+        gro_in = gro_in[0]
+        files = [top_in, gro_in]
         prefix = args.gro_in[0][args.gro_in[0].rfind('/') + 1:-4]
     elif args.lmp_in:
         if not os.path.isfile(args.lmp_in[0]):
@@ -142,12 +147,10 @@ def main():
     if args.energy:
         # input
         if args.des_in:
-            e_in, e_infile = evaluate.desmond_energies(args.des_in[0],
+            e_in, e_infile = desmond_energies(args.des_in[0],
                     'Inputs/Desmond/onepoint.cfg', args.despath)
         elif args.gro_in:
-            top = [x for x in args.gro_in if x.endswith('.top')]
-            gro = [x for x in args.gro_in if x.endswith('.gro')]
-            e_in, e_infile = gromacs_energies(top[0], gro[0],
+            e_in, e_infile = gromacs_energies(top_in, gro_in,
                     'Inputs/Gromacs/grompp.mdp', args.gropath, '')
         elif args.lmp_in:
             # TODO: fix this when --lmp_in gets changed to read input files
@@ -159,7 +162,7 @@ def main():
         
         # output
         if args.desmond:
-            e_out, e_outfile = evaluate.desmond_energies('%s.cms' % oname,
+            e_out, e_outfile = desmond_energies('%s.cms' % oname,
                     'Inputs/Desmond/onepoint.cfg', args.despath) 
         if args.gromacs:
             e_out, e_outfile = gromacs_energies('%s.top' % oname,
