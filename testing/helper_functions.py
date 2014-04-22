@@ -33,3 +33,4 @@ def print_energy_summary(results):
 
     print " "
     print "RMS signed error: %18.8f" % (rms)
+    return rms

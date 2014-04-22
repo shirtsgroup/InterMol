@@ -13,7 +13,7 @@ from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
 from helper_functions import combine_energy_results, print_energy_summary
 
-def parse_args():
+def get_parser():
     # TODO:
     ############
     #   Priority: remove reliance on extensions, both here and in Driver
@@ -69,10 +69,14 @@ def parse_args():
     group_misc.add_argument('-f', '--force', action='store_true',
             help='ignore warnings')
     
-    return parser.parse_args()
+    return parser
 
-def main():
-    args = parse_args()
+def main(args=''):
+    parser = get_parser()
+    if not args:
+        args = parser.parse_args() # args automatically obtained from sys.argv
+    else:
+        args = parser.parse_args(args) # flexibility to call main() from other scripts
 
     print 'Performing InterMol conversion...'
 
@@ -173,7 +177,8 @@ def main():
         print 'Input energy file:', e_infile
         print 'Output energy file:', e_outfile
         results = combine_energy_results(e_in, e_out)
-        print_energy_summary(results)
+        rms = print_energy_summary(results)
+        return rms # as a convenience for the regression test script
 
 if __name__ == '__main__':
     main()
