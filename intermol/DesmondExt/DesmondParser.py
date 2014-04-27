@@ -418,6 +418,7 @@ class DesmondParser():
                         print "Parsing [ angles]..."
                     for j in range(ff_number):
                         split = entry_values[j].split()
+                        pdb.set_trace()
                         newAngleForce = None
                         # todo: integrate constraints and angle constraint description together better.
                         if re.match("HARM_CONSTRAINED",split[4],re.IGNORECASE):  # this needs to go first because HARM is a substring
@@ -448,7 +449,19 @@ class DesmondParser():
                                                 int(split[3]),
                                                 float(split[5]),
                                                 float(split[6]))
-
+                        elif re.match("UB", split[4],re.IGNORECASE):
+                            try:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]) * units.degrees,
+                                                float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
+                            except:
+                                newAngleForce = Angle(int(split[1]),
+                                                int(split[2]),
+                                                int(split[3]),
+                                                float(split[5]),
+                                                float(split[6]))
 
                         else:
                             print "ERROR (readFile): found unsupported angle in: ",
