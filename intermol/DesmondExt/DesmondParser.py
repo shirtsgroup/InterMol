@@ -526,11 +526,27 @@ class DesmondParser():
                         print lines[i]
 
                     if newAngleForce:
+                        # check to see if this angle already has terms associated with it.
+                        if (currentMoleculeType.angleForceSet.get(newAngleForce)):
+                            # if it's already in, then reset the forces
+                            oldAngleForce = currentMoleculeType.angleForceSet.get(newAngleForce)
+                            # OK, we have two values.  One of them is UB.
+                            if (oldAngleForce.k._value == 0):
+                                # the old one is the UB term.  Copy the new angle parameters into it.
+                                oldAngleForce.k = newAngleForce.k
+                                oldAngleForce.theta = newAngleForce.theta
+                                # overwrite the old one with the new one
+                                newAngleForce = oldAngleForce
+                            elif (newAngleForce.k._value == 0):
+                                # the new one is the UB term.  Copy the old angle parameters into it
+                                newAngleForce.k = oldAngleForce.k
+                                newAngleForce.theta = oldAngleForce.theta
+                            else:
+                                print "warning: duplicate angle type! Shouldn't reach this point of code!"
+
+                        # add it on
                         currentMoleculeType.angleForceSet.add(newAngleForce)
                         System._sys._forces.add(newAngleForce)
-                        # have to add code to go through and modify Urey-Bradley Parameters, 
-                        # joining the two angle distributions
-                         
 
             elif match.group('dihedrals'):
                 if verbose:
@@ -1515,8 +1531,9 @@ class DesmondParser():
             hlines.append("      :::\n")
             i = 1
             for angle in moleculetype.angleForceSet.itervalues():
-                if type(angle) == UreyBradleyAngleType:
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(r.theta.in_units_of(units.nanometers)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
+                if isinstance(angle,UreyBradleyAngle):
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.nanometers)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
+                    i+=1
                 if angle.c:
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
                 else:
