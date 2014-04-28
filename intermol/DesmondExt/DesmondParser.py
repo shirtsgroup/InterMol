@@ -1660,7 +1660,7 @@ class DesmondParser():
                               int(torsiontorsion.atom1), int(torsiontorsion.atom2), 
                               int(torsiontorsion.atom3), int(torsiontorsion.atom4), 
                               int(torsiontorsion.atom5), int(torsiontorsion.atom6), 
-                              int(torsiontorsion.atom7), int(torsiontorsion.atom7), 
+                              int(torsiontorsion.atom7), int(torsiontorsion.atom8), 
                               'cmap', torsiontorsion.chart))
             header = "    ffio_torsion_torsion[%d] {\n"%(i)
 
