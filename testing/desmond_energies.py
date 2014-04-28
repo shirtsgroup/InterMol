@@ -36,7 +36,10 @@ def desmond_energies(cms, cfg, despath):
     cwd = os.getcwd()
     name = 'system'
     energy_file = '%s/%s.enegrp.dat' % (direc, name)
-    desmond_bin = os.path.join(despath,'desmond')
+    if not despath == '':
+        desmond_bin = os.path.join(despath,'desmond')
+    else:
+        desmond_bin = os.path.join(os.environ.get('SCHRODINGER'),'desmond')
 
     # first see if the file already exists
     if os.path.exists(energy_file):
