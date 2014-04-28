@@ -479,14 +479,14 @@ class DesmondParser():
                                             int(split[3]),
                                             float(split[5]) * units.degrees,
                                             float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
-                                            1)
+                                            True)
                         except:
                             newAngleForce = Angle(int(split[1]),
                                             int(split[2]),
                                             int(split[3]),
                                             float(split[5]),
                                             float(split[6]),
-                                            1)
+                                            True)
                     elif re.match("HARM", split[4],re.IGNORECASE):
                         try:
                             newAngleForce = Angle(int(split[1]),
@@ -501,16 +501,23 @@ class DesmondParser():
                                             float(split[5]),
                                             float(split[6]))
                     elif re.match("UB", split[4],re.IGNORECASE):
+                        # Urey-Bradley is implemented in DESMOND differently, with the 
+                        # terms implemented in a new angle term independent of the harmonic term.
+                        # Instead, we will add everything together afterwards into a single term
                         try:
-                            newAngleForce = Angle(int(split[1]),
+                            newAngleForce = UreyBradleyAngle(int(split[1]),
                                             int(split[2]),
                                             int(split[3]),
-                                            float(split[5]) * units.degrees,
-                                            float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
+                                            0 * units.degrees,
+                                            0 * units.kilocalorie_per_mole * units.radians **(-2),
+                                            float(split[5]) * units.angstroms,
+                                            float(split[6]) * units.kilocalorie_per_mole)
                         except:
-                            newAngleForce = Angle(int(split[1]),
+                            newAngleForce = UreyBradleyAngle(int(split[1]),
                                             int(split[2]),
                                             int(split[3]),
+                                            0,
+                                            0,
                                             float(split[5]),
                                             float(split[6]))
 
@@ -521,6 +528,9 @@ class DesmondParser():
                     if newAngleForce:
                         currentMoleculeType.angleForceSet.add(newAngleForce)
                         System._sys._forces.add(newAngleForce)
+                        # have to add code to go through and modify Urey-Bradley Parameters, 
+                        # joining the two angle distributions
+                         
 
             elif match.group('dihedrals'):
                 if verbose:
@@ -1505,10 +1515,13 @@ class DesmondParser():
             hlines.append("      :::\n")
             i = 1
             for angle in moleculetype.angleForceSet.itervalues():
-                if angle.c == 0:
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-                elif angle.c == 1:
+                if type(angle) == UreyBradleyAngleType:
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(r.theta.in_units_of(units.nanometers)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
+                if angle.c:
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                else:
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+
                 i+=1
 
             header = "    ffio_angles[%d] {\n" % (i-1)
