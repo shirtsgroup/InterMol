@@ -63,7 +63,7 @@ class Constraint(object):
 	    self.atom9 = atom9
 	    self.length8 = length8
 
-    def getarameters(self):
+    def getparameters(self):
         if self.n == 1:
           return (self.atom1, self.atom2, self.length1, type)
 	elif self.n == 2:

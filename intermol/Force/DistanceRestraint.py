@@ -17,6 +17,6 @@ class DistanceRestraint(object):
         self.up2 = up2
         self.weight = weight
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.type, self.label, self.low, self.up1, self.up2, self.weight)
 

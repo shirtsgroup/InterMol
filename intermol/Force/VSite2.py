@@ -11,5 +11,5 @@ class VSite2(object):
             self.atom3 = atom3
         self.a = a
 
-    def getarameters(self):
+    def get_parameters(self):
         return(self.atom1, self.atom2, self.atom3, self.a)

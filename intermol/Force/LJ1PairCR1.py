@@ -11,7 +11,7 @@ class LJ1PairCR1(AbstractPair):
         self.V = V
         self.W = W
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.V, self.W) 
 
     def __repr__(self):

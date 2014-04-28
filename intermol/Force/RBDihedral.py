@@ -29,7 +29,7 @@ class RBDihedral(AbstractDihedral):
         self.C6 = C6
         self.i = i #improper or not--Desmond only
 
-    def getParameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.atom4, self.C0, self.C1, self.C2, self.C3, self.C4, self.C5, self.C6)
 
     def __repr__(self):

@@ -14,7 +14,7 @@ class UreyBradleyAngle(AbstractAngle):
         self.kUB = kUB
         self.c = c
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.theta, self.k, self.r, self.kUB, self.c)   
 
 

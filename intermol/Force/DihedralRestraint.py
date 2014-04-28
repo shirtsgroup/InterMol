@@ -28,6 +28,6 @@ class DihedralRestraint(object):
         self.delphi = delphi
         self.weight = weight
     
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.atom4, self.type, self.label, self.phi, self.delphi, self.weight)
 

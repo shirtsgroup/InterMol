@@ -12,6 +12,6 @@ class PositionRestraint(object):
         self.ky = ky
         self.kz = kz
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.kx, self.ky, self.kz)
         

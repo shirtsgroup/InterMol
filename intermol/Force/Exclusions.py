@@ -8,7 +8,7 @@ class Exclusions(object):
         if (type(exclusions).__name__ == 'list') and (len(exclusions) > 0):
             self.exclusions = exclusions
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.exclusions)
 
     def __repr__(self):

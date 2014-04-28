@@ -18,6 +18,6 @@ class OrientationRestraint(object):
         self.obs = obs
         self.weight = weight
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.exp, self.label, self.alpha, self.c, self.obs, self.weight)
 

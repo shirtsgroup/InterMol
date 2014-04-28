@@ -11,7 +11,7 @@ class HarmonicPotential(AbstractBond):
         self.length = length
         self.k = k
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.length, self.k)    
     def __repr__(self):
         return str(self.atom1) +'  '+ str(self.atom2) +'  '+  str(self.length) +'  '+  str(self.k)

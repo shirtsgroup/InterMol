@@ -23,7 +23,7 @@ class QuarticAngle(AbstractAngle):
         self.C3 = C3
         self.C4 = C4
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.theta, self.C0, self.C1, self.C2, self.C3, self.C4)
 
     def __repr__(self):

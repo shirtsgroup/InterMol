@@ -19,7 +19,7 @@ class Bond(AbstractBond):
     	self.order = order
     	self.c = c #constrained or not, Desmond only
 
-    def getarameters(self):
+    def getparameters(self):
         return (self.atom1, self.atom2, self.length, self.k)
 
     def __repr__(self):

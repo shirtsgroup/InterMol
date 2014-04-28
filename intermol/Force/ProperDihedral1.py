@@ -11,7 +11,7 @@ class ProperDihedral1(AbstractDihedral):
         self.phi = phi
         self.k = k 
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.atom4, self.phi, self.k, self.multiplicity)  
     
     def __repr__(self):

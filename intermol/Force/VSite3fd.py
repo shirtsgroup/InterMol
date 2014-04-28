@@ -15,6 +15,6 @@ class VSite3fd(object):
         self.a = a
         self.d = d
 
-    def getarameters(self):
+    def get_parameters(self):
         return(self.atom1, self.atom2, self.atom3, self.atom4, self.a, self.d)
 

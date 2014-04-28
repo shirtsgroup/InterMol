@@ -24,5 +24,5 @@ class AngleRestraint(object):
         self.k = k
         self.multiplicity = multiplicity
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self. atom1, self.atom2, self.atom3, self.atom4, self.theta, self.k, self.multiplicity)

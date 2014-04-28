@@ -12,7 +12,7 @@ class ImproperDihedral2(AbstractDihedral):
         self.xi = xi
         self.k = k
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.atom4, self.xi, self.k)
 
     def __repr__(self):

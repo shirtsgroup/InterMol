@@ -15,6 +15,6 @@ class VSite3fad(object):
         self.theta = theta
         self.d = d
 
-    def getarameters(self):
+    def get_parameters(self):
         return(self.atom1, self.atom2, self.atom3, self.atom4, self.theta, self.d)
 

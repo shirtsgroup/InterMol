@@ -16,7 +16,7 @@ class CubicBond(AbstractBond):
         self.C2 = C2
         self.C3 = C3
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.length, self.C2, self.C3)    
 
     def __repr__(self):

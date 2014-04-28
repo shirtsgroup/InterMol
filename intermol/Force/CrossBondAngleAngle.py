@@ -19,7 +19,7 @@ class CrossBondAngleAngle(AbstractAngle):
         self.r2 = r2
         self.k = k
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.r1, self.r2, self.r3, self.k)
 
     def __repr__(self):

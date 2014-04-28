@@ -19,7 +19,7 @@ class Angle(AbstractAngle):
         self.k = k
         self.c = c #constrained or not, Desmond only
     
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.theta, self.k, self.c)
 
     def __repr__(self):

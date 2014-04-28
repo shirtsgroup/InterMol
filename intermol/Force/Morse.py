@@ -12,7 +12,7 @@ class Morse(AbstractBond):
         self.D = D
         self.beta = beta
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.length, self.D, self.beta)
 
     def __repr__(self):

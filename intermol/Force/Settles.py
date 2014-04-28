@@ -11,7 +11,7 @@ class Settles(object):
         self.dOH = dOH
         self.dHH = dHH
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, dOH, dHH)
 
     def __repr__(self):

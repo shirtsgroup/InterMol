@@ -14,7 +14,7 @@ class LJNBPairCR23(AbstractPair):
         self.V = V
         self.W = W 
 
-    def getarameters(self):
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.qi, self.qj, self.V, self.W) 
 
     def __repr__(self):

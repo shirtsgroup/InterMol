@@ -10,7 +10,8 @@ class G96Angle(AbstractAngle):
         AbstractAngle.__init__(self, atom1, atom2, atom3)
         self.theta = theta
         self.k = k
-    def getarameters(self):
+
+    def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.theta, self.k)
 
     def __repr__(self):
