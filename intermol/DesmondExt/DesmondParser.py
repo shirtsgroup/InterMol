@@ -1532,7 +1532,7 @@ class DesmondParser():
             i = 1
             for angle in moleculetype.angleForceSet.itervalues():
                 if isinstance(angle,UreyBradleyAngle):
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.nanometers)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
                     i+=1
                 if angle.c:
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
@@ -1562,41 +1562,33 @@ class DesmondParser():
             hlines.append("      i_ffio_ak\n")
             hlines.append("      i_ffio_al\n")
             hlines.append("      s_ffio_funct\n")
+            # we assume the maximum number of dihedral terms 
+
+            hmax = 8
+            # assume the maximum number of dihedral terms (8) to simplify things for now
+            for ih in range(hmax):
+                hlines.append("      r_ffio_c%d\n" %(ih))
+            hlines.append("      :::\n")
 
             i = 1
-            # sorting for now to make it easier to debug
-            #for dihedral in moleculetype.dihedralForceSet.itervalues():
+            #sorting by first index
             dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
+            # first, identify the number of terms we will print
             for dihedral in dihedrallist:
                 if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
-                    if i == 1:
-                        hlines.append("      r_ffio_c0\n")
-                        hlines.append("      r_ffio_c1\n")
-                        hlines.append("      r_ffio_c2\n")
-                        hlines.append("      :::\n")
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), int(dihedral.multiplicity)))
+                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
+                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
+                                   'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), 
+                                   float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), 
+                                   int(dihedral.multiplicity),0,0,0,0,0))
                 elif isinstance(dihedral, ImproperDihedral2):
-                    if i == 1:
-                        hlines.append("      r_ffio_c0\n")
-                        hlines.append("      r_ffio_c1\n")
-                        hlines.append("      :::\n")
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),0,0,0,0,0,0))
                 elif isinstance(dihedral, RBDihedral):
-                    if i == 1:
-                        hlines.append("      r_ffio_c0\n")
-                        hlines.append("      r_ffio_c1\n")
-                        hlines.append("      r_ffio_c2\n")
-                        hlines.append("      r_ffio_c3\n")
-                        hlines.append("      r_ffio_c4\n")
-                        hlines.append("      r_ffio_c5\n")
-                        hlines.append("      r_ffio_c6\n")
-                        hlines.append("      r_ffio_c7\n")
-                        hlines.append("      :::\n")
                     if dihedral.i == 1:
                         name = 'Improper_Trig'
                     else:
                         name = 'Proper_Trig'
-                    # convert to the     
+                    # convert to the proper form    
                     c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromRBToProperTrig(dihedral.C0,dihedral.C1,dihedral.C2,
                                                                              dihedral.C3,dihedral.C4,dihedral.C5,
                                                                              dihedral.C6)
@@ -1604,6 +1596,8 @@ class DesmondParser():
                 else:
                     print "ERROR (writeFile): found unsupported dihedral"
                 i+=1
+
+
             header = "    ffio_dihedrals[%d] {\n" % (i-1)
             hlines = endheadersection(i==1,header,hlines)
 
