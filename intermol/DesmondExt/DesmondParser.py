@@ -14,7 +14,7 @@ from intermol.System import System
 from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
-
+import cmap_parameters
 
 #   helper function
 def endheadersection(blanksection,header,hlines):
@@ -143,6 +143,7 @@ class DesmondParser():
         newAngleForce = None
         newDihedralType = None
         newDihedralForce = None
+        newTorsionTorsionForce = None
         stemp = None
         etemp = None
         sigma = None
@@ -564,7 +565,7 @@ class DesmondParser():
                                                float(split[6]) * units.degrees,
                                                float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
                         except:
-                            newDihedralFroce = ProperDihedral1(int(split[1]),
+                            newDihedralForce = ProperDihedral1(int(split[1]),
                                                int(split[2]),
                                                int(split[3]),
                                                int(split[4]),
@@ -692,6 +693,31 @@ class DesmondParser():
                 #9 proper dihedrals, funct = 1
                 #3 improper dihedrals, funct = 2
                 #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
+
+            elif match.group('torsiontorsion'):
+                if verbose:
+                    print "Parsing [ torsion-torsion]..."
+                for j in range(ff_number):
+                    split = entry_values[j].split()
+                    newTorsionTorsionForce = None
+                    if re.match(split[9], "CMAP", re.IGNORECASE):
+                        # we shouldn't need to try/accept because there are no units.
+                        newTorsionTorsionForce = TorsionTorsionCMAP(int(split[1]),
+                                                                    int(split[2]),
+                                                                    int(split[3]),
+                                                                    int(split[4]),
+                                                                    int(split[5]),
+                                                                    int(split[6]),
+                                                                    int(split[7]),
+                                                                    int(split[8]),
+                                                                    'cmap',
+                                                                    int(split[10]))
+                    else:
+                        print "ERROR (readFile): found unsupported torsion-torsion type in:",
+                        print line[i]
+                    if newTorsionTorsionForce:
+                        currentMoleculeType.torsiontorsionForceSet.add(newTorsionTorsionForce)
+                        System._sys._forces.add(newTorsionTorsionForce)
 
             elif match.group('constraints'):
                 if verbose:
@@ -1044,6 +1070,8 @@ class DesmondParser():
           (?P<angles>\s*ffio_angles)
           |
           (?P<dihedrals>\s*ffio_dihedrals)
+          |
+          (?P<torsiontorsion>\s*ffio_torsion_torsion)
           |
           (?P<constraints>\s*ffio_constraints)
           |
@@ -1408,7 +1436,7 @@ class DesmondParser():
             lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
 
             #-ADDING VDWTYPES AND SITES
-            i = 1
+            i = 0
             vdwtypes = []
             sites = []
             sig = None
@@ -1417,6 +1445,7 @@ class DesmondParser():
             etemp = None
             combRule = System._sys._combinationRule
             for atom in molecule._atoms:
+                i+=1
                 if atom.residueIndex:
                     sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (i,'atom',float(atom._charge[0].in_units_of(units.elementary_charge)._value),float(atom._mass[0].in_units_of(units.atomic_mass_unit)._value),atom._atomtype[0],atom.residueIndex,atom.residueName))
                 else:
@@ -1431,7 +1460,6 @@ class DesmondParser():
                     etemp = ep
                 if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
                     vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
-                i+=1
 
             if verbose:
                 print "   -Writing vdwtypes..."
@@ -1441,10 +1469,10 @@ class DesmondParser():
             lines.append("      r_ffio_c1\n")
             lines.append("      r_ffio_c2\n")
             lines.append("      :::\n")
-            i = 1
+            i = 0
             for v in vdwtypes:
-                lines.append('      %d%2s'%(i,v))
                 i+=1
+                lines.append('      %d%2s'%(i,v))
             lines.append("      :::\n")
             lines.append("    }\n")
 
@@ -1455,7 +1483,7 @@ class DesmondParser():
             lines.append("      r_ffio_charge\n")
             lines.append("      r_ffio_mass\n")
             lines.append("      s_ffio_vdwtype\n")
-            if len(sites[0].split()) > 5:
+            if len(sites[0].split()) > 5:   # fix this to explicitly ask if resnr is in here rather than length
                 lines.append("      i_ffio_resnr\n")
                 lines.append("      s_ffio_residue\n")
             lines.append("      :::\n")
@@ -1529,8 +1557,9 @@ class DesmondParser():
             hlines.append("      r_ffio_c1\n")
             hlines.append("      r_ffio_c2\n")
             hlines.append("      :::\n")
-            i = 1
+            i = 0
             for angle in moleculetype.angleForceSet.itervalues():
+                i+=1
                 if isinstance(angle,UreyBradleyAngle):
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
                     i+=1
@@ -1539,9 +1568,7 @@ class DesmondParser():
                 else:
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
 
-                i+=1
-
-            header = "    ffio_angles[%d] {\n" % (i-1)
+            header = "    ffio_angles[%d] {\n" % (i)
             hlines = endheadersection(i==1,header,hlines)
 
             lines.extend(hlines)
@@ -1570,11 +1597,12 @@ class DesmondParser():
                 hlines.append("      r_ffio_c%d\n" %(ih))
             hlines.append("      :::\n")
 
-            i = 1
+            i = 0
             #sorting by first index
             dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
             # first, identify the number of terms we will print
             for dihedral in dihedrallist:
+                i+=1
                 if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
                     dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
                                   (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
@@ -1595,10 +1623,8 @@ class DesmondParser():
                     dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(c0.in_units_of(units.kilocalories_per_mole)._value), float(c1.in_units_of(units.kilocalories_per_mole)._value), float(c2.in_units_of(units.kilocalories_per_mole)._value), float(c3.in_units_of(units.kilocalories_per_mole)._value), float(c4.in_units_of(units.kilocalories_per_mole)._value), float(c5.in_units_of(units.kilocalories_per_mole)._value), float(c6.in_units_of(units.kilocalories_per_mole)._value)))
                 else:
                     print "ERROR (writeFile): found unsupported dihedral"
-                i+=1
 
-
-            header = "    ffio_dihedrals[%d] {\n" % (i-1)
+            header = "    ffio_dihedrals[%d] {\n" % (i)
             hlines = endheadersection(i==1,header,hlines)
 
             lines.extend(hlines)
@@ -1606,8 +1632,58 @@ class DesmondParser():
             lines.append("      :::\n")
             lines.append("    }\n")
 
+            # adding TORSION-TORSION terms
+            if verbose:
+                print "   -Writing torsion-torsions..."
+
+            bpos = len(lines) #storing position for exclusions instead of bonds
+            hlines = list()
+            dlines = list()
+            hlines.append("    ffio_torsion_torsion_placeholder\n")
+            hlines.append("      i_ffio_ai\n")
+            hlines.append("      i_ffio_aj\n")
+            hlines.append("      i_ffio_ak\n")
+            hlines.append("      i_ffio_al\n")
+            hlines.append("      i_ffio_am\n")
+            hlines.append("      i_ffio_an\n")
+            hlines.append("      i_ffio_ao\n")
+            hlines.append("      i_ffio_ap\n")
+            hlines.append("      i_ffio_ap\n")
+            hlines.append("      s_ffio_func\n")
+            hlines.append("      i_ffio_c1\n")
+            hlines.append("      :::\n")
+            i = 0
+
+            for torsiontorsion in moleculetype.torsiontorsionForceSet.itervalues():
+                i+=1
+                # only type of torsion/torsion is CMAP currently
+                dlines.append('      %d %d %d %d %d %d %d %d %d %s %d\n' % (i, 
+                              int(torsiontorsion.atom1), int(torsiontorsion.atom2), 
+                              int(torsiontorsion.atom3), int(torsiontorsion.atom4), 
+                              int(torsiontorsion.atom5), int(torsiontorsion.atom6), 
+                              int(torsiontorsion.atom7), int(torsiontorsion.atom7), 
+                              'cmap', torsiontorsion.chart))
+            header = "    ffio_torsion_torsion[%d] {\n"%(i)
+
+            hlines = endheadersection(i==0,header,hlines)
+            # write out the cmap terms: for now, write out all the
+            # charts.  Later, we can scan through and only print out the ones we use
+            # and only include the relevant charts    
+
+            if (i > 0):  # only include cmap_charts if we need to
+                cmap_charts = cmap_parameters.get_cmap_charts()
+                for chart in cmap_charts:
+                    chartlines = chart.split('\n')
+                    for line in chartlines:
+                        lines.append(line + '\n')
+
+            lines.extend(hlines)
+            lines.extend(dlines)
+            lines.append("      :::\n")
+            lines.append("    }\n")
+
             #ADDING EXCLUSIONS
-            i = 1
+            i = 0
             if verbose:
                 print "   -Writing exclusions..."
             bpos = len(lines) #storing position for exclusions instead of bonds
@@ -1618,10 +1694,10 @@ class DesmondParser():
             hlines.append("      i_ffio_aj\n")
             hlines.append("      :::\n")
             for exclusion in moleculetype.exclusions.itervalues():
-                dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
                 i+=1
-            header = "    ffio_exclusions[%d] {\n"%(i-1)
-            hlines = endheadersection(i==1,header,hlines)
+                dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+            header = "    ffio_exclusions[%d] {\n"%(i)
+            hlines = endheadersection(i==0,header,hlines)
             lines.extend(hlines)
             lines.extend(dlines)
             lines.append("      :::\n")
@@ -1639,8 +1715,9 @@ class DesmondParser():
             hlines.append("      s_ffio_funct\n")
             hlines.append("      r_ffio_c1\n")
             hlines.append("      :::\n")
-            i = 1
+            i = 0
             for pair in moleculetype.pairForceSet.itervalues():
+                i += 1
                 if re.match("LJ", pair.type):
                     dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
                 elif re.match("Coulomb", pair.type):
@@ -1649,9 +1726,8 @@ class DesmondParser():
                     dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
                     i+=1
                     dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
-                i+=1
-            header = "    ffio_pairs[%d] {\n"%(i-1)
-            hlines = endheadersection(i==1,header,hlines)
+            header = "    ffio_pairs[%d] {\n"%(i)
+            hlines = endheadersection(i==0,header,hlines)
 
             lines.extend(hlines)
             lines.extend(dlines)

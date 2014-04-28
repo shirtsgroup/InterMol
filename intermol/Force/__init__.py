@@ -31,6 +31,7 @@ __all__ = ["AbstractAngle",
     "QuarticAngle",
     "RBDihedral",
     "Settles",
+    "TorsionTorsionCMAP",       
     "UreyBradleyAngle",
     "VSite2",
     "VSite3fad",
@@ -72,6 +73,7 @@ from ProperDihedral1 import ProperDihedral1
 from QuarticAngle import QuarticAngle
 from RBDihedral import RBDihedral
 from Settles import Settles
+from TorsionTorsionCMAP import TorsionTorsionCMAP
 from UreyBradleyAngle import UreyBradleyAngle
 from VSite2 import VSite2
 from VSite3fad import VSite3fad

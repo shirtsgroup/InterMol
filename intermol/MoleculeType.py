@@ -17,6 +17,7 @@ class MoleculeType(object):
         self.pairForceSet = HashMap()
         self.angleForceSet = HashMap()
         self.dihedralForceSet = HashMap()
+        self.torsiontorsionForceSet = HashMap()
         self.constraints = HashMap()
         self.exclusions = HashMap()
         self.settles = None
