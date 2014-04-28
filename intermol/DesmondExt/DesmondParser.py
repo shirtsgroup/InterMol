@@ -181,12 +181,12 @@ class DesmondParser():
                 i+=1 # skip the ':::'    
                 # figure out combination rule
                 combrule = lines[i+combrcol]
-                if re.search("Geometric", combrule, re.IGNORECASE):
-                    if re.search("Arithmetic", lines[i], re.IGNORECASE):
+                if re.search("GEOMETRIC", combrule, re.IGNORECASE):
+                    if re.search("ARITHMETIC", combrule, re.IGNORECASE):
                         System._sys._combinationRule = 3
                     else:
                         System._sys._combinationRule = 2
-                elif re.search("Arithmetic", lines[i], re.IGNORECASE):
+                elif re.search("Arithmetic", combrule, re.IGNORECASE):
                     System._sys._combinationRule = 1
                 vdwrule = lines[i+vdwtypercol] 
                 # MISSING: need to identify vdw rule here -- currently assuming LJ12_6_sig_epsilon!
