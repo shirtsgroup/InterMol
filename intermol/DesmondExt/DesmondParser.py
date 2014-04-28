@@ -157,7 +157,7 @@ class DesmondParser():
         atomlist = OrderedSet()
         namecol = 0
         combrcol = 0
-        vdwrcol = 0
+        vdwtypercol = 0
 
         #DEFAULT VALUES WHEN CONVERTING TO GROMACS
         System._sys._nbFunc = 1
@@ -188,7 +188,8 @@ class DesmondParser():
                         System._sys._combinationRule = 2
                 elif re.search("Arithmetic", combrule, re.IGNORECASE):
                     System._sys._combinationRule = 1
-                vdwrule = lines[i+vdwtypercol] 
+                if (vdwtypercol > 0):
+                    vdwrule = lines[i+vdwtypercol]
                 # MISSING: need to identify vdw rule here -- currently assuming LJ12_6_sig_epsilon!
 
                 # skip to the next ffio entry
