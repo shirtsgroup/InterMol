@@ -1648,7 +1648,6 @@ class DesmondParser():
             hlines.append("      i_ffio_an\n")
             hlines.append("      i_ffio_ao\n")
             hlines.append("      i_ffio_ap\n")
-            hlines.append("      i_ffio_ap\n")
             hlines.append("      s_ffio_func\n")
             hlines.append("      i_ffio_c1\n")
             hlines.append("      :::\n")
