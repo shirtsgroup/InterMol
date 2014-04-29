@@ -1613,7 +1613,7 @@ class DesmondParser():
                     print "ERROR (writeFile): found unsupported dihedral"
 
             header = "    ffio_dihedrals[%d] {\n" % (i)
-            hlines = endheadersection(i==1,header,hlines)
+            hlines = endheadersection(i==0,header,hlines)
 
             lines.extend(hlines)
             lines.extend(dlines)
