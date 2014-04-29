@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import sys
 import os
 import pdb
@@ -66,15 +67,19 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
             types.append(line.split('"')[1])
 
     # take last line
-    data = map(float, all_lines[-1].split()[1:])  # what is [0] of that line?
+    data = map(float, all_lines[-1].split()[1:])  # [0] is the time
 
     # give everything units
     data = [value * units.kilojoules_per_mole for value in data]
 
     # pack it up in a dictionary
-    e_out = dict(zip(types, data))
-    # fix temperature unit (or we could just toss it...)
-    e_out['Temperature'] = e_out['Temperature']._value * units.kelvin
+    e_out = OrderedDict(zip(types, data))
+
+    # discard non-energy terms 
+    unwanted = ['Temperature', 'Pressure', 'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Pres. DC']
+    for group in unwanted:
+        if group in e_out:
+            del e_out[group]
 
     # dispersive energies - do buckingham energies also get dumped here?
     dispersive = ['LJ (SR)', 'LJ-14', 'Disper.corr.']
