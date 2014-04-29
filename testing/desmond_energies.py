@@ -4,6 +4,37 @@ import shutil
 import intermol.unit as units
 from collections import OrderedDict
 
+def standardize_key(in_key):
+    out_key = in_key
+    # terms from header line
+    if in_key == 'en':
+        out_key = 'Raw Potential'
+    if in_key == 'E_p':
+        out_key = 'Potential'
+    if in_key == 'E_k':
+        out_key = 'Kinetic En.'
+    if in_key == 'E_x':
+        out_key = 'Extended En.'
+
+    # terms from (0.000000) lines
+    if in_key == 'stretch':
+        out_key = 'Bond'
+    if in_key == 'angle':
+        out_key = 'Angle'
+    if in_key == 'dihedral':
+        out_key = 'All dihedrals'
+    if in_key == 'pair_vdw':
+        out_key = 'LJ-14'
+    if in_key == 'pair_elec':
+        out_key = 'Coulomb-14'
+    if in_key == 'Kinetic':
+        out_key = '' # already included by header line
+    if in_key == 'Total': # refers to total potential
+        out_key = '' # already included by header line
+    if in_key == 'Self_Energy':
+        out_key = '' # not sure how it is different from Corr_Energy
+    return out_key
+
 def get_desmond_energy_from_file(energy_file):
     ''' 
     parses the desmond energy file
@@ -11,13 +42,27 @@ def get_desmond_energy_from_file(energy_file):
     with open(energy_file, 'r') as f:
         data = []
         types = []
+
+        # first line of enegrp.dat file contains total energy terms
+        line = f.readline() 
+        if line.startswith('time=0.000000'): # just to make sure the line is what we think it is
+            terms = line.split()
+            terms = terms[1:-2] # don't want time, pressure, or volume
+            for term in terms:
+                key, value = term.split('=')
+                types.append(standardize_key(key))
+                data.append(float(value))
+
+        # parse rest of file for individual energy grouops
         for line in f:
-            if '(0.000000)' in line:
+            if '(0.000000)' in line: # time 0
                 words = line.split()
                 if words[-1] == 'total':
                     continue
-                types.append(words[0])
-                data.append(words[-1])
+                key = standardize_key(words[0])
+                if key:
+                    types.append(key)
+                    data.append(words[-1])
     data = [float(value) * units.kilocalories_per_mole for value in data]
     e_out = OrderedDict(zip(types, data))
     return e_out

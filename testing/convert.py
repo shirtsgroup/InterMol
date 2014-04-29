@@ -98,7 +98,7 @@ def main(args=''):
         gro_in = [x for x in args.gro_in if x.endswith('.gro')]
         assert(len(gro_in)==1)
         gro_in = gro_in[0]
-        files = [top_in, gro_in]
+        files = [top_in, gro_in] # ensures proper ordering
         prefix = args.gro_in[0][args.gro_in[0].rfind('/') + 1:-4]
     elif args.lmp_in:
         if not os.path.isfile(args.lmp_in[0]):
