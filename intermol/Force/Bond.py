@@ -10,7 +10,7 @@ class Bond(AbstractBond):
             units.kilojoules_per_mole * units.nanometers**(-2),
             None,
 	    None)
-    def __init__(self, atom1, atom2, length, k, order=None, c=0):
+    def __init__(self, atom1, atom2, length, k, order=1, c=0):  # default bond order is 1
         """
         """
         AbstractBond.__init__(self, atom1, atom2)

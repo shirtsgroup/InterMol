@@ -422,7 +422,7 @@ class DesmondParser():
                                                         float(split[5]))
                     elif re.match("LJ", split[3],re.IGNORECASE):
                         ljcorr = float(split[4])
-                        newPairForce = AbstractPair(int(split[1]), int(split[2]), "Standard")
+                        newPairForce = AbstractPair(int(split[1]), int(split[2]), "Both")
 
                     elif re.match(split[3], "Coulomb",re.IGNORECASE):
                         coulcorr = float(split[4])
@@ -544,27 +544,9 @@ class DesmondParser():
                 for j in range(ff_number):
                     split = entry_values[j].split()
                     newDihedralForce = None
-                    #Proper Diehdral 1 ---NOT SURE ABOUT MULTIPLICITY
-                    if re.match(split[5], "PROPER_HARM", re.IGNORECASE):
-                        try:
-                            newDihedralForce = ProperDihedral1(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               float(split[6]) * units.degrees,
-                                               2*float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
-                        except:
-                            newDihedralForce = ProperDihedral1(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               split[6],
-                                               2*split[7],
-                                               2)
-
                     #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
                     # These two should be the same function.  Check differences (polymer or protein defn, etc).
-                    elif re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
+                    if re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
                         try:
                             newDihedralForce = ImproperDihedral2(int(split[1]),
                                                int(split[2]),
@@ -1593,14 +1575,20 @@ class DesmondParser():
             # first, identify the number of terms we will print
             for dihedral in dihedrallist:
                 i+=1
-                if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
-                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
-                                   'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), 
-                                   0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), 
-                                   int(dihedral.multiplicity),0,0,0,0,0))
-                elif isinstance(dihedral, ImproperDihedral2):
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), 0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),0,0,0,0,0,0))
+                if isinstance(dihedral, ImproperDihedral2):
+                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n' %
+                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4,
+                                   'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
+                                   0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
+                                   0,0,0,0,0,0))
+                # probably can support this under a RB or Fourier scheme, but come back to this later, as is not common.    
+                # if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
+                #    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
+                #                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
+                #                   'Opls_Proper', float(dihedral.phi.in_units_of(units.degrees)._value), 
+                #                   float(dihedral.k.in_units_of(units.kilocalorie_per_mole)._value), 
+                #                   int(dihedral.multiplicity),0,0,0,0,0))
+
                 elif isinstance(dihedral, RBDihedral):
                     if dihedral.i == 1:
                         name = 'Improper_Trig'
@@ -1610,10 +1598,22 @@ class DesmondParser():
                     c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromRBToProperTrig(dihedral.C0,dihedral.C1,dihedral.C2,
                                                                              dihedral.C3,dihedral.C4,dihedral.C5,
                                                                              dihedral.C6)
-                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name, float(c0.in_units_of(units.kilocalories_per_mole)._value), float(c1.in_units_of(units.kilocalories_per_mole)._value), float(c2.in_units_of(units.kilocalories_per_mole)._value), float(c3.in_units_of(units.kilocalories_per_mole)._value), float(c4.in_units_of(units.kilocalories_per_mole)._value), float(c5.in_units_of(units.kilocalories_per_mole)._value), float(c6.in_units_of(units.kilocalories_per_mole)._value)))
+                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
+                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name,
+                                   float(c0.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c1.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c2.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c3.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c4.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c5.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c6.in_units_of(units.kilocalories_per_mole)._value)))
                 else:
-                    print "ERROR (writeFile): found unsupported dihedral"
-
+                    print "ERROR (writeFile): found unsupported dihedral."
+                    print dihedral,
+                    print "Printing zero-energy placeholder."
+                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
+                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
+                                   0, 0, 0, 0, 0, 0, 0))
             header = "    ffio_dihedrals[%d] {\n" % (i)
             hlines = endheadersection(i==0,header,hlines)
 
@@ -1711,7 +1711,7 @@ class DesmondParser():
                 if isinstance(pair,LJ1PairCR23):
                     dlines.append('      %d %d %d %s %10.8f %10.8f\n' % (i-1, pair.atom1, pair.atom2, 'LJ12_6_sig_epsilon', pair.V.in_units_of(units.angstroms)._value,pair.W.in_units_of(units.kilocalorie_per_mole)._value))
                     dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
-                elif re.match("Standard", pair.type):
+                elif re.match("Both", pair.type):
                     dlines.append('      %d %d %d %s %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
                     dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
                 else:
