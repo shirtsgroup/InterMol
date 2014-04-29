@@ -184,10 +184,10 @@ class DesmondParser():
                 combrule = lines[i+combrcol]
                 if re.search("GEOMETRIC", combrule, re.IGNORECASE):
                     if re.search("ARITHMETIC", combrule, re.IGNORECASE):
-                        System._sys._combinationRule = 3
-                    else:
                         System._sys._combinationRule = 2
-                elif re.search("Arithmetic", combrule, re.IGNORECASE):
+                    else:
+                        System._sys._combinationRule = 3
+                elif re.search("C6C12", combrule, re.IGNORECASE):
                     System._sys._combinationRule = 1
                 if (vdwtypercol > 0):
                     vdwrule = lines[i+vdwtypercol]
@@ -328,31 +328,32 @@ class DesmondParser():
                     # integrate validation of harm_constrained and constraints better.
                     if re.match("HARM_CONSTRAINED", split[3], re.IGNORECASE):
                         try:
+                            # we use the GROMACS harmonic convention
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
                                           1,
                                           float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
-                                          float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                          2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                           1)
                         except:
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
                                           1,
                                           float(split[4]),
-                                          float(split[5]),
+                                          2*float(split[5]),
                                           1)
                         try:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
                                            float(split[4]) * units.angstroms,
-                                           float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                            None,
                                            1)
                         except:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
                                            float(split[4]),
-                                           float(split[5]),
+                                           2*float(split[5]),
                                            None,
                                            1)
 
@@ -362,27 +363,27 @@ class DesmondParser():
                                           atomlist[int(split[2])-1].atomName,
                                           1,
                                           float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS
-                                          float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                          2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                           0)
                         except:
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
                                           1,
                                           float(split[4]),
-                                          float(split[5]),
+                                          2*float(split[5]),
                                           0)
                         try:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
                                            float(split[4]) * units.angstroms,
-                                           float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                            None,
                                            0)
                         except:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
                                            float(split[4]),
-                                           float(split[5]),
+                                           2*float(split[5]),
                                            None,
                                            0)
                     else:
@@ -467,14 +468,14 @@ class DesmondParser():
                                             int(split[2]),
                                             int(split[3]),
                                             float(split[5]) * units.degrees,
-                                            float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
+                                            2*float(split[6]) * units.kilocalorie_per_mole * units.radians**(-2),
                                             True)
                         except:
                             newAngleForce = Angle(int(split[1]),
                                             int(split[2]),
                                             int(split[3]),
                                             float(split[5]),
-                                            float(split[6]),
+                                            2*float(split[6]),
                                             True)
                     elif re.match("HARM", split[4],re.IGNORECASE):
                         try:
@@ -482,13 +483,13 @@ class DesmondParser():
                                             int(split[2]),
                                             int(split[3]),
                                             float(split[5]) * units.degrees,
-                                            float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
+                                            2*float(split[6]) * units.kilocalorie_per_mole * units.radians **(-2))
                         except:
                             newAngleForce = Angle(int(split[1]),
                                             int(split[2]),
                                             int(split[3]),
                                             float(split[5]),
-                                            float(split[6]))
+                                            2*float(split[6]))
                     elif re.match("UB", split[4],re.IGNORECASE):
                         # Urey-Bradley is implemented in DESMOND differently, with the 
                         # terms implemented in a new angle term independent of the harmonic term.
@@ -500,7 +501,7 @@ class DesmondParser():
                                             0 * units.degrees,
                                             0 * units.kilocalorie_per_mole * units.radians **(-2),
                                             float(split[5]) * units.angstroms,
-                                            float(split[6]) * units.kilocalorie_per_mole)
+                                            2*float(split[6]) * units.kilocalorie_per_mole)
                         except:
                             newAngleForce = UreyBradleyAngle(int(split[1]),
                                             int(split[2]),
@@ -508,7 +509,7 @@ class DesmondParser():
                                             0,
                                             0,
                                             float(split[5]),
-                                            float(split[6]))
+                                            2*float(split[6]))
 
                     else:
                         print "ERROR (readFile): found unsupported angle in: ",
@@ -551,14 +552,14 @@ class DesmondParser():
                                                int(split[3]),
                                                int(split[4]),
                                                float(split[6]) * units.degrees,
-                                               float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
+                                               2*float(split[7]) * units.kilocalorie_per_mole * units.degrees**(-2))
                         except:
                             newDihedralForce = ProperDihedral1(int(split[1]),
                                                int(split[2]),
                                                int(split[3]),
                                                int(split[4]),
                                                split[6],
-                                               split[7],
+                                               2*split[7],
                                                2)
 
                     #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
@@ -570,14 +571,14 @@ class DesmondParser():
                                                int(split[3]),
                                                int(split[4]),
                                                float(split[6]) * units.radians,
-                                               float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
+                                               2*float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
                         except:
                             newDihedralForce = ImproperDihedral2(int(split[1]),
                                                int(split[2]),
                                                int(split[3]),
                                                int(split[4]),
                                                split[6],
-                                               split[7])
+                                               2*split[7])
 
                     #RB Dihedral (Assume for Improper_trig and Proper_trig for now)
                     elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE) or re.match(split[5],"IMPROPER_TRIG", re.IGNORECASE) or re.match(split[5], "DIHEDRAL_TRIG", re.IGNORECASE):
@@ -1414,11 +1415,12 @@ class DesmondParser():
 
             #Adding Combination Rule
             if System._sys._combinationRule == 1:
-                lines.append('    ARITHMETIC\n') #NOT SURE WHAT TO PUT HERE...COME BACK TO THIS
+                lines.append('    C612\n')   # this may not exist in DESMOND, or if so, need to be corrected
             elif System._sys._combinationRule == 2:
-                lines.append('    GEOMETRIC\n')
-            elif System._sys._combinationRule == 3:
                 lines.append('    ARITHMETIC/GEOMETRIC\n')
+            elif System._sys._combinationRule == 3:
+                lines.append('    GEOMETRIC\n')
+
 
             #Adding Version
             lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
@@ -1519,7 +1521,7 @@ class DesmondParser():
                                    bond.atom2,
                                    name,
                                    length,
-                                   k))
+                                   0.5*k))
                 elif not bond:
                     nonecnt+=1
             if nonecnt > 0 and verbose:
@@ -1549,12 +1551,12 @@ class DesmondParser():
             for angle in moleculetype.angleForceSet.itervalues():
                 i+=1
                 if isinstance(angle,UreyBradleyAngle):
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), 0.5*float(angle.kUB.in_units_of(units.kilocalorie_per_mole)._value)))
                     i+=1
                 if angle.c:
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
                 else:
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
 
             header = "    ffio_angles[%d] {\n" % (i)
             hlines = endheadersection(i==0,header,hlines)
@@ -1595,10 +1597,10 @@ class DesmondParser():
                     dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
                                   (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
                                    'Proper_Harm', float(dihedral.phi.in_units_of(units.degrees)._value), 
-                                   float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), 
+                                   0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value), 
                                    int(dihedral.multiplicity),0,0,0,0,0))
                 elif isinstance(dihedral, ImproperDihedral2):
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),0,0,0,0,0,0))
+                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n'%(i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value), 0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),0,0,0,0,0,0))
                 elif isinstance(dihedral, RBDihedral):
                     if dihedral.i == 1:
                         name = 'Improper_Trig'
