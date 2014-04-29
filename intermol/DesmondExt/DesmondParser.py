@@ -184,10 +184,10 @@ class DesmondParser():
                 combrule = lines[i+combrcol]
                 if re.search("GEOMETRIC", combrule, re.IGNORECASE):
                     if re.search("ARITHMETIC", combrule, re.IGNORECASE):
-                        System._sys._combinationRule = 3
-                    else:
                         System._sys._combinationRule = 2
-                elif re.search("Arithmetic", combrule, re.IGNORECASE):
+                    else:
+                        System._sys._combinationRule = 3
+                elif re.search("C6C12", combrule, re.IGNORECASE):
                     System._sys._combinationRule = 1
                 if (vdwtypercol > 0):
                     vdwrule = lines[i+vdwtypercol]
@@ -1415,11 +1415,12 @@ class DesmondParser():
 
             #Adding Combination Rule
             if System._sys._combinationRule == 1:
-                lines.append('    ARITHMETIC\n') #NOT SURE WHAT TO PUT HERE...COME BACK TO THIS
+                lines.append('    C612\n')   # this may not exist in DESMOND, or if so, need to be corrected
             elif System._sys._combinationRule == 2:
-                lines.append('    GEOMETRIC\n')
-            elif System._sys._combinationRule == 3:
                 lines.append('    ARITHMETIC/GEOMETRIC\n')
+            elif System._sys._combinationRule == 3:
+                lines.append('    GEOMETRIC\n')
+
 
             #Adding Version
             lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
