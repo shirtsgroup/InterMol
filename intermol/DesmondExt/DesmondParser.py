@@ -1557,7 +1557,7 @@ class DesmondParser():
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
 
             header = "    ffio_angles[%d] {\n" % (i)
-            hlines = endheadersection(i==1,header,hlines)
+            hlines = endheadersection(i==0,header,hlines)
 
             lines.extend(hlines)
             lines.extend(dlines)
