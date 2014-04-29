@@ -49,11 +49,9 @@ def readStructure(filename):
             v[i, i] = float(rawBoxVector[i]) * units.nanometers
 
     elif len(rawBoxVector) == 9:
-        n = -1
-        BoxVectorElements = split.rawBoxVector()
         for i in range(3):
             for j in range(3):
-                v[i, j] = float(BoxVectorElements[3*i+j]) * units.nanometers
+                v[i, j] = float(rawBoxVector[3*i+j]) * units.nanometers
     # need to make this numpy sensitive so we can just pass the vector
     System._sys.setBoxVector(v)
 

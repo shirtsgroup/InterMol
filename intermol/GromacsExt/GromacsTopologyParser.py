@@ -388,10 +388,10 @@ class GromacsTopologyParser(object):
                         if split[2].isdigit():
                             # Proper Dihedral 1
                             if (int(split[2]) == 1) and (len(split) == 6):
-                                newDihedralType = ProperDihedral1Type('*',
+                                newDihedralType = ProperDihedral1Type('X',
                                     split[0],
                                     split[1],
-                                    '*',
+                                    'X',
                                     split[2],
                                     float(split[3]) * units.degrees,
                                     float(split[4]) * units.kilojoules_per_mole,
@@ -399,20 +399,20 @@ class GromacsTopologyParser(object):
 
                             # Proper Dihedral 2
                             elif (int(split[2]) == 2) and (len(split) == 5):
-                                newDihedralType = ImproperDihedral2Type('*',
+                                newDihedralType = ImproperDihedral2Type('X',
                                     split[0],
                                     split[1],
-                                    '*',
+                                    'X',
                                     split[2],
                                     float(split[3]) * units.degrees,
                                     float(split[4]) * units.kilojoules_per_mole * units.radians**(-2))
 
                             # RBDihedral
                             elif (int(split[2]) == 3) and (len(split) == 9):
-                                newDihedralType = RBDihedralType('*',
+                                newDihedralType = RBDihedralType('X',
                                     split[0],
                                     split[1],
-                                    '*',
+                                    'X',
                                     split[2],
                                     float(split[3]) * units.kilojoules_per_mole,
                                     float(split[4]) * units.kilojoules_per_mole,
@@ -913,19 +913,38 @@ class GromacsTopologyParser(object):
                             tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[4])
                             dihedralType = self.dihedraltypes.get(tempType)
 
+                            # now a single endpoint wildcard    
+                            if not (dihedralType):
+                                # now with one endpoint wildcards
+                                tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, 'X', split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+                            if not (dihedralType):
+                                # now with other endpoint wildcards
+                                tempType = AbstractDihedralType('X', atomtype2, atomtype3, atomtype4, split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+                            # now flipped single endpoint wildcards    
+                            if not (dihedralType):
+                                tempType = AbstractDihedralType('X', atomtype3, atomtype2, atomtype1, split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+                            if not (dihedralType):
+                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, 'X', split[4])
+                                dihedralType = self.dihedraltypes.get(tempType)
+
+                            # if not single endpoint wildcards, try double endpoint wildcards    
                             if not (dihedralType):
                                 # flip it around
                                 tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[4])
                                 dihedralType = self.dihedraltypes.get(tempType)
                             if not (dihedralType):
                                 # try with wildcards
-                                tempType = AbstractDihedralType('*', atomtype2, atomtype3, '*', split[4])
+                                tempType = AbstractDihedralType('X', atomtype2, atomtype3, 'X', split[4])
                                 dihedralType = self.dihedraltypes.get(tempType)
                             if not (dihedralType):
                                 # try with flipped wildcards
-                                tempType = AbstractDihedralType('*', atomtype3, atomtype2, '*', split[4])
+                                tempType = AbstractDihedralType('X', atomtype3, atomtype2, 'X', split[4])
                                 dihedralType = self.dihedraltypes.get(tempType)
 
+    
                             if isinstance(dihedralType, ProperDihedral1Type):
                                 split.append(dihedralType.phi)
                                 split.append(dihedralType.k)
@@ -1351,7 +1370,7 @@ class GromacsTopologyParser(object):
             lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                     % (atomtype.atomtype,
                        atomtype.bondtype,
-                       atomtype.Z,
+                       int(atomtype.Z),
                        atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
                        atomtype.charge.in_units_of(units.elementary_charge)._value,
                        atomtype.ptype,
