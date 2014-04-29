@@ -72,7 +72,7 @@ def writeStructure(filename):
                 if atom.atomName.isdigit():
                     atom.atomName = "LMP_" + atom.atomName
                 n += 1
-                lines.append('%5d%-4s%6s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n'
+                lines.append('%5d%-4s%6s%5d%13.8f%13.8f%13.8f%13.8f%13.8f%13.8f\n'
                              % (atom.residueIndex,
                                 atom.residueName,
                                 atom.atomName,
@@ -89,11 +89,11 @@ def writeStructure(filename):
         System._sys._boxVector[0, 2]._value == 0 and 
         System._sys._boxVector[1, 2]._value == 0):
             for i in range(3):
-                lines.append('%10.6f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
+                lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
     else:
         for i in range(3):
             for j in range(3):
-                lines.append('%10.6f ' % System._sys._boxVector[i, j].in_units_of(units.nanometers)._value)
+                lines.append('%11.7f ' % System._sys._boxVector[i, j].in_units_of(units.nanometers)._value)
     lines.append('\n')
 
     lines.insert(0, (System._sys._name + '\n'))
