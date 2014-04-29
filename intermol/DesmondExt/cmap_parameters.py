@@ -1,3 +1,6 @@
+# will need to get this converted to units for other force fields if
+# required for the input parameter format
+
 def get_cmap_charts():
     cmap_charts = []
     cmap_charts.append("""

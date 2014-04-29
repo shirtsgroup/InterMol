@@ -398,73 +398,61 @@ class DesmondParser():
                     if newBondType and newBondType not in self.bondtypes:
                         self.bondtypes.add(newBondType)
 
-            elif match.group('pairs'): #GromacsTopology didn't fix this, so fix this when changes are made
+            elif match.group('pairs'):
                 if verbose:
                     print "Parsing [ pairs]..."
-                funct1_lj = []
-                funct1_cl = []
-                funct1_both = []
-                ljch=None
-                clomb=None
-                lj = False
-                cl = False
-                tempcnt = 0
+                #pairlist_coul = []
+                ljcorr = False
+                coulcorr = False
+
                 for j in range(ff_number):
                     split = entry_values[j].split()
-                    if int(split[0]) == 1:
-                        if re.match(split[3], "LJ"):
-                            ljch = float(split[4])
-                            lj = True
-                            funct1_lj.append([int(split[1]),int(split[2])])
+                    newPairForce = None
+                    if re.match("LJ12_6_sig_epsilon",split[3],re.IGNORECASE):
+                        try:
+                            newPairForce = LJ1PairCR23(int(split[1]),
+                                                       int(split[2]),
+                                                       float(split[4])*units.angstroms,
+                                                       float(split[5])*units.kilocalorie_per_mole)
+                        except:
+                            newPairForce =  LJ1PairCR23(int(split[1]),
+                                                        int(split[2]),
+                                                        float(split[4]),
+                                                        float(split[5]))
+                    elif re.match("LJ", split[3],re.IGNORECASE):
+                        ljcorr = float(split[4])
+                        newPairForce = AbstractPair(int(split[1]), int(split[2]), "Standard")
+
+                    elif re.match(split[3], "Coulomb",re.IGNORECASE):
+                        coulcorr = float(split[4])
+                        # we need to save these to add at the end
+                        # because we can't have multiple pairs with
+                        # the same indices.
+                        #pairlist_coul.append([int(split[1]),int(split[2])])
+                    else:
+                        print "ERROR (readFile): didn't recognize type %s in line %s", split[3], entry_values[j]
+
+                    if ljcorr:
+                        if System._sys._ljCorrection:
+                            if System._sys._ljCorrection != ljcorr:
+                                "ERROR (readFile): atoms have different LJ 1-4 correction terms"
                         else:
-                            clomb = float(split[4])
-                            cl = True
-                            funct1_cl.append([int(split[1]),int(split[2])])
-                    elif lj:
-                        if re.match(split[3], "Coulomb"):
-                            if not clomb:
-                                clomb = float(split[4])
-                            cl = True
-                            lj = False
-                    elif cl:
-                        if re.match(split[3], "LJ"):
-                            if not ljch:
-                                ljch = float(split[4])
-                            cl = False
-                            lj = True
-                    if not int(split[0]) == 1:
-                        if lj and [int(split[1]), int(split[2])] in funct1_cl:
-                            funct1_cl.remove([int(split[1]), int(split[2])])
-                            funct1_both.append([int(split[1]), int(split[2])])
-                        elif cl and [int(split[1]), int(split[2])] in funct1_lj:
-                            funct1_lj.remove([int(split[1]), int(split[2])])
-                            funct1_both.append([int(split[1]), int(split[2])])
+                            System._sys._ljCorrection = ljcorr
+
+                    if coulcorr:
+                        if System._sys._coulombCorrection:
+                            if System._sys._coulombCorrection != coulcorr:
+                                "ERROR (readFile): atoms have different Coulomb 1-4 correction terms"
                         else:
-                            if lj:
-                                funct1_lj.append([int(split[1]),int(split[2])])
-                            else:
-                                funct1_cl.append([int(split[1]),int(split[2])])
+                            System._sys._coulombCorrection = coulcorr
 
-                # Logic below can't be right, since this value will be written over.
-                if ljch:
-                    System._sys._ljCorrection = float(ljch)
-                if clomb:
-                    System._sys._coulombCorrection = float(clomb)
+                    if newPairForce:
+                        currentMoleculeType.pairForceSet.add(newPairForce)
+                        System._sys._forces.add(newPairForce)
 
-                for a in funct1_lj:     #PUT ALL PAIRS WITH ONLY LJ INTO LJ1
-                    newPairForce = AbstractPair(a[0], a[1], "LJ")
-                    currentMoleculeType.pairForceSet.add(newPairForce)
-                    System._sys._forces.add(newPairForce)
-
-                for a in funct1_cl: #PUT ALL PAIRS WITH ONLY CL INT LJ1
-                    newPairForce = AbstractPair(a[0], a[1], "Coulomb")
-                    currentMoleculeType.pairForceSet.add(newPairForce)
-                    System._sys._forces.add(newPairForce)
-
-                for a in funct1_both: #PUT ALL PAIRS WITH BOTH LJ AND COULOMB INTO NB
-                    newPairForce = AbstractPair(a[0], a[1], "Both")
-                    currentMoleculeType.pairForceSet.add(newPairForce)
-                    System._sys._forces.add(newPairForce)
+                    # IMPORTANT: we are going to assume that all pairs are both LJ and COUL.
+                    # if COUL is not included, then it is because the charges are zero, and they will give the
+                    # same energy.  This could eventually be improved by checking versus the sites.
 
             elif match.group('angles'): #add more stuff later once you have more samples to work with
                 if verbose:
@@ -1713,18 +1701,20 @@ class DesmondParser():
             hlines.append("      i_ffio_aj\n")
             hlines.append("      s_ffio_funct\n")
             hlines.append("      r_ffio_c1\n")
+            hlines.append("      r_ffio_c2\n")
             hlines.append("      :::\n")
             i = 0
             for pair in moleculetype.pairForceSet.itervalues():
-                i += 1
-                if re.match("LJ", pair.type):
-                    dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._ljCorrection))
-                elif re.match("Coulomb", pair.type):
-                    dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, pair.type, System._sys._coulombCorrection))
-                elif re.match("Both", pair.type):
-                    dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
-                    i+=1
-                    dlines.append('      %d %d %d %s %10.8f\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                i += 2
+                if isinstance(pair,LJ1PairCR23):
+                    dlines.append('      %d %d %d %s %10.8f %10.8f\n' % (i-1, pair.atom1, pair.atom2, 'LJ12_6_sig_epsilon', pair.V.in_units_of(units.angstroms)._value,pair.W.in_units_of(units.kilocalorie_per_mole)._value))
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                elif re.match("Standard", pair.type):
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                else:
+                    print "ERROR: unknown pair type!"
+
             header = "    ffio_pairs[%d] {\n"%(i)
             hlines = endheadersection(i==0,header,hlines)
 
