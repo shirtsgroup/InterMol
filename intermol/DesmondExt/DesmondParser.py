@@ -1210,26 +1210,29 @@ class DesmondParser():
 
         i = 0
         nonecnt = 0
-        nmol = 0
         for moleculetype in System._sys._molecules.itervalues():
             # sort the bondlist because Desmond requires the first time a bond is listed to have
             # the atoms in ascending order
+            repeatmol = len(moleculetype.moleculeSet)
+            atompermol = len(moleculetype.moleculeSet[0]._atoms)
             bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
-            for bond in bondlist:
-                if bond and bond.order:
-                    i += 1
-                    dlines.append('    %d %d %d %d %d %d\n'
-                                  %(i,
-                                  bond.atom1 + totalatoms[nmol],
-                                  bond.atom2 + totalatoms[nmol],
-                                  int(bond.order),
-                                  1,
-                                  1))
-                elif not bond:
-                    nonecnt+=1
+            for n in range(repeatmol): 
+                for bond in bondlist:
+                    if bond and bond.order:
+                        i += 1
+                        dlines.append('    %d %d %d %d %d %d\n'
+                                      %(i,
+                                        bond.atom1 + n*atompermol + totalatoms[nmol],
+                                        bond.atom2 + n*atompermol + totalatoms[nmol],
+                                        int(bond.order),
+                                        1,
+                                        1))
+                    elif not bond:
+                        nonecnt+=1
+                if nonecnt > 0 and verbose:
+                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
             nmol +=1
-        if nonecnt > 0 and verbose:
-            print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+
         hlines[0] = '  m_bond[%d] {\n' % i    
         if (i > 0):
             lines.extend(hlines)
@@ -1355,21 +1358,26 @@ class DesmondParser():
 
             i = 0
             nonecnt = 0
+
+            repeatmol = len(moleculetype.moleculeSet)
+            atompermol = len(moleculetype.moleculeSet[0]._atoms)
             bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
-            for bond in bondlist:
-                if bond and bond.order:
-                    i += 1
-                    dlines.append('    %d %d %d %d %d %d\n'
-                                 %(i,
-                                   bond.atom1,
-                                   bond.atom2,
-                                   int(bond.order),
-                                   1,
-                                   1))
-                else:
-                    nonecnt+=1
-            if nonecnt > 0 and verbose:
-                print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+            for n in range(repeatmol): 
+                for bond in bondlist:
+                    if bond and bond.order:
+                        i += 1
+                        dlines.append('    %d %d %d %d %d %d\n'
+                                      %(i,
+                                        bond.atom1 + n*atompermol,
+                                        bond.atom2 + n*atompermol,
+                                        int(bond.order),
+                                        1,
+                                        1))
+                    else:
+                        nonecnt+=1
+                if nonecnt > 0 and verbose:
+                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+
             header = '  m_bond[%d] {\n'%i
 
             if (i>0):
@@ -1808,9 +1816,10 @@ class DesmondParser():
 
             # now need to add the constraints specified through settles.  Only one settles per molecule
             if (moleculetype.settles):
+                i += 1
                 settles = moleculetype.settles
                 # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
-                cline = '      %d %d %d %d ' % (1,1,3,2)
+                cline = '      %d %d %d %d ' % (i,1,3,2)
                 for j in range(alen_max-3):
                     cline += '0 '
                 cline += ' HOH '    

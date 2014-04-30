@@ -772,7 +772,6 @@ class GromacsTopologyParser(object):
                                 split.append(angleType.r2)
                                 split.append(angleType.r3)
                                 split.append(angleType.k)
-
                             if isinstance(angleType, UreyBradleyAngleType):
                                 split.append(angleType.theta)
                                 split.append(angleType.k)
@@ -1107,19 +1106,33 @@ class GromacsTopologyParser(object):
                         # we assume the gromacs default of 1. O, 2. H, 3. H
                         # reference bond strength is 450 kj/mol, but doesn't really matter since  constrainted.
                         waterbondrefk = 450*units.kilojoules_per_mole * units.nanometers**(-2) 
-                        water_atoms = currentMolecule.getAtoms()
-                        oType = water_atoms[0].getAtomType(0)[0]  # extract the name of the atom
-                        hType = water_atoms[1].getAtomType(0)[0]
-                        newBondType = BondType(oType, hType, '1', float(split[2]) * units.nanometers,
-                                               waterbondrefk,c=True)
-
-                        self.bondtypes.add(newBondType)
-
                         wateranglerefk = 200*units.kilojoules_per_mole * units.degrees**(-2) 
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
-                        newAngleType = AngleType(hType, oType, hType, 1, angle, wateranglerefk)
+                        dOH = float(split[2]) * units.nanometers
+                        
+                        newBondForce = Bond(1,2,dOH,waterbondrefk)
+                        currentMoleculeType.bondForceSet.add(newBondForce)
+                        System._sys._forces.add(newBondForce)
 
-                        self.angletypes.add(newAngleType)
+                        newBondForce = Bond(1,3,dOH,waterbondrefk)
+                        currentMoleculeType.bondForceSet.add(newBondForce)
+                        System._sys._forces.add(newBondForce)
+
+                        newAngleForce = Angle(3,1,2,angle,wateranglerefk)
+                        currentMoleculeType.angleForceSet.add(newAngleForce)
+                        System._sys._forces.add(newAngleForce)
+
+                        #water_atoms = currentMolecule.getAtoms()
+                        #oType = water_atoms[0].getAtomType(0)[0]  # extract the name of the atom
+                        #hType = water_atoms[1].getAtomType(0)[0]
+                        #
+                        #newBondType = BondType(oType, hType, '1', float(split[2]) * units.nanometers,
+                        #                       waterbondrefk,c=True)
+                        #
+                        #self.bondtypes.add(newBondType)
+                        #
+                        #newAngleType = AngleType(hType, oType, hType, 1, angle, wateranglerefk)
+                        #self.angletypes.add(newAngleType)
                         
                 elif match.group('exclusions'):
                     if verbose:
