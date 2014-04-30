@@ -3,6 +3,7 @@ import shlex
 import os
 import copy
 import string
+import math
 import re
 import numpy as np
 from collections import deque
@@ -1803,6 +1804,24 @@ class DesmondParser():
                     for j in range(alen,alen_max):
                         cline += ' 0.0'
                 cline += '\n'
+                dlines.append(cline)
+
+            # now need to add the constraints specified through settles.  Only one settles per molecule
+            if (moleculetype.settles):
+                settles = moleculetype.settles
+                # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
+                cline = '      %d %d %d %d ' % (1,1,3,2)
+                for j in range(alen_max-3):
+                    cline += '0 '
+                cline += ' HOH '    
+                pdb.set_trace()
+                dOH = settles.dOH._value
+                dHH = settles.dHH._value
+                angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
+                cline += " %.3f %.5f %.5f " % (angle,dOH,dOH)
+                cline += '\n'
+                for j in range(alen,alen_max):
+                    cline += ' 0.0'
                 dlines.append(cline)
 
             hlines.append("    ffio_constraints[%d] {\n"%(i))

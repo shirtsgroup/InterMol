@@ -1,9 +1,12 @@
-import pdb
 import sys
 import os
 import re
 import copy
 import warnings
+import math
+
+# for debugging eventually remove
+import pdb
 
 import intermol.unit as units
 from collections import deque
@@ -1096,10 +1099,28 @@ class GromacsTopologyParser(object):
                             newSettlesForce = Settles(int(split[0]),
                                     float(split[2]) * units.nanometers,
                                     float(split[3]) * units.nanometers)
-
+                            
                         currentMoleculeType.settles = newSettlesForce
                         System._sys._forces.add(newSettlesForce)
 
+                        # we need to add a constrainted bonded force as well between the atoms in these molecules. 
+                        # we assume the gromacs default of 1. O, 2. H, 3. H
+                        # reference bond strength is 450 kj/mol, but doesn't really matter since  constrainted.
+                        waterbondrefk = 450*units.kilojoules_per_mole * units.nanometers**(-2) 
+                        water_atoms = currentMolecule.getAtoms()
+                        oType = water_atoms[0].getAtomType(0)[0]  # extract the name of the atom
+                        hType = water_atoms[1].getAtomType(0)[0]
+                        newBondType = BondType(oType, hType, '1', float(split[2]) * units.nanometers,
+                                               waterbondrefk,c=True)
+
+                        self.bondtypes.add(newBondType)
+
+                        wateranglerefk = 200*units.kilojoules_per_mole * units.degrees**(-2) 
+                        angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
+                        newAngleType = AngleType(hType, oType, hType, 1, angle, wateranglerefk)
+
+                        self.angletypes.add(newAngleType)
+                        
                 elif match.group('exclusions'):
                     if verbose:
                         print "Parsing [ exclusions ]..."
