@@ -554,10 +554,10 @@ class GromacsTopologyParser(object):
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
-                        atom = Atom(int(split[0]),          # AtomNum
+                        atom = Atom(int(split[0]),          # AtomNum  (index)
+                                split[4].strip(),           # atomName
                                 int(split[2]),              # resNum
-                                split[3].strip(),           # resName
-                                split[4].strip())           # atomName
+                                split[3].strip())           # resName
                         atom.setAtomType(0, split[1].strip())
                         atom.cgnr = int(split[5])
                         atom.setCharge(0, float(split[6]) * units.elementary_charge)
@@ -599,7 +599,6 @@ class GromacsTopologyParser(object):
                             index += 1
 
                         currentMolecule.addAtom(atom)
-
                 elif match.group('bonds'):
                     if verbose:
                         print "Parsing [ bonds ]..."
