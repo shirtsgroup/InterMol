@@ -1823,7 +1823,6 @@ class DesmondParser():
                 for j in range(alen_max-3):
                     cline += '0 '
                 cline += ' HOH '    
-                pdb.set_trace()
                 dOH = settles.dOH._value
                 dHH = settles.dHH._value
                 angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
