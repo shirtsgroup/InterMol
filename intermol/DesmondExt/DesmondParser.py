@@ -1742,10 +1742,17 @@ class DesmondParser():
             if verbose:
                 print "   -Writing constraints..."
             isHOH = False
-            alen = 0
-            clen = 0
-            alen_max = 0
-            clen_max = 0
+
+            if (moleculetype.settles):
+                alen = 2
+                clen = 3
+            else:
+                alen = 0
+                clen = 0
+
+            alen_max = alen
+            clen_max = clen
+
             for constraint in moleculetype.constraints.itervalues():
                 if re.search('AH',constraint.type):
                     alen = int(list(constraint.type)[-1])
@@ -1817,6 +1824,7 @@ class DesmondParser():
             # now need to add the constraints specified through settles.  Only one settles per molecule
             if (moleculetype.settles):
                 i += 1
+
                 settles = moleculetype.settles
                 # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
                 cline = '      %d %d %d %d ' % (i,1,3,2)
