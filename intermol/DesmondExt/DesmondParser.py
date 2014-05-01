@@ -839,14 +839,14 @@ class DesmondParser():
         rincol = None
         rncol = None
         aicol = None
-        an1col = None
-        an2col = None
+        pdbancol = None
+        ancol = None
         vxcol = None
         vycol = None
         vzcol = None
         bg = False
-        aline1 = ""
-        aline2 = ""
+        pdbaline = ""
+        aline = ""
 
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
@@ -883,14 +883,14 @@ class DesmondParser():
                         if verbose:
                             print "   Parsing [ aindex]..."
                         aicol = i - start
-                    elif match.group('aname1'):
+                    elif match.group('pdbaname'):
                         if verbose:
-                            print "   Parsing [ aname1]..."
-                        an1col = i - start
-                    elif match.group('aname2'):
+                            print "   Parsing [ pdb atom name]..."
+                        pdbancol = i - start
+                    elif match.group('aname'):
                         if verbose:
-                            print "   Parsing [ aname2]..."
-                        an2col = i - start
+                            print "   Parsing [ atom name]..."
+                        ancol = i - start
                     elif match.group('xvelocity'):
                         if verbose:
                             print "   Parsing [ xvelocity]..."
@@ -934,26 +934,28 @@ class DesmondParser():
                         atom.setVelocity(float(aline[vxcol]) * units.angstroms * units.picoseconds**(-1),
                                         float(aline[vycol]) * units.angstroms * units.picoseconds**(-1),
                                          float(aline[vzcol]) * units.angstroms * units.picoseconds**(-1))
-                    aline1 = aline[an1col].strip()
-                    aline2 = aline[an2col].strip()
-                    if re.match('$^',aline1) and not re.match('$^',aline2):
-                        atom.atomName = aline2
-                    elif re.match('$^',aline2) and not re.match('$^',aline1):
-                        atom.atomName = aline1
-                    elif re.search("\d+",aline1) and not re.search("\d+",aline2):
-                        if re.search("\D+",aline1) and re.search("\w+",aline1):
-                            atom.atomName = aline1
+                    if (pdbancol):    
+                        pdbaline = aline[pdbancol].strip()
+                    if (ancol):
+                        aline = aline[ancol].strip()
+                    if re.match('$^',pdbaline) and not re.match('$^',aline):
+                        atom.atomName = aline
+                    elif re.match('$^',aline) and not re.match('$^',pdbaline):
+                        atom.atomName = pdbaline
+                    elif re.search("\d+",pdbaline) and not re.search("\d+",aline):
+                        if re.search("\D+",pdbaline) and re.search("\w+",pdbaline):
+                            atom.atomName = pdbaline
                         else:
-                            atom.atomName = aline2
-                    elif re.search("\d+",aline2) and not re.search("\d+",aline1):
-                        if re.search("\D+",aline2) and re.search("\w+",aline2):
-                            atom.atomName = aline2
+                            atom.atomName = aline
+                    elif re.search("\d+",aline) and not re.search("\d+",pdbaline):
+                        if re.search("\D+",aline) and re.search("\w+",aline):
+                            atom.atomName = aline
                         else:
                             atom.atomName = aline1
-                    elif re.match('$^',aline1) and re.match('$^',aline2):
+                    elif re.match('$^',pdbaline) and re.match('$^',aline):
                         atom.atomName = "None"
                     else:
-                        atom.atomName = aline2  #doesn't matter which we choose, so we'll go with atom name instead of pdb
+                        atom.atomName = aline  #doesn't matter which we choose, so we'll go with atom name instead of pdb
                     i+=1
 
             molecules.append(newMolecule)        
@@ -1067,9 +1069,9 @@ class DesmondParser():
           |
           (?P<aindex>\s*i_m_atomic_number)
           |
-          (?P<aname1>\s*s_m_pdb_atom_name)
+          (?P<pdbaname>\s*s_m_pdb_atom_name)
           |
-          (?P<aname2>\s*s_m_atom_name)
+          (?P<aname>\s*s_m_atom_name)
           |
           (?P<xvelocity>\s*r_ffio_x_vel)
           |

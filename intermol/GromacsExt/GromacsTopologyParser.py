@@ -905,7 +905,6 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newDihedralForce = None
-
                         if len(split) == 5:
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
