@@ -5,7 +5,7 @@ import pdb
 
 import intermol.unit as units
 
-def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
+def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp_check=False):
     """
 
     gropath = path to gromacs binaries
@@ -36,6 +36,8 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff=''):
     if exit:
         print 'grompp failed for {0}'.format(top)
         sys.exit(1)
+    elif grompp_check:
+        return
 
     # mdrunin'
     cmd = ("{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(

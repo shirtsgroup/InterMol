@@ -61,14 +61,13 @@ def get_parser():
             metavar='path', default='',
             help='path for DESMOND binary, needed for energy evaluation')
     group_misc.add_argument('-g', '--gropath', dest='gropath',
-            metavar='path', default='', 
+            metavar='path', default='',
             help='path for GROMACS binary, needed for energy evaluation')
     group_misc.add_argument('-l', '--lmppath', dest='lmppath',
             metavar='path', default='lmp_openmpi',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-f', '--force', action='store_true',
             help='ignore warnings')
-    
     return parser
 
 def main(args=''):
@@ -100,6 +99,11 @@ def main(args=''):
         gro_in = gro_in[0]
         files = [top_in, gro_in] # ensures proper ordering
         prefix = args.gro_in[0][args.gro_in[0].rfind('/') + 1:-4]
+        # ensure .gro and .top are a valid match
+        _ = gromacs_energies(top_in, gro_in,
+                'Inputs/Gromacs/grompp.mdp', args.gropath, '',
+                grompp_check=True)
+
     elif args.lmp_in:
         if not os.path.isfile(args.lmp_in[0]):
             raise Exception('File not found: {0}'.format(args.lmp_in[0]))
