@@ -309,7 +309,9 @@ class DesmondParser():
                         index +=1
 
                 currentMoleculeType = System._sys._molecules[moleculeName]
-                currentMoleculeType.nrexcl = 3 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
+                currentMoleculeType.nrexcl = 0 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
+                                               #MRS: basically, we have to figure out the furthest number of bonds out 
+                                               # to exclude OR explicitly set gromacs exclusions. Either should work.
 
             elif match.group('bonds'): #may not have all bonds types here yet?
                 forces = []
@@ -1496,13 +1498,13 @@ class DesmondParser():
             for bond in moleculetype.bondForceSet.itervalues():
                 try:
                     length = float(bond.length.in_units_of(units.angstroms)._value)   #Look at unit conversions here
-                    k = float(bond.k._value)  # look at unit conversions here
+                    k = float(bond.k.in_units_of(units.kilocalorie_per_mole * units.angstroms**(-2))._value)
                 except:
                     length = None
                     k = None
                 if bond and (length and not length == float(0)) and (k and not k == float(0)):  #Probably a better way to sort sites from m_bond
                     i += 1
-                    if bond.c == 1:
+                    if bond.c == True:
                         name = 'Harm_constrained'
                     else:
                         name = 'Harm'
@@ -1635,7 +1637,7 @@ class DesmondParser():
             if verbose:
                 print "   -Writing torsion-torsions..."
 
-            bpos = len(lines) #storing position for exclusions instead of bonds
+            bpos = len(lines) #storing position for torsions
             hlines = list()
             dlines = list()
             hlines.append("    ffio_torsion_torsion_placeholder\n")
@@ -1691,9 +1693,59 @@ class DesmondParser():
             hlines.append("      i_ffio_ai\n")
             hlines.append("      i_ffio_aj\n")
             hlines.append("      :::\n")
-            for exclusion in moleculetype.exclusions.itervalues():
-                i+=1
-                dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+
+            # currently, should be determined entirely by the bonds, since settles now adds bonds.
+            # MRS: verify!
+            #for exclusion in moleculetype.exclusions.itervalues():
+            #    i+=1
+            #    dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+
+            # now add bond based exclusions
+            if moleculetype.nrexcl > 0:
+
+                if moleculetype.nrexcl > 4:
+                    print "ERROR: can't handle more than excluding 1-4 interactions right now!"
+
+                bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+                # first, figure out the first appearance of each atom in the bondlist
+                currentatom = 0
+                atompos = []
+                bondindex = 0
+                nsize = len(sites)+1
+                atombonds = np.zeros([nsize,8],int)  # assume max of 8 for now
+                natombonds = np.zeros(nsize,int)
+                for bond in bondlist:
+                    atombonds[bond.atom1,natombonds[bond.atom1]] = bond.atom2
+                    natombonds[bond.atom1] += 1
+                    atombonds[bond.atom2,natombonds[bond.atom2]] = bond.atom1
+                    natombonds[bond.atom2] += 1
+
+                for atom in range(1,nsize):
+                    atomexclude = set()  # will be a unique set
+                    # need to make this recursive! And must be a better algorithm
+                    for j1 in range(natombonds[atom]):
+                        toatom1 = atombonds[atom,j1];
+                        atomexclude.add(toatom1)
+                        if moleculetype.nrexcl > 1:
+                            for j2 in range(natombonds[toatom1]):
+                                toatom2 = atombonds[toatom1,j2]
+                                atomexclude.add(toatom2)
+                                if moleculetype.nrexcl > 2:
+                                    for j3 in range(natombonds[toatom2]):
+                                        toatom3 = atombonds[toatom1,j3]
+                                        atomexclude.add(toatom3)
+                                        if moleculetype.nrexcl > 3:
+                                            for j4 in range(natombonds[toatom3]):
+                                                toatom4 = atombonds[toatom1,j4]
+                                                atomexclude.add(toatom4)
+
+                    uniqueexclude = set(atomexclude)
+                    for a in atomexclude:
+                        if (a > atom):
+                            i+=1
+                            dlines.append('      %d %d %d\n' % (i, atom, a))
+
+
             header = "    ffio_exclusions[%d] {\n"%(i)
             hlines = endheadersection(i==0,header,hlines)
             lines.extend(hlines)
