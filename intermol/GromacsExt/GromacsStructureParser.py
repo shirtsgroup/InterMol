@@ -88,12 +88,12 @@ def writeStructure(filename):
                                 atom.residueName,
                                 atom.atomName,
                                 atom.atomIndex,
-                                atom._position[0]._value,
-                                atom._position[1]._value,
-                                atom._position[2]._value,
-                                atom._velocity[0]._value,
-                                atom._velocity[1]._value,
-                                atom._velocity[2]._value))
+                                atom._position[0].in_units_of(units.nanometers)._value,
+                                atom._position[1].in_units_of(units.nanometers)._value,
+                                atom._position[2].in_units_of(units.nanometers)._value,
+                                atom._velocity[0].in_units_of(units.nanometers / units.picoseconds)._value,
+                                atom._velocity[1].in_units_of(units.nanometers / units.picoseconds)._value,
+                                atom._velocity[2].in_units_of(units.nanometers / units.picoseconds)._value))
     # print the box vector
     # check for rectangular; should be symmetric, so we don't have to check 6 values
     if (System._sys._boxVector[0, 1]._value == 0 and
