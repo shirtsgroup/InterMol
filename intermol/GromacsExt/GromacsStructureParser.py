@@ -17,8 +17,20 @@ def readStructure(filename):
     fd.close()
 
     i = 2
-    for moleculetype in System._sys._molecules.values():
-        for molecule in moleculetype.moleculeSet:
+    uniquec = set()
+    # get a list of the unique components, so that we can tell how many of each of them we printed out if
+    # they are split into multiple groups in the .top.
+
+    for component in System._sys._components:
+        uniquec.add(component[0])
+    componentcount = dict(zip(uniquec, np.zeros(len(uniquec),int)))
+
+    for component in System._sys._components:
+        moleculetype = System._sys._molecules[component[0]]
+        molecules = moleculetype.moleculeSet.list
+        ncomponent = componentcount[component[0]]
+        for n in range(ncomponent,ncomponent+component[1]):
+            molecule = molecules[n]
             for atom in molecule._atoms:
                 if lines[i]:
                     atom.residueIndex = int(lines[i][0:5])
@@ -41,6 +53,7 @@ def readStructure(filename):
                     i += 1
                 else:
                     sys.exit()
+        componentcount[component[0]] += component[1]
 
     rawBoxVector = lines[i].split()
     v = np.zeros([3, 3], float) * units.nanometers

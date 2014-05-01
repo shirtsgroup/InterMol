@@ -120,14 +120,20 @@ class GromacsTopologyParser(object):
                         newAtomType = None
 
                         # note -- we should be able to store either C6 and C12 parameters or sigma and epsilon: not both
-                        if len(split) == 7:  # atom name and bond type are the same
+                        if len(split) == 7:  # atom name and bond type are the same, or there is no z.
+                            if (split[1].isdigit()):
+                                Z = int(split[1])
+                                bondtype = split[0].strip()
+                            else:
+                                Z = -1
+                                bondtype = split[1].strip()
                             if System._sys._combinationRule == 1:
                                 sigma = (float(split[6]) / float(split[5])) ** (1/6)
                                 epsilon = float(split[5]) / (4*sigma**6)
 
                                 newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
-                                        split[0].strip(),                           # bondtype
-                                        int(split[1]),                              # Z
+                                        bondtype,                                   # bondtype
+                                        Z,                                          # Z
                                         float(split[2]) * units.amu,                # mass
                                         float(split[3]) * units.elementary_charge,  # charge
                                         split[4],                                   # ptype
@@ -136,8 +142,8 @@ class GromacsTopologyParser(object):
 
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
-                                        split[0].strip(),                             # bondtype
-                                        int(split[1]),                                # Z
+                                        bondtype,                                     # bondtype
+                                        Z,                                            # Z
                                         float(split[2]) * units.amu,                  # mass
                                         float(split[3]) * units.elementary_charge,    # charge
                                         split[4],                                     # ptype
@@ -556,6 +562,7 @@ class GromacsTopologyParser(object):
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
+
                         atom = Atom(int(split[0]),          # AtomNum  (index)
                                 split[4].strip(),           # atomName
                                 int(split[2]),              # resNum
@@ -1414,7 +1421,6 @@ class GromacsTopologyParser(object):
         lines.append('\n')
 
         # [ moleculetype]
-        pdb.set_trace()
         for moleculeType in System._sys._molecules.itervalues():
             lines.append('[ moleculetype ]\n')
             lines.append('%s%10d\n\n'
@@ -1657,17 +1663,17 @@ class GromacsTopologyParser(object):
         # [ molecules ]
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')
-        pdb.set_trace()
-        for component in System._sys._components:
-            lines.append('%-15s%8d\n'
-                         % (component[0],
-                            component[1]))
+        #pdb.set_trace()
+        #for component in System._sys._components:
+        #    lines.append('%-15s%8d\n'
+        #                 % (component[0],
+        #                    component[1]))
         #keeping this for now, since we don't know when it might be preferable.
         # The following lines are more 'chemical'
-        #for molType in System._sys._molecules:
-        #    lines.append('%-15s%8d\n'
-        #            % (molType,
-        #              len(System._sys._molecules[molType].moleculeSet)))
+        for molType in System._sys._molecules:
+            lines.append('%-15s%8d\n'
+                    % (molType,
+                      len(System._sys._molecules[molType].moleculeSet)))
 
         fout = open(filename, 'w')
         for line in lines:
