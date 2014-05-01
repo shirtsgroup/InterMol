@@ -540,7 +540,6 @@ class GromacsTopologyParser(object):
                     if verbose:
                         print "Parsing [ moleculetype ]..."
                     expanded.pop(i)
-
                     split = expanded[i].split()
 
                     moleculeName = split[0]
@@ -1332,6 +1331,7 @@ class GromacsTopologyParser(object):
             print "WARNING: Omitting file ", filename, ". It has already been included!"
             return None
         temp = filename
+
         if os.path.exists(filename):
             try:
                 fd = open(filename)
@@ -1340,20 +1340,13 @@ class GromacsTopologyParser(object):
                 return fd
             except IOError, (errno, strerror):
                 sys.stderr.write("I/O error(%d): %s for local instance of '%s'\n" % (errno, strerror, filename))
-        # if we can't find it, check for the pathname in GMXLIB.
-        filename = os.path.join(os.environ['GMXLIB'], temp)
-        try:
-            fd = open(filename)
-            self.includes.add(filename)
-            sys.stderr.write("version in GMXLIB = %s used for topology file '%s'\n" % (os.environ['GMXLIB'], temp))
-            return fd
-        except:
-            pass
 
-        # if we can't include the file locally or from GMXLIB,
-        # let's look for it in the directory of one of the previous files.
-        # NOTE: could be dangerous if multiple files with the same name are
-        # found in different directories!
+        # if we can't include the file locally, let's look for it in
+        # the directory of one of the previous files.  
+
+        # NOTE: could be
+        # dangerous if multiple files with the same name are found in
+        # different directories!
         found = False
         for parentfile in self.includes:
             parentdir, oldfile = os.path.split(parentfile)
@@ -1361,15 +1354,26 @@ class GromacsTopologyParser(object):
             if os.path.exists(filename):
                 found = True
                 break
-        try:
-            fd = open(filename)
-            self.includes.add(temp)
-            sys.stderr.write("version in %s used for topology file '%s'\n" % (parentdir, filename))
-            return fd
 
-        except IOError, (errno, strerror):
-            sys.stderr.write("Unrecoverable I/O error(%d): %s: '%s'\n" % (errno, strerror, filename))
-            sys.exit()
+        if found:
+            try:
+                fd = open(filename)
+                self.includes.add(temp)
+                sys.stderr.write("version in %s used for topology file '%s'\n" % (parentdir, filename))
+                return fd
+            except:
+                pass
+        else:
+            try:
+                filename = os.path.join(os.environ['GMXLIB'], temp)
+                fd = open(filename)
+                self.includes.add(filename)
+                sys.stderr.write("version in GMXLIB = %s used for topology file '%s'\n" % (os.environ['GMXLIB'], temp))
+                return fd
+
+            except IOError, (errno, strerror):
+                sys.stderr.write("Unrecoverable I/O error(%d): can'd find %s anywhere: '%s'\n" % (errno, strerror, filename))
+                sys.exit()
 
     def writeTopology(self, filename):
         """Write this topology in GROMACS file format.
@@ -1410,6 +1414,7 @@ class GromacsTopologyParser(object):
         lines.append('\n')
 
         # [ moleculetype]
+        pdb.set_trace()
         for moleculeType in System._sys._molecules.itervalues():
             lines.append('[ moleculetype ]\n')
             lines.append('%s%10d\n\n'
@@ -1652,10 +1657,17 @@ class GromacsTopologyParser(object):
         # [ molecules ]
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')
-        for molType in System._sys._molecules:
+        pdb.set_trace()
+        for component in System._sys._components:
             lines.append('%-15s%8d\n'
-                    % (molType,
-                      len(System._sys._molecules[molType].moleculeSet)))
+                         % (component[0],
+                            component[1]))
+        #keeping this for now, since we don't know when it might be preferable.
+        # The following lines are more 'chemical'
+        #for molType in System._sys._molecules:
+        #    lines.append('%-15s%8d\n'
+        #            % (molType,
+        #              len(System._sys._molecules[molType].moleculeSet)))
 
         fout = open(filename, 'w')
         for line in lines:
