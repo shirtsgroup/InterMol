@@ -27,7 +27,7 @@
   CT     CT     OH     HO      2      180 1.4
   HC     CT     CT     OH      2      180 1.4
   HC     CT     OH     HO      2      180 1.4
-  HC     CT     CT     HC      3      180 1.4
+  HC     CT     CT     HC      2      180 1.4
 	
 [ moleculetype ]
 ; Name                   nrexcl
