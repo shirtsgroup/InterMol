@@ -1110,15 +1110,15 @@ class GromacsTopologyParser(object):
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
                         dOH = float(split[2]) * units.nanometers
                         
-                        newBondForce = Bond(1,2,dOH,waterbondrefk)
+                        newBondForce = Bond(1,2,dOH,waterbondrefk,c=True)
                         currentMoleculeType.bondForceSet.add(newBondForce)
                         System._sys._forces.add(newBondForce)
 
-                        newBondForce = Bond(1,3,dOH,waterbondrefk)
+                        newBondForce = Bond(1,3,dOH,waterbondrefk,c=True)
                         currentMoleculeType.bondForceSet.add(newBondForce)
                         System._sys._forces.add(newBondForce)
 
-                        newAngleForce = Angle(3,1,2,angle,wateranglerefk)
+                        newAngleForce = Angle(3,1,2,angle,wateranglerefk,c=True)
                         currentMoleculeType.angleForceSet.add(newAngleForce)
                         System._sys._forces.add(newAngleForce)
 

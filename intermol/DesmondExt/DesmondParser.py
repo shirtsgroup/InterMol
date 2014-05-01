@@ -1498,13 +1498,13 @@ class DesmondParser():
             for bond in moleculetype.bondForceSet.itervalues():
                 try:
                     length = float(bond.length.in_units_of(units.angstroms)._value)   #Look at unit conversions here
-                    k = float(bond.k._value)  # look at unit conversions here
+                    k = float(bond.k.in_units_of(units.kilocalorie_per_mole * units.angstroms**(-2))._value)
                 except:
                     length = None
                     k = None
                 if bond and (length and not length == float(0)) and (k and not k == float(0)):  #Probably a better way to sort sites from m_bond
                     i += 1
-                    if bond.c == 1:
+                    if bond.c == True:
                         name = 'Harm_constrained'
                     else:
                         name = 'Harm'
