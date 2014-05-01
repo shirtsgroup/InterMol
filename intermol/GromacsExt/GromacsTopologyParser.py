@@ -1098,7 +1098,7 @@ class GromacsTopologyParser(object):
                             newSettlesForce = Settles(int(split[0]),
                                     float(split[2]) * units.nanometers,
                                     float(split[3]) * units.nanometers)
-                            
+
                         currentMoleculeType.settles = newSettlesForce
                         System._sys._forces.add(newSettlesForce)
 
@@ -1616,34 +1616,34 @@ class GromacsTopologyParser(object):
                         print "ERROR (writeTopology): found unsupported  dihedral type"
                 lines.append('\n')
 
-        if moleculeType.settles:
-            settles = moleculeType.settles
-            # [ settles ]
-            lines.append('[ settles ]\n')
-            lines.append('; i  funct   dOH  dHH\n')
-            s_type = 1
-            lines.append('%6d%6d%18.8f%18.8f\n'
-                    % (settles.atom1,
-                       s_type,
-                       settles.dOH.in_units_of(units.nanometers)._value,
-                       settles.dHH.in_units_of(units.nanometers)._value))
-            lines.append('\n')
+            if moleculeType.settles:
+                settles = moleculeType.settles
+                # [ settles ]
+                lines.append('[ settles ]\n')
+                lines.append('; i  funct   dOH  dHH\n')
+                s_type = 1
+                lines.append('%6d%6d%18.8f%18.8f\n'
+                             % (settles.atom1,
+                                s_type,
+                                settles.dOH.in_units_of(units.nanometers)._value,
+                                settles.dHH.in_units_of(units.nanometers)._value))
+                lines.append('\n')
 
-        if moleculeType.exclusions:
-            # [ exclusions ]
-            lines.append('[ exclusions ]\n')
-            for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
-                if len(exclusion.exclusions) == 2:
-                    lines.append('%6s%6s%6s\n'
-                            % (i+1,
-                              exclusion.exclusions[0],
-                              exclusion.exclusions[1]))
-                else:
-                    lines.append('%6s%6s%6s\n'
-                            % (exclusion.exclusions[0],
-                               exclusion.exclusions[1],
-                               exclusion.exclusions[2]))
-                    lines.append('\n')
+            if moleculeType.exclusions:
+                # [ exclusions ]
+                lines.append('[ exclusions ]\n')
+                for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
+                    if len(exclusion.exclusions) == 2:
+                        lines.append('%6s%6s%6s\n'
+                                     % (i+1,
+                                        exclusion.exclusions[0],
+                                        exclusion.exclusions[1]))
+                    else:
+                        lines.append('%6s%6s%6s\n'
+                                     % (exclusion.exclusions[0],
+                                        exclusion.exclusions[1],
+                                        exclusion.exclusions[2]))
+                        lines.append('\n')
 
         # [ system ]
         lines.append('[ system ]\n')
