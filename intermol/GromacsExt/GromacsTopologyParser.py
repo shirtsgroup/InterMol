@@ -1104,9 +1104,9 @@ class GromacsTopologyParser(object):
 
                         # we need to add a constrainted bonded force as well between the atoms in these molecules. 
                         # we assume the gromacs default of 1. O, 2. H, 3. H
-                        # reference bond strength is 450 kj/mol, but doesn't really matter since  constrainted.
-                        waterbondrefk = 450*units.kilojoules_per_mole * units.nanometers**(-2) 
-                        wateranglerefk = 200*units.kilojoules_per_mole * units.degrees**(-2) 
+                        # reference bond strength is 900 kj/mol, but doesn't really matter since constrainted.
+                        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
+                        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
                         dOH = float(split[2]) * units.nanometers
                         
@@ -1122,28 +1122,18 @@ class GromacsTopologyParser(object):
                         currentMoleculeType.angleForceSet.add(newAngleForce)
                         System._sys._forces.add(newAngleForce)
 
-                        #water_atoms = currentMolecule.getAtoms()
-                        #oType = water_atoms[0].getAtomType(0)[0]  # extract the name of the atom
-                        #hType = water_atoms[1].getAtomType(0)[0]
-                        #
-                        #newBondType = BondType(oType, hType, '1', float(split[2]) * units.nanometers,
-                        #                       waterbondrefk,c=True)
-                        #
-                        #self.bondtypes.add(newBondType)
-                        #
-                        #newAngleType = AngleType(hType, oType, hType, 1, angle, wateranglerefk)
-                        #self.angletypes.add(newAngleType)
-                        
                 elif match.group('exclusions'):
                     if verbose:
                         print "Parsing [ exclusions ]..."
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                        newExclusion = Exclusions(expanded.pop(i).split())
-
-                        currentMoleculeType.exclusions.add(newExclusion)
-                        System._sys._forces.add(newExclusion)
+                        split = expanded.pop(i).split()
+                        for j in range(len(split)):
+                            if split[0] < split[j]:
+                                newExclusion = Exclusions([split[0],split[j]])
+                                currentMoleculeType.exclusions.add(newExclusion)
+                                System._sys._forces.add(newExclusion)
 
                 elif match.group('molecules'):
                     if verbose:
@@ -1460,7 +1450,6 @@ class GromacsTopologyParser(object):
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
                 for bond in moleculeType.bondForceSet.itervalues():
-
                     if isinstance(bond, Bond):
                         b_type = 1
                         lines.append('%6d%7d%4d%18.8e%18.8e\n'
