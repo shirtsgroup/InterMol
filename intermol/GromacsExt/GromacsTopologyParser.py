@@ -119,25 +119,25 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         newAtomType = None
 
-                        if len(split) == 7:
+                        # note -- we should be able to store either C6 and C12 parameters or sigma and epsilon: not both
+                        if len(split) == 7:  # atom name and bond type are the same
                             if System._sys._combinationRule == 1:
-                                # TODO: double check the following equations
                                 sigma = (float(split[6]) / float(split[5])) ** (1/6)
                                 epsilon = float(split[5]) / (4*sigma**6)
 
                                 newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
-                                        split[1].strip(),                           # bondtype
-                                        -1,                                         # Z
+                                        split[0].strip(),                           # bondtype
+                                        int(split[1]),                              # Z
                                         float(split[2]) * units.amu,                # mass
                                         float(split[3]) * units.elementary_charge,  # charge
                                         split[4],                                   # ptype
-                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # sigma
-                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
+                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
+                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
 
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
-                                        split[1].strip(),                             # bondtype
-                                        -1,                                           # Z
+                                        split[0].strip(),                             # bondtype
+                                        int(split[1]),                                # Z
                                         float(split[2]) * units.amu,                  # mass
                                         float(split[3]) * units.elementary_charge,    # charge
                                         split[4],                                     # ptype
@@ -146,7 +146,6 @@ class GromacsTopologyParser(object):
 
                         if len(split) == 8:
                             if System._sys._combinationRule == 1:
-                                # TODO: double check the following equations
                                 sigma = (float(split[7]) / float(split[6]))**(1/6)
                                 epsilon = float(split[6]) / (4*sigma**6)
                                 newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
@@ -155,8 +154,8 @@ class GromacsTopologyParser(object):
                                         float(split[3]) * units.amu,                # mass
                                         float(split[4]) * units.elementary_charge,  # charge
                                         split[5],                                   # ptype
-                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # sigma
-                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # epsilon
+                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
+                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
 
                             elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
                                 newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
