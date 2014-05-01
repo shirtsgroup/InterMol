@@ -21,8 +21,8 @@ def ConvertDihedralFromOPLSToRB(f1,f2,f3,f4):
     c2 = -f2 + 4.0 * f4
     c3 = 2.0 * f3
     c4 = -4.0 * f4
-    c5 = 0.0
-    c6 = 0.0
+    c5 = 0.0*c0.unit  # need to keep everything in units
+    c6 = 0.0*c0.unit
     return c0, c1, c2, c3, c4, c5, c6
 
 def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):

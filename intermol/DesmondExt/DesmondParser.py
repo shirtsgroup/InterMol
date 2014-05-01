@@ -1592,13 +1592,26 @@ class DesmondParser():
                                    'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
                                    0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
                                    0,0,0,0,0,0))
-                # probably can support this under a RB or Fourier scheme, but come back to this later, as is not common.    
-                # if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
-                #    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f\n' % 
-                #                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 
-                #                   'Opls_Proper', float(dihedral.phi.in_units_of(units.degrees)._value), 
-                #                   float(dihedral.k.in_units_of(units.kilocalorie_per_mole)._value), 
-                #                   int(dihedral.multiplicity),0,0,0,0,0))
+                if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
+                    zunit = 0*dihedral.k.unit
+                    if (dihedral.multiplicity == 1):
+                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(dihedral.k,zunit,zunit,zunit)
+                    elif (dihedral.multiplicity == 2):
+                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,dihedral.k,zunit,zunit)
+                    elif (dihedral.multiplicity == 3):
+                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,zunit,dihedral.k,zunit)
+                    elif (dihedral.multiplicity == 4):
+                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,zunit,zunit,dihedral.k)
+                    f0,f1,f2,f3,f4,f5,f6 = ConvertDihedralFromRBToProperTrig(c0,c1,c2,c3,c4,c5,c6)
+                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
+                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
+                                   float(c0.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c1.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c2.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c3.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c4.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c5.in_units_of(units.kilocalories_per_mole)._value),
+                                   float(c6.in_units_of(units.kilocalories_per_mole)._value)))                        
 
                 elif isinstance(dihedral, RBDihedral):
                     if dihedral.i == 1:
