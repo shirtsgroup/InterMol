@@ -38,6 +38,8 @@ class System(object):
         self._forces = OrderedSet()
         self._boxVector = np.zeros([3, 3])
 
+        self._components = list()
+
     def addMolecule(self, molecule):
         """Append a molecule into the System.
 

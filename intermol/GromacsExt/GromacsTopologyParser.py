@@ -4,6 +4,7 @@ import re
 import copy
 import warnings
 import math
+from collections import OrderedDict
 
 # for debugging eventually remove
 import pdb
@@ -1149,15 +1150,24 @@ class GromacsTopologyParser(object):
                     if verbose:
                         print "Parsing [ molecules ]..."
                     expanded.pop(i)
+                    ordered_moleculetypes = OrderedDict()
                     while i < len(expanded) and not (expanded[i].count('[')):
                         split = expanded.pop(i).split()
-                        tempMolecule = System._sys._molecules[split[0]].moleculeSet[0]
-                        max = int(split[1])
-                        n = 1
-                        while n < max:
+                        mol_name = split[0]
+                        mol_num = int(split[1])
+                        System._sys._components.append((mol_name, mol_num))
+
+                        ordered_moleculetypes[mol_name] = System._sys._molecules[mol_name]
+                        tempMolecule = System._sys._molecules[mol_name].moleculeSet[0]
+                        if len(System._sys._molecules[mol_name].moleculeSet) > 1:
+                            n = 0
+                        else:
+                            n = 1
+                        while n < mol_num:
                             mol = copy.deepcopy(tempMolecule)
                             System._sys.addMolecule(mol)
                             n += 1
+                    System._sys._molecules = ordered_moleculetypes
                 else:
                     i += 1
             else:

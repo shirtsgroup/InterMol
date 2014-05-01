@@ -84,7 +84,7 @@ def writeStructure(filename):
     # print the box vector
     # check for rectangular; should be symmetric, so we don't have to check 6 values
     if (System._sys._boxVector[0, 1]._value == 0 and
-        System._sys._boxVector[0, 2]._value == 0 and 
+        System._sys._boxVector[0, 2]._value == 0 and
         System._sys._boxVector[1, 2]._value == 0):
             for i in range(3):
                 lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
