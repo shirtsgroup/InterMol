@@ -1,6 +1,6 @@
 def ConvertDihedralFromRBToOPLS(c0,c1,c2,c3,c4,c5,c6):
 
-    if (c5 !=0.0 and c1+c2+c3+c4 != 0.0):
+    if (c5 !=0.0 * c0.unit and c1+c2+c3+c4 != 0.0 * c0.unit):
         print "This RB dihedral is inconsistent with OPLS style",
         print "because c5 = ",c5,
         print " (should be 0) and c1+c2+c3+c4 = ",c1+c2+c3+c4,
@@ -21,8 +21,8 @@ def ConvertDihedralFromOPLSToRB(f1,f2,f3,f4):
     c2 = -f2 + 4.0 * f4
     c3 = 2.0 * f3
     c4 = -4.0 * f4
-    c5 = 0.0*c0.unit  # need to keep everything in units
-    c6 = 0.0*c0.unit
+    c5 = 0.0 * c0.unit  # need to keep everything in units
+    c6 = 0.0 * c0.unit
     return c0, c1, c2, c3, c4, c5, c6
 
 def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):
@@ -30,7 +30,7 @@ def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):
     # sign is -1 or 1
     # RB is \sum_n=0^6 cos(x)^n
     # ProperTrig is f_0 + \sum_n=1^6 cos(nx-phi)
-    # we restrict to phi = 0 or 180 (might need to generalize later), so we can write as 
+    # we restrict to phi = 0 or 180 (might need to generalize later), so we can write as
     #               f_0 + \sum_n=1^6 cos(nx)cos(phi) + sin(nx)sin(phi)
     #               f_0 + \sum_n=1^6 cos(nx)  (phi = 0)
     #               f_0 + \sum_n=1^6 -cos(nx)  (phi = 180)

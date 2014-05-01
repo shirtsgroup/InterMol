@@ -23,7 +23,7 @@ def get_parser():
 
     parser = argparse.ArgumentParser(description = 'Perform a file conversion')
 
-    # input arguments 
+    # input arguments
     #   (FYI not using argparse's mutually exclusive group since it
     #    doesn't support the description argument => ugly -h output)
     group_in = parser.add_argument_group('Choose input conversion format')
@@ -127,7 +127,7 @@ def main(args=''):
     # initialize driver
     Driver.initSystem(prefix)  # what does this name do?
 
-    # load files -- Driver should know which type based on extension... 
+    # load files -- Driver should know which type based on extension...
     # change this eventually?
     Driver.load(*files)
 
@@ -147,7 +147,7 @@ def main(args=''):
     if args.lammps:
         print 'Converting to Lammps...writing %s.lmp...' % oname
         Driver.write('%s.lmp' % oname)
-    
+
     # calculate energy of input and output files to compare
     # to do: remove hardcoded parmeter filenames
     #        add lammps
@@ -163,21 +163,21 @@ def main(args=''):
         elif args.lmp_in:
             # TODO: fix this when --lmp_in gets changed to read input files
             temp = args.lmp_in[0].split('.')[0] + '.input'
-            e_in, e_infile = lammps_energies(temp, args.lmppath) 
+            e_in, e_infile = lammps_energies(temp, args.lmppath)
         else:
             warn('Something weird went wrong! Code should have never made it here.')
             pass # should never reach here
-        
+
         # output
         if args.desmond:
             e_out, e_outfile = desmond_energies('%s.cms' % oname,
-                    'Inputs/Desmond/onepoint.cfg', args.despath) 
+                    'Inputs/Desmond/onepoint.cfg', args.despath)
         if args.gromacs:
             e_out, e_outfile = gromacs_energies('%s.top' % oname,
-                    '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '') 
+                    '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
         if args.lammps:
             e_out, e_outfile = lammps_energies('%s.input' % oname,
-                    args.lmppath) 
+                    args.lmppath)
         print 'Input energy file:', e_infile
         print 'Output energy file:', e_outfile
         results = combine_energy_results(e_in, e_out)

@@ -447,16 +447,15 @@ class LammpsParser(object):
             new_dihed_force = None
             if len(self.dihedral_style) == 1:
                 if self.dihedral_style[0] == 'opls':
-                    Fs = [self.dihedral_types[int(fields[1])][0],
-                          self.dihedral_types[int(fields[1])][1],
-                          self.dihedral_types[int(fields[1])][2],
-                          self.dihedral_types[int(fields[1])][3]]
-                    Cs_temp = ConvertDihedralFromOPLSToRB(
-                            Fs[0]._value,
-                            Fs[1]._value,
-                            Fs[2]._value,
-                            Fs[3]._value)
-                    Cs = [param * Fs[0].unit for param in Cs_temp]
+                    Fs = [self.dihedral_types[fields[1]][0],
+                          self.dihedral_types[fields[1]][1],
+                          self.dihedral_types[fields[1]][2],
+                          self.dihedral_types[fields[1]][3]]
+                    Cs = ConvertDihedralFromOPLSToRB(
+                            Fs[0],
+                            Fs[1],
+                            Fs[2],
+                            Fs[3])
                     new_dihed_force = RBDihedral(
                             fields[2], fields[3], fields[4], fields[5],
                             Cs[0], Cs[1], Cs[2], Cs[3], Cs[4], Cs[5], Cs[6])
@@ -652,29 +651,14 @@ class LammpsParser(object):
                         atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
                         atomtype4 = atom4.bondtype
 
-                        temp = RBDihedralType(
-                                atomtype1,
-                                atomtype2,
-                                atomtype3,
-                                atomtype4,
-                                3,
-                                dihedral.C0,
-                                dihedral.C1,
-                                dihedral.C2,
-                                dihedral.C3,
-                                dihedral.C4,
-                                dihedral.C5,
-                                dihedral.C6)
+                        temp = RBDihedralType(atomtype1, atomtype2,
+                                atomtype3, atomtype4, 3, dihedral.C0,
+                                dihedral.C1, dihedral.C2, dihedral.C3,
+                                dihedral.C4, dihedral.C5, dihedral.C6)
                         if temp not in dihedral_type_dict:
-                            Fs_temp = ConvertDihedralFromRBToOPLS(
-                                    dihedral.C0._value,
-                                    dihedral.C1._value,
-                                    dihedral.C2._value,
-                                    dihedral.C3._value,
-                                    dihedral.C4._value,
-                                    dihedral.C5._value,
-                                    dihedral.C6._value)
-                            Fs = [param * dihedral.C0.unit for param in Fs_temp]
+                            Fs = ConvertDihedralFromRBToOPLS(dihedral.C0,
+                                    dihedral.C1, dihedral.C2, dihedral.C3,
+                                    dihedral.C4, dihedral.C5, dihedral.C6)
                             dihedral_type_dict[temp] = dih_type_i
                             dihedral_coeffs.append('{0:d} {1:18.8f} {2:18.8f} {3:18.8f} {4:18.8f}\n'.format(
                                     dih_type_i,
@@ -788,19 +772,13 @@ class LammpsParser(object):
                     atomtype4 = atom4.bondtype
 
                     if isinstance(dihedral, ProperDihedral1):
+                        # TODO: implement remaining cases
                         continue
-                    temp = RBDihedralType(atomtype1,
-                                atomtype2,
-                                atomtype3,
-                                atomtype4,
-                                3,
-                                dihedral.C0,
-                                dihedral.C1,
-                                dihedral.C2,
-                                dihedral.C3,
-                                dihedral.C4,
-                                dihedral.C5,
-                                dihedral.C6)
+                    if isinstance(dihedral, RBDihedral):
+                        temp = RBDihedralType(atomtype1, atomtype2, atomtype3,
+                                atomtype4, 3, dihedral.C0,
+                                dihedral.C1, dihedral.C2, dihedral.C3,
+                                dihedral.C4, dihedral.C5, dihedral.C6)
 
                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
                             i + j + 1,
@@ -913,7 +891,7 @@ class LammpsParser(object):
             # non-bonded
             f.write('pair_style lj/cut/coul/long 9.0 10.0\n')  # TODO: match mdp
             f.write('pair_modify mix geometric\n')  # TODO: match defaults
-            f.write('kspace_style pppm 1.0e-4\n')  # TODO: match mdp
+            f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
             f.write('\n')
 
             # bonded
