@@ -4,7 +4,7 @@ sys.path.append('..')
 from intermol.Decorators import *
 from AbstractDihedralType import *
 
-class ProperDihedral1Type(AbstractDihedralType):
+class ProperPeriodicDihedralType(AbstractDihedralType):
 
     @accepts_compatible_units(None,
             None,

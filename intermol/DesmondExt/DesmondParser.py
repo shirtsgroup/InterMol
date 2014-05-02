@@ -1594,7 +1594,7 @@ class DesmondParser():
                                    'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
                                    0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
                                    0,0,0,0,0,0))
-                if isinstance(dihedral, ProperDihedral1) or isinstance(dihedral, ProperDihedral9):
+                elif isinstance(dihedral, ProperPeriodicDihedral) or isinstance(dihedral, ProperDihedral9):
                     zunit = 0*dihedral.k.unit
                     if (dihedral.multiplicity == 1):
                         c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(dihedral.k,zunit,zunit,zunit)

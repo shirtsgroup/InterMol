@@ -397,7 +397,7 @@ class GromacsTopologyParser(object):
                         if split[2].isdigit():
                             # Proper Dihedral 1
                             if (int(split[2]) == 1) and (len(split) == 6):
-                                newDihedralType = ProperDihedral1Type('X',
+                                newDihedralType = ProperPeriodicDihedralType('X',
                                     split[0],
                                     split[1],
                                     'X',
@@ -446,7 +446,7 @@ class GromacsTopologyParser(object):
                         elif split[4].isdigit():
                             # Proper Dihedral 1
                             if (int(split[4]) == 1) and (len(split) == 8):
-                                newDihedralType = ProperDihedral1Type(split[0],
+                                newDihedralType = ProperPeriodicDihedralType(split[0],
                                     split[1],
                                     split[2],
                                     split[3],
@@ -977,7 +977,7 @@ class GromacsTopologyParser(object):
                                 dihedralType = self.dihedraltypes.get(tempType)
 
     
-                            if isinstance(dihedralType, ProperDihedral1Type):
+                            if isinstance(dihedralType, ProperPeriodicDihedralType):
                                 split.append(dihedralType.phi)
                                 split.append(dihedralType.k)
                                 split.append(dihedralType.multiplicity)
@@ -1013,7 +1013,7 @@ class GromacsTopologyParser(object):
                         # Proper Dihedral 1
                         if int(split[4]) == 1:
                             try:
-                                newDihedralForce = ProperDihedral1(int(split[0]),
+                                newDihedralForce = ProperPeriodicDihedral(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1021,7 +1021,7 @@ class GromacsTopologyParser(object):
                                         float(split[6]) * units.kilojoules_per_mole,
                                         int(split[7]))
                             except:
-                                newDihedralForce = ProperDihedral1(int(split[0]),
+                                newDihedralForce = ProperPeriodicDihedral(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1608,10 +1608,11 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
+
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
                     # this atom index will be the same for all of types.
                     atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
-                    if isinstance(dihedral, ProperDihedral1):
+                    if isinstance(dihedral, ProperPeriodicDihedral):
                         d_type = 1
                         lines.append('%s%4d%18.8f%18.8f%4d\n'
                                 % (atomindex,

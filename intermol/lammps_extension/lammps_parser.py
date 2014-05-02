@@ -632,7 +632,7 @@ class LammpsParser(object):
             # dihedral types
             if mol_type.dihedralForceSet:
                 for dihedral in mol_type.dihedralForceSet.itervalues():
-                    if isinstance(dihedral, ProperDihedral1):
+                    if isinstance(dihedral, ProperPeriodicDihedral):
                         continue
                     if isinstance(dihedral, RBDihedral):
                         if 'opls' not in dihedral_style:
@@ -771,7 +771,7 @@ class LammpsParser(object):
                     atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
                     atomtype4 = atom4.bondtype
 
-                    if isinstance(dihedral, ProperDihedral1):
+                    if isinstance(dihedral, ProperPeriodicDihedral):
                         # TODO: implement remaining cases
                         continue
                     if isinstance(dihedral, RBDihedral):

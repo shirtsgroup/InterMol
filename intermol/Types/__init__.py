@@ -27,7 +27,7 @@ all=['AbstractAtomType',
     'UreyBradleyAngleType'
 
     'RBDihedralType'
-    'ProperDihedral1Type'
+    'ProperPeriodicDihedralType'
     'ImproperDihedral2Type'
     'ImproperDihedral4Type'
     'FourierDihedralType'
@@ -65,7 +65,7 @@ from QuarticAngleType import QuarticAngleType
 from RBDihedralType import RBDihedralType
 from UreyBradleyAngleType import UreyBradleyAngleType
 
-from ProperDihedral1Type import ProperDihedral1Type
+from ProperPeriodicDihedralType import ProperPeriodicDihedralType
 from ImproperDihedral2Type import ImproperDihedral2Type
 from ImproperDihedral4Type import ImproperDihedral4Type
 from ProperDihedral9Type import ProperDihedral9Type
