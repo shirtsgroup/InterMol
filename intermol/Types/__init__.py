@@ -30,6 +30,7 @@ all=['AbstractAtomType',
     'ProperDihedral1Type'
     'ImproperDihedral2Type'
     'ImproperDihedral4Type'
+    'FourierDihedralType'
     'ProperDihedral9Type'
     'ConvertOPLS'
 ]
@@ -68,6 +69,7 @@ from ProperDihedral1Type import ProperDihedral1Type
 from ImproperDihedral2Type import ImproperDihedral2Type
 from ImproperDihedral4Type import ImproperDihedral4Type
 from ProperDihedral9Type import ProperDihedral9Type
+from FourierDihedralType import FourierDihedralType
 
 from ConvertDihedrals import ConvertDihedralFromRBToOPLS
 from ConvertDihedrals import ConvertDihedralFromOPLSToRB

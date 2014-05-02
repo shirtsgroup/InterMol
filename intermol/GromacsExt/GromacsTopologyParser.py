@@ -430,6 +430,19 @@ class GromacsTopologyParser(object):
                                     float(split[7]) * units.kilojoules_per_mole,
                                     float(split[8]) * units.kilojoules_per_mole,
                                     0 * units.kilojoules_per_mole)  # GROMACS only goes up through C5
+
+                            #Fourier Dihedral
+                            elif (int(split[2]) == 5) and (len(split) == 7):
+                                newDihedralType = RBDihedralType('X',
+                                    split[0],
+                                    split[1],
+                                    'X',
+                                    split[2],
+                                    float(split[3]) * units.kilojoules_per_mole,
+                                    float(split[4]) * units.kilojoules_per_mole,
+                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[6]) * units.kilojoules_per_mole)
+
                         elif split[4].isdigit():
                             # Proper Dihedral 1
                             if (int(split[4]) == 1) and (len(split) == 8):
@@ -442,7 +455,7 @@ class GromacsTopologyParser(object):
                                     float(split[6]) * units.kilojoules_per_mole,
                                     int(split[7]))
 
-                            # Proper Dihedral 2
+                            # Improper Dihedral 2
                             elif (int(split[4]) == 2) and (len(split) == 7):
                                 newDihedralType = ImproperDihedral2Type(split[0],
                                     split[1],
@@ -467,16 +480,29 @@ class GromacsTopologyParser(object):
                                     float(split[10]) * units.kilojoules_per_mole,
                                     0 * units.kilojoules_per_mole)
 
+                            # Fourier Dihedral
+                            if (int(split[4]) == 5) and (len(split) == 9):
+                                newDihedralType = FourierDihedralType(split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    float(split[7]) * units.kilojoules_per_mole,
+                                    float(split[8]) * units.kilojoules_per_mole)
+
                             # periodic improper dihedral
-                            elif (int(split[4]) == 4) and (len(split) == 8):
+                            elif (int(split[4]) == 4) and (len(split) == 9):
                                 newDihedralType = ImproperDihedral4Type(split[0],
                                     split[1],
                                     split[2],
                                     split[3],
                                     split[4],
-                                    float(split[5]) * units.degrees,
+                                    float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole,
-                                    int(split[7]))
+                                    float(split[7]) * units.kilojoules_per_mole,
+                                    float(split[8]) * units.kilojoules_per_mole)
                         else:
                             print "could not find dihedral type"
 
@@ -973,6 +999,12 @@ class GromacsTopologyParser(object):
                                 split.append(dihedralType.C4)
                                 split.append(dihedralType.C5)
 
+                            if isinstance(dihedralType, FourierDihedralType):
+                                split.append(dihedralType.c1)
+                                split.append(dihedralType.c2)
+                                split.append(dihedralType.c3)
+                                split.append(dihedralType.c4)
+
                             if isinstance(dihedralType, ImproperDihedral4Type):
                                 split.append(dihedralType.phi)
                                 split.append(dihedralType.k)
@@ -1040,6 +1072,26 @@ class GromacsTopologyParser(object):
                                         split[9],
                                         split[10],
                                         0 * units.kilojoules_per_mole)
+
+                        elif int(split[4]) == 5:
+                            try:
+                                newDihedralForce = FourierDihedral(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        float(split[5]) * units.kilojoules_per_mole,
+                                        float(split[6]) * units.kilojoules_per_mole,
+                                        float(split[7]) * units.kilojoules_per_mole,
+                                        float(split[8]) * units.kilojoules_per_mole)
+                            except:
+                                newDihedralForce = FourierDihedral(int(split[0]),
+                                        int(split[1]),
+                                        int(split[2]),
+                                        int(split[3]),
+                                        split[5],
+                                        split[6],
+                                        split[7],
+                                        split[8])
 
                         # Improper Dihedral 4
                         elif int(split[4]) == 4:
@@ -1513,18 +1565,15 @@ class GromacsTopologyParser(object):
                 for angle in moleculeType.angleForceSet.itervalues():
                     if isinstance(angle, Angle):
                         a_type = 1
-                        lines.append('%6d%7d%7d%7d%18.8e%18.8e\n'
-                                % (angle.atom1,
-                                   angle.atom2,
-                                   angle.atom3,
+                        atomindex = "%6d%7d%7d" % (angle.atom1,angle.atom2,angle.atom3)
+                        lines.append('%s%4d%18.8e%18.8e\n'
+                                % (atomindex,
                                    a_type,
                                    angle.theta.in_units_of(units.degrees)._value,
                                    angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
                     elif isinstance(angle, UreyBradleyAngle):
-                        lines.append('%6d%7d%7d%7d%18.8e%18.8e%18.8e%18.8e\n'
-                                     % (angle.atom1,
-                                        angle.atom2,
-                                        angle.atom3,
+                        lines.append('%s%4d%18.8e%18.8e%18.8e%18.8e\n'
+                                     % (atomindex,
                                         a_type,
                                         angle.theta.in_units_of(units.degrees)._value,
                                         angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value,
@@ -1559,15 +1608,13 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
+                    # this atom index will be the same for all of types.
+                    atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
                     if isinstance(dihedral, ProperDihedral1):
                         d_type = 1
-                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1,
-                                   dihedral.atom2,
-                                   dihedral.atom3,
-                                   dihedral.atom4,
+                        lines.append('%s%4d%18.8f%18.8f%4d\n'
+                                % (atomindex,
                                    d_type,
                                    dihedral.phi.in_units_of(units.degrees)._value,
                                    dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
@@ -1575,22 +1622,16 @@ class GromacsTopologyParser(object):
 
                     elif isinstance(dihedral, ImproperDihedral2):
                         d_type = 2
-                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f\n'
-                                % (dihedral.atom1,
-                                   dihedral.atom2,
-                                   dihedral.atom3,
-                                   dihedral.atom4,
+                        lines.append('%s%4d%18.8f%18.8f\n'
+                                % (atomindex,
                                    d_type,
                                    dihedral.xi.in_units_of(units.degrees)._value,
                                    dihedral.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
 
                     elif isinstance(dihedral, RBDihedral):
                         d_type = 3
-                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
-                                % (dihedral.atom1,
-                                   dihedral.atom2,
-                                   dihedral.atom3,
-                                   dihedral.atom4,
+                        lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
+                                % (atomindex,
                                    d_type,
                                    dihedral.C0.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.C1.in_units_of(units.kilojoules_per_mole)._value,
@@ -1599,13 +1640,20 @@ class GromacsTopologyParser(object):
                                    dihedral.C4.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.C5.in_units_of(units.kilojoules_per_mole)._value))
 
+                    elif isinstance(dihedral, FourierDihedral):
+                        d_type = 5
+                        lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f\n'
+                                % (atomindex,
+                                   d_type,
+                                   dihedral.c1.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.c2.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.c3.in_units_of(units.kilojoules_per_mole)._value,
+                                   dihedral.c4.in_units_of(units.kilojoules_per_mole)._value))
+
                     elif isinstance(dihedral, ImproperDihedral4):
                         d_type = 4
-                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1,
-                                   dihedral.atom2,
-                                   dihedral.atom3,
-                                   dihedral.atom4,
+                        lines.append('%s%4d%18.8f%18.8f%4d\n'
+                                % (atomindex,
                                    d_type,
                                    dihedral.phi.in_units_of(units.degrees)._value,
                                    dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
@@ -1613,11 +1661,8 @@ class GromacsTopologyParser(object):
 
                     elif isinstance(dihedral, ProperDihedral9):
                         d_type = 9
-                        lines.append('%6d%7d%7d%7d%4d%18.8f%18.8f%4d\n'
-                                % (dihedral.atom1,
-                                   dihedral.atom2,
-                                   dihedral.atom3,
-                                   dihedral.atom4,
+                        lines.append('%s%4d%18.8f%18.8f%4d\n'
+                                % (atomindex,
                                    d_type,
                                    dihedral.phi.in_units_of(units.degrees)._value,
                                    dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
