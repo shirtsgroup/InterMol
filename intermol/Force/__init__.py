@@ -15,7 +15,7 @@ __all__ = ["AbstractAngle",
     "G96Angle",
     "G96Bond",
     "HarmonicPotential",
-    "ImproperDihedral2",
+    "ImproperHarmonicDihedral",
     "ImproperDihedral4",
     "LJ1PairCR1",
     "LJ1PairCR23",
@@ -58,7 +58,7 @@ from Exclusions import Exclusions
 from G96Angle import G96Angle
 from G96Bond import G96Bond
 from HarmonicPotential import HarmonicPotential
-from ImproperDihedral2 import ImproperDihedral2
+from ImproperHarmonicDihedral import ImproperHarmonicDihedral
 from ImproperDihedral4 import ImproperDihedral4
 from LJ1PairCR1 import LJ1PairCR1
 from LJ1PairCR23 import LJ1PairCR23

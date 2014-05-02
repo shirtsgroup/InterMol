@@ -408,7 +408,7 @@ class GromacsTopologyParser(object):
 
                             # Proper Dihedral 2
                             elif (int(split[2]) == 2) and (len(split) == 5):
-                                newDihedralType = ImproperDihedral2Type('X',
+                                newDihedralType = ImproperHarmonicDihedralType('X',
                                     split[0],
                                     split[1],
                                     'X',
@@ -457,7 +457,7 @@ class GromacsTopologyParser(object):
 
                             # Improper Dihedral 2
                             elif (int(split[4]) == 2) and (len(split) == 7):
-                                newDihedralType = ImproperDihedral2Type(split[0],
+                                newDihedralType = ImproperHarmonicDihedralType(split[0],
                                     split[1],
                                     split[2],
                                     split[3],
@@ -987,7 +987,7 @@ class GromacsTopologyParser(object):
                                 split.append(dihedralType.k)
                                 split.append(dihedralType.multicplicity)
 
-                            if isinstance(dihedralType, ImproperDihedral2Type):
+                            if isinstance(dihedralType, ImproperHarmonicDihedralType):
                                 split.append(dihedralType.xi)
                                 split.append(dihedralType.k)
 
@@ -1032,14 +1032,14 @@ class GromacsTopologyParser(object):
                         # Improper Dihedral 2
                         elif int(split[4]) == 2:
                             try:
-                                newDihedralForce = ImproperDihedral2(int(split[0]),
+                                newDihedralForce = ImproperHarmonicDihedral(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
                                         float(split[5]) * units.degrees,
                                         float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
                             except:
-                                newDihedralForce = ImproperDihedral2(int(split[0]),
+                                newDihedralForce = ImproperHarmonicDihedral(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         int(split[3]),
@@ -1621,7 +1621,7 @@ class GromacsTopologyParser(object):
                                    dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
                                    dihedral.multiplicity))
 
-                    elif isinstance(dihedral, ImproperDihedral2):
+                    elif isinstance(dihedral, ImproperHarmonicDihedral):
                         d_type = 2
                         lines.append('%s%4d%18.8f%18.8f\n'
                                 % (atomindex,

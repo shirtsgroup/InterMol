@@ -28,7 +28,7 @@ all=['AbstractAtomType',
 
     'RBDihedralType'
     'ProperPeriodicDihedralType'
-    'ImproperDihedral2Type'
+    'ImproperHarmonicDihedralType'
     'ImproperDihedral4Type'
     'FourierDihedralType'
     'ProperDihedral9Type'
@@ -66,7 +66,7 @@ from RBDihedralType import RBDihedralType
 from UreyBradleyAngleType import UreyBradleyAngleType
 
 from ProperPeriodicDihedralType import ProperPeriodicDihedralType
-from ImproperDihedral2Type import ImproperDihedral2Type
+from ImproperHarmonicDihedralType import ImproperHarmonicDihedralType
 from ImproperDihedral4Type import ImproperDihedral4Type
 from ProperDihedral9Type import ProperDihedral9Type
 from FourierDihedralType import FourierDihedralType

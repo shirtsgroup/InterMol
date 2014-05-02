@@ -551,14 +551,14 @@ class DesmondParser():
                     # These two should be the same function.  Check differences (polymer or protein defn, etc).
                     if re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
                         try:
-                            newDihedralForce = ImproperDihedral2(int(split[1]),
+                            newDihedralForce = ImproperHarmonicDihedral(int(split[1]),
                                                int(split[2]),
                                                int(split[3]),
                                                int(split[4]),
                                                float(split[6]) * units.radians,
                                                2*float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
                         except:
-                            newDihedralForce = ImproperDihedral2(int(split[1]),
+                            newDihedralForce = ImproperHarmonicDihedral(int(split[1]),
                                                int(split[2]),
                                                int(split[3]),
                                                int(split[4]),
@@ -1588,7 +1588,7 @@ class DesmondParser():
             # first, identify the number of terms we will print
             for dihedral in dihedrallist:
                 i+=1
-                if isinstance(dihedral, ImproperDihedral2):
+                if isinstance(dihedral, ImproperHarmonicDihedral):
                     dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n' %
                                   (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4,
                                    'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),

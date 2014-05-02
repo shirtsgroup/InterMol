@@ -2,7 +2,7 @@ from intermol.Decorators import *
 from AbstractDihedral import *
 
 
-class ImproperDihedral2(AbstractDihedral):
+class ImproperHarmonicDihedral(AbstractDihedral):
 
     @accepts_compatible_units(None, None, None, None, units.degrees, units.kilojoules_per_mole * units.radians**(-2))
     def __init__(self, atom1, atom2, atom3, atom4, xi, k):
