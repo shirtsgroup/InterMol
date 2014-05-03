@@ -120,59 +120,47 @@ class GromacsTopologyParser(object):
                         newAtomType = None
 
                         # note -- we should be able to store either C6 and C12 parameters or sigma and epsilon: not both
+                        atomtype = split[0].strip()
                         if len(split) == 7:  # atom name and bond type are the same, or there is no z.
+                            d = 0  #offset
                             if (split[1].isdigit()):
                                 Z = int(split[1])
                                 bondtype = split[0].strip()
                             else:
                                 Z = -1
                                 bondtype = split[1].strip()
-                            if System._sys._combinationRule == 1:
-                                sigma = (float(split[6]) / float(split[5])) ** (1/6)
-                                epsilon = float(split[5]) / (4*sigma**6)
+                        elif len(split) == 8: #atom and bond name and Z
+                            d = 1
+                            bondtype = split[1].strip()            # bondtype
+                            Z = split[2]                           # Z
+                        else:
+                            print "ERROR: incorrect number of points in atomtype entry (%s)" % split
 
-                                newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
-                                        bondtype,                                   # bondtype
-                                        Z,                                          # Z
-                                        float(split[2]) * units.amu,                # mass
-                                        float(split[3]) * units.elementary_charge,  # charge
-                                        split[4],                                   # ptype
-                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
-                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
+                        mass =  float(split[2+d]) * units.amu
+                        charge = float(split[3+d]) * units.elementary_charge
+                        ptype = split[4+d]
+                        if System._sys._combinationRule == 1:
+                            sigma = (float(split[6+d]) / float(split[5+d])) ** (1.0/6.0)
+                            epsilon = float(split[5+d]) / (4*sigma**6)
 
-                            elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
-                                newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
-                                        bondtype,                                     # bondtype
-                                        Z,                                            # Z
-                                        float(split[2]) * units.amu,                  # mass
-                                        float(split[3]) * units.elementary_charge,    # charge
-                                        split[4],                                     # ptype
-                                        float(split[5]) * units.nanometers,           # sigma
-                                        float(split[6]) * units.kilojoules_per_mole)  # epsilon
+                            newAtomType = AtomCR1Type(atomtype,
+                                                      bondtype,
+                                                      Z,
+                                                      mass,
+                                                      charge,
+                                                      ptype,
+                                                      sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
+                                                      epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
 
-                        if len(split) == 8:
-                            if System._sys._combinationRule == 1:
-                                sigma = (float(split[7]) / float(split[6]))**(1/6)
-                                epsilon = float(split[6]) / (4*sigma**6)
-                                newAtomType = AtomCR1Type(split[0].strip(),         # atomtype or name
-                                        split[1].strip(),                           # bondtype
-                                        split[2],                                   # Z
-                                        float(split[3]) * units.amu,                # mass
-                                        float(split[4]) * units.elementary_charge,  # charge
-                                        split[5],                                   # ptype
-                                        sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
-                                        epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
-
-                            elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
-                                newAtomType = AtomCR23Type(split[0].strip(),          # atomtype or name
-                                        split[1].strip(),                             # bondtype
-                                        split[2],                                     # Z
-                                        float(split[3]) * units.amu,                  # mass
-                                        float(split[4]) * units.elementary_charge,    # charge
-                                        split[5],                                     # ptype
-                                        float(split[6]) * units.nanometers,           # sigma
-                                        float(split[7]) * units.kilojoules_per_mole)  # epsilon
-
+                        elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
+                            newAtomType = AtomCR23Type(atomtype,
+                                                       bondtype,
+                                                       Z,
+                                                       mass,
+                                                       charge,
+                                                       ptype,
+                                                       float(split[5+d]) * units.nanometers,           # sigma
+                                                       float(split[6+d]) * units.kilojoules_per_mole)  # epsilon
                         System._sys._atomtypes.add(newAtomType)
 
                 elif match.group('bondtypes'):
@@ -1689,17 +1677,9 @@ class GromacsTopologyParser(object):
                 # [ exclusions ]
                 lines.append('[ exclusions ]\n')
                 for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
-                    if len(exclusion.exclusions) == 2:
-                        lines.append('%6s%6s%6s\n'
-                                     % (i+1,
-                                        exclusion.exclusions[0],
-                                        exclusion.exclusions[1]))
-                    else:
-                        lines.append('%6s%6s%6s\n'
-                                     % (exclusion.exclusions[0],
-                                        exclusion.exclusions[1],
-                                        exclusion.exclusions[2]))
-                        lines.append('\n')
+                    lines.append('%6s%6s\n'
+                                 % (exclusion.exclusions[0],
+                                    exclusion.exclusions[1]))
 
         # [ system ]
         lines.append('[ system ]\n')
