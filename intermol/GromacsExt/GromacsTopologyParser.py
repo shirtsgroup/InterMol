@@ -383,114 +383,70 @@ class GromacsTopologyParser(object):
                         newDihedralType = None
                         # first, check whether they are using 2 or 4 atom types
                         if split[2].isdigit():
-                            # Proper Dihedral 1
-                            if (int(split[2]) == 1) and (len(split) == 6):
-                                newDihedralType = ProperPeriodicDihedralType('X',
-                                    split[0],
-                                    split[1],
-                                    'X',
-                                    split[2],
-                                    float(split[3]) * units.degrees,
-                                    float(split[4]) * units.kilojoules_per_mole,
-                                    int(split[5]))
-
-                            # Proper Dihedral 2
-                            elif (int(split[2]) == 2) and (len(split) == 5):
-                                newDihedralType = ImproperHarmonicDihedralType('X',
-                                    split[0],
-                                    split[1],
-                                    'X',
-                                    split[2],
-                                    float(split[3]) * units.degrees,
-                                    float(split[4]) * units.kilojoules_per_mole * units.radians**(-2))
-
-                            # RBDihedral
-                            elif (int(split[2]) == 3) and (len(split) == 9):
-                                newDihedralType = RBDihedralType('X',
-                                    split[0],
-                                    split[1],
-                                    'X',
-                                    split[2],
-                                    float(split[3]) * units.kilojoules_per_mole,
-                                    float(split[4]) * units.kilojoules_per_mole,
-                                    float(split[5]) * units.kilojoules_per_mole,
-                                    float(split[6]) * units.kilojoules_per_mole,
-                                    float(split[7]) * units.kilojoules_per_mole,
-                                    float(split[8]) * units.kilojoules_per_mole,
-                                    0 * units.kilojoules_per_mole)  # GROMACS only goes up through C5
-
-                            #Fourier Dihedral
-                            elif (int(split[2]) == 5) and (len(split) == 7):
-                                newDihedralType = RBDihedralType('X',
-                                    split[0],
-                                    split[1],
-                                    'X',
-                                    split[2],
-                                    float(split[3]) * units.kilojoules_per_mole,
-                                    float(split[4]) * units.kilojoules_per_mole,
-                                    float(split[5]) * units.kilojoules_per_mole,
-                                    float(split[6]) * units.kilojoules_per_mole)
+                            atom1 = 'X'
+                            atom2 = split[0]
+                            atom3 = split[1]
+                            atom4 = 'X'
+                            d = 0
 
                         elif split[4].isdigit():
-                            # Proper Dihedral 1
-                            if (int(split[4]) == 1) and (len(split) == 8):
-                                newDihedralType = ProperPeriodicDihedralType(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    float(split[5]) * units.degrees,
-                                    float(split[6]) * units.kilojoules_per_mole,
-                                    int(split[7]))
+                            atom1 = split[0]
+                            atom2 = split[1]
+                            atom3 = split[2]
+                            atom4 = split[3]
+                            d = 2
 
-                            # Improper Dihedral 2
-                            elif (int(split[4]) == 2) and (len(split) == 7):
-                                newDihedralType = ImproperHarmonicDihedralType(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    float(split[5]) * units.degrees,
-                                    float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
+                        # Proper Dihedral 1 & 9 - might not be handling 9 correctly yet.
+                        if ((int(split[2+d]) == 1) or int(split[2+d]) == 9) and (len(split) == 6+d):
+                            newDihedralType = ProperPeriodicDihedralType(
+                                atom1,atom2,atom3,atom4,
+                                split[2+d],
+                                float(split[3+d]) * units.degrees,
+                                float(split[4+d]) * units.kilojoules_per_mole,
+                                int(split[5+d]))
 
-                            # RBDihedral
-                            elif (int(split[4]) == 3) and (len(split) == 11):
-                                newDihedralType = RBDihedralType(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    float(split[5]) * units.kilojoules_per_mole,
-                                    float(split[6]) * units.kilojoules_per_mole,
-                                    float(split[7]) * units.kilojoules_per_mole,
-                                    float(split[8]) * units.kilojoules_per_mole,
-                                    float(split[9]) * units.kilojoules_per_mole,
-                                    float(split[10]) * units.kilojoules_per_mole,
-                                    0 * units.kilojoules_per_mole)
+                        # Proper Dihedral 2
+                        elif (int(split[2+d]) == 2) and (len(split) == 5+d):
+                            newDihedralType = ImproperHarmonicDihedralType(
+                                atom1,atom2,atom3,atom4,
+                                split[2+d],
+                                float(split[3+d]) * units.degrees,
+                                float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2))
 
-                            # Fourier Dihedral
-                            if (int(split[4]) == 5) and (len(split) == 9):
-                                newDihedralType = FourierDihedralType(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    float(split[5]) * units.kilojoules_per_mole,
-                                    float(split[6]) * units.kilojoules_per_mole,
-                                    float(split[7]) * units.kilojoules_per_mole,
-                                    float(split[8]) * units.kilojoules_per_mole)
+                        # RBDihedral 3
+                        elif (int(split[2+d]) == 3) and (len(split) == 9+d):
+                            newDihedralType = RBDihedralType(
+                                atom1,atom2,atom3,atom4,
+                                split[2+d],
+                                float(split[3+d]) * units.kilojoules_per_mole,
+                                float(split[4+d]) * units.kilojoules_per_mole,
+                                float(split[5+d]) * units.kilojoules_per_mole,
+                                float(split[6+d]) * units.kilojoules_per_mole,
+                                float(split[7+d]) * units.kilojoules_per_mole,
+                                float(split[8+d]) * units.kilojoules_per_mole,
+                                0 * units.kilojoules_per_mole)  # GROMACS only goes up through C5
 
-                            # periodic improper dihedral
-                            elif (int(split[4]) == 4) and (len(split) == 8):
-                                pdb.set_trace()
-                                newDihedralType = ImproperDihedral4Type(split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    float(split[5]) * units.degrees,
-                                    float(split[6]) * units.kilojoules_per_mole,
-                                    float(split[7]))  #multiplicity
+                        # periodic improper dihedral 4
+                        elif (int(split[2+d]) == 4) and (len(split) == 6+d):
+                            newDihedralType = ImproperDihedral4Type(
+                                atom1,atom2,atom3,atom4,
+                                split[2+d],
+                                float(split[3+d]) * units.degrees,
+                                float(split[4+d]) * units.kilojoules_per_mole,
+                                float(split[5+d]))  #multiplicity
+
+                        # Fourier Dihedral 5
+                        elif (int(split[2+d]) == 5) and (len(split) == 7+d):
+                            newDihedralType = FourierDihedralType(
+                            atom1,atom2,atom3,atom4,
+                            split[2+d],
+                            float(split[3+d]) * units.kilojoules_per_mole,
+                            float(split[4+d]) * units.kilojoules_per_mole,
+                            float(split[5+d]) * units.kilojoules_per_mole,
+                            float(split[6+d]) * units.kilojoules_per_mole)
+
+                        elif (int(split[2+d]) == 8):
+                            print "Error: Tabulated dihedrals not supported"
                         else:
                             print "could not find dihedral type"
 
@@ -930,40 +886,24 @@ class GromacsTopologyParser(object):
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
                             atomtype4 = currentMolecule._atoms[int(split[3])-1].bondtype
 
-                            tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, atomtype4, split[4])
-                            dihedralType = self.dihedraltypes.get(tempType)
+                            # check the possible ways to match a dihedraltype
+                            atomtypelists = [[atomtype1, atomtype2, atomtype3, atomtype4],  # original order
+                                             [atomtype4, atomtype3, atomtype2, atomtype1],  # flip it
+                                             [atomtype1, atomtype2, atomtype3, 'X'],  #single wildcard 1
+                                             ['X', atomtype2, atomtype3, atomtype4],  #single wildcard 2
+                                             ['X', atomtype3, atomtype2, atomtype1], # flipped single wildcard 1
+                                             [atomtype4, atomtype3, atomtype2, 'X'], # flipped single wildcard 2
+                                             ['X', atomtype2, atomtype3, 'X'], # double wildcard
+                                             ['X', atomtype3, atomtype2, 'X'] # flipped double wildcard
+                                             ]
 
-                            # now a single endpoint wildcard    
-                            if not (dihedralType):
-                                # now with one endpoint wildcards
-                                tempType = AbstractDihedralType(atomtype1, atomtype2, atomtype3, 'X', split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-                            if not (dihedralType):
-                                # now with other endpoint wildcards
-                                tempType = AbstractDihedralType('X', atomtype2, atomtype3, atomtype4, split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-                            # now flipped single endpoint wildcards    
-                            if not (dihedralType):
-                                tempType = AbstractDihedralType('X', atomtype3, atomtype2, atomtype1, split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-                            if not (dihedralType):
-                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, 'X', split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-
-                            # if not single endpoint wildcards, try double endpoint wildcards    
-                            if not (dihedralType):
-                                # flip it around
-                                tempType = AbstractDihedralType(atomtype4, atomtype3, atomtype2, atomtype1, split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-                            if not (dihedralType):
-                                # try with wildcards
-                                tempType = AbstractDihedralType('X', atomtype2, atomtype3, 'X', split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-                            if not (dihedralType):
-                                # try with flipped wildcards
-                                tempType = AbstractDihedralType('X', atomtype3, atomtype2, 'X', split[4])
-                                dihedralType = self.dihedraltypes.get(tempType)
-
+                            dihedralType = None
+                            for alist in atomtypelists:
+                                if not dihedralType:
+                                    tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3], split[4])
+                                    dihedralType = self.dihedraltypes.get(tempType)
+                                else:
+                                    break
     
                             if isinstance(dihedralType, ProperPeriodicDihedralType):
                                 split.append(dihedralType.phi)
