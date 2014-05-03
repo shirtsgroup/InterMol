@@ -481,16 +481,16 @@ class GromacsTopologyParser(object):
                                     float(split[8]) * units.kilojoules_per_mole)
 
                             # periodic improper dihedral
-                            elif (int(split[4]) == 4) and (len(split) == 9):
+                            elif (int(split[4]) == 4) and (len(split) == 8):
+                                pdb.set_trace()
                                 newDihedralType = ImproperDihedral4Type(split[0],
                                     split[1],
                                     split[2],
                                     split[3],
                                     split[4],
-                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[5]) * units.degrees,
                                     float(split[6]) * units.kilojoules_per_mole,
-                                    float(split[7]) * units.kilojoules_per_mole,
-                                    float(split[8]) * units.kilojoules_per_mole)
+                                    float(split[7]))  #multiplicity
                         else:
                             print "could not find dihedral type"
 
