@@ -312,7 +312,7 @@ class DesmondParser():
                 currentMoleculeType.nrexcl = 0 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
                                                #MRS: basically, we have to figure out the furthest number of bonds out 
                                                # to exclude OR explicitly set gromacs exclusions. Either should work.
-
+                                               # for now, we'll go with the latter
             elif match.group('bonds'): #may not have all bonds types here yet?
                 forces = []
                 if len(self.b_blockpos) > 1:  #LOADING M_BONDS
@@ -1737,7 +1737,7 @@ class DesmondParser():
 
                 for atom in range(1,nsize):
                     atomexclude = set()  # will be a unique set
-                    # need to make this recursive! And must be a better algorithm
+                    # need to make this recursive! And there must be a better algorithm
                     for j1 in range(natombonds[atom]):
                         toatom1 = atombonds[atom,j1];
                         atomexclude.add(toatom1)
@@ -1747,7 +1747,7 @@ class DesmondParser():
                                 atomexclude.add(toatom2)
                                 if moleculetype.nrexcl > 2:
                                     for j3 in range(natombonds[toatom2]):
-                                        toatom3 = atombonds[toatom1,j3]
+                                        toatom3 = atombonds[toatom2,j3]
                                         atomexclude.add(toatom3)
                                         if moleculetype.nrexcl > 3:
                                             for j4 in range(natombonds[toatom3]):
