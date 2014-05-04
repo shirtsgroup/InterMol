@@ -583,7 +583,6 @@ class LammpsParser(object):
                         temp = BondType(
                                 atomtype1,
                                 atomtype2,
-                                1,
                                 bond.length,
                                 bond.k)
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
@@ -729,7 +728,6 @@ class LammpsParser(object):
 
                     temp = BondType(atomtype1,
                             atomtype2,
-                            1,
                             bond.length,
                             bond.k)
 

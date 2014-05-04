@@ -175,7 +175,6 @@ class GromacsTopologyParser(object):
                         if int(split[2]) == 1:
                             newBondType = BondType(split[0],
                                     split[1],
-                                    split[2],
                                     float(split[3]) * units.nanometers,
                                     float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
 
@@ -183,7 +182,6 @@ class GromacsTopologyParser(object):
                         elif int(split[2]) == 2:
                             newBondType = G96BondType(split[0],
                                         split[1],
-                                        split[2],
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-4))
 
@@ -191,7 +189,6 @@ class GromacsTopologyParser(object):
                         elif int(split[2]) == 3:
                             newBondType = MorseBondType(split[0],
                                         split[1],
-                                        split[2],
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole,
                                         float(split[5]) * units.nanometers**(-1))
@@ -200,7 +197,6 @@ class GromacsTopologyParser(object):
                         elif int(split[2]) == 4:
                             newBondType = CubicBondType(split[0],
                                         split[1],
-                                        split[2],
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2),
                                         float(split[5]) * units.kilojoules_per_mole * units.nanometers**(-3))
@@ -209,12 +205,10 @@ class GromacsTopologyParser(object):
                         elif int(split[2]) == 6:
                             newBondType = HarmonicBondType(split[0],
                                         split[1],
-                                        split[2],
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
                         else:
-                            # TODO make a more descriptive error
-                            print "could not find bond type"
+                            print "%s is not a supported bond type"
 
                         if newBondType:
                             self.bondtypes.add(newBondType)
@@ -426,7 +420,7 @@ class GromacsTopologyParser(object):
                             newDihedralType = ImproperHarmonicDihedralType(
                                 atom1,atom2,atom3,atom4,
                                 float(split[3+d]) * units.degrees,
-                                float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2),improper=improper)
+                                float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2))
 
                         # RBDihedral: type 3
                         elif (int(split[2+d]) == 3) and (len(split) == 9+d):
@@ -599,11 +593,11 @@ class GromacsTopologyParser(object):
                         if len(split) == 3:
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
-                            tempType = AbstractBondType(atomtype1, atomtype2, split[2])
+                            tempType = AbstractBondType(atomtype1, atomtype2)
                             bondType = self.bondtypes.get(tempType)
                             if not bondType:
                                 # we only have the reversed bond order stored, flip the atoms
-                                tempType = AbstractBondType(atomtype2, atomtype1, split[2])
+                                tempType = AbstractBondType(atomtype2, atomtype1)
                                 bondType = self.bondtypes.get(tempType)
                             if not bondType:
                                 raise Exception("Bondtype lookup failed for '{0}'".format(" ".join(split)))
