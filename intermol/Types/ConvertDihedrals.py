@@ -1,3 +1,41 @@
+def ConvertDihedralFromProperTrigToDihedralTrig(k, multiplicity):
+
+    zu = 0*k.unit
+    fc0 = k
+    fc1 = zu
+    fc2 = zu
+    fc3 = zu
+    fc4 = zu
+    fc5 = zu
+    fc6 = zu
+
+    if (multiplicity == 1):
+        fc1 = k
+    elif (multiplicity == 2):
+        fc2 = k
+    elif (multiplicity == 3):
+        fc3 = k
+    elif (multiplicity == 4):
+        fc4 = k
+    elif (multiplicity == 5):
+        fc5 = k
+    elif (multiplicity == 6):
+        fc6 = k
+    return fc0, fc1, fc2, fc3, fc4, fc5, fc6
+
+def ConvertDihedralFromFourierToDihedralTrig(F1, F2, F3, F4):
+
+    zu = 0*F1.unit
+    fc0 = 0.5*(F1+F2+F3+F4)
+    fc1 = 0.5*F1
+    fc2 = -0.5*F2
+    fc3 = 0.5*F3
+    fc4 = -0.5*F4
+    fc5 = zu
+    fc6 = zu
+
+    return fc0, fc1, fc2, fc3, fc4, fc5, fc6
+    
 def ConvertDihedralFromRBToOPLS(c0,c1,c2,c3,c4,c5,c6):
 
     if (c5 !=0.0 * c0.unit and c1+c2+c3+c4 != 0.0 * c0.unit):
@@ -25,11 +63,11 @@ def ConvertDihedralFromOPLSToRB(f1,f2,f3,f4):
     c6 = 0.0 * c0.unit
     return c0, c1, c2, c3, c4, c5, c6
 
-def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):
+def ConvertDihedralFromDihedralTrigToRB(sign, phi, fc0, fc1, fc2, fc3, fc4, fc5, fc6):
 
     # sign is -1 or 1
     # RB is \sum_n=0^6 cos(x)^n
-    # ProperTrig is f_0 + \sum_n=1^6 cos(nx-phi)
+    # DihedralTrig is f_0 + \sum_n=1^6 cos(nx-phi)
     # we restrict to phi = 0 or 180 (might need to generalize later), so we can write as
     #               f_0 + \sum_n=1^6 cos(nx)cos(phi) + sin(nx)sin(phi)
     #               f_0 + \sum_n=1^6 cos(nx)  (phi = 0)
@@ -53,24 +91,27 @@ def ConvertDihedralFromProperTrigToRB(sign,f0,f1,f2,f3,f4,f5,f6):
     # c5 = 16f5
     # c6 = 32f6
 
-    c0 = sign*f0 - f2 + f4 - f6
-    c1 = f1 - 3.0*f3 + 5.0*f5
-    c2 = 2.0*f2 - 8.0*f4 + 18.0*f6
-    c3 = 4.0*f3 - 20.0*f5
-    c4 = 8.0*f4 - 48.0*f6
-    c5 = 16.0*f5
-    c6 = 32.0*f6
-    return sign*c0, sign*c1, sign*c2, sign*c3, sign*c4, sign*c5, sign*c6
+    c0 = sign*fc0 - fc2 + fc4 - fc6
+    c1 = fc1 - 3.0*fc3 + 5.0*fc5
+    c2 = 2.0*fc2 - 8.0*fc4 + 18.0*fc6
+    c3 = 4.0*fc3 - 20.0*fc5
+    c4 = 8.0*fc4 - 48.0*fc6
+    c5 = 16.0*fc5
+    c6 = 32.0*fc6
 
-def ConvertDihedralFromRBToProperTrig(c0,c1,c2,c3,c4,c5,c6):
+    return c0,sign*c1,sign*c2,sign*c3,sign*c4,sign*c5,sign*c6,
 
-    # see above for conversion; simply inverting the matrix.
-    f0 =  1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
-    f1 =  1.0*c1 + 0.75*c3 + 0.6250*c5
-    f2 =  0.5*c2 + 0.5*c4 + 0.46875*c6
-    f3 =  0.25*c3 + 0.3125*c5
-    f4 =  0.125*c4 + 0.1875*c6 
-    f5 =  0.0625*c5
-    f6 =  0.03125*c6
-    return f0, f1, f2, f3, f4, f5, f6
+def ConvertDihedralFromRBToDihedralTrig(c0,c1,c2,c3,c4,c5,c6):
+
+    # see above for conversion; simply inverting the matrix.  Need to handle sign?
+
+    fc0 =  1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
+    fc1 =  1.0*c1 + 0.75*c3 + 0.6250*c5
+    fc2 =  0.5*c2 + 0.5*c4 + 0.46875*c6
+    fc3 =  0.25*c3 + 0.3125*c5
+    fc4 =  0.125*c4 + 0.1875*c6 
+    fc5 =  0.0625*c5
+    fc6 =  0.03125*c6
+
+    return fc0,fc1,fc2,fc3,fc4,fc5,fc6
 

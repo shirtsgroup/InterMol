@@ -26,6 +26,7 @@ __all__ = ["AbstractAngle",
     "Morse",
     "OrientationRestraint",
     "PositionRestraint",
+    "DihedralTrigDihedral",       
     "ProperPeriodicDihedral",
     "FourierDihedral",
     "ProperDihedral9",
@@ -72,6 +73,7 @@ from PositionRestraint import PositionRestraint
 from ProperDihedral9 import ProperDihedral9
 from FourierDihedral import FourierDihedral
 from ProperPeriodicDihedral import ProperPeriodicDihedral
+from DihedralTrigDihedral import DihedralTrigDihedral
 from QuarticAngle import QuarticAngle
 from RBDihedral import RBDihedral
 from Settles import Settles

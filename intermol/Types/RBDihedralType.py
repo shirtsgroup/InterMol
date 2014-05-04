@@ -10,7 +10,6 @@ class RBDihedralType(AbstractDihedralType):
             None,
             None,
             None,
-            None,
             units.kilojoules_per_mole,
             units.kilojoules_per_mole,
             units.kilojoules_per_mole,
@@ -18,10 +17,10 @@ class RBDihedralType(AbstractDihedralType):
             units.kilojoules_per_mole,
             units.kilojoules_per_mole,
             units.kilojoules_per_mole)
-    def __init__(self, atom1, atom2, atom3, atom4, type, C0, C1, C2, C3, C4, C5, C6):
+    def __init__(self, atom1, atom2, atom3, atom4, C0, C1, C2, C3, C4, C5, C6):
         """
         """
-        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4, type)
+        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4)
         self.C0 = C0
         self.C1 = C1
         self.C2 = C2

@@ -27,12 +27,13 @@ all=['AbstractAtomType',
     'UreyBradleyAngleType'
 
     'RBDihedralType'
+    'DihedralTrigType'
     'ProperPeriodicDihedralType'
     'ImproperHarmonicDihedralType'
     'ImproperDihedral4Type'
+    'DihedralTrigDihedral'
     'FourierDihedralType'
     'ProperDihedral9Type'
-    'ConvertOPLS'
 ]
 
 from AbstractAtomType import AbstractAtomType
@@ -65,6 +66,7 @@ from QuarticAngleType import QuarticAngleType
 from RBDihedralType import RBDihedralType
 from UreyBradleyAngleType import UreyBradleyAngleType
 
+from DihedralTrigType import DihedralTrigType
 from ProperPeriodicDihedralType import ProperPeriodicDihedralType
 from ImproperHarmonicDihedralType import ImproperHarmonicDihedralType
 from ImproperDihedral4Type import ImproperDihedral4Type
@@ -73,5 +75,7 @@ from FourierDihedralType import FourierDihedralType
 
 from ConvertDihedrals import ConvertDihedralFromRBToOPLS
 from ConvertDihedrals import ConvertDihedralFromOPLSToRB
-from ConvertDihedrals import ConvertDihedralFromRBToProperTrig
-from ConvertDihedrals import ConvertDihedralFromProperTrigToRB
+from ConvertDihedrals import ConvertDihedralFromRBToDihedralTrig
+from ConvertDihedrals import ConvertDihedralFromDihedralTrigToRB
+from ConvertDihedrals import ConvertDihedralFromProperTrigToDihedralTrig
+from ConvertDihedrals import ConvertDihedralFromFourierToDihedralTrig

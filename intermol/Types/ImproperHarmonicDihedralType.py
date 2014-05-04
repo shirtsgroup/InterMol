@@ -10,13 +10,12 @@ class ImproperHarmonicDihedralType(AbstractDihedralType):
             None,
             None,
             None,
-            None,
             units.degrees,
             units.kilojoules_per_mole * units.radians**(-2))
-    def __init__(self, atom1, atom2, atom3, atom4, type, xi, k):
+    def __init__(self, atom1, atom2, atom3, atom4, xi, k):
         """
         """
-        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4, type)
+        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4)
         self.xi = xi
         self.k = k
 

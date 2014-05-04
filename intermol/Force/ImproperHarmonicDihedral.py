@@ -8,7 +8,7 @@ class ImproperHarmonicDihedral(AbstractDihedral):
     def __init__(self, atom1, atom2, atom3, atom4, xi, k):
         """
         """
-        AbstractDihedral.__init__(self, atom1, atom2, atom3, atom4, -1)
+        AbstractDihedral.__init__(self, atom1, atom2, atom3, atom4)
         self.xi = xi
         self.k = k
 

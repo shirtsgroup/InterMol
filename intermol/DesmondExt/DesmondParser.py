@@ -46,9 +46,6 @@ class DesmondParser():
 
         self.atomtypes = HashMap()
         self.bondtypes = HashMap()
-        self.pairtypes = HashMap()
-        self.angletypes = HashMap()
-        self.dihedraltypes = HashMap()
         self.constrainttypes = HashMap()
 
         if defines:
@@ -138,11 +135,8 @@ class DesmondParser():
         newAtomType = None
         newBondForce = None
         newBondType = None
-        newPairType = None
         newPairForce = None
-        newAngleType = None
         newAngleForce = None
-        newDihedralType = None
         newDihedralForce = None
         newTorsionTorsionForce = None
         stemp = None
@@ -544,119 +538,69 @@ class DesmondParser():
             elif match.group('dihedrals'):
                 if verbose:
                     print "Parsing [ dihedrals]..."
+
                 for j in range(ff_number):
                     split = entry_values[j].split()
                     newDihedralForce = None
+                    atom1 = int(split[1])
+                    atom2 = int(split[2])
+                    atom3 = int(split[3])
+                    atom4 = int(split[4])
+
                     #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
                     # These two should be the same function.  Check differences (polymer or protein defn, etc).
                     if re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
-                        try:
-                            newDihedralForce = ImproperHarmonicDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               float(split[6]) * units.radians,
-                                               2*float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
-                        except:
-                            newDihedralForce = ImproperHarmonicDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               split[6],
-                                               2*split[7])
+                        newDihedralForce = ImproperHarmonicDihedral(
+                            atom1, atom2, atom3, atom4,
+                            float(split[6]) * units.radians,
+                            2*float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
+                    elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE) or re.match(
+                        split[5],"IMPROPER_TRIG", re.IGNORECASE):
+                        if re.match(split[5], "IMPROPER_TRIG", re.IGNORECASE):
+                            improper = True
+                        else:
+                            improper = False
 
-                    #RB Dihedral (Assume for Improper_trig and Proper_trig for now)
-                    elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE) or re.match(split[5],"IMPROPER_TRIG", re.IGNORECASE) or re.match(split[5], "DIHEDRAL_TRIG", re.IGNORECASE):
                         # currently, I can't see a difference in Proper_trig and improper_trig angles.
-                        try:
-                            if float(split[6]) == 0:
-                                sign = 1
-                            elif float(split[6]) == 180:
-                                sign = -1
-                            else:
-                                print("Currently, can't handle a phase angle that is not 0 or 180 in %s" % (split[5]))
-                            c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromProperTrigToRB(sign,float(split[7]),float(split[8]),
-                                                                                     float(split[9]),float(split[10]),
-                                                                                     float(split[11]),float(split[12]),
-                                                                                     float(split[13]))
-                        except:
-                            c0 = 0
-                            c1 = 0
-                            c2 = 0
-                            c3 = 0
-                            c4 = 0
-                            c5 = 0
-                            c6 = 0
-                            # do some additional error handling here?
-                            print "ERROR (readFile): PROPER_TRIG terms not found"
-                        try:    
-                            newDihedralForce = RBDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               c0 * units.kilocalorie_per_mole,
-                                               c1 * units.kilocalorie_per_mole,
-                                               c2 * units.kilocalorie_per_mole,
-                                               c3 * units.kilocalorie_per_mole,
-                                               c4 * units.kilocalorie_per_mole,
-                                               c5 * units.kilocalorie_per_mole,
-                                               c6 * units.kilocalorie_per_mole)
-                        except:
-                            newDihedralForce = RBDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               c0,
-                                               c1,
-                                               c2,
-                                               c3,
-                                               c4,
-                                               c5,
-                                               c6)
+                        if float(split[6]) == 0:
+                            sign = 1
+                        elif float(split[6]) == 180:
+                            sign = -1
+                        else:
+                            print("Currently, can't handle a phase angle that is not 0 or 180 in %s" % (split[5]))
+                        newDihedralForce = DihedralTrigDihedral(
+                            atom1, atom2, atom3, atom4, 
+                            float(split[6]) * units.degrees,
+                            float(split[7]) * units.kilocalorie_per_mole,
+                            float(split[8]) * units.kilocalorie_per_mole,
+                            float(split[9]) * units.kilocalorie_per_mole,
+                            float(split[10]) * units.kilocalorie_per_mole,
+                            float(split[11]) * units.kilocalorie_per_mole,
+                            float(split[12]) * units.kilocalorie_per_mole,
+                            float(split[13]) * units.kilocalorie_per_mole,
+                            improper = improper
+                            )
                     elif (re.match(split[5], "OPLS_PROPER", re.IGNORECASE) or re.match(split[5], "OPLS_IMPROPER", re.IGNORECASE)):
-                        try:
-                            # Internal desmond formatting for OPLS_PROPER
-                            #
-                            # r_ffio_c0 = f0 (always 0)  split(6)
-                            # r_ffio_c1 = f1             split(7)
-                            # r_ffio_c2 = f2             split(8)
-                            # r_ffio_c3 = f3             split(9)
-                            # r_ffio_c4 = f4             split(10)
-                            # r_ffio_c5 = f5 (always 0)  split(11)
-                            # r_ffio_c6 = f6 (always 0)  split(12)
-                            c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(float(split[7]),float(split[8]),
-                                                                               float(split[9]),float(split[10]))
-                        except:
-                            f1=0
-                            f2=0
-                            f3=0
-                            f4=0
-                            # do some additional error handling here.
-                            print "ERROR (readFile): OPLS_PROPER terms not found"
-                        try:
-                            newDihedralForce = RBDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               c0 * units.kilocalorie_per_mole,
-                                               c1 * units.kilocalorie_per_mole,
-                                               c2 * units.kilocalorie_per_mole,
-                                               c3 * units.kilocalorie_per_mole,
-                                               c4 * units.kilocalorie_per_mole,
-                                               c5 * units.kilocalorie_per_mole,
-                                               0 * units.kilocalorie_per_mole)
-                        except:
-                            newDihedralForce = RBDihedral(int(split[1]),
-                                               int(split[2]),
-                                               int(split[3]),
-                                               int(split[4]),
-                                               c0 * units.kilocalorie_per_mole,
-                                               c1 * units.kilocalorie_per_mole,
-                                               c2 * units.kilocalorie_per_mole,
-                                               c3 * units.kilocalorie_per_mole,
-                                               c4 * units.kilocalorie_per_mole,
-                                               c5 * units.kilocalorie_per_mole,
-                                               c6 * units.kilocalorie_per_mole)
+                        # Internal desmond formatting for OPLS_PROPER
+                        #
+                        # r_ffio_c0 = f0 (always 0)  split(6)
+                        # r_ffio_c1 = f1             split(7)
+                        # r_ffio_c2 = f2             split(8)
+                        # r_ffio_c3 = f3             split(9)
+                        # r_ffio_c4 = f4             split(10)
+                        # r_ffio_c5 = f5 (always 0)  split(11)
+                        # r_ffio_c6 = f6 (always 0)  split(12)
+
+                        fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
+                            float(split[7]) * units.kilocalorie_per_mole,
+                            float(split[8]) * units.kilocalorie_per_mole,
+                            float(split[9]) * units.kilocalorie_per_mole,
+                            float(split[10]) * units.kilocalorie_per_mole)
+
+                        newDihedralForce = DihedralTrigDihedral(
+                            atom1, atom2, atom3, atom4,
+                            0 * units.degrees,
+                            fc0, fc1, fc2, fc3, fc4, fc5, fc6)
                     else:
                         print "ERROR (readFile): found unsupported dihedral in:",
                         print line[i]
@@ -951,7 +895,7 @@ class DesmondParser():
                         if re.search("\D+",aline) and re.search("\w+",aline):
                             atom.atomName = aline
                         else:
-                            atom.atomName = aline1
+                            atom.atomName = pdbaline
                     elif re.match('$^',pdbaline) and re.match('$^',aline):
                         atom.atomName = "None"
                     else:
@@ -1588,56 +1532,33 @@ class DesmondParser():
             # first, identify the number of terms we will print
             for dihedral in dihedrallist:
                 i+=1
+                dlines.append('      %d %d %d %d %d ' % (
+                    i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4))
                 if isinstance(dihedral, ImproperHarmonicDihedral):
-                    dlines.append('      %d %d %d %d %d %s %10.8f %10.8f %.1f %.1f %.1f %.1f %.1f %.1f\n' %
-                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4,
-                                   'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
-                                   0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
-                                   0,0,0,0,0,0))
-                elif isinstance(dihedral, ProperPeriodicDihedral) or isinstance(dihedral, ProperDihedral9):
-                    zunit = 0*dihedral.k.unit
-                    if (dihedral.multiplicity == 1):
-                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(dihedral.k,zunit,zunit,zunit)
-                    elif (dihedral.multiplicity == 2):
-                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,dihedral.k,zunit,zunit)
-                    elif (dihedral.multiplicity == 3):
-                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,zunit,dihedral.k,zunit)
-                    elif (dihedral.multiplicity == 4):
-                        c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromOPLSToRB(zunit,zunit,zunit,dihedral.k)
-                    f0,f1,f2,f3,f4,f5,f6 = ConvertDihedralFromRBToProperTrig(c0,c1,c2,c3,c4,c5,c6)
-                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
-                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
-                                   float(c0.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c1.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c2.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c3.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c4.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c5.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c6.in_units_of(units.kilocalories_per_mole)._value)))                        
-
-                elif isinstance(dihedral, RBDihedral):
-                    if dihedral.i == 1:
-                        name = 'Improper_Trig'
+                    dlines.append('%s %10.8f %10.8f %1d %1d %1d %1d %1d %1d\n' % (
+                            'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
+                            0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
+                            0,0,0,0,0,0))
+                elif isinstance(dihedral, DihedralTrigDihedral):
+                    if dihedral.improper:
+                        dtype = 'Improper_Trig'
                     else:
-                        name = 'Proper_Trig'
-                    # convert to the proper form    
-                    c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromRBToProperTrig(dihedral.C0,dihedral.C1,dihedral.C2,
-                                                                             dihedral.C3,dihedral.C4,dihedral.C5,
-                                                                             dihedral.C6)
-                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
-                                  (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name,
-                                   float(c0.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c1.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c2.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c3.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c4.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c5.in_units_of(units.kilocalories_per_mole)._value),
-                                   float(c6.in_units_of(units.kilocalories_per_mole)._value)))
+                        dtype = 'Proper_Trig'
+                    dlines.append('%s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (
+                            dtype,
+                            float(dihedral.phi.in_units_of(units.degrees)._value),
+                            float(dihedral.fc0.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc1.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc2.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc3.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc4.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc5.in_units_of(units.kilocalories_per_mole)._value),
+                            float(dihedral.fc6.in_units_of(units.kilocalories_per_mole)._value)))
                 else:
                     print "ERROR (writeFile): found unsupported dihedral."
                     print dihedral,
                     print "Printing zero-energy placeholder."
-                    dlines.append('      %d %d %d %d %d %s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
+                    dlines.append('%s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
                                   (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
                                    0, 0, 0, 0, 0, 0, 0))
             header = "    ffio_dihedrals[%d] {\n" % (i)

@@ -18,7 +18,6 @@ from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
 
-
 class GromacsTopologyParser(object):
     """
     A class containing methods required to read in a Gromacs(4.5.4) Topology File
@@ -396,54 +395,64 @@ class GromacsTopologyParser(object):
                             atom4 = split[3]
                             d = 2
 
-                        # Proper Dihedral 1 & 9 - might not be handling 9 correctly yet.
-                        if ((int(split[2+d]) == 1) or int(split[2+d]) == 9) and (len(split) == 6+d):
-                            newDihedralType = ProperPeriodicDihedralType(
-                                atom1,atom2,atom3,atom4,
-                                split[2+d],
-                                float(split[3+d]) * units.degrees,
-                                float(split[4+d]) * units.kilojoules_per_mole,
-                                int(split[5+d]))
+                        # We can fit everything into two types of dihedrals - dihedral_trig, and improper harmonic
+                        # dihedral trig is of the form fc0 + sum_i=1^6 fci (cos(nx-phi)
+                        # proper dihedrals can be stored easily in this form, since they have only 1 n
+                        # improper dihedrals can as well (flag as improper)
+                        # RB can be stored as well, assuming phi = 0 or 180
+                        # Fourier can also be stored.
+                        # a full dihedral trig can be decomposied in to multiple proper dihedrals.
 
-                        # Proper Dihedral 2
+                        # will need to handle this a little differently, in that we will need
+                        # to add multiple 9 dihedrals together into a single dihedral_trig
+
+                        if ((int(split[2+d]) == 1 or
+                            int(split[2+d]) == 9 or
+                            int(split[2+d]) == 4)
+                            and (len(split) == 6+d)):
+
+                            if int(split[2+d]==4):
+                                improper = True
+                            else:
+                                improper = False
+                            fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperTrigtoDihedralTrig(
+                                float(split[4+d])*units.kilojoules_per_mole,int(split[5+d]))
+                            newDihedralType = DihedralTrigType(
+                                atom1, atom2, atom3, atom4, float(split[3+d]) * units.degrees,
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
+
+                        # Improper Harmonic Dihedral: type 2. Can't be converted to any other type
                         elif (int(split[2+d]) == 2) and (len(split) == 5+d):
                             newDihedralType = ImproperHarmonicDihedralType(
                                 atom1,atom2,atom3,atom4,
-                                split[2+d],
                                 float(split[3+d]) * units.degrees,
                                 float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2))
 
-                        # RBDihedral 3
+                        # RBDihedral: type 3
                         elif (int(split[2+d]) == 3) and (len(split) == 9+d):
-                            newDihedralType = RBDihedralType(
-                                atom1,atom2,atom3,atom4,
-                                split[2+d],
+                            fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
                                 float(split[3+d]) * units.kilojoules_per_mole,
                                 float(split[4+d]) * units.kilojoules_per_mole,
                                 float(split[5+d]) * units.kilojoules_per_mole,
                                 float(split[6+d]) * units.kilojoules_per_mole,
                                 float(split[7+d]) * units.kilojoules_per_mole,
                                 float(split[8+d]) * units.kilojoules_per_mole,
-                                0 * units.kilojoules_per_mole)  # GROMACS only goes up through C5
-
-                        # periodic improper dihedral 4
-                        elif (int(split[2+d]) == 4) and (len(split) == 6+d):
-                            newDihedralType = ImproperDihedral4Type(
-                                atom1,atom2,atom3,atom4,
-                                split[2+d],
-                                float(split[3+d]) * units.degrees,
-                                float(split[4+d]) * units.kilojoules_per_mole,
-                                float(split[5+d]))  #multiplicity
+                                0 * units.kilojoules_per_mole)
+                            newDihedralType = DihedralTrigType(
+                                atom1, atom2, atom3, atom4, 0 * units.degrees,
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the sign here
 
                         # Fourier Dihedral 5
                         elif (int(split[2+d]) == 5) and (len(split) == 7+d):
-                            newDihedralType = FourierDihedralType(
-                            atom1,atom2,atom3,atom4,
-                            split[2+d],
-                            float(split[3+d]) * units.kilojoules_per_mole,
-                            float(split[4+d]) * units.kilojoules_per_mole,
-                            float(split[5+d]) * units.kilojoules_per_mole,
-                            float(split[6+d]) * units.kilojoules_per_mole)
+                            fc0, fc1, fc2, fc3, fc4, fc5, fc6  = ConvertDihedralFromFouriertoDihedralTrig(
+                                float(split[3+d]) * units.kilojoules_per_mole,
+                                float(split[4+d]) * units.kilojoules_per_mole,
+                                float(split[5+d]) * units.kilojoules_per_mole,
+                                float(split[6+d]) * units.kilojoules_per_mole)
+
+                            newDihedralType = DihedralTrigType(
+                                atom1, atom2, atom3, atom4, 0 * units.degrees,
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6)
 
                         elif (int(split[2+d]) == 8):
                             print "Error: Tabulated dihedrals not supported"
@@ -900,164 +909,89 @@ class GromacsTopologyParser(object):
                             dihedralType = None
                             for alist in atomtypelists:
                                 if not dihedralType:
-                                    tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3], split[4])
+                                    tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3])
                                     dihedralType = self.dihedraltypes.get(tempType)
                                 else:
                                     break
-    
-                            if isinstance(dihedralType, ProperPeriodicDihedralType):
-                                split.append(dihedralType.phi)
-                                split.append(dihedralType.k)
-                                split.append(dihedralType.multiplicity)
 
-                            if isinstance(dihedralType, ProperDihedral9Type):
-                                split.append(dihedralType.phi)
-                                split.append(dihedralType.k)
-                                split.append(dihedralType.multicplicity)
+                        if isinstance(dihedralType, DihedralTrigType):
+                            phi = dihedralType.phi
+                            fc0 = dihedralType.fc0
+                            fc1 = dihedralType.fc1
+                            fc2 = dihedralType.fc2
+                            fc3 = dihedralType.fc3
+                            fc4 = dihedralType.fc4
+                            fc5 = dihedralType.fc5
+                            fc6 = dihedralType.fc6
 
-                            if isinstance(dihedralType, ImproperHarmonicDihedralType):
-                                split.append(dihedralType.xi)
-                                split.append(dihedralType.k)
+                        if isinstance(dihedralType, ImproperHarmonicDihedralType):
+                            xi = dihedralType.xi
+                            k = dihedralType.k
 
-                            if isinstance(dihedralType, RBDihedralType):
-                                split.append(dihedralType.C0)
-                                split.append(dihedralType.C1)
-                                split.append(dihedralType.C2)
-                                split.append(dihedralType.C3)
-                                split.append(dihedralType.C4)
-                                split.append(dihedralType.C5)
-
-                            if isinstance(dihedralType, FourierDihedralType):
-                                split.append(dihedralType.c1)
-                                split.append(dihedralType.c2)
-                                split.append(dihedralType.c3)
-                                split.append(dihedralType.c4)
-
-                            if isinstance(dihedralType, ImproperDihedral4Type):
-                                split.append(dihedralType.phi)
-                                split.append(dihedralType.k)
-                                split.append(dihedralType.multiplicity)
+                        atom1 = int(split[0])
+                        atom2 = int(split[1])
+                        atom3 = int(split[2])
+                        atom4 = int(split[3])
 
                         # Proper Dihedral 1
-                        if int(split[4]) == 1:
-                            try:
-                                newDihedralForce = ProperPeriodicDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.degrees,
-                                        float(split[6]) * units.kilojoules_per_mole,
-                                        int(split[7]))
-                            except:
-                                newDihedralForce = ProperPeriodicDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6],
-                                        split[7])
+                        if int(split[4]) == 1 or int(split[4]) == 9 or int(split[4]) == 4:
+
+                            if int(split[4] == 4):
+                                improper = True
+                            else:
+                                improper = False
+
+                            if len(split) > 5:
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
+                                    split[6] * units.kilojoules_per_mole, split[7])
+                                phi = float(split[5]) * degrees
+
+                            newDihedralForce = DihedralTrigDihedral(
+                                atom1, atom2, atom3, atom4,
+                                phi, fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
+                            # for dihedral type 9, there can be multiple interactions
 
                         # Improper Dihedral 2
+
                         elif int(split[4]) == 2:
-                            try:
-                                newDihedralForce = ImproperHarmonicDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.degrees,
-                                        float(split[6]) * units.kilojoules_per_mole * units.radians**(-2))
-                            except:
-                                newDihedralForce = ImproperHarmonicDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6])
+
+                            if len(split) > 5:
+                                phi = float(split[5]) * degrees
+                                k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
+
+                            newDihedralForce = ImproperHarmonicDihedral(
+                                atom1, atom2, atom3, atom4, xi, k)
 
                         # RBDihedral
                         elif int(split[4]) == 3:
-                            try:
-                                newDihedralForce = RBDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.kilojoules_per_mole,
-                                        float(split[6]) * units.kilojoules_per_mole,
-                                        float(split[7]) * units.kilojoules_per_mole,
-                                        float(split[8]) * units.kilojoules_per_mole,
-                                        float(split[9]) * units.kilojoules_per_mole,
-                                        float(split[10]) * units.kilojoules_per_mole,
-                                        0 * units.kilojoules_per_mole)
-                            except:
-                                newDihedralForce = RBDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6],
-                                        split[7],
-                                        split[8],
-                                        split[9],
-                                        split[10],
-                                        0 * units.kilojoules_per_mole)
+
+                            if len(split) > 5:
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBtoDihedralTrig(
+                                    float(split[4]) * units.kilojoules_per_mole,
+                                    float(split[5]) * units.kilojoules_per_mole,
+                                    float(split[6]) * units.kilojoules_per_mole,
+                                    float(split[7]) * units.kilojoules_per_mole,
+                                    float(split[8]) * units.kilojoules_per_mole,
+                                    float(split[9]) * units.kilojoules_per_mole)
+
+                            newDihedralForce = DihedralTrigDihedral(
+                                atom1, atom2, atom3, atom4,
+                                0 * units.degrees, fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the use of sign here
 
                         elif int(split[4]) == 5:
-                            try:
-                                newDihedralForce = FourierDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.kilojoules_per_mole,
-                                        float(split[6]) * units.kilojoules_per_mole,
-                                        float(split[7]) * units.kilojoules_per_mole,
-                                        float(split[8]) * units.kilojoules_per_mole)
-                            except:
-                                newDihedralForce = FourierDihedral(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6],
-                                        split[7],
-                                        split[8])
 
-                        # Improper Dihedral 4
-                        elif int(split[4]) == 4:
-                            try:
-                                newDihedralForce = ImproperDihedral4(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.degrees,
-                                        float(split[6]) * units.kilojoules_per_mole,
-                                        int(split[7]))
-                            except:
-                                newDihedralForce = ImproperDihedral4(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6],
-                                        split[7])
+                            if len(split) > 5:
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFouriertoDihedralTrig(
+                                    int(split[5])*units.kilojoules_per_mole,
+                                    int(split[6])*units.kilojoules_per_mole,
+                                    int(split[7])*units.kilojoules_per_mole,
+                                    int(split[8])*units.kilojoules_per_mole,
+                                    )
 
-                        # Proper Dihedral 9
-                        elif int(split[4]) == 9:
-                            try:
-                                newDihedralForce = ProperDihedral9(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        float(split[5]) * units.degrees,
-                                        float(split[6]) * units.kilojoules_per_mole,
-                                        int(split[7]))
-                            except:
-                                newDihedralForce = ProperDihedral9(int(split[0]),
-                                        int(split[1]),
-                                        int(split[2]),
-                                        int(split[3]),
-                                        split[5],
-                                        split[6],
-                                        split[7])
+                        elif int(split[4]) == 8:
+                            print "Error: Cannot support tabulated dihedrals"
+                        else:
+                            print "ERROR: unsupported dihedral"
 
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                         System._sys._forces.add(newDihedralForce)
@@ -1540,62 +1474,67 @@ class GromacsTopologyParser(object):
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
                     # this atom index will be the same for all of types.
                     atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
-                    if isinstance(dihedral, ProperPeriodicDihedral):
-                        d_type = 1
-                        lines.append('%s%4d%18.8f%18.8f%4d\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.phi.in_units_of(units.degrees)._value,
-                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.multiplicity))
+                    if isinstance(dihedral, DihedralTrigDihedral):
+                        # convienience array
+                        darray = [dihedral.fc1,dihedral.fc2,dihedral.fc3,dihedral.fc4,dihedral.fc5,dihedral.fc6]
+                        if (dihedral.improper):
+                            for j in range(6):  # only one of these should be nonzero
+                                if darray[j].in_units_of(units.kilojoules_per_mole._value) != 0:
+                                    lines.append('%s%4d%18.8f%18.8f%6d\n'
+                                                 % (atomindex, 4,
+                                                    dihedral.phi.in_units_of(units.degrees)._value,
+                                                    darray.in_units_of(units.kilojoules_per_mole)._value,
+                                                    i))
+                        else:
+                            if (dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees):
+                                d_type = 3
+                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromDihedralTrigToRB(
+                                    math.cos(dihedral.phi.in_units_of(units.radians)._value),
+                                    dihedral.phi,
+                                    dihedral.fc0,
+                                    dihedral.fc1,
+                                    dihedral.fc2,
+                                    dihedral.fc3,
+                                    dihedral.fc4,
+                                    dihedral.fc5,
+                                    dihedral.fc6)
+                                lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
+                                             % (atomindex,
+                                                d_type,
+                                                c0.in_units_of(units.kilojoules_per_mole)._value,
+                                                c1.in_units_of(units.kilojoules_per_mole)._value,
+                                                c2.in_units_of(units.kilojoules_per_mole)._value,
+                                                c3.in_units_of(units.kilojoules_per_mole)._value,
+                                                c4.in_units_of(units.kilojoules_per_mole)._value,
+                                                c5.in_units_of(units.kilojoules_per_mole)._value))
+                            else:
+                                #print as a type 1 dihedral, or a series of type 9 dihedrals
+                                ncount = 0
+
+                                for j in range(6):
+                                    if float(darray[j]._value) != 0:
+                                        ncount +=1
+                                if ncount > 1:
+                                    dtype = 9
+                                else:
+                                    dtype = 1
+                                for j in range(6):
+                                    if float(darray[j]._value) != 0:
+                                        lines.append('%s%4d%18.8f%18.8f%6d\n'
+                                        % (atomindex,
+                                           dtype,
+                                           dihedral.phi.in_units_of(units.degrees)._value,
+                                           darray[j].in_units_of(units.kilojoules_per_mole)._value,
+                                           j+1))
 
                     elif isinstance(dihedral, ImproperHarmonicDihedral):
                         d_type = 2
                         lines.append('%s%4d%18.8f%18.8f\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.xi.in_units_of(units.degrees)._value,
-                                   dihedral.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
+                                     % (atomindex,
+                                        d_type,
+                                        dihedral.xi.in_units_of(units.degrees)._value,
+                                        dihedral.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
 
-                    elif isinstance(dihedral, RBDihedral):
-                        d_type = 3
-                        lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.C0.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.C1.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.C2.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.C3.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.C4.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.C5.in_units_of(units.kilojoules_per_mole)._value))
-
-                    elif isinstance(dihedral, FourierDihedral):
-                        d_type = 5
-                        lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.c1.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.c2.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.c3.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.c4.in_units_of(units.kilojoules_per_mole)._value))
-
-                    elif isinstance(dihedral, ImproperDihedral4):
-                        d_type = 4
-                        lines.append('%s%4d%18.8f%18.8f%4d\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.phi.in_units_of(units.degrees)._value,
-                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.multiplicity))
-
-                    elif isinstance(dihedral, ProperDihedral9):
-                        d_type = 9
-                        lines.append('%s%4d%18.8f%18.8f%4d\n'
-                                % (atomindex,
-                                   d_type,
-                                   dihedral.phi.in_units_of(units.degrees)._value,
-                                   dihedral.k.in_units_of(units.kilojoules_per_mole)._value,
-                                   dihedral.multiplicity))
                     else:
                         print "ERROR (writeTopology): found unsupported  dihedral type"
                 lines.append('\n')
