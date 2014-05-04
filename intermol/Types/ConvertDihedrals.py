@@ -79,7 +79,7 @@ def ConvertDihedralFromDihedralTrigToRB(sign, phi, fc0, fc1, fc2, fc3, fc4, fc5,
     # cos(4x) = 8cos^4(X)-8cos^2(x)+1
     # cos(5x) = 16cos^5(x)-20cos^3(x)+5cos(x)
     # cos(6x) = 32cos^6(x)-48cos^4(x)+18cos^2(x)-1
-    # Thus: 
+    # Thus:
     #   f0 + f1*cos(x) + f2*cos(2x) + f3*cos(3x) + f4*cos(4x) + f5*cos(5x) + f6*cos(6x) 
     #   z = cos(x)
     # = f0 + f1*z + f2*(2z^2-1) + f3*(4*z^3-3*z) + f4*(8z^4-8z^2+1) + f5*(16z^5-20z^3+5*z) + f6*(32z^6-48z^4+18*z^2-1) 
@@ -99,11 +99,12 @@ def ConvertDihedralFromDihedralTrigToRB(sign, phi, fc0, fc1, fc2, fc3, fc4, fc5,
     c5 = 16.0*fc5
     c6 = 32.0*fc6
 
-    return c0,sign*c1,sign*c2,sign*c3,sign*c4,sign*c5,sign*c6,
+    # Multiplying by -1 on odd powers to switch between sign conventions
+    return sign*c0,-sign*c1,sign*c2,-sign*c3,sign*c4,-sign*c5,sign*c6,
 
-def ConvertDihedralFromRBToDihedralTrig(c0,c1,c2,c3,c4,c5,c6):
+def ConvertDihedralFromRBToDihedralTrig(c0, c1, c2, c3, c4, c5, c6):
 
-    # see above for conversion; simply inverting the matrix.  Need to handle sign?
+    # see above for conversion; simply inverting the matrix.  Need to handle sign for 180?
 
     fc0 =  1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
     fc1 =  1.0*c1 + 0.75*c3 + 0.6250*c5
@@ -113,5 +114,6 @@ def ConvertDihedralFromRBToDihedralTrig(c0,c1,c2,c3,c4,c5,c6):
     fc5 =  0.0625*c5
     fc6 =  0.03125*c6
 
-    return fc0,fc1,fc2,fc3,fc4,fc5,fc6
+    # Multiplying by -1 on odd powers to switch between sign conventions
+    return fc0, -fc1, fc2, -fc3, fc4, -fc5, fc6
 

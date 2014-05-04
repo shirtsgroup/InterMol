@@ -1159,7 +1159,6 @@ class DesmondParser():
         i = 0
         nonecnt = 0
         for moleculetype in System._sys._molecules.itervalues():
-            pdb.set_trace()
             # sort the bondlist because Desmond requires the first time a bond is listed to have
             # the atoms in ascending order
             repeatmol = len(moleculetype.moleculeSet)

@@ -411,12 +411,13 @@ class GromacsTopologyParser(object):
                             int(split[2+d]) == 4)
                             and (len(split) == 6+d)):
 
-                            if int(split[2+d]==4):
+                            if int(split[2+d])==4:
                                 improper = True
                             else:
                                 improper = False
                             fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                 float(split[4+d])*units.kilojoules_per_mole,int(split[5+d]))
+                            print fc0, fc1, fc2, fc3, fc4, fc5, fc6
                             newDihedralType = DihedralTrigType(
                                 atom1, atom2, atom3, atom4, float(split[3+d]) * units.degrees,
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
@@ -426,7 +427,7 @@ class GromacsTopologyParser(object):
                             newDihedralType = ImproperHarmonicDihedralType(
                                 atom1,atom2,atom3,atom4,
                                 float(split[3+d]) * units.degrees,
-                                float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2))
+                                float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2),improper=improper)
 
                         # RBDihedral: type 3
                         elif (int(split[2+d]) == 3) and (len(split) == 9+d):
@@ -938,14 +939,14 @@ class GromacsTopologyParser(object):
                         # Proper Dihedral 1
                         if int(split[4]) == 1 or int(split[4]) == 9 or int(split[4]) == 4:
 
-                            if int(split[4] == 4):
+                            if int(split[4]) == 4:
                                 improper = True
                             else:
                                 improper = False
 
                             if len(split) > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
-                                    split[6] * units.kilojoules_per_mole, split[7])
+                                    float(split[6]) * units.kilojoules_per_mole, split[7])
                                 phi = float(split[5]) * units.degrees
 
                             newDihedralForce = DihedralTrigDihedral(
@@ -956,7 +957,6 @@ class GromacsTopologyParser(object):
                         # Improper Dihedral 2
 
                         elif int(split[4]) == 2:
-
                             if len(split) > 5:
                                 phi = float(split[5]) * degrees
                                 k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
@@ -985,10 +985,10 @@ class GromacsTopologyParser(object):
 
                             if len(split) > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
-                                    int(split[5])*units.kilojoules_per_mole,
-                                    int(split[6])*units.kilojoules_per_mole,
-                                    int(split[7])*units.kilojoules_per_mole,
-                                    int(split[8])*units.kilojoules_per_mole,
+                                    float(split[5])*units.kilojoules_per_mole,
+                                    float(split[6])*units.kilojoules_per_mole,
+                                    float(split[7])*units.kilojoules_per_mole,
+                                    float(split[8])*units.kilojoules_per_mole,
                                     )
 
                         elif int(split[4]) == 8:
@@ -1482,12 +1482,12 @@ class GromacsTopologyParser(object):
                         darray = [dihedral.fc1,dihedral.fc2,dihedral.fc3,dihedral.fc4,dihedral.fc5,dihedral.fc6]
                         if (dihedral.improper):
                             for j in range(6):  # only one of these should be nonzero
-                                if darray[j].in_units_of(units.kilojoules_per_mole._value) != 0:
+                                if darray[j].in_units_of(units.kilojoules_per_mole)._value != 0:
                                     lines.append('%s%4d%18.8f%18.8f%6d\n'
                                                  % (atomindex, 4,
                                                     dihedral.phi.in_units_of(units.degrees)._value,
-                                                    darray.in_units_of(units.kilojoules_per_mole)._value,
-                                                    i))
+                                                    darray[j].in_units_of(units.kilojoules_per_mole)._value,
+                                                    j+1))
                         else:
                             if (dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees):
                                 d_type = 3
@@ -1501,6 +1501,8 @@ class GromacsTopologyParser(object):
                                     dihedral.fc4,
                                     dihedral.fc5,
                                     dihedral.fc6)
+                                if (c6._value != 0):
+                                    print "ERROR: Gromacs does not handle multiplicities of greater than 6"
                                 lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
                                              % (atomindex,
                                                 d_type,
@@ -1571,7 +1573,6 @@ class GromacsTopologyParser(object):
         # [ molecules ]
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')
-        #pdb.set_trace()
         #for component in System._sys._components:
         #    lines.append('%-15s%8d\n'
         #                 % (component[0],
