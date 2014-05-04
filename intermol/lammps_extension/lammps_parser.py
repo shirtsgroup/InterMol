@@ -451,14 +451,14 @@ class LammpsParser(object):
                           self.dihedral_types[fields[1]][1],
                           self.dihedral_types[fields[1]][2],
                           self.dihedral_types[fields[1]][3]]
-                    Cs = ConvertDihedralFromOPLSToRB(
+                    Cs = ConvertDihedralFromFourierToDihedralTrig(
                             Fs[0],
                             Fs[1],
                             Fs[2],
                             Fs[3])
-                    new_dihed_force = RBDihedral(
+                    new_dihed_force = DihedralTrigDihedral(
                             fields[2], fields[3], fields[4], fields[5],
-                            Cs[0], Cs[1], Cs[2], Cs[3], Cs[4], Cs[5], Cs[6])
+                            0*units.degrees, Cs[0], Cs[1], Cs[2], Cs[3], Cs[4], Cs[5], Cs[6])
             else:
                 warn("Hybrid dihedral styles not yet implemented")
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
@@ -634,7 +634,7 @@ class LammpsParser(object):
                 for dihedral in mol_type.dihedralForceSet.itervalues():
                     if isinstance(dihedral, ProperPeriodicDihedral):
                         continue
-                    if isinstance(dihedral, RBDihedral):
+                    if isinstance(dihedral, DihedralTrigDihedral):
                         if 'opls' not in dihedral_style:
                             dihedral_style.append('opls')
                         if len(dihedral_style) > 1:
@@ -651,14 +651,14 @@ class LammpsParser(object):
                         atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
                         atomtype4 = atom4.bondtype
 
-                        temp = RBDihedralType(atomtype1, atomtype2,
-                                atomtype3, atomtype4, 3, dihedral.C0,
-                                dihedral.C1, dihedral.C2, dihedral.C3,
-                                dihedral.C4, dihedral.C5, dihedral.C6)
+                        temp = DihedralTrigType(atomtype1, atomtype2, atomtype3, atomtype4, 
+                                                dihedral.phi, dihedral.fc0,
+                                                dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                                dihedral.fc4, dihedral.fc5, dihedral.fc6)
                         if temp not in dihedral_type_dict:
-                            Fs = ConvertDihedralFromRBToOPLS(dihedral.C0,
-                                    dihedral.C1, dihedral.C2, dihedral.C3,
-                                    dihedral.C4, dihedral.C5, dihedral.C6)
+                            Fs = ConvertDihedralFromDihedralTrigToFourier(
+                                dihedral.fc0, dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                dihedral.fc4, dihedral.fc5, dihedral.fc6)
                             dihedral_type_dict[temp] = dih_type_i
                             dihedral_coeffs.append('{0:d} {1:18.8f} {2:18.8f} {3:18.8f} {4:18.8f}\n'.format(
                                     dih_type_i,
@@ -776,9 +776,14 @@ class LammpsParser(object):
                         continue
                     if isinstance(dihedral, RBDihedral):
                         temp = RBDihedralType(atomtype1, atomtype2, atomtype3,
-                                atomtype4, 3, dihedral.C0,
-                                dihedral.C1, dihedral.C2, dihedral.C3,
-                                dihedral.C4, dihedral.C5, dihedral.C6)
+                                              atomtype4, dihedral.C0,
+                                              dihedral.C1, dihedral.C2, dihedral.C3,
+                                              dihedral.C4, dihedral.C5, dihedral.C6)
+                    if isinstance(dihedral, DihedralTrigDihedral):
+                        temp = DihedralTrigType(atomtype1, atomtype2, atomtype3,
+                                              atomtype4, dihedral.phi, dihedral.fc0,
+                                              dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                              dihedral.fc4, dihedral.fc5, dihedral.fc6)
 
                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
                             i + j + 1,

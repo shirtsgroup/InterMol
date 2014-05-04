@@ -417,7 +417,6 @@ class GromacsTopologyParser(object):
                                 improper = False
                             fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                 float(split[4+d])*units.kilojoules_per_mole,int(split[5+d]))
-                            print fc0, fc1, fc2, fc3, fc4, fc5, fc6
                             newDihedralType = DihedralTrigType(
                                 atom1, atom2, atom3, atom4, float(split[3+d]) * units.degrees,
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
@@ -1491,7 +1490,7 @@ class GromacsTopologyParser(object):
                         else:
                             if (dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees):
                                 d_type = 3
-                                c0,c1,c2,c3,c4,c5,c6 = ConvertDihedralFromDihedralTrigToRB(
+                                c = ConvertDihedralFromDihedralTrigToRB(
                                     math.cos(dihedral.phi.in_units_of(units.radians)._value),
                                     dihedral.phi,
                                     dihedral.fc0,
@@ -1501,17 +1500,17 @@ class GromacsTopologyParser(object):
                                     dihedral.fc4,
                                     dihedral.fc5,
                                     dihedral.fc6)
-                                if (c6._value != 0):
+                                if (c[6]._value != 0):
                                     print "ERROR: Gromacs does not handle multiplicities of greater than 6"
                                 lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
                                              % (atomindex,
                                                 d_type,
-                                                c0.in_units_of(units.kilojoules_per_mole)._value,
-                                                c1.in_units_of(units.kilojoules_per_mole)._value,
-                                                c2.in_units_of(units.kilojoules_per_mole)._value,
-                                                c3.in_units_of(units.kilojoules_per_mole)._value,
-                                                c4.in_units_of(units.kilojoules_per_mole)._value,
-                                                c5.in_units_of(units.kilojoules_per_mole)._value))
+                                                c[0].in_units_of(units.kilojoules_per_mole)._value,
+                                                c[1].in_units_of(units.kilojoules_per_mole)._value,
+                                                c[2].in_units_of(units.kilojoules_per_mole)._value,
+                                                c[3].in_units_of(units.kilojoules_per_mole)._value,
+                                                c[4].in_units_of(units.kilojoules_per_mole)._value,
+                                                c[5].in_units_of(units.kilojoules_per_mole)._value))
                             else:
                                 #print as a type 1 dihedral, or a series of type 9 dihedrals
                                 ncount = 0

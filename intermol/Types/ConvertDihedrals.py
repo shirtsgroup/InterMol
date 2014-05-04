@@ -35,6 +35,18 @@ def ConvertDihedralFromFourierToDihedralTrig(F1, F2, F3, F4):
     fc6 = zu
 
     return fc0, fc1, fc2, fc3, fc4, fc5, fc6
+
+def ConvertDihedralFromDihedralTrigToFourier(fc0, fc1, fc2, fc3, fc4, fc5, fc6):
+
+    F1 = 2*fc1
+    F2 = -2*fc2
+    F3 = 2*fc3
+    F4 = -2*fc4
+
+    if fc0 != 0.5*(F1+F2+F3+F4):
+        print "This dihedral is inconsistent with OPLS format",
+
+    return F1, F2, F3, F4
     
 def ConvertDihedralFromRBToOPLS(c0,c1,c2,c3,c4,c5,c6):
 
