@@ -310,14 +310,14 @@ class DesmondParser():
             elif match.group('bonds'): #may not have all bonds types here yet?
                 forces = []
                 if len(self.b_blockpos) > 1:  #LOADING M_BONDS
-                    #print 'LENGTH OF B_BLOCKPOS: %d'%len(self.b_blockpos)
                     if self.b_blockpos[0] < start:
-                        forces = self.loadMBonds(lines,self.b_blockpos[0], i, verbose)
+                        npermol = len(currentMoleculeType.moleculeSet[0]._atoms)
+                        forces = self.loadMBonds(lines,self.b_blockpos[0], i, npermol, verbose)
                         currentMoleculeType.bondForceSet = forces[0]
                         System._sys._forces = forces[1]
                         self.b_blockpos.pop(0)
                 if verbose:
-                    print "Parsing [ bonds]..."
+                    print "Parsing [ bonds ]..."
 
                 for j in range(ff_number):
                     split = entry_values[j].split()
@@ -358,24 +358,19 @@ class DesmondParser():
                         try:
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
-                                          1,
                                           float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS
                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                           0)
                         except:
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
-                                          1,
                                           float(split[4]),
-                                          2*float(split[5]),
-                                          0)
+                                          2*float(split[5]))
                         try:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
                                            float(split[4]) * units.angstroms,
-                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
-                                           None,
-                                           0)
+                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2))
                         except:
                             newBondForce = Bond(int(split[1]),
                                            int(split[2]),
@@ -718,7 +713,7 @@ class DesmondParser():
             while '}' not in lines[i]:
                 i+=1   # not the most robust if there is nesting in a particular pattern
 
-    def loadMBonds(self, lines, start, end, verbose = False): #adds new bonds for each molecule in System
+    def loadMBonds(self, lines, start, end, npermol, verbose = False): #adds new bonds for each molecule in System
 
 #        Loading in m_bonds in Desmond format
 #        Args:
@@ -728,7 +723,7 @@ class DesmondParser():
 
         if verbose:
             print "Parsing [ m_bonds]..."
-        bg = False
+            bg = False
         newBondForce = None
         split = []
         i = start
@@ -743,20 +738,28 @@ class DesmondParser():
                     i+=1
             if bg:
                 split = lines[i].split()
+                atomi = int(split[1])
+                atomj = int(split[2])
+                if atomi > npermol:  # we've collected the number of atoms per molecule.  Exit.
+                    break
+                order = int(split[3])
                 try:
-                    newBondForce = Bond(int(split[1]),
-                                   int(split[2]),
-                                   float(0) * units.angstroms, #BOND ORDERS ARE DIFFERENT, SPLIT3 IS BOND ORDER. NOT ACCURATE CALCULATION
-                                   float(0) * units.kilocalorie_per_mole * units.angstroms**(-2),
-                                   int(split[3]),
-                                   0)
+                    newBondForce = Bond(
+                        atomi,
+                        atomj,
+                        float(0) * units.angstroms,
+                        float(0) * units.kilocalorie_per_mole * units.angstroms**(-2),
+                        order = order,
+                        c = False)
                 except:
-                    newBondForce = Bond(int(split[1]),
-                                   int(split[2]),
-                                   float(0),
-                                   float(0),
-                                   int(split[3]),
-                                   0)
+                    newBondForce = Bond(
+                    atomi,
+                    atomj,
+                    float(0),
+                    float(0),
+                    order,
+                    c = False)
+
                 bondForceSet.add(newBondForce)
                 forces.add(newBondForce)
             i+=1
