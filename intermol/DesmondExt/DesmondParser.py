@@ -1634,19 +1634,23 @@ class DesmondParser():
             hlines.append("      i_ffio_aj\n")
             hlines.append("      :::\n")
 
-            # currently, should be determined entirely by the bonds, since settles now adds bonds.
-            # MRS: verify!
-            #for exclusion in moleculetype.exclusions.itervalues():
-            #    i+=1
-            #    dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+            if moleculetype.nrexcl == 0:
 
-            # now add bond based exclusions
-            if moleculetype.nrexcl > 0:
+            # Should probably be determined entirely by the bonds,
+            # since settles now adds bonds.  For now, leave this in
+            # for Desmond to Desmond conversion, where nrexcl is not
+            # determind.  Probably should switch eventually.
 
+                for exclusion in moleculetype.exclusions.itervalues():
+                    i+=1
+                    dlines.append('      %d %d %d\n'%(i, int(exclusion.exclusions[0]), int(exclusion.exclusions[1])))
+
+            else:
                 if moleculetype.nrexcl > 4:
                     print "ERROR: can't handle more than excluding 1-4 interactions right now!"
 
                 bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+
                 # first, figure out the first appearance of each atom in the bondlist
                 currentatom = 0
                 atompos = []
