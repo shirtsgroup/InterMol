@@ -1,4 +1,4 @@
-def ConvertDihedralFromProperTrigToDihedralTrig(k, multiplicity):
+def ConvertDihedralFromProperDihedralToDihedralTrig(k, multiplicity):
 
     zu = 0*k.unit
     fc0 = k

@@ -415,7 +415,7 @@ class GromacsTopologyParser(object):
                                 improper = True
                             else:
                                 improper = False
-                            fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperTrigtoDihedralTrig(
+                            fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                 float(split[4+d])*units.kilojoules_per_mole,int(split[5+d]))
                             newDihedralType = DihedralTrigType(
                                 atom1, atom2, atom3, atom4, float(split[3+d]) * units.degrees,
@@ -444,7 +444,7 @@ class GromacsTopologyParser(object):
 
                         # Fourier Dihedral 5
                         elif (int(split[2+d]) == 5) and (len(split) == 7+d):
-                            fc0, fc1, fc2, fc3, fc4, fc5, fc6  = ConvertDihedralFromFouriertoDihedralTrig(
+                            fc0, fc1, fc2, fc3, fc4, fc5, fc6  = ConvertDihedralFromFourierToDihedralTrig(
                                 float(split[3+d]) * units.kilojoules_per_mole,
                                 float(split[4+d]) * units.kilojoules_per_mole,
                                 float(split[5+d]) * units.kilojoules_per_mole,
@@ -889,7 +889,10 @@ class GromacsTopologyParser(object):
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
                         split = expanded.pop(i).split()
                         newDihedralForce = None
+                        dihedralType = None
+
                         if len(split) == 5:
+
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
@@ -906,7 +909,6 @@ class GromacsTopologyParser(object):
                                              ['X', atomtype3, atomtype2, 'X'] # flipped double wildcard
                                              ]
 
-                            dihedralType = None
                             for alist in atomtypelists:
                                 if not dihedralType:
                                     tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3])
@@ -944,7 +946,7 @@ class GromacsTopologyParser(object):
                             if len(split) > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                     split[6] * units.kilojoules_per_mole, split[7])
-                                phi = float(split[5]) * degrees
+                                phi = float(split[5]) * units.degrees
 
                             newDihedralForce = DihedralTrigDihedral(
                                 atom1, atom2, atom3, atom4,
@@ -966,13 +968,14 @@ class GromacsTopologyParser(object):
                         elif int(split[4]) == 3:
 
                             if len(split) > 5:
-                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBtoDihedralTrig(
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
                                     float(split[4]) * units.kilojoules_per_mole,
                                     float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole,
                                     float(split[7]) * units.kilojoules_per_mole,
                                     float(split[8]) * units.kilojoules_per_mole,
-                                    float(split[9]) * units.kilojoules_per_mole)
+                                    float(split[9]) * units.kilojoules_per_mole,
+                                    float(split[10]) * units.kilojoules_per_mole)
 
                             newDihedralForce = DihedralTrigDihedral(
                                 atom1, atom2, atom3, atom4,
@@ -981,7 +984,7 @@ class GromacsTopologyParser(object):
                         elif int(split[4]) == 5:
 
                             if len(split) > 5:
-                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFouriertoDihedralTrig(
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
                                     int(split[5])*units.kilojoules_per_mole,
                                     int(split[6])*units.kilojoules_per_mole,
                                     int(split[7])*units.kilojoules_per_mole,

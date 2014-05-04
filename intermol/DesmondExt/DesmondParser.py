@@ -1159,12 +1159,14 @@ class DesmondParser():
         i = 0
         nonecnt = 0
         for moleculetype in System._sys._molecules.itervalues():
+            pdb.set_trace()
             # sort the bondlist because Desmond requires the first time a bond is listed to have
             # the atoms in ascending order
             repeatmol = len(moleculetype.moleculeSet)
+            #MRS: need to be fixed; gromacs loads in one set of bonds per molecue; desmond loads in all
             atompermol = len(moleculetype.moleculeSet[0]._atoms)
             bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
-            for n in range(repeatmol): 
+            for n in range(repeatmol):
                 for bond in bondlist:
                     if bond and bond.order:
                         i += 1
