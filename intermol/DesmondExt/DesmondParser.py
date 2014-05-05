@@ -547,7 +547,7 @@ class DesmondParser():
                     if re.match(split[5], "IMPROPER_HARM", re.IGNORECASE):
                         newDihedralForce = ImproperHarmonicDihedral(
                             atom1, atom2, atom3, atom4,
-                            float(split[6]) * units.radians,
+                            float(split[6]) * units.degrees,
                             2*float(split[7]) * units.kilocalorie_per_mole * units.radians**(-2))
                     elif re.match(split[5], "PROPER_TRIG", re.IGNORECASE) or re.match(
                         split[5],"IMPROPER_TRIG", re.IGNORECASE):
@@ -1540,7 +1540,7 @@ class DesmondParser():
                     i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4))
                 if isinstance(dihedral, ImproperHarmonicDihedral):
                     dlines.append('%s %10.8f %10.8f %1d %1d %1d %1d %1d %1d\n' % (
-                            'Improper_Harm', float(dihedral.xi.in_units_of(units.radians)._value),
+                            'Improper_Harm', float(dihedral.xi.in_units_of(units.degrees)._value),
                             0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
                             0,0,0,0,0,0))
                 elif isinstance(dihedral, DihedralTrigDihedral):
