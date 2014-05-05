@@ -940,10 +940,9 @@ class GromacsTopologyParser(object):
                             if len(split) > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                     float(split[6]) * units.kilojoules_per_mole, int(split[7]))
-
+                                phi = float(split[5]) * units.degrees 
                             newDihedralForce = DihedralTrigDihedral(
-                                atom1, atom2, atom3, atom4,
-                                float(split[5]) * units.degrees,
+                                atom1, atom2, atom3, atom4, phi,
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
 
                             # for dihedral type 9, there can be multiple interactions
