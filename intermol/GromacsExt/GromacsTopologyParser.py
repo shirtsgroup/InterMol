@@ -984,6 +984,10 @@ class GromacsTopologyParser(object):
                                     float(split[8])*units.kilojoules_per_mole,
                                     )
 
+                            newDihedralForce = DihedralTrigDihedral(
+                                atom1, atom2, atom3, atom4,
+                                0 * units.degrees, fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the use of sign here
+
                         elif int(split[4]) == 8:
                             print "Error: Cannot support tabulated dihedrals"
                         else:
@@ -1466,7 +1470,6 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-
                 for dihedral in moleculeType.dihedralForceSet.itervalues():
 
                     # this atom index will be the same for all of types.
