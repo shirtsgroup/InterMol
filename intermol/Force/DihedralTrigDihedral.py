@@ -1,6 +1,7 @@
 from intermol.Decorators import *
 from AbstractDihedral import *
-import pdb
+import math
+from math import fabs as abs
 
 
 class DihedralTrigDihedral(AbstractDihedral):
@@ -34,6 +35,30 @@ class DihedralTrigDihedral(AbstractDihedral):
 
     def get_parameters(self):
         return (self.atom1, self.atom2, self.atom3, self.atom4, self.phi, self.fc0, self.fc1, self.fc2, self.fc3, self.fc4, self.fc5, self.fc6)
+
+    def sum_parameters(self, addterms):
+        # addterms is another dihedral.
+        compatible = False
+        sign = 1
+
+        if self.phi == addterms.phi:
+            compatible = True
+        else:
+            # might not be compatible.  Check to see if they are offset by 180 degrees
+            if abs((self.phi - addterms.phi).value_in_unit(units.degrees)) == 180:
+                compatible = True
+                sign = -1
+
+        if (compatible):
+            self.fc0 += addterms.fc0
+            self.fc1 += sign*addterms.fc1
+            self.fc2 += sign*addterms.fc2
+            self.fc3 += sign*addterms.fc3
+            self.fc4 += sign*addterms.fc4
+            self.fc5 += sign*addterms.fc5
+            self.fc6 += sign*addterms.fc6
+        else:
+            print "Can't add terms for dihedral_trigs with different phase angles (%4f vs. %4f)" % (self.phi, addterms.phi)
 
     def __repr__(self):
         return "{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}".format(self.atom1,

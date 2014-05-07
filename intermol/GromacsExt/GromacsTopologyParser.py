@@ -398,17 +398,19 @@ class GromacsTopologyParser(object):
                         # a full dihedral trig can be decomposied in to multiple proper dihedrals.
 
                         # will need to handle this a little differently, in that we will need
-                        # to add multiple 9 dihedrals together into a single dihedral_trig
+                        # to add multiple 9 dihedrals together into a single dihedral_trig, as long as they
+                        # have the same phi angle (seems to be always the case).
 
-                        if ((int(split[2+d]) == 1 or
-                            int(split[2+d]) == 9 or
-                            int(split[2+d]) == 4)
-                            and (len(split) == 6+d)):
+                        dtype = int(split[2+d])
+                        nentries = len(split)
 
-                            if int(split[2+d])==4:
+                        if (dtype == 1 or dtype == 4 or dtype == 9) and nentries == 6+d:
+
+                            if dtype == 4:
                                 improper = True
                             else:
                                 improper = False
+
                             fc0,fc1,fc2,fc3,fc4,fc5,fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                 float(split[4+d])*units.kilojoules_per_mole,int(split[5+d]))
                             newDihedralType = DihedralTrigType(
@@ -416,14 +418,14 @@ class GromacsTopologyParser(object):
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
 
                         # Improper Harmonic Dihedral: type 2. Can't be converted to any other type
-                        elif (int(split[2+d]) == 2) and (len(split) == 5+d):
+                        elif (dtype == 2) and nentries == 5+d:
                             newDihedralType = ImproperHarmonicDihedralType(
                                 atom1,atom2,atom3,atom4,
                                 float(split[3+d]) * units.degrees,
                                 float(split[4+d]) * units.kilojoules_per_mole * units.radians**(-2))
 
                         # RBDihedral: type 3
-                        elif (int(split[2+d]) == 3) and (len(split) == 9+d):
+                        elif (dtype == 3) and nentries == 9+d:
                             fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
                                 float(split[3+d]) * units.kilojoules_per_mole,
                                 float(split[4+d]) * units.kilojoules_per_mole,
@@ -437,7 +439,7 @@ class GromacsTopologyParser(object):
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the sign here
 
                         # Fourier Dihedral 5
-                        elif (int(split[2+d]) == 5) and (len(split) == 7+d):
+                        elif dtype == 5 and nentries == 7+d:
                             fc0, fc1, fc2, fc3, fc4, fc5, fc6  = ConvertDihedralFromFourierToDihedralTrig(
                                 float(split[3+d]) * units.kilojoules_per_mole,
                                 float(split[4+d]) * units.kilojoules_per_mole,
@@ -448,12 +450,21 @@ class GromacsTopologyParser(object):
                                 atom1, atom2, atom3, atom4, 0 * units.degrees,
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6)
 
-                        elif (int(split[2+d]) == 8):
+                        elif dtype == 8:
                             print "Error: Tabulated dihedrals not supported"
                         else:
                             print "could not find dihedral type"
 
                         if newDihedralType:
+
+                            if dtype == 9:
+                                # we can't actually store multiple dihedral parameters in our
+                                # architecture, so we add up the types into a single DihedralTrigDihedral angle
+                                try:
+                                    dihedralmatch = self.dihedraltypes.get(newDihedralType)
+                                    dihedralmatch.sum_parameters(newDihedralType)
+                                except:
+                                    pass
                             self.dihedraltypes.add(newDihedralType)
 
                 elif match.group('constrainttypes'):
@@ -928,16 +939,18 @@ class GromacsTopologyParser(object):
                         atom2 = int(split[1])
                         atom3 = int(split[2])
                         atom4 = int(split[3])
+                        dtype = int(split[4])
+                        nentries = len(split)
 
                         # Proper Dihedral 1
                         if int(split[4]) == 1 or int(split[4]) == 9 or int(split[4]) == 4:
 
-                            if int(split[4]) == 4:
+                            if dtype == 4:
                                 improper = True
                             else:
                                 improper = False
 
-                            if len(split) > 5:
+                            if nentries > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
                                     float(split[6]) * units.kilojoules_per_mole, int(split[7]))
                                 phi = float(split[5]) * units.degrees 
@@ -949,8 +962,8 @@ class GromacsTopologyParser(object):
 
                         # Improper Dihedral 2
 
-                        elif int(split[4]) == 2:
-                            if len(split) > 5:
+                        elif dtype == 2:
+                            if nentries > 5:
                                 phi = float(split[5]) * degrees
                                 k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
 
@@ -958,9 +971,9 @@ class GromacsTopologyParser(object):
                                 atom1, atom2, atom3, atom4, xi, k)
 
                         # RBDihedral
-                        elif int(split[4]) == 3:
+                        elif dtype == 3:
 
-                            if len(split) > 5:
+                            if nentries > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
                                     float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole,
@@ -974,9 +987,9 @@ class GromacsTopologyParser(object):
                                 atom1, atom2, atom3, atom4,
                                 0 * units.degrees, fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the use of sign here
 
-                        elif int(split[4]) == 5:
+                        elif dtype == 5:
 
-                            if len(split) > 5:
+                            if nentries > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
                                     float(split[5])*units.kilojoules_per_mole,
                                     float(split[6])*units.kilojoules_per_mole,
@@ -988,11 +1001,22 @@ class GromacsTopologyParser(object):
                                 atom1, atom2, atom3, atom4,
                                 0 * units.degrees, fc0, fc1, fc2, fc3, fc4, fc5, fc6)  # need to look at the use of sign here
 
-                        elif int(split[4]) == 8:
+                        elif dtype == 8:
                             print "Error: Cannot support tabulated dihedrals"
                         else:
                             print "ERROR: unsupported dihedral"
 
+                        if dtype == 9:
+                            # we need to retrive the information add to the dihedral,
+                            # rather than overwrite it
+                            # warning: right now, I don't think we can have BOTH duplicate dihedrals and
+                            # duplicate dihedral types.  Will have to investigate.
+                            try:
+                                # retrive a dihedral with the same atoms, add to it if it exists
+                                dihedralmatch = currentMoleculeType.dihedralForceSet.map[newDihedralForce]
+                                dihedralmatch.sum_parameters(newDihedralForce)
+                            except:
+                                pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                         System._sys._forces.add(newDihedralForce)
 
@@ -1510,7 +1534,11 @@ class GromacsTopologyParser(object):
                                                 c[4].in_units_of(units.kilojoules_per_mole)._value,
                                                 c[5].in_units_of(units.kilojoules_per_mole)._value))
                             else:
-                                #print as a type 1 dihedral, or a series of type 9 dihedrals
+                                # print as a type 1 dihedral, or a series of type 9 dihedrals
+                                # note -- code not actually tested well, as may not be needed; I think all
+                                # of the dihedrals can be extracted as RB dihedrals as long as phi is always
+                                # the same.
+
                                 ncount = 0
 
                                 for j in range(6):
@@ -1521,7 +1549,10 @@ class GromacsTopologyParser(object):
                                 else:
                                     dtype = 1
                                 for j in range(6):
-                                    if float(darray[j]._value) != 0:
+                                    if darray[j]._value != 0:
+                                        if darray[j]._value < 0:
+                                            dihedral.phi = 180*units.degrees
+                                            darray[j] *= -1
                                         lines.append('%s%4d%18.8f%18.8f%6d\n'
                                         % (atomindex,
                                            dtype,
