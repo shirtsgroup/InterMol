@@ -577,14 +577,13 @@ class LammpsParser(object):
                         if len(bond_style) > 1:
                             warn("More than one bond style found!")
 
-                        temp = BondType(atomtype1, atomtype2, 1,
+                        temp = BondType(atomtype1, atomtype2,
                                 bond.length, bond.k)
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in bond_type_dict:
                             bond_type_dict[temp] = b_type_i
-                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                            bond_coeffs.append('{0:d} {1:18.8f} {2:18.8f}\n'.format(
                                     b_type_i,
-                                    bond_type,
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
