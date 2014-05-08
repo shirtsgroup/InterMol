@@ -3,7 +3,7 @@ from intermol.Decorators import *
 from AbstractBond import *
 
 class Bond(AbstractBond):
-
+    __slots__ = ['length', 'k', 'order', 'c']
     @accepts_compatible_units(None, 
             None, 
             units.nanometers, 

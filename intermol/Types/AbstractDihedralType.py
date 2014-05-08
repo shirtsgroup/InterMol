@@ -1,4 +1,5 @@
 class AbstractDihedralType(object):
+    __slots__ = ['atom1', 'atom2', 'atom3', 'atom4', 'improper']
     def __init__(self, atom1, atom2, atom3, atom4, improper=False):
         self.atom1 = atom1
         self.atom2 = atom2

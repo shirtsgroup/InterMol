@@ -2,11 +2,11 @@ from intermol.Decorators import *
 from AbstractBond import *
 
 class CubicBond(AbstractBond):
-
-    @accepts_compatible_units(None, 
-            None, 
-            units.nanometers, 
-            units.kilojoules_per_mole * units.nanometers**(-2), 
+    __slots__ = ['length', 'C2', 'C3'] 
+    @accepts_compatible_units(None,
+            None,
+            units.nanometers,
+            units.kilojoules_per_mole * units.nanometers**(-2),
             units.kilojoules_per_mole * units.nanometers**(-3))
     def __init__(self, atom1, atom2, length, C2, C3):
         """
@@ -17,7 +17,7 @@ class CubicBond(AbstractBond):
         self.C3 = C3
 
     def get_parameters(self):
-        return (self.atom1, self.atom2, self.length, self.C2, self.C3)    
+        return (self.atom1, self.atom2, self.length, self.C2, self.C3)
 
     def __repr__(self):
         return str(self.atom1) +'  '+ str(self.atom2) +'  '+  str(self.length) +'  '+  str(self.C2) +'  '+ str(self.C3)

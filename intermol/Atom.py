@@ -11,6 +11,9 @@ from Converter import convert_units
 
 
 class Atom(object):
+    __slots__ = ['atomIndex', 'atomName', 'residueIndex', 'residueName',
+            '_position', '_velocity', '_force', '_atomtype', 'bondtype', 'Z',
+            'cgnr', '_mass', '_charge', 'ptype', '_sigma', '_epsilon']
     def __init__(self,
                 atomIndex,
                 atomName=None,

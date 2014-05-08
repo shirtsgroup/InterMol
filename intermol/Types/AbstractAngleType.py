@@ -1,4 +1,5 @@
 class AbstractAngleType(object):
+    __slots__ = ['atom1', 'atom2', 'atom3', 'type']
     def __init__(self, atom1, atom2, atom3, type):
         """An abstract representation of a generic angle type.
 

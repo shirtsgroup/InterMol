@@ -3,6 +3,7 @@ from AbstractPair import *
 
 class LJ2PairCR1(AbstractPair):
 
+    __slots__ = ['fudgeQQ', 'qi', 'qj', 'V', 'W']
     @accepts_compatible_units(None, None, None, units.elementary_charge, units.elementary_charge, units.kilojoules_per_mole * units.nanometers**(6), units.kilojoules_per_mole * units.nanometers**(12))
     def __init__(self, atom1, atom2, fudgeQQ, qi, qj, V, W):
         """

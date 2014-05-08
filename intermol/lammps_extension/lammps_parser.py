@@ -447,18 +447,14 @@ class LammpsParser(object):
             new_dihed_force = None
             if len(self.dihedral_style) == 1:
                 if self.dihedral_style[0] == 'opls':
-                    Fs = [self.dihedral_types[fields[1]][0],
+                    cs = [self.dihedral_types[fields[1]][0],
                           self.dihedral_types[fields[1]][1],
                           self.dihedral_types[fields[1]][2],
                           self.dihedral_types[fields[1]][3]]
-                    Cs = ConvertDihedralFromFourierToDihedralTrig(
-                            Fs[0],
-                            Fs[1],
-                            Fs[2],
-                            Fs[3])
-                    new_dihed_force = DihedralTrigDihedral(
+                    new_dihed_force = FourierDihedral(
                             fields[2], fields[3], fields[4], fields[5],
-                            0*units.degrees, Cs[0], Cs[1], Cs[2], Cs[3], Cs[4], Cs[5], Cs[6])
+                            cs[0], cs[1], cs[2], cs[3])
+
             else:
                 warn("Hybrid dihedral styles not yet implemented")
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
@@ -569,27 +565,26 @@ class LammpsParser(object):
             # bond types
             if mol_type.bondForceSet:
                 for bond in mol_type.bondForceSet.itervalues():
+                    bond_type = ''
+                    atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
+                    atomtype1 = atom1.bondtype
+                    atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
+                    atomtype2 = atom2.bondtype
+
                     if isinstance(bond, Bond):
                         if 'harmonic' not in bond_style:
                             bond_style.append('harmonic')
                         if len(bond_style) > 1:
                             warn("More than one bond style found!")
 
-                        atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
-                        atomtype1 = atom1.bondtype
-                        atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
-                        atomtype2 = atom2.bondtype
-
-                        temp = BondType(
-                                atomtype1,
-                                atomtype2,
-                                bond.length,
-                                bond.k)
+                        temp = BondType(atomtype1, atomtype2, 1,
+                                bond.length, bond.k)
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in bond_type_dict:
                             bond_type_dict[temp] = b_type_i
-                            bond_coeffs.append('{0:d} {1:18.8f} {2:18.8f}\n'.format(
+                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
                                     b_type_i,
+                                    bond_type,
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
@@ -633,12 +628,10 @@ class LammpsParser(object):
                 for dihedral in mol_type.dihedralForceSet.itervalues():
                     if isinstance(dihedral, ProperPeriodicDihedral):
                         continue
-                    if isinstance(dihedral, DihedralTrigDihedral):
+                    if isinstance(dihedral, FourierDihedral):
                         if 'opls' not in dihedral_style:
                             dihedral_style.append('opls')
                         if len(dihedral_style) > 1:
-                            # this may need to be an error
-                            # or require some form of conversion if possible
                             warn("More than one dihedral style found!")
 
                         atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
@@ -650,21 +643,17 @@ class LammpsParser(object):
                         atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
                         atomtype4 = atom4.bondtype
 
-                        temp = DihedralTrigType(atomtype1, atomtype2, atomtype3, atomtype4, 
-                                                dihedral.phi, dihedral.fc0,
-                                                dihedral.fc1, dihedral.fc2, dihedral.fc3,
-                                                dihedral.fc4, dihedral.fc5, dihedral.fc6)
+                        temp = FourierDihedralType(atomtype1, atomtype2,
+                                atomtype3, atomtype4, 3, dihedral.c1,
+                                dihedral.c1, dihedral.c2, dihedral.c3)
                         if temp not in dihedral_type_dict:
-                            Fs = ConvertDihedralFromDihedralTrigToFourier(
-                                dihedral.fc0, dihedral.fc1, dihedral.fc2, dihedral.fc3,
-                                dihedral.fc4, dihedral.fc5, dihedral.fc6)
                             dihedral_type_dict[temp] = dih_type_i
                             dihedral_coeffs.append('{0:d} {1:18.8f} {2:18.8f} {3:18.8f} {4:18.8f}\n'.format(
                                     dih_type_i,
-                                    Fs[0].in_units_of(self.ENERGY)._value,
-                                    Fs[1].in_units_of(self.ENERGY)._value,
-                                    Fs[2].in_units_of(self.ENERGY)._value,
-                                    Fs[3].in_units_of(self.ENERGY)._value))
+                                    dihedral.c1.in_units_of(self.ENERGY)._value,
+                                    dihedral.c2.in_units_of(self.ENERGY)._value,
+                                    dihedral.c3.in_units_of(self.ENERGY)._value,
+                                    dihedral.c4.in_units_of(self.ENERGY)._value))
                             dih_type_i += 1
                     else:
                         warn("Found unsupported dihedral type for LAMMPS!")
@@ -697,7 +686,7 @@ class LammpsParser(object):
                         z_min = z_coord
 
                     # atom
-                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.3f} {5:8.3f} {6:8.3f}\n'.format(
+                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
                             atom.atomIndex,
                             atom.residueIndex,
                             atom_type_dict[atom._atomtype[0]],
@@ -728,6 +717,7 @@ class LammpsParser(object):
 
                     temp = BondType(atomtype1,
                             atomtype2,
+                            1,
                             bond.length,
                             bond.k)
 
@@ -772,17 +762,13 @@ class LammpsParser(object):
                     if isinstance(dihedral, ProperPeriodicDihedral):
                         # TODO: implement remaining cases
                         continue
-                    if isinstance(dihedral, RBDihedral):
-                        temp = RBDihedralType(atomtype1, atomtype2, atomtype3,
-                                              atomtype4, dihedral.C0,
-                                              dihedral.C1, dihedral.C2, dihedral.C3,
-                                              dihedral.C4, dihedral.C5, dihedral.C6)
-                    if isinstance(dihedral, DihedralTrigDihedral):
-                        temp = DihedralTrigType(atomtype1, atomtype2, atomtype3,
-                                              atomtype4, dihedral.phi, dihedral.fc0,
-                                              dihedral.fc1, dihedral.fc2, dihedral.fc3,
-                                              dihedral.fc4, dihedral.fc5, dihedral.fc6)
-
+                    elif isinstance(dihedral, FourierDihedral):
+                        temp = FourierDihedralType(atomtype1, atomtype2, atomtype3,
+                                atomtype4, 3, dihedral.c1,
+                                dihedral.c1, dihedral.c2, dihedral.c3)
+                    else:
+                        raise Exception("Unsupported dihedral type system: "
+                                        "{0}".format(type(dihedral)))
                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
                             i + j + 1,
                             dihedral_type_dict[temp],

@@ -2,7 +2,7 @@ from intermol.Decorators import *
 from AbstractBond import *
 
 class G96Bond(AbstractBond):
-
+    __slots__ = ['length', 'k']
     @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-4))
     def __init__(self, atom1, atom2, length, k):
         """

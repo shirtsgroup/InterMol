@@ -12,6 +12,7 @@ from OrderedSet import OrderedSet
 class Molecule(object):
     """An abstract molecule object.
     """
+    __slots__ = ['name', '_atoms']
     def __init__(self, name = None):
         """Initialize the molecule
 

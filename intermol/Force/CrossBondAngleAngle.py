@@ -2,7 +2,7 @@ from intermol.Decorators import *
 from AbstractAngle import *
 
 class CrossBondAngleAngle(AbstractAngle):
-
+    __slots__ = ['r1', 'r2', 'r3', 'k']
     @accepts_compatible_units(None, 
             None, 
             None, 

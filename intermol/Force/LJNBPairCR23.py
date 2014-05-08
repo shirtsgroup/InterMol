@@ -4,6 +4,7 @@ from AbstractPair import *
 
 class LJNBPairCR23(AbstractPair):
 
+    __slots__ = ['fudgeQQ', 'qi', 'qj', 'V', 'W']
     @accepts_compatible_units(None, None, units.elementary_charge, units.elementary_charge, units.nanometers, units.kilojoules_per_mole)
     def __init__(self, atom1, atom2, qi, qj, V, W):
         """

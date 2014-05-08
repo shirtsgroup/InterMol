@@ -2,7 +2,7 @@ from intermol.Decorators import *
 from AbstractPair import *
 
 class LJ1PairCR1(AbstractPair):
-
+    __slots__ = ['V', 'W']
     @accepts_compatible_units(None, None, units.kilojoules_per_mole * units.nanometers**(6), units.kilojoules_per_mole * units.nanometers**(12))
     def __init__(self, atom1, atom2, V = None, W = None):
         """
