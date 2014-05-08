@@ -1,0 +1,11 @@
+#include "amber99sb-ildn.ff/forcefield.itp"
+#include "../itps/L14.itp"
+#include "amber99sb-ildn.ff/tip3p.itp"
+
+[ system ]
+L14 solvation 
+
+[ molecules ]
+; Compound        #mols
+L14               1
+SOL               874
