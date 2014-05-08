@@ -328,14 +328,12 @@ class DesmondParser():
                             # we use the GROMACS harmonic convention
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
-                                          1,
                                           float(split[4]) * units.angstroms, #UNITS IN ANGSTROMS--CHECK
                                           2*float(split[5]) * units.kilocalorie_per_mole * units.angstroms**(-2),
                                           1)
                         except:
                             newBondType = BondType(atomlist[int(split[1])-1].atomName,
                                           atomlist[int(split[2])-1].atomName,
-                                          1,
                                           float(split[4]),
                                           2*float(split[5]),
                                           1)
