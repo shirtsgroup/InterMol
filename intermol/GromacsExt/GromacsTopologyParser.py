@@ -911,7 +911,9 @@ class GromacsTopologyParser(object):
                                              ['X', atomtype3, atomtype2, atomtype1], # flipped single wildcard 1
                                              [atomtype4, atomtype3, atomtype2, 'X'], # flipped single wildcard 2
                                              ['X', atomtype2, atomtype3, 'X'], # double wildcard
-                                             ['X', atomtype3, atomtype2, 'X'] # flipped double wildcard
+                                             ['X', atomtype3, atomtype2, 'X'], # flipped double wildcard
+                                             ['X', 'X', atomtype3, atomtype4], # end double wildcard
+                                             [atomtype1, atomtype2,'X', 'X'] # flipped end double wildcard
                                              ]
 
                             for alist in atomtypelists:
@@ -1406,7 +1408,8 @@ class GromacsTopologyParser(object):
                 # [ bonds ]
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
-                for bond in moleculeType.bondForceSet.itervalues():
+                bondlist = sorted(moleculeType.bondForceSet.itervalues(), key=lambda x: x.atom1)
+                for bond in bondlist:
                     if isinstance(bond, Bond):
                         b_type = 1
                         lines.append('%6d%7d%4d%18.8e%18.8e\n'
@@ -1427,6 +1430,7 @@ class GromacsTopologyParser(object):
                         print "ERROR (writeTopology): found unsupported bond type"
                 lines.append('\n')
 
+            #MRS: why are there two pairs sections?    
             if moleculeType.pairForceSet:
                 # [ pair ]
                 lines.append('[ pairs ]\n')
@@ -1448,7 +1452,9 @@ class GromacsTopologyParser(object):
                 # [ angles ]
                 lines.append('[ angles ]\n')
                 lines.append(';   ai     aj     ak    funct   theta         cth\n')
-                for angle in moleculeType.angleForceSet.itervalues():
+
+                anglelist = sorted(moleculeType.angleForceSet.itervalues(), key=lambda x: x.atom1)
+                for angle in anglelist:
                     if isinstance(angle, Angle):
                         a_type = 1
                         atomindex = "%6d%7d%7d" % (angle.atom1,angle.atom2,angle.atom3)
@@ -1474,7 +1480,8 @@ class GromacsTopologyParser(object):
             lines.append('[ pairs ]\n')
             lines.append(';   ai     aj    funct')
 
-            for pair  in moleculeType.pairForceSet.itervalues():
+            pairlist = sorted(moleculeType.pairForceSet.itervalues(), key=lambda x: x.atom1)
+            for pair in pairlist:
                 if isinstance(pair, LJ1PairCR1) or isinstance(pair, LJ1PairCR23)
                     type = 1
                     lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value)
@@ -1494,7 +1501,8 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-                for dihedral in moleculeType.dihedralForceSet.itervalues():
+                dihedrallist = sorted(moleculeType.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
+                for dihedral in dihedrallist:
 
                     # this atom index will be the same for all of types.
                     atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
