@@ -5,9 +5,6 @@ from HashMap import HashMap
 class MoleculeType(object):
     """An abstract container for molecules of one type
     """
-    __slots__ = ['name', 'moleculeSet', 'bondForceSet', 'pairForceSet', 'angleForceSet',
-            'dihedralForceSet', 'torsiontorsionForceSet', 'constraints', 'exclusions',
-            'settles', 'nrexcl']
     def __init__(self, name):
         """Initialize the MoleculeType container
 
