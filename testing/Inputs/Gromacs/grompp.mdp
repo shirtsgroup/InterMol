@@ -20,7 +20,7 @@ ns_type                  = grid
 ; Periodic boundary conditions: xyz or no = 
 pbc                      = xyz
 ; nblist cut-off         = 
-rlist                    = 1.0
+rlist                    = 1.5
 
 ; OUTPUT CONTROL OPTIONS
 ; Output frequency for coords (x), velocities (v) and forces (f)
@@ -38,14 +38,14 @@ xtc-precision            = 1000
 ; OPTIONS FOR ELECTROSTATICS AND VDW = 
 ; Method for doing electrostatics = 
 coulombtype              = PME
-rcoulomb                 = 1.0
+rcoulomb                 = 1.5
 ; Dielectric constant (DC) for cut-off or DC of reaction field = 
 epsilon-r                = 1
 ; Method for doing Van der Waals = 
 vdw-type                 = switch
 ; cut-off lengths        = 
-rvdw-switch              = 0.8
-rvdw                     = 0.9
+rvdw-switch              = 1.2
+rvdw                     = 1.25
 ; Apply long range dispersion corrections for Energy and Pressure = 
 DispCorr                 = AllEnerPres
 ; Spacing for the PME/PPPM FFT grid = 
@@ -55,7 +55,7 @@ fourier_nx               = 0
 fourier_ny               = 0
 fourier_nz               = 0
 ; EWALD/PME/PPPM parameters = 
-pme_order                = 6
+pme_order                = 4
 ewald_rtol               = 1e-06
 ewald_geometry           = 3d
 epsilon_surface          = 0
