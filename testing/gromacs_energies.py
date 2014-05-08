@@ -77,8 +77,9 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     # pack it up in a dictionary
     e_out = OrderedDict(zip(types, data))
 
-    # discard non-energy terms 
-    unwanted = ['Temperature', 'Pressure', 'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Pres. DC']
+    # discard non-energy terms
+    unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
+            'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Pres. DC']
     for group in unwanted:
         if group in e_out:
             del e_out[group]
@@ -99,6 +100,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
 
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
 
+    # all the various dihedral energies - what else goes in here?
     all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper']
     e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
     for group in all_dihedrals:
