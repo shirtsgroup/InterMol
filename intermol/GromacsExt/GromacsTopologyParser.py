@@ -896,7 +896,10 @@ class GromacsTopologyParser(object):
                         newDihedralForce = None
                         dihedralType = None
 
+                        dtype = int(split[4])
                         if len(split) == 5:
+
+                            improper = (dtype == 4) or (dtype == 2)
 
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
@@ -918,7 +921,7 @@ class GromacsTopologyParser(object):
 
                             for alist in atomtypelists:
                                 if not dihedralType:
-                                    tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3])
+                                    tempType = AbstractDihedralType(alist[0], alist[1], alist[2], alist[3], improper)
                                     dihedralType = self.dihedraltypes.get(tempType)
                                 else:
                                     break
@@ -941,16 +944,10 @@ class GromacsTopologyParser(object):
                         atom2 = int(split[1])
                         atom3 = int(split[2])
                         atom4 = int(split[3])
-                        dtype = int(split[4])
                         nentries = len(split)
 
                         # Proper Dihedral 1
                         if int(split[4]) == 1 or int(split[4]) == 9 or int(split[4]) == 4:
-
-                            if dtype == 4:
-                                improper = True
-                            else:
-                                improper = False
 
                             if nentries > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
