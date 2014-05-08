@@ -2,7 +2,7 @@ import sys
 import os
 import re
 import copy
-import warnings
+from warnings import warn
 import math
 from collections import OrderedDict
 
@@ -456,7 +456,6 @@ class GromacsTopologyParser(object):
                             print "could not find dihedral type"
 
                         if newDihedralType:
-
                             if dtype == 9:
                                 # we can't actually store multiple dihedral parameters in our
                                 # architecture, so we add up the types into a single DihedralTrigDihedral angle
@@ -483,7 +482,28 @@ class GromacsTopologyParser(object):
                     expanded.pop(i)
 
                     while not (expanded[i].count('[')) and i < len(expanded)-1:
-                        expanded.pop(i)
+                        split = expanded.pop(i).split()
+                        newNonbondedType = None
+                        if int(split[2]) == 1:
+                            if System._sys._combinationRule == 1:
+                                sigma = (float(split[4]) / float(split[3])) ** (1.0/6.0)
+                                sigma *= units.kilojoules_per_mole * units.nanometers**(6)
+                                epsilon = float(split[3]) / (4 * sigma**6)
+                                epsilon *= units.kilojoules_per_mole * units.nanometers**(12)
+                                newNonbondedType = NonbondedLJCR1Type(split[0], split[1], split[2],
+                                        sigma, epsilon)
+                            elif System._sys._combinationRule in (2, 3):
+                                sigma = float(split[3]) * units.nanometers
+                                epsilon = float(split[4]) * units.kilojoules_per_mole
+                                newNonbondedType = NonbondedLJCR23Type(split[0], split[1], split[2],
+                                        sigma, epsilon)
+
+                        elif int(split[2]) == 2:
+                            # TODO
+                            warn("Found Buckingham entry in [ nonbond_param ]. Not yet implemented!")
+                        else:
+                            warn("Found unknown entry type in [ nonbond_param ]. Ignoring.")
+                        System._sys._nonbonded.add(newNonbondedType)
 
                 elif match.group('system'):
                     if verbose:
@@ -635,7 +655,7 @@ class GromacsTopologyParser(object):
                                 split.append(bondType.length)
                                 split.append(bondType.k)
                             else:
-                                warnings.warn("Bondtype '{0}' is unsupported or something more complicated went wrong".format(bondType.type))
+                                warn("Bondtype '{0}' is unsupported or something more complicated went wrong".format(bondType.type))
 
                         if int(split[2]) == 1:
                             try:
@@ -1051,7 +1071,7 @@ class GromacsTopologyParser(object):
                         wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
                         dOH = float(split[2]) * units.nanometers
-                        
+
                         newBondForce = Bond(1,2,dOH,waterbondrefk,c=True)
                         currentMoleculeType.bondForceSet.add(newBondForce)
                         System._sys._forces.add(newBondForce)
@@ -1076,6 +1096,7 @@ class GromacsTopologyParser(object):
                                 newExclusion = Exclusions([split[0],split[j]])
                                 currentMoleculeType.exclusions.add(newExclusion)
                                 System._sys._forces.add(newExclusion)
+
 
                 elif match.group('molecules'):
                     if verbose:
@@ -1346,15 +1367,43 @@ class GromacsTopologyParser(object):
                 atomtype.atomtype = "LMP_" + atomtype.atomtype
             if atomtype.bondtype.isdigit():
                 atomtype.bondtype = "LMP_" + atomtype.bondtype
-            lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
-                    % (atomtype.atomtype,
-                       atomtype.bondtype,
-                       int(atomtype.Z),
-                       atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
-                       atomtype.charge.in_units_of(units.elementary_charge)._value,
-                       atomtype.ptype,
-                       atomtype.sigma.in_units_of(units.nanometers)._value,
-                       atomtype.epsilon.in_units_of(units.kilojoules_per_mole)._value))
+            if System._sys._combinationRule == 1:
+                lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
+                        % (atomtype.atomtype,
+                           atomtype.bondtype,
+                           int(atomtype.Z),
+                           atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
+                           atomtype.charge.in_units_of(units.elementary_charge)._value,
+                           atomtype.ptype,
+                           atomtype.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
+                           atomtype.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
+            elif System._sys._combinationRule in (2, 3):
+                lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
+                        % (atomtype.atomtype,
+                           atomtype.bondtype,
+                           int(atomtype.Z),
+                           atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
+                           atomtype.charge.in_units_of(units.elementary_charge)._value,
+                           atomtype.ptype,
+                           atomtype.sigma.in_units_of(units.nanometers)._value,
+                           atomtype.epsilon.in_units_of(units.kilojoules_per_mole)._value))
+        lines.append('\n')
+
+        if System._sys._nonbonded:
+            # [ nonbond_params ]
+            lines.append('[ nonbond_params ]\n')
+            for nonbonded in System._sys._nonbonded.itervalues():
+                if System._sys._combinationRule == 1:
+                    lines.append('{0:6s} {1:6s} {2:3d} {3:18.8e} {4:18.8e}\n'.format(
+                            nonbonded.atom1, nonbonded.atom2, nonbonded.type,
+                            nonbonded.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
+                            nonbonded.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
+                elif System._sys._combinationRule in (2, 3):
+                    lines.append('%6s%6s\n')
+                    lines.append('{0:6s} {1:6s} {2:3s} {3:18.8e} {4:18.8e}\n'.format(
+                            nonbonded.atom1, nonbonded.atom2, nonbonded.type,
+                            nonbonded.sigma.in_units_of(units.nanometers)._value,
+                            nonbonded.epsilon.in_units_of(units.kilojoules_per_mole)._value))
         lines.append('\n')
 
         # [ moleculetype]
@@ -1427,7 +1476,7 @@ class GromacsTopologyParser(object):
                         print "ERROR (writeTopology): found unsupported bond type"
                 lines.append('\n')
 
-            #MRS: why are there two pairs sections?    
+            #MRS: why are there two pairs sections?
             if moleculeType.pairForceSet:
                 # [ pair ]
                 lines.append('[ pairs ]\n')
@@ -1593,11 +1642,10 @@ class GromacsTopologyParser(object):
             if moleculeType.exclusions:
                 # [ exclusions ]
                 lines.append('[ exclusions ]\n')
-                for i, exclusion in enumerate(moleculeType.exclusions.itervalues()):
+                for exclusion in moleculeType.exclusions.itervalues():
                     lines.append('%6s%6s\n'
                                  % (exclusion.exclusions[0],
                                     exclusion.exclusions[1]))
-
         # [ system ]
         lines.append('[ system ]\n')
         lines.append('%s\n' % (System._sys._name))

@@ -1,42 +1,48 @@
-all=['AbstractAtomType',
-    'AbstractBondType',
-    'AbstractPairType',
-    'AbstractAngleType',
+all = ['AbstractAtomType',
+       'AbstractNonbondedType',
+       'AbstractBondType',
+       'AbstractPairType',
+       'AbstractAngleType',
+       'AbstractDihedralType',
 
-    'AtomCR1Type',
-    'AtomCR23Type',
+       'AtomCR1Type',
+       'AtomCR23Type',
 
-    'BondType',
-    'G96BondType',
-    'MorseBondType',
-    'CubicBondType',
-    'HarmonicBondType',
+       'NonbondedLJCR1Type',
+       'NonbondedLJCR23Type',
 
-    'LJ1PairCR1Type',
-    'LJ1PairCR23Type',
-    'LJ2PairCR1Type',
-    'LJ2PairCR23Type',
-    'LJNBPairCR1Type',
-    'LJNBPairCR23Type',
+       'BondType',
+       'G96BondType',
+       'MorseBondType',
+       'CubicBondType',
+       'HarmonicBondType',
 
-    'AngleType',
-    'G96AngleType'
-    'CrossBondAngleAngleType'
-    'CrossBondBondAngleType'
-    'QuarticAngleType'
-    'UreyBradleyAngleType'
+       'LJ1PairCR1Type',
+       'LJ1PairCR23Type',
+       'LJ2PairCR1Type',
+       'LJ2PairCR23Type',
+       'LJNBPairCR1Type',
+       'LJNBPairCR23Type',
 
-    'RBDihedralType'
-    'DihedralTrigType'
-    'ProperPeriodicDihedralType'
-    'ImproperHarmonicDihedralType'
-    'ImproperDihedral4Type'
-    'DihedralTrigDihedral'
-    'FourierDihedralType'
-    'ProperDihedral9Type'
+       'AngleType',
+       'G96AngleType'
+       'CrossBondAngleAngleType'
+       'CrossBondBondAngleType'
+       'QuarticAngleType'
+       'UreyBradleyAngleType'
+
+       'RBDihedralType'
+       'DihedralTrigType'
+       'ProperPeriodicDihedralType'
+       'ImproperHarmonicDihedralType'
+       'ImproperDihedral4Type'
+       'DihedralTrigDihedral'
+       'FourierDihedralType'
+       'ProperDihedral9Type'
 ]
 
 from AbstractAtomType import AbstractAtomType
+from AbstractNonbondedType import AbstractNonbondedType
 from AbstractBondType import AbstractBondType
 from AbstractPairType import AbstractPairType
 from AbstractAngleType import AbstractAngleType
@@ -44,6 +50,9 @@ from AbstractDihedralType import AbstractDihedralType
 
 from AtomCR1Type import AtomCR1Type
 from AtomCR23Type import AtomCR23Type
+
+from NonbondedLJCR1Type import NonbondedLJCR1Type
+from NonbondedLJCR23Type import NonbondedLJCR23Type
 
 from BondType import BondType
 from G96BondType import G96BondType

@@ -1,7 +1,6 @@
 from intermol.Decorators import *
 
 class AngleRestraint(object):
-
     @accepts_compatible_units(None, 
             None, 
             None, 
