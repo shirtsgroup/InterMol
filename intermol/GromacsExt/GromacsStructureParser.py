@@ -57,14 +57,19 @@ def readStructure(filename):
 
     rawBoxVector = lines[i].split()
     v = np.zeros([3, 3], float) * units.nanometers
-    if len(rawBoxVector) == 3:
-        for i in range(3):
-            v[i, i] = float(rawBoxVector[i]) * units.nanometers
+    # diagonals
+    for i in range(3):
+        v[i, i] = float(rawBoxVector[i]) * units.nanometers
 
-    elif len(rawBoxVector) == 9:
+    if len(rawBoxVector) == 9:
+        k = 3
+        # Then the off-diagonals
         for i in range(3):
             for j in range(3):
-                v[i, j] = float(rawBoxVector[3*i+j]) * units.nanometers
+                if  i != j:
+                    v[i, j] = float(rawBoxVector[k]) * units.nanometers
+                    k += 1
+
     # need to make this numpy sensitive so we can just pass the vector
     System._sys.setBoxVector(v)
 
@@ -96,15 +101,19 @@ def writeStructure(filename):
                                 atom._velocity[2].in_units_of(units.nanometers / units.picoseconds)._value))
     # print the box vector
     # check for rectangular; should be symmetric, so we don't have to check 6 values
-    if (System._sys._boxVector[0, 1]._value == 0 and
-        System._sys._boxVector[0, 2]._value == 0 and
-        System._sys._boxVector[1, 2]._value == 0):
+    if (System._sys._boxVector[1, 0]._value == 0 and
+        System._sys._boxVector[2, 0]._value == 0 and
+        System._sys._boxVector[2, 1]._value == 0):
             for i in range(3):
                 lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
     else:
         for i in range(3):
+            lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
+        for i in range(3):
             for j in range(3):
-                lines.append('%11.7f ' % System._sys._boxVector[i, j].in_units_of(units.nanometers)._value)
+                if i != j:
+                    lines.append('%11.7f ' % System._sys._boxVector[i, j].in_units_of(units.nanometers)._value)
+
     lines.append('\n')
 
     lines.insert(0, (System._sys._name + '\n'))
