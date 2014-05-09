@@ -1,5 +1,4 @@
 import pdb #FOR DEBUGGING PURPOSES
-import shlex
 import os
 import copy
 import string
@@ -17,7 +16,7 @@ from intermol.Force import *
 from intermol.HashMap import *
 import cmap_parameters
 
-#   helper function
+#   helper functions
 def endheadersection(blanksection,header,hlines):
     if blanksection:
         hlines = list()
@@ -27,6 +26,18 @@ def endheadersection(blanksection,header,hlines):
         hlines[0] = header
     return hlines
 
+def split_with_quotes(line):
+
+    vals = line.split()
+
+    for v in vals:
+        if v == '"':
+            del(vals[vals.index(v)])            
+        else:
+            vnew = v.replace('"','')
+            vals[vals.index(v)] = vnew
+    return vals
+        
 class DesmondParser():
     """
     A class containing methods required to read in Desmond CMS File
@@ -555,12 +566,6 @@ class DesmondParser():
                             improper = False
 
                         # currently, I can't see a difference in Proper_trig and improper_trig angles.
-                        if float(split[6]) == 0:
-                            sign = 1
-                        elif float(split[6]) == 180:
-                            sign = -1
-                        else:
-                            print("Currently, can't handle a phase angle that is not 0 or 180 in %s" % (split[5]))
                         newDihedralForce = DihedralTrigDihedral(
                             atom1, atom2, atom3, atom4, 
                             float(split[6]) * units.degrees,
@@ -598,6 +603,16 @@ class DesmondParser():
                         print "ERROR (readFile): found unsupported dihedral in:",
                         print line[i]
                     if newDihedralForce:
+                        try:
+                            # we can have multiple parameters with DESMOND, and append if we do
+                            dihedralmatch = currentMoleculeType.dihedralForceSet.get(newDihedralForce)
+                            # this will fail if it's the wrong type of dihedral
+                            try:
+                                dihedralmatch.sum_parameters(newDihedralForce) 
+                            except:
+                                pass
+                        except:
+                            pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                         System._sys._forces.add(newDihedralForce)
 
@@ -864,9 +879,10 @@ class DesmondParser():
                 if ':::' in lines[i]:
                     break
                 else:
-                    aline = shlex.split(lines[i])
+                    aline = split_with_quotes(lines[i])
                     atom.residueIndex = int(aline[rincol])
                     atom.residueName = aline[rncol].strip()
+
                     atom.atomIndex = int(aline[aicol])
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
