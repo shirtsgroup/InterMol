@@ -1399,7 +1399,6 @@ class GromacsTopologyParser(object):
                             nonbonded.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
                             nonbonded.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
                 elif System._sys._combinationRule in (2, 3):
-                    lines.append('%6s%6s\n')
                     lines.append('{0:6s} {1:6s} {2:3s} {3:18.8e} {4:18.8e}\n'.format(
                             nonbonded.atom1, nonbonded.atom2, nonbonded.type,
                             nonbonded.sigma.in_units_of(units.nanometers)._value,
