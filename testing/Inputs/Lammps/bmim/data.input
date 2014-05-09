@@ -6,7 +6,7 @@ boundary p p p
 
 pair_style lj/cut/coul/long 9.0 10.0
 pair_modify mix geometric
-kspace_style pppm 1.0e-4
+kspace_style pppm 1.0e-5
 
 bond_style harmonic
 angle_style harmonic

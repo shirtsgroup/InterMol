@@ -304,10 +304,7 @@ class LammpsParser(object):
                             float(fields[1]) * self.ENERGY,
                             float(fields[2]) * self.DIST**(-1),
                             float(fields[3]) * self.DIST]
-                else:
-                    warn("Unsupported bond coeff formatting in data file!")
-
-            if len(self.bond_style) > 1:
+            elif len(self.bond_style) > 1:
                 style = fields[1]
                 if style not in self.bond_style:
                     raise Exception("Bond type found in Bond Coeffs that "
@@ -439,8 +436,6 @@ class LammpsParser(object):
                 new_bond_force = Morse(
                         fields[2], fields[3],
                         r, D, beta)
-            else:
-                warn("Hybrid bond styles not yet implemented")
             self.current_mol_type.bondForceSet.add(new_bond_force)
 
     def parse_angles(self, data_lines):
@@ -574,24 +569,27 @@ class LammpsParser(object):
         bond_type_dict = dict()  # typeObject:int_type
         b_type_i = 1  # counter for bond types
 
-        angle_style = []
+        angle_style = set()
         angle_type_dict = dict()
         ang_type_i = 1
 
-        dihedral_style = []
+        dihedral_style = set()
         dihedral_type_dict = dict()
         dih_type_i = 1
 
-        improper_style = []
+        improper_style = set()
         improper_type_dict = dict()
         imp_type_i = 1
 
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
-            # bond types
-            if mol_type.bondForceSet:
-                for bond in mol_type.bondForceSet.itervalues():
-                    bond_type = ''
+            # atom index offsets from 1 for each molecule
+            offsets = list()
+            for molecule in mol_type.moleculeSet:
+                offsets.append(molecule._atoms[0].atomIndex - 1)
+
+            for i, offset in enumerate(offsets):
+                for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
                     atomtype1 = atom1.bondtype
                     atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
@@ -610,7 +608,7 @@ class LammpsParser(object):
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
-                    if isinstance(bond, Morse):
+                    elif isinstance(bond, Morse):
                         style = 'morse'
                         temp = MorseBondType(atomtype1, atomtype2,
                                 bond.length, bond.D, bond.beta)
@@ -623,74 +621,79 @@ class LammpsParser(object):
                                     bond.beta.in_units_of(self.DIST**(-1))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
-
                     else:
                         warn("Found unimplemented bond type for LAMMPS!")
+                        continue
 
+                    bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
+                            i + j + 1,
+                            bond_type_dict[temp],
+                            bond.atom1 + offset,
+                            bond.atom2 + offset))
+                    
                     bond_style.add(style)
                     if len(bond_style) > 1:
                         warn("More than one bond style found!")
 
-            # angle types
-            if mol_type.angleForceSet:
-                for angle in mol_type.angleForceSet.itervalues():
+                # angle types
+                for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
+                    atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
+                    atomtype1 = atom1.bondtype
+                    atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
+                    atomtype2 = atom2.bondtype
+                    atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
+                    atomtype3 = atom3.bondtype
+
                     if isinstance(angle, Angle):
-                        if 'harmonic' not in angle_style:
-                            angle_style.append('harmonic')
-                        if len(angle_style) > 1:
-                            warn("More than one angle style found!")
-
-                        atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
-                        atomtype1 = atom1.bondtype
-                        atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
-                        atomtype2 = atom2.bondtype
-                        atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
-                        atomtype3 = atom3.bondtype
-
-                        temp = AngleType(atomtype1,
-                                atomtype2,
-                                atomtype3,
-                                1,
-                                angle.theta,
-                                angle.k)
+                        style = 'harmonic'
+                        temp = AngleType(atomtype1, atomtype2, atomtype3,
+                                angle.theta, angle.k)
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in angle_type_dict:
                             angle_type_dict[temp] = ang_type_i
-                            angle_coeffs.append('{0:d} {1:18.8f} {2:18.8f}\n'.format(
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
                                     ang_type_i,
+                                    style, 
                                     0.5 * angle.k.in_units_of(self.ENERGY / (self.RAD*self.RAD))._value,
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
                         warn("Found unimplemented angle type for LAMMPS!")
-
-            # dihedral types
-            if mol_type.dihedralForceSet:
-                for dihedral in mol_type.dihedralForceSet.itervalues():
-                    if isinstance(dihedral, ProperPeriodicDihedral):
                         continue
+
+                    angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
+                            i + j + 1,
+                            angle_type_dict[temp],
+                            angle.atom1 + offset,
+                            angle.atom2 + offset,
+                            angle.atom3 + offset))
+
+                    angle_style.add(style)
+                    if len(angle_style) > 1:
+                        warn("More than one angle style found!")
+
+                # dihedrals
+                for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
+                    atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
+                    atomtype1 = atom1.bondtype
+                    atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
+                    atomtype2 = atom2.bondtype
+                    atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
+                    atomtype3 = atom3.bondtype
+                    atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
+                    atomtype4 = atom4.bondtype
+
                     if isinstance(dihedral, FourierDihedral):
-                        if 'opls' not in dihedral_style:
-                            dihedral_style.append('opls')
-                        if len(dihedral_style) > 1:
-                            warn("More than one dihedral style found!")
-
-                        atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
-                        atomtype1 = atom1.bondtype
-                        atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
-                        atomtype2 = atom2.bondtype
-                        atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
-                        atomtype3 = atom3.bondtype
-                        atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
-                        atomtype4 = atom4.bondtype
-
+                        style = 'opls'
                         temp = FourierDihedralType(atomtype1, atomtype2,
-                                atomtype3, atomtype4, 3, dihedral.c1,
-                                dihedral.c1, dihedral.c2, dihedral.c3)
+                                atomtype3, atomtype4, 
+                                dihedral.c1, dihedral.c1,
+                                dihedral.c2, dihedral.c3)
                         if temp not in dihedral_type_dict:
                             dihedral_type_dict[temp] = dih_type_i
-                            dihedral_coeffs.append('{0:d} {1:18.8f} {2:18.8f} {3:18.8f} {4:18.8f}\n'.format(
+                            dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} {4:18.8f} {5:18.8f}\n'.format(
                                     dih_type_i,
+                                    style,
                                     dihedral.c1.in_units_of(self.ENERGY)._value,
                                     dihedral.c2.in_units_of(self.ENERGY)._value,
                                     dihedral.c3.in_units_of(self.ENERGY)._value,
@@ -698,6 +701,18 @@ class LammpsParser(object):
                             dih_type_i += 1
                     else:
                         warn("Found unimplemented dihedral type for LAMMPS!")
+                        continue
+
+                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                            i + j + 1,
+                            dihedral_type_dict[temp],
+                            dihedral.atom1 + offset,
+                            dihedral.atom2 + offset,
+                            dihedral.atom3 + offset,
+                            dihedral.atom4 + offset))
+                    dihedral_style.add(style)
+                    if len(dihedral_style) > 1:
+                        warn("More than one dihedral style found!")
 
             # atom specific information
             x_min = y_min = z_min = np.inf
@@ -741,87 +756,7 @@ class LammpsParser(object):
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
-
-        # read all connectivity information
-        for mol_type in System._sys._molecules.itervalues():
-            # atom index offsets from 1 for each molecule
-            offsets = list()
-            for molecule in mol_type.moleculeSet:
-                offsets.append(molecule._atoms[0].atomIndex - 1)
-
-            for i, offset in enumerate(offsets):
-                for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
-                    atomtype2 = atom2.bondtype
-                    
-                    if isinstance(bond, Bond):
-                        temp = BondType(atomtype1, atomtype2,
-                                bond.length, bond.k)
-                    elif isinstance(bond, Morse):
-                        temp = MorseBondType(atomtype1, atomtype2,
-                                bond.length, bond.D, bond.beta)
-                    else:
-                        warn("Found unimplemented bond type for LAMMPS!")
-
-                    bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
-                            i + j + 1,
-                            bond_type_dict[temp],
-                            bond.atom1 + offset,
-                            bond.atom2 + offset))
-
-                for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
-                    atomtype2 = atom2.bondtype
-                    atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
-                    atomtype3 = atom3.bondtype
-
-                    temp = AngleType(atomtype1,
-                            atomtype2,
-                            atomtype3,
-                            1,
-                            angle.theta,
-                            angle.k)
-
-                    angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
-                            i + j + 1,
-                            angle_type_dict[temp],
-                            angle.atom1 + offset,
-                            angle.atom2 + offset,
-                            angle.atom3 + offset))
-
-                for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
-                    atomtype2 = atom2.bondtype
-                    atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
-                    atomtype3 = atom3.bondtype
-                    atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
-                    atomtype4 = atom4.bondtype
-
-                    if isinstance(dihedral, ProperPeriodicDihedral):
-                        # TODO: implement remaining cases
-                        continue
-                    elif isinstance(dihedral, FourierDihedral):
-                        temp = FourierDihedralType(atomtype1, atomtype2, atomtype3,
-                                atomtype4, 3, dihedral.c1,
-                                dihedral.c1, dihedral.c2, dihedral.c3)
-                    else:
-                        #raise Exception("Unsupported dihedral type system: "
-                        #                "{0}".format(type(dihedral)))
-                        continue
-                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                            i + j + 1,
-                            dihedral_type_dict[temp],
-                            dihedral.atom1 + offset,
-                            dihedral.atom2 + offset,
-                            dihedral.atom3 + offset,
-                            dihedral.atom4 + offset))
-
+               
         # Write the actual data file.
         with open(data_file, 'w') as f:
             # front matter
@@ -930,33 +865,17 @@ class LammpsParser(object):
 
             # bonded
             if len(bond_coeffs) > 3:
-                if len(bond_style) == 1:
-                    f.write('bond_style {0}\n'.format(
-                            " ".join(bond_style)))
-                else:
-                    f.write('bond_style hybrid {0}\n'.format(
-                            " ".join(bond_style)))
+                f.write('bond_style hybrid {0}\n'.format(
+                        " ".join(bond_style)))
             if len(angle_coeffs) > 3:
-                if len(angle_style) == 1:
-                    f.write('angle_style {0}\n'.format(
-                            " ".join(angle_style)))
-                else:
-                    f.write('angle_style hybrid {0}\n'.format(
-                            " ".join(angle_style)))
+                f.write('angle_style hybrid {0}\n'.format(
+                        " ".join(angle_style)))
             if len(dihedral_coeffs) > 3:
-                if len(dihedral_style) == 1:
-                    f.write('dihedral_style {0}\n'.format(
-                            " ".join(dihedral_style)))
-                else:
-                    f.write('dihedral_style hybrid {0}\n'.format(
-                            " ".join(dihedral_style)))
+                f.write('dihedral_style hybrid {0}\n'.format(
+                        " ".join(dihedral_style)))
             if len(improper_coeffs) > 3:
-                if len(improper_style) == 1:
-                    f.write('improper_style {0}\n'.format(
-                            " ".join(improper_style)))
-                else:
-                    f.write('improper_style hybrid {0}\n'.format(
-                            " ".join(improper_style)))
+                f.write('improper_style hybrid {0}\n'.format(
+                        " ".join(improper_style)))
 
             f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(
                     0.0,
