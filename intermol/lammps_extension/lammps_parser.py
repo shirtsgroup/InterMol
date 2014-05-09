@@ -229,16 +229,15 @@ class LammpsParser(object):
     def parse_special_bonds(self, line):
         """ """
         if 'lj/coul' in line:
-            System._sys._ljCorrection = float(
-                    line[line.index('lj/coul') + 3])
-            System._sys._coulombCorrection = float(
-                    line[line.index('lj/coul') + 3])
+            System._sys._ljCorrection = float(line[line.index('lj/coul') + 3])
+            System._sys._coulombCorrection = float(line[line.index('lj/coul') + 3])
+        elif 'lj' in line and 'coul' in line:
+            System._sys._ljCorrection = float(line[line.index('lj') + 3])
+            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
         elif 'lj' in line:
-            System._sys._ljCorrection = float(
-                    line[line.index('lj') + 3])
+            System._sys._ljCorrection = float(line[line.index('lj') + 3])
         elif 'coul' in line:
-            System._sys._coulombCorrection = float(
-                    line[line.index('coul') + 3])
+            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
         else:
             warn("Unsupported special_bonds in input file.")
 
