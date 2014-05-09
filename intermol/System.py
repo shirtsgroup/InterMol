@@ -36,7 +36,6 @@ class System(object):
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._nonbonded = HashMap()
-        self._forces = OrderedSet()
         self._boxVector = np.zeros([3, 3])
 
         self._components = list()

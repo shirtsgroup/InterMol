@@ -722,7 +722,6 @@ class GromacsTopologyParser(object):
                                         split[4])
 
                         currentMoleculeType.bondForceSet.add(newBondForce)
-                        System._sys._forces.add(newBondForce)
 
                 elif match.group('pairs'):
                     if verbose:
@@ -739,7 +738,6 @@ class GromacsTopologyParser(object):
                                 newPairForce = AbstractPair(int(split[0]), int(split[1]), "Both")
 
                         currentMoleculeType.pairForceSet.add(newPairForce)
-                        System._sys._forces.add(newPairForce)
 
                 elif match.group('angles'):
                     if verbose:
@@ -905,7 +903,6 @@ class GromacsTopologyParser(object):
                                         split[9])
 
                         currentMoleculeType.angleForceSet.add(newAngleForce)
-                        System._sys._forces.add(newAngleForce)
 
                 elif match.group('dihedrals'):
                     if verbose:
@@ -1037,7 +1034,6 @@ class GromacsTopologyParser(object):
                             except:
                                 pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
-                        System._sys._forces.add(newDihedralForce)
 
                 elif match.group('constraints'):
                     if verbose:
@@ -1062,7 +1058,6 @@ class GromacsTopologyParser(object):
                                     float(split[3]) * units.nanometers)
 
                         currentMoleculeType.settles = newSettlesForce
-                        System._sys._forces.add(newSettlesForce)
 
                         # we need to add a constrainted bonded force as well between the atoms in these molecules. 
                         # we assume the gromacs default of 1. O, 2. H, 3. H
@@ -1074,15 +1069,12 @@ class GromacsTopologyParser(object):
 
                         newBondForce = Bond(1,2,dOH,waterbondrefk,c=True)
                         currentMoleculeType.bondForceSet.add(newBondForce)
-                        System._sys._forces.add(newBondForce)
 
                         newBondForce = Bond(1,3,dOH,waterbondrefk,c=True)
                         currentMoleculeType.bondForceSet.add(newBondForce)
-                        System._sys._forces.add(newBondForce)
 
                         newAngleForce = Angle(3,1,2,angle,wateranglerefk,c=True)
                         currentMoleculeType.angleForceSet.add(newAngleForce)
-                        System._sys._forces.add(newAngleForce)
 
                 elif match.group('exclusions'):
                     if verbose:
@@ -1095,7 +1087,6 @@ class GromacsTopologyParser(object):
                             if split[0] < split[j]:
                                 newExclusion = Exclusions([split[0],split[j]])
                                 currentMoleculeType.exclusions.add(newExclusion)
-                                System._sys._forces.add(newExclusion)
 
 
                 elif match.group('molecules'):

@@ -413,7 +413,6 @@ class LammpsParser(object):
             else:
                 warn("Hybrid bond styles not yet implemented")
             self.current_mol_type.bondForceSet.add(new_bond_force)
-            System._sys._forces.add(new_bond_force)
 
     def parse_angles(self, data_lines):
         """Read angles from data file."""
@@ -434,7 +433,6 @@ class LammpsParser(object):
             else:
                 warn("Hybrid angle styles not yet implemented")
             self.current_mol_type.angleForceSet.add(new_angle_force)
-            System._sys._forces.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
         """Read dihedrals from data file."""
@@ -458,7 +456,6 @@ class LammpsParser(object):
             else:
                 warn("Hybrid dihedral styles not yet implemented")
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
-            System._sys._forces.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real'):
         """Reads a LAMMPS data file.

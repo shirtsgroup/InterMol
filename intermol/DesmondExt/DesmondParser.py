@@ -325,7 +325,6 @@ class DesmondParser():
                         npermol = len(currentMoleculeType.moleculeSet[0]._atoms)
                         forces = self.loadMBonds(lines,self.b_blockpos[0], i, npermol, verbose)
                         currentMoleculeType.bondForceSet = forces[0]
-                        System._sys._forces = forces[1]
                         self.b_blockpos.pop(0)
                 if verbose:
                     print "Parsing [ bonds ]..."
@@ -396,7 +395,6 @@ class DesmondParser():
                             currentMoleculeType.bondForceSet.remove(newBondForce)
                             newBondForce.order = oldBondForce.order
                         currentMoleculeType.bondForceSet.add(newBondForce)
-                        System._sys._forces.add(newBondForce)
                     if newBondType and newBondType not in self.bondtypes:
                         self.bondtypes.add(newBondType)
 
@@ -450,7 +448,6 @@ class DesmondParser():
 
                     if newPairForce:
                         currentMoleculeType.pairForceSet.add(newPairForce)
-                        System._sys._forces.add(newPairForce)
 
                     # IMPORTANT: we are going to assume that all pairs are both LJ and COUL.
                     # if COUL is not included, then it is because the charges are zero, and they will give the
@@ -537,7 +534,6 @@ class DesmondParser():
 
                         # add it on
                         currentMoleculeType.angleForceSet.add(newAngleForce)
-                        System._sys._forces.add(newAngleForce)
 
             elif match.group('dihedrals'):
                 if verbose:
@@ -614,7 +610,6 @@ class DesmondParser():
                         except:
                             pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
-                        System._sys._forces.add(newDihedralForce)
 
                 #9 proper dihedrals, funct = 1
                 #3 improper dihedrals, funct = 2
@@ -643,7 +638,6 @@ class DesmondParser():
                         print line[i]
                     if newTorsionTorsionForce:
                         currentMoleculeType.torsiontorsionForceSet.add(newTorsionTorsionForce)
-                        System._sys._forces.add(newTorsionTorsionForce)
 
             elif match.group('constraints'):
                 if verbose:
@@ -706,7 +700,6 @@ class DesmondParser():
                         print "ERROR (readFile): found unsupported constraint"
                     if newConstraint:
                         currentMoleculeType.constraints.add(newConstraint)
-                        System._sys._forces.add(newConstraint)
 
             elif match.group('exclusions'):
                 if verbose:
@@ -716,7 +709,6 @@ class DesmondParser():
                     temp.remove(temp[0])
                     newExclusion = Exclusions(temp)
                     currentMoleculeType.exclusions.add(newExclusion)
-                    System._sys._forces.add(newExclusion)
 
             elif match.group('restraints'):
                 if verbose:
