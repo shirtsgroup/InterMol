@@ -27,16 +27,21 @@ def endheadersection(blanksection,header,hlines):
     return hlines
 
 def split_with_quotes(line):
+    line = list(line)
+    in_quotes = False
+    for i, char in enumerate(line):
+        if char == '"' and not in_quotes:
+            in_quotes = True
+        elif char == '"' and in_quotes:
+            in_quotes = False
+        if char == ' ' and in_quotes:
+            line[i] = '_'
 
-    vals = line.split()
-
-    for v in vals:
-        if v == '"':
-            del(vals[vals.index(v)])            
-        else:
-            vnew = v.replace('"','')
-            vals[vals.index(v)] = vnew
-    return vals
+    split = "".join(line).split()
+    for i, sub in enumerate(split):
+        sub = sub.replace('"', '')
+        split[i] = sub.replace('_', ' ')
+    return split
         
 class DesmondParser():
     """
@@ -874,8 +879,10 @@ class DesmondParser():
                     aline = split_with_quotes(lines[i])
                     atom.residueIndex = int(aline[rincol])
                     atom.residueName = aline[rncol].strip()
-
-                    atom.atomIndex = int(aline[aicol])
+                    try:
+                        atom.atomIndex = int(aline[aicol])
+                    except:
+                        pdb.set_trace()
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
                                      float(aline[zcol]) * units.angstroms)
