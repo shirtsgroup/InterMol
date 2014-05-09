@@ -75,9 +75,9 @@ class System(object):
     def __str__(self):
         """String representation of a System object
         """
-        return "System: " + self.name
+        return "System: " + self._name
 
     def __repr__(self):
         """String representation of a System object
         """
-        return "System: " + self.name
+        return "System: " + self._name
