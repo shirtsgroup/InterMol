@@ -46,6 +46,6 @@ def lammps_energies(input_file, lmppath='lmp_openmpi',
     e_out = dict(zip(types, data))
 
     #groupings
-    #e_out['Electrostatic'] += e_out['Coul. recip.']
+    e_out['Electrostatic'] += e_out['Coul. recip.']
     e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
     return e_out, log

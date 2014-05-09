@@ -585,7 +585,7 @@ class LammpsParser(object):
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
                     else:
-                        warn("Found unsupported bond type for LAMMPS!")
+                        warn("Found unimplemented bond type for LAMMPS!")
             # angle types
             if mol_type.angleForceSet:
                 for angle in mol_type.angleForceSet.itervalues():
@@ -617,7 +617,7 @@ class LammpsParser(object):
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
-                        warn("Found unsupported angle type for LAMMPS!")
+                        warn("Found unimplemented angle type for LAMMPS!")
 
             # dihedral types
             if mol_type.dihedralForceSet:
@@ -652,7 +652,7 @@ class LammpsParser(object):
                                     dihedral.c4.in_units_of(self.ENERGY)._value))
                             dih_type_i += 1
                     else:
-                        warn("Found unsupported dihedral type for LAMMPS!")
+                        warn("Found unimplemented dihedral type for LAMMPS!")
 
             # atom specific information
             x_min = y_min = z_min = np.inf
@@ -713,7 +713,6 @@ class LammpsParser(object):
 
                     temp = BondType(atomtype1,
                             atomtype2,
-                            1,
                             bond.length,
                             bond.k)
 
@@ -763,8 +762,9 @@ class LammpsParser(object):
                                 atomtype4, 3, dihedral.c1,
                                 dihedral.c1, dihedral.c2, dihedral.c3)
                     else:
-                        raise Exception("Unsupported dihedral type system: "
-                                        "{0}".format(type(dihedral)))
+                        #raise Exception("Unsupported dihedral type system: "
+                        #                "{0}".format(type(dihedral)))
+                        continue
                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
                             i + j + 1,
                             dihedral_type_dict[temp],

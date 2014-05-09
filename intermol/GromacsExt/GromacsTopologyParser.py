@@ -914,9 +914,9 @@ class GromacsTopologyParser(object):
                         dihedralType = None
 
                         dtype = int(split[4])
+                        improper = (dtype == 4) or (dtype == 2)
                         if len(split) == 5:
 
-                            improper = (dtype == 4) or (dtype == 2)
 
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
@@ -968,11 +968,11 @@ class GromacsTopologyParser(object):
 
                             if nentries > 5:
                                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromProperDihedralToDihedralTrig(
-                                    float(split[6]) * units.kilojoules_per_mole, int(split[7]))
-                                phi = float(split[5]) * units.degrees 
+                                        float(split[6]) * units.kilojoules_per_mole, int(split[7]))
+                                phi = float(split[5]) * units.degrees
                             newDihedralForce = DihedralTrigDihedral(
                                 atom1, atom2, atom3, atom4, phi,
-                                fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = improper)
+                                fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper=improper)
 
                             # for dihedral type 9, there can be multiple interactions
 
