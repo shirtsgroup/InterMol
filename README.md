@@ -51,7 +51,7 @@ Other optional arguments:
 For example, to convert from desmond to gromacs and evalutate the energy of the input and output files:
 
 ````
-# current working directory is testing
+# current working directory is Intermol/testing
 mkdir test_output
 python convert.py --des_in Inputs/Desmond/RegTest/frag_opls2001.cms --gromacs --odir test_output -e
 ````
