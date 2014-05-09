@@ -302,7 +302,6 @@ class GromacsTopologyParser(object):
                             newAngleType = AngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole * units.radians**(-2))
 
@@ -311,7 +310,6 @@ class GromacsTopologyParser(object):
                             newAngleType = G96AngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole)
 
@@ -320,7 +318,6 @@ class GromacsTopologyParser(object):
                             newAngleType = CrossBondBondAngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * units.nanometers,
                                     float(split[5]) * units.nanometers,
                                     float(split[6]) * units.kilojoules_per_mole * units.nanometers**(-2))
@@ -330,7 +327,6 @@ class GromacsTopologyParser(object):
                             newAngleType = CrossBondAngleAngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * units.nanometers,
                                     float(split[5]) * units.nanometers,
                                     float(split[6]) * units.nanometers,
@@ -341,7 +337,6 @@ class GromacsTopologyParser(object):
                             newAngleType = UreyBradleyAngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole * units.nanometers**(-2),
                                     float(split[6]) * units.nanometers,
@@ -352,7 +347,6 @@ class GromacsTopologyParser(object):
                             newAngleType = QuarticAngleType(split[0],
                                     split[1],
                                     split[2],
-                                    split[3],
                                     float(split[4]) * degrees,
                                     float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole * units.radians*(-1),
@@ -1500,6 +1494,7 @@ class GromacsTopologyParser(object):
                                    angle.theta.in_units_of(units.degrees)._value,
                                    angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
                     elif isinstance(angle, UreyBradleyAngle):
+                        a_type = 5
                         lines.append('%s%4d%18.8e%18.8e%18.8e%18.8e\n'
                                      % (atomindex,
                                         a_type,

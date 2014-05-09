@@ -1,6 +1,6 @@
 class AbstractAngleType(object):
-    __slots__ = ['atom1', 'atom2', 'atom3', 'type']
-    def __init__(self, atom1, atom2, atom3, type):
+    __slots__ = ['atom1', 'atom2', 'atom3']
+    def __init__(self, atom1, atom2, atom3):
         """An abstract representation of a generic angle type.
 
         Args:
@@ -17,21 +17,20 @@ class AbstractAngleType(object):
         self.atom1 = atom1
         self.atom2 = atom2
         self.atom3 = atom3
-        self.type = type
 
 
     def __eq__(self, object):
         if ((self.atom1 == object.atom1
-                and self.atom2 == object.atom2 
-                and self.atom3 == object.atom3) 
+                and self.atom2 == object.atom2
+                and self.atom3 == object.atom3)
                 or
-                (self.atom1 == object.atom3 
-                and self.atom2 == object.atom2 
-                and self.atom3 == object.atom1)): 
+                (self.atom1 == object.atom3
+                and self.atom2 == object.atom2
+                and self.atom3 == object.atom1)):
             return True
         else:
             return False
 
     def __hash__(self):
-        return hash(tuple([self.atom1, self.atom2, self.atom3, self.type]))
+        return hash(tuple([self.atom1, self.atom2, self.atom3]))
 
