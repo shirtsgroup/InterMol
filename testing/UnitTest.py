@@ -1,3 +1,4 @@
+import argparse
 import glob
 import numpy
 import convert
@@ -40,12 +41,16 @@ def parse_args():
 def test_desmond(args):
     # for now only attempts desmond to desmond conversion of input files
     # to do: need to add checks that right input .cms files are globbed
-    files = glob.glob('%s/*/*.cms' % DES_IN) # return list of files that match the string
-    results = []
+    odir = '%s/DesmondToDesmond' % OUTPUT_DIR
+    if not os.path.isdir(odir):
+        os.mkdir(odir)
 
+    files = glob.glob('%s/*/*.cms' % DES_IN) # return list of files that match the string
+    files = [x for x in files if not x.endswith('-out.cms')]
+    results = []
     for f in files:
         try:
-            args = ['--des_in', f, '--desmond', '--odir', OUTPUT_DIR, '-e']
+            args = ['--des_in', f, '--desmond', '--odir', odir, '-e']
             print 'converting %s to desmond file format with command' % f
             print 'python convert.py', ' '.join(args)
             rms = convert.main(args) # reuses code from convert.py
@@ -73,20 +78,14 @@ def main():
     if args.lammps:
         results_lmp = test_lampps(args)
     
-    print results_des
-    print results_gro
-    print results_lmp
+    if args.desmond:
+        print results_des
+    if args.gromacs:
+        print results_gro
+    if args.lammps:
+        print results_lmp
 
     return
-
-    input_files = [glob.glob('%s/*' % x) for x in INPUT_DIR] 
-
-    des_in = input_files[0]
-
-    gro_in = input_files[1]
-
-    lmp_in = input_files[2]
-
 
 
 if __name__ == '__main__':
