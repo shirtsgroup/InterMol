@@ -749,11 +749,11 @@ class GromacsTopologyParser(object):
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
                             #atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
-                            tempType = AbstractAngleType(atomtype1, atomtype2, atomtype3, split[3])
+                            tempType = AbstractAngleType(atomtype1, atomtype2, atomtype3)
                             angleType = self.angletypes.get(tempType)
                             if not (angleType):
                                 #flip it around.
-                                tempType = AbstractAngleType(atomtype3, atomtype2, atomtype1, split[3])
+                                tempType = AbstractAngleType(atomtype3, atomtype2, atomtype1)
                                 angleType = self.angletypes.get(tempType)
 
                             if isinstance(angleType, AngleType):
@@ -1053,7 +1053,7 @@ class GromacsTopologyParser(object):
 
                         currentMoleculeType.settles = newSettlesForce
 
-                        # we need to add a constrainted bonded force as well between the atoms in these molecules. 
+                        # we need to add a constrainted bonded force as well between the atoms in these molecules.
                         # we assume the gromacs default of 1. O, 2. H, 3. H
                         # reference bond strength is 900 kj/mol, but doesn't really matter since constrainted.
                         waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)

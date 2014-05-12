@@ -21,9 +21,8 @@ def lammps_energies(input_file, lmppath='lmp_openmpi',
     saved_path = os.getcwd()
     os.chdir(directory)
 
-    run_lammps = "{lmppath} < {input_file}".format(
+    run_lammps = "{lmppath} < {input_file} > log.lammps".format(
             lmppath=lmppath, input_file=input_file)
-
     os.system(run_lammps)
     os.chdir(saved_path)
 
