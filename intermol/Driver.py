@@ -93,7 +93,16 @@ def write(*files):
             from intermol.lammps_extension.lammps_parser import LammpsParser
             print "Writing LAMMPS data & input files..."
             lammps_parser = LammpsParser()
+            import cProfile, pstats, StringIO
+            pr = cProfile.Profile()
+            pr.enable()
             lammps_parser.write(filename)
+            pr.disable()
+            s = StringIO.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            print s.getvalue()
             print "Finished writing '{0}'".format(input_name)
 
         else:
