@@ -481,7 +481,7 @@ class LammpsParser(object):
                 warn("Hybrid dihedral styles not yet implemented")
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
-    def write(self, data_file, unit_set='real'):
+    def write(self, data_file, unit_set='real', verbose=True):
         """Reads a LAMMPS data file.
 
         Args:
@@ -583,16 +583,27 @@ class LammpsParser(object):
 
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
+            if verbose:
+                print "Writing moleculetype {0}...".format(mol_type.name)
             # atom index offsets from 1 for each molecule
             offsets = list()
             for molecule in mol_type.moleculeSet:
                 offsets.append(molecule._atoms[0].atomIndex - 1)
 
+            molecule = mol_type.moleculeSet[0]
             for i, offset in enumerate(offsets):
+                if verbose:
+                    print "Writing bonds..."
+                    import cProfile, pstats, StringIO
+                    pr = cProfile.Profile()
+                    pr.enable()
+
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
+                    #atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
+                    atom1 = molecule._atoms[bond.atom1 - 1]
                     atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
+                    #atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
+                    atom2 = molecule._atoms[bond.atom2 - 1]
                     atomtype2 = atom2.bondtype
 
                     if isinstance(bond, Bond):
@@ -630,18 +641,28 @@ class LammpsParser(object):
                             bond_type_dict[temp],
                             bond.atom1 + offset,
                             bond.atom2 + offset))
-                    
                     bond_style.add(style)
                     if len(bond_style) > 1:
                         warn("More than one bond style found!")
-
+                if verbose:
+                    pr.disable()
+                    s = StringIO.StringIO()
+                    sortby = 'cumulative'
+                    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+                    ps.print_stats()
+                    print s.getvalue()
                 # angle types
+                if verbose:
+                    print "Writing angles..."
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
+                    #atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
+                    atom1 = molecule._atoms[angle.atom1 - 1]
                     atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
+                    #atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
+                    atom2 = molecule._atoms[angle.atom2 - 1]
                     atomtype2 = atom2.bondtype
-                    atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
+                    #atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
+                    atom3 = molecule._atoms[angle.atom3 - 1]
                     atomtype3 = atom3.bondtype
 
                     if isinstance(angle, Angle):
@@ -653,7 +674,7 @@ class LammpsParser(object):
                             angle_type_dict[temp] = ang_type_i
                             angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
                                     ang_type_i,
-                                    style, 
+                                    style,
                                     0.5 * angle.k.in_units_of(self.ENERGY / (self.RAD*self.RAD))._value,
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
@@ -673,20 +694,26 @@ class LammpsParser(object):
                         warn("More than one angle style found!")
 
                 # dihedrals
+                if verbose:
+                    print "Writing dihedrals..."
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
-                    atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
+                    #atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
+                    atom1 = molecule._atoms[angle.atom1 - 1]
                     atomtype1 = atom1.bondtype
-                    atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
+                    #atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
+                    atom2 = molecule._atoms[angle.atom2 - 1]
                     atomtype2 = atom2.bondtype
-                    atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
+                    #atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
+                    atom3 = molecule._atoms[angle.atom3 - 1]
                     atomtype3 = atom3.bondtype
-                    atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
+                    #atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
+                    atom4 = molecule._atoms[angle.atom4 - 1]
                     atomtype4 = atom4.bondtype
 
                     if isinstance(dihedral, FourierDihedral):
                         style = 'opls'
                         temp = FourierDihedralType(atomtype1, atomtype2,
-                                atomtype3, atomtype4, 
+                                atomtype3, atomtype4,
                                 dihedral.c1, dihedral.c1,
                                 dihedral.c2, dihedral.c3)
                         if temp not in dihedral_type_dict:
@@ -716,6 +743,8 @@ class LammpsParser(object):
 
             # atom specific information
             x_min = y_min = z_min = np.inf
+            if verbose:
+                print "Writing atoms..."
             for molecule in mol_type.moleculeSet:
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
@@ -756,7 +785,7 @@ class LammpsParser(object):
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
-               
+
         # Write the actual data file.
         with open(data_file, 'w') as f:
             # front matter
