@@ -347,7 +347,7 @@ class GromacsTopologyParser(object):
                             newAngleType = QuarticAngleType(split[0],
                                     split[1],
                                     split[2],
-                                    float(split[4]) * degrees,
+                                    float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole,
                                     float(split[6]) * units.kilojoules_per_mole * units.radians*(-1),
                                     float(split[7]) * units.kilojoules_per_mole * units.radians*(-2),
@@ -643,7 +643,7 @@ class GromacsTopologyParser(object):
                             elif isinstance(bondType, MorseBondType):
                                 split.append(bondType.length)
                                 split.append(bondType.D)
-                                split.append(bomdType.beta)
+                                split.append(bondType.beta)
 
                             elif isinstance(bondType, HarmonicBondType):
                                 split.append(bondType.length)
@@ -974,7 +974,7 @@ class GromacsTopologyParser(object):
 
                         elif dtype == 2:
                             if nentries > 5:
-                                phi = float(split[5]) * degrees
+                                phi = float(split[5]) * units.degrees
                                 k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
 
                             newDihedralForce = ImproperHarmonicDihedral(
