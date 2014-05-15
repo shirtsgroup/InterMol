@@ -706,16 +706,16 @@ class LammpsParser(object):
                     print "    Writing dihedrals..."
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
-                    atom1 = molecule._atoms[angle.atom1 - 1]
+                    atom1 = molecule._atoms[dihedral.atom1 - 1]
                     atomtype1 = atom1.bondtype
                     #atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
-                    atom2 = molecule._atoms[angle.atom2 - 1]
+                    atom2 = molecule._atoms[dihedral.atom2 - 1]
                     atomtype2 = atom2.bondtype
                     #atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
-                    atom3 = molecule._atoms[angle.atom3 - 1]
+                    atom3 = molecule._atoms[dihedral.atom3 - 1]
                     atomtype3 = atom3.bondtype
                     #atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
-                    atom4 = molecule._atoms[angle.atom4 - 1]
+                    atom4 = molecule._atoms[dihedral.atom4 - 1]
                     atomtype4 = atom4.bondtype
 
                     if isinstance(dihedral, FourierDihedral):
