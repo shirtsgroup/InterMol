@@ -3,7 +3,7 @@
 .. module:: lammps_parser
 .. moduleauthor:: Christoph Klein <christoph.t.klein@me.com>
 """
-
+import time
 import os
 from warnings import warn
 import pdb
@@ -311,7 +311,7 @@ class LammpsParser(object):
                             "was not specified in bond_style: {0}".format(style))
                 if style == 'harmonic':
                     self.bond_types[int(fields[0])] = [
-                            style, 
+                            style,
                             2 * float(fields[2]) * self.ENERGY / (self.DIST*self.DIST),
                             float(fields[3]) * self.DIST]
                 if style == 'morse':
@@ -381,7 +381,7 @@ class LammpsParser(object):
                             fields[2],                         # bondtype
                             -1,                                # Z
                             self.mass_dict[int(fields[2])],    # mass
-                            float(fields[3]) * self.CHARGE,         # charge
+                            float(fields[3]) * self.CHARGE,    # charge
                             'A',                               # ptype
                             self.nb_types[int(fields[2])][1],  # sigma
                             self.nb_types[int(fields[2])][0])  # epsilon
@@ -584,19 +584,21 @@ class LammpsParser(object):
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
             if verbose:
-                print "Writing moleculetype {0}...".format(mol_type.name)
+                print "    Writing moleculetype {0}...".format(mol_type.name)
             # atom index offsets from 1 for each molecule
             offsets = list()
             for molecule in mol_type.moleculeSet:
                 offsets.append(molecule._atoms[0].atomIndex - 1)
 
             molecule = mol_type.moleculeSet[0]
+            atoms = molecule._atoms
             for i, offset in enumerate(offsets):
                 if verbose:
-                    print "Writing bonds..."
-                    import cProfile, pstats, StringIO
-                    pr = cProfile.Profile()
-                    pr.enable()
+                    start = time.time()
+                    print "    Writing bonds..."
+                    #import cProfile, pstats, StringIO
+                    #pr = cProfile.Profile()
+                    #pr.enable()
 
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
@@ -645,15 +647,18 @@ class LammpsParser(object):
                     if len(bond_style) > 1:
                         warn("More than one bond style found!")
                 if verbose:
-                    pr.disable()
-                    s = StringIO.StringIO()
-                    sortby = 'cumulative'
-                    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-                    ps.print_stats()
-                    print s.getvalue()
+                    print "    Done. ({0:.2f} s)".format(time.time() - start)
+                    #pr.disable()
+                    #s = StringIO.StringIO()
+                    #sortby = 'cumulative'
+                    #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+                    #ps.print_stats()
+                    #print s.getvalue()
+
                 # angle types
                 if verbose:
-                    print "Writing angles..."
+                    start = time.time()
+                    print "    Writing angles..."
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
                     atom1 = molecule._atoms[angle.atom1 - 1]
@@ -692,10 +697,13 @@ class LammpsParser(object):
                     angle_style.add(style)
                     if len(angle_style) > 1:
                         warn("More than one angle style found!")
+                if verbose:
+                    print "    Done. ({0:.2f} s)".format(time.time() - start) 
 
                 # dihedrals
                 if verbose:
-                    print "Writing dihedrals..."
+                    start = time.time()
+                    print "    Writing dihedrals..."
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
                     atom1 = molecule._atoms[angle.atom1 - 1]
@@ -740,11 +748,14 @@ class LammpsParser(object):
                     dihedral_style.add(style)
                     if len(dihedral_style) > 1:
                         warn("More than one dihedral style found!")
+                if verbose:
+                    print "    Done. ({0:.2f} s)".format(time.time() - start)
 
             # atom specific information
             x_min = y_min = z_min = np.inf
             if verbose:
-                print "Writing atoms..."
+                start = time.time()
+                print "    Writing atoms..."
             for molecule in mol_type.moleculeSet:
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
@@ -785,6 +796,8 @@ class LammpsParser(object):
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
+            if verbose:
+                print "    Done. ({0:.2f} s)".format(time.time() - start)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
