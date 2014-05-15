@@ -28,7 +28,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    cmd = ("{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(
+    cmd = ("{grompp_bin} -nt 1 -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(
         grompp_bin=grompp_bin, mdp=mdp, top=top, gro=gro, tpr=tpr, mdout=mdout))
     print 'Running GROMACS with command:'
     print cmd
@@ -40,7 +40,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
         return
 
     # mdrunin'
-    cmd = ("{mdrun_bin} -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(
+    cmd = ("{mdrun_bin} -nt 1 -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(
         mdrun_bin=mdrun_bin, tpr=tpr, traj=traj, state=state,
         conf=conf, ener=ener, log=log))
     print cmd
