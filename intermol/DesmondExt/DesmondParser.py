@@ -1079,7 +1079,7 @@ class DesmondParser():
         stemp = None
         etemp = None
 
-        print "WARNING: MacroModel atom type is set to 7 for all cases."
+        print "WARNING: MacroModel atom type is not defined in other files, is set to 1 for all cases as it must be validly defined for desmond files to run.  However, it does not affect the energies."
 
         # for all CMS files
         lines.append('{\n')
@@ -1141,7 +1141,7 @@ class DesmondParser():
                     i += 1
                     lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s    %11.8f %11.8f %11.8f\n'
                                 %(i,
-                                7, #NOT SURE WHAT TO PUT FOR MMOD TYPE
+                                1, #HAVE TO PUT SOMETHING HERE
                                 float(atom._position[0].in_units_of(units.angstroms)._value),
                                 float(atom._position[1].in_units_of(units.angstroms)._value),
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
@@ -1292,7 +1292,7 @@ class DesmondParser():
                     # unless it is stored previous, nor is it used by desmond
                     lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s   %11.8f %11.8f %11.8f\n'
                                 %(i,
-                                7,
+                                1,
                                 float(atom._position[0].in_units_of(units.angstroms)._value),
                                 float(atom._position[1].in_units_of(units.angstroms)._value),
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
