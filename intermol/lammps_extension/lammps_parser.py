@@ -3,7 +3,6 @@
 .. module:: lammps_parser
 .. moduleauthor:: Christoph Klein <christoph.t.klein@me.com>
 """
-import time
 import os
 from warnings import warn
 import pdb
@@ -570,20 +569,22 @@ class LammpsParser(object):
         b_type_i = 1  # counter for bond types
 
         angle_style = set()
-        angle_type_dict = dict()
+        angle_type_dict = dict()  # typeObject:int_type
         ang_type_i = 1
 
         dihedral_style = set()
-        dihedral_type_dict = dict()
+        dihedral_type_dict = dict()  # typeObject:int_type
         dih_type_i = 1
 
         improper_style = set()
-        improper_type_dict = dict()
+        improper_type_dict = dict()  # typeObject:int_type
         imp_type_i = 1
 
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
             if verbose:
+                import time
+                mol_start = time.time()
                 print "    Writing moleculetype {0}...".format(mol_type.name)
             # atom index offsets from 1 for each molecule
             offsets = list()
@@ -595,11 +596,7 @@ class LammpsParser(object):
             for i, offset in enumerate(offsets):
                 if verbose:
                     start = time.time()
-                    print "    Writing bonds..."
-                    #import cProfile, pstats, StringIO
-                    #pr = cProfile.Profile()
-                    #pr.enable()
-
+                    print "        Writing bonds..."
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
                     atom1 = molecule._atoms[bond.atom1 - 1]
@@ -647,18 +644,12 @@ class LammpsParser(object):
                     if len(bond_style) > 1:
                         warn("More than one bond style found!")
                 if verbose:
-                    print "    Done. ({0:.2f} s)".format(time.time() - start)
-                    #pr.disable()
-                    #s = StringIO.StringIO()
-                    #sortby = 'cumulative'
-                    #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-                    #ps.print_stats()
-                    #print s.getvalue()
+                    print "        Done. ({0:.2f} s)".format(time.time() - start)
 
                 # angle types
                 if verbose:
                     start = time.time()
-                    print "    Writing angles..."
+                    print "        Writing angles..."
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
                     atom1 = molecule._atoms[angle.atom1 - 1]
@@ -698,12 +689,12 @@ class LammpsParser(object):
                     if len(angle_style) > 1:
                         warn("More than one angle style found!")
                 if verbose:
-                    print "    Done. ({0:.2f} s)".format(time.time() - start) 
+                    print "        Done. ({0:.2f} s)".format(time.time() - start)
 
                 # dihedrals
                 if verbose:
                     start = time.time()
-                    print "    Writing dihedrals..."
+                    print "        Writing dihedrals..."
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     #atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
                     atom1 = molecule._atoms[dihedral.atom1 - 1]
@@ -749,7 +740,7 @@ class LammpsParser(object):
                     if len(dihedral_style) > 1:
                         warn("More than one dihedral style found!")
                 if verbose:
-                    print "    Done. ({0:.2f} s)".format(time.time() - start)
+                    print "        Done. ({0:.2f} s)".format(time.time() - start)
 
             # atom specific information
             x_min = y_min = z_min = np.inf
@@ -798,6 +789,8 @@ class LammpsParser(object):
                             atom._velocity[2].in_units_of(self.VEL)._value))
             if verbose:
                 print "    Done. ({0:.2f} s)".format(time.time() - start)
+        if verbose:
+            print "    Done. ({0:.2f} s)".format(time.time() - mol_start)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
@@ -900,7 +893,7 @@ class LammpsParser(object):
             f.write('\n')
 
             # non-bonded
-            f.write('pair_style lj/cut/coul/long 9.0 10.0\n')  # TODO: match mdp
+            f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
             f.write('pair_modify mix geometric\n')  # TODO: match defaults
             f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
             f.write('\n')
