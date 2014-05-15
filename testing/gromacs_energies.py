@@ -101,7 +101,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
 
     # all the various dihedral energies - what else goes in here?
-    all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper']
+    all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper Dih.']
     e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
     for group in all_dihedrals:
         if group in e_out:
