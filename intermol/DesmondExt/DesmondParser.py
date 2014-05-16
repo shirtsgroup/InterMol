@@ -733,7 +733,7 @@ class DesmondParser():
 
         if verbose:
             print "Parsing [ m_bonds]..."
-            bg = False
+        bg = False
         newBondForce = None
         split = []
         i = start
