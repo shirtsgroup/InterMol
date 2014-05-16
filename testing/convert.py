@@ -131,8 +131,8 @@ def main(args=''):
     # change this eventually?
     try:
         Driver.load(*files)
-    except:
-        print 'Failed on read'
+    except Exception, e:
+        print 'Failed on read: {0}'.format(e)
         return 1 # failed on read, used in UnitTest.py
 
     # output
@@ -153,8 +153,8 @@ def main(args=''):
         if args.lammps:
             print 'Converting to Lammps...writing %s.lmp...' % oname
             Driver.write('%s.lmp' % oname)
-    except:
-        print 'Failed on write'
+    except Exception, e:
+        print 'Failed on write: {0}'.format(e)
         return 2 # failed on write, used in UnitTest.py
 
     # calculate energy of input and output files to compare
