@@ -129,7 +129,11 @@ def main(args=''):
 
     # load files -- Driver should know which type based on extension...
     # change this eventually?
-    Driver.load(*files)
+    try:
+        Driver.load(*files)
+    except:
+        print 'Failed on read'
+        return 1 # failed on read, used in UnitTest.py
 
     # output
     if not args.oname: # default is to append _converted to the input prefix
@@ -137,16 +141,21 @@ def main(args=''):
     else:
         oname = args.oname
     oname = os.path.join(args.odir, oname) # prepend output directory to oname
-    if args.desmond:
-        print 'Converting to Desmond...writing %s.cms...' % oname
-        Driver.write('%s.cms' % oname)
-    if args.gromacs:
-        print 'Converting to Gromacs...writing %s.gro, %s.top...' % (oname, oname)
-        Driver.write('%s.gro' % oname)
-        Driver.write('%s.top' % oname)
-    if args.lammps:
-        print 'Converting to Lammps...writing %s.lmp...' % oname
-        Driver.write('%s.lmp' % oname)
+
+    try:
+        if args.desmond:
+            print 'Converting to Desmond...writing %s.cms...' % oname
+            Driver.write('%s.cms' % oname)
+        if args.gromacs:
+            print 'Converting to Gromacs...writing %s.gro, %s.top...' % (oname, oname)
+            Driver.write('%s.gro' % oname)
+            Driver.write('%s.top' % oname)
+        if args.lammps:
+            print 'Converting to Lammps...writing %s.lmp...' % oname
+            Driver.write('%s.lmp' % oname)
+    except:
+        print 'Failed on write'
+        return 2 # failed on write, used in UnitTest.py
 
     # calculate energy of input and output files to compare
     # to do: remove hardcoded parmeter filenames
@@ -154,35 +163,46 @@ def main(args=''):
     #        format printing of energy dictionary
     if args.energy:
         # input
-        if args.des_in:
-            e_in, e_infile = desmond_energies(args.des_in[0],
-                    'Inputs/Desmond/onepoint.cfg', args.despath)
-        elif args.gro_in:
-            e_in, e_infile = gromacs_energies(top_in, gro_in,
-                    'Inputs/Gromacs/grompp.mdp', args.gropath, '')
-        elif args.lmp_in:
-            # TODO: fix this when --lmp_in gets changed to read input files
-            temp = args.lmp_in[0].split('.')[0] + '.input'
-            e_in, e_infile = lammps_energies(temp, args.lmppath)
-        else:
-            warn('Something weird went wrong! Code should have never made it here.')
-            pass # should never reach here
+        try:
+            if args.des_in:
+                e_in, e_infile = desmond_energies(args.des_in[0],
+                        'Inputs/Desmond/onepoint.cfg', args.despath)
+            elif args.gro_in:
+                e_in, e_infile = gromacs_energies(top_in, gro_in,
+                        'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+            elif args.lmp_in:
+                # TODO: fix this when --lmp_in gets changed to read input files
+                temp = args.lmp_in[0].split('.')[0] + '.input'
+                e_in, e_infile = lammps_energies(temp, args.lmppath)
+            else:
+                warn('Something weird went wrong! Code should have never made it here.')
+                pass # should never reach here
+        except:
+            print 'Failed at evaluating energy of input file'
+            return 3 # failed at input energy, used in UnitTest.py
 
         # output
-        if args.desmond:
-            e_out, e_outfile = desmond_energies('%s.cms' % oname,
-                    'Inputs/Desmond/onepoint.cfg', args.despath)
-        if args.gromacs:
-            e_out, e_outfile = gromacs_energies('%s.top' % oname,
-                    '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
-        if args.lammps:
-            e_out, e_outfile = lammps_energies('%s.input' % oname,
-                    args.lmppath)
+        try:
+            if args.desmond:
+                e_out, e_outfile = desmond_energies('%s.cms' % oname,
+                        'Inputs/Desmond/onepoint.cfg', args.despath)
+            if args.gromacs:
+                e_out, e_outfile = gromacs_energies('%s.top' % oname,
+                        '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+            if args.lammps:
+                e_out, e_outfile = lammps_energies('%s.input' % oname,
+                        args.lmppath)
+        except:
+            print 'Failed at evaluating energy of output file'
+            return 4
+
         print 'Input energy file:', e_infile
         print 'Output energy file:', e_outfile
         results = combine_energy_results(e_in, e_out)
         rms = print_energy_summary(results)
         return rms # as a convenience for the regression test script
+
+    return 0
 
 if __name__ == '__main__':
     main()
