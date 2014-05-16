@@ -361,10 +361,10 @@ class LammpsParser(object):
                 if 'opls' in self.dihedral_style:
                     self.dihedral_types[int(fields[0])] = [
                             'opls',
-                            fields[1] * self.ENERGY,
-                            fields[2] * self.ENERGY,
-                            fields[3] * self.ENERGY,
-                            fields[4] * self.ENERGY]
+                            float(fields[1]) * self.ENERGY,
+                            float(fields[2]) * self.ENERGY,
+                            float(fields[3]) * self.ENERGY,
+                            float(fields[4]) * self.ENERGY]
             elif len(self.dihedral_style) > 1:
                 style = fields[1]
                 if style not in self.dihedral_style:
@@ -373,10 +373,10 @@ class LammpsParser(object):
                 if style == 'opls':
                      self.dihedral_types[int(fields[0])] = [
                             style,
-                            fields[1] * self.ENERGY,
-                            fields[2] * self.ENERGY,
-                            fields[3] * self.ENERGY,
-                            fields[4] * self.ENERGY]
+                            float(fields[1]) * self.ENERGY,
+                            float(fields[2]) * self.ENERGY,
+                            float(fields[3]) * self.ENERGY,
+                            float(fields[4]) * self.ENERGY]
             else:
                 raise ValueError("No entries found in 'dihedral_style'.")
 
@@ -490,10 +490,10 @@ class LammpsParser(object):
             coeff_num = int(fields[1])
             # OPLS
             if  self.dihedral_types[coeff_num][0] == 'opls':
-                cs = [self.dihedral_types[fields[1]][2],
+                cs = [self.dihedral_types[fields[1]][1],
+                      self.dihedral_types[fields[1]][2],
                       self.dihedral_types[fields[1]][3],
-                      self.dihedral_types[fields[1]][4],
-                      self.dihedral_types[fields[1]][5]]
+                      self.dihedral_types[fields[1]][4]]
                 new_dihed_force = FourierDihedral(
                         fields[2], fields[3], fields[4], fields[5],
                         cs[0], cs[1], cs[2], cs[3])
