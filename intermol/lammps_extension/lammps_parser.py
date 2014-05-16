@@ -297,7 +297,7 @@ class LammpsParser(object):
                             'harmonic',
                             2 * float(fields[1]) * self.ENERGY / (self.DIST*self.DIST),
                             float(fields[2]) * self.DIST]
-                if 'morse' in self.bond_style:
+                elif 'morse' in self.bond_style:
                     self.bond_types[int(fields[0])] = [
                             'morse',
                             float(fields[1]) * self.ENERGY,
@@ -313,14 +313,14 @@ class LammpsParser(object):
                             style,
                             2 * float(fields[2]) * self.ENERGY / (self.DIST*self.DIST),
                             float(fields[3]) * self.DIST]
-                if style == 'morse':
+                elif style == 'morse':
                     self.bond_types[int(fields[0])] = [
                             style,
                             float(fields[2]) * self.ENERGY,
                             float(fields[3]) * self.DIST**(-1),
                             float(fields[4]) * self.DIST]
             else:
-                warn("Unsupported bond coeff formatting in data file!")
+                raise ValueError("No entries found in 'bond_style'.")
 
     def parse_angle_coeffs(self, data_lines):
         """Read angle coefficients from data file."""
@@ -329,16 +329,25 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = line.split()
             if len(self.angle_style) == 1:
                 if 'harmonic' in self.angle_style:
                     self.angle_types[int(fields[0])] = [
-                            2 * fields[1] * self.ENERGY / (self.RAD*self.RAD),
-                            fields[2] * self.DEGREE]
-                else:
-                    warn("Unsupported angle coeff formatting in data file!")
+                            'harmonic',
+                            2 * float(fields[1]) * self.ENERGY / (self.RAD*self.RAD),
+                            float(fields[2]) * self.DEGREE]
+            elif len(self.angle_style) > 1:
+                style = fields[1]
+                if style not in self.angle_style:
+                    raise Exception("Angle type found in Angle Coeffs that "
+                            "was not specified in angle_style: {0}".format(style))
+                if style == 'harmonic':
+                    self.angle_types[int(fields[0])] = [
+                            style,
+                            2 * float(fields[1]) * self.ENERGY / (self.RAD*self.RAD),
+                            float(fields[2]) * self.DEGREE]
             else:
-                warn("Unsupported angle coeff formatting in data file!")
+                raise ValueError("No entries found in 'angle_style'.")
 
     def parse_dihedral_coeffs(self, data_lines):
         """Read dihedral coefficients from data file."""
@@ -347,18 +356,29 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = line.split()
             if len(self.dihedral_style) == 1:
                 if 'opls' in self.dihedral_style:
                     self.dihedral_types[int(fields[0])] = [
+                            'opls',
                             fields[1] * self.ENERGY,
                             fields[2] * self.ENERGY,
                             fields[3] * self.ENERGY,
                             fields[4] * self.ENERGY]
-                else:
-                    warn("Unsupported dihedral coeff formatting in data file!")
+            elif len(self.dihedral_style) > 1:
+                style = fields[1]
+                if style not in self.dihedral_style:
+                    raise Exception("Dihedral type found in Dihedral Coeffs that "
+                            "was not specified in dihedral_style: {0}".format(style))
+                if style == 'opls':
+                     self.dihedral_types[int(fields[0])] = [
+                            style,
+                            fields[1] * self.ENERGY,
+                            fields[2] * self.ENERGY,
+                            fields[3] * self.ENERGY,
+                            fields[4] * self.ENERGY]
             else:
-                warn("Unsupported dihedral coeff formatting in data file!")
+                raise ValueError("No entries found in 'dihedral_style'.")
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
@@ -422,13 +442,15 @@ class LammpsParser(object):
 
             new_bond_force = None
             coeff_num = int(fields[1])
+            # Bond
             if self.bond_types[coeff_num][0] == 'harmonic':
                 r = self.bond_types[coeff_num][2]
                 k = self.bond_types[coeff_num][1]
                 new_bond_force = Bond(
                         fields[2], fields[3],
                         r, k)
-            if self.bond_types[coeff_num][0] == 'morse':
+            # Morse
+            elif self.bond_types[coeff_num][0] == 'morse':
                 r = self.bond_types[coeff_num][3]
                 D = self.bond_types[coeff_num][1]
                 beta = self.bond_types[coeff_num][2]
@@ -446,15 +468,14 @@ class LammpsParser(object):
             fields = [int(field) for field in line.split()]
 
             new_angle_force = None
-            if len(self.angle_style) == 1:
-                if self.angle_style[0] == 'harmonic':
-                    theta = self.angle_types[int(fields[1])][1]
-                    k = self.angle_types[int(fields[1])][0]
-                    new_angle_force = Angle(
-                            fields[2], fields[3], fields[4],
-                            theta, k)
-            else:
-                warn("Hybrid angle styles not yet implemented")
+            coeff_num = int(fields[1])
+            # Angle
+            if self.angle_types[coeff_num][0] == 'harmonic':
+                theta = self.angle_types[int(fields[1])][2]
+                k = self.angle_types[int(fields[1])][1]
+                new_angle_force = Angle(
+                        fields[2], fields[3], fields[4],
+                        theta, k)
             self.current_mol_type.angleForceSet.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
@@ -466,18 +487,16 @@ class LammpsParser(object):
             fields = [int(field) for field in line.split()]
 
             new_dihed_force = None
-            if len(self.dihedral_style) == 1:
-                if self.dihedral_style[0] == 'opls':
-                    cs = [self.dihedral_types[fields[1]][0],
-                          self.dihedral_types[fields[1]][1],
-                          self.dihedral_types[fields[1]][2],
-                          self.dihedral_types[fields[1]][3]]
-                    new_dihed_force = FourierDihedral(
-                            fields[2], fields[3], fields[4], fields[5],
-                            cs[0], cs[1], cs[2], cs[3])
-
-            else:
-                warn("Hybrid dihedral styles not yet implemented")
+            coeff_num = int(fields[1])
+            # OPLS
+            if  self.dihedral_types[coeff_num][0] == 'opls':
+                cs = [self.dihedral_types[fields[1]][2],
+                      self.dihedral_types[fields[1]][3],
+                      self.dihedral_types[fields[1]][4],
+                      self.dihedral_types[fields[1]][5]]
+                new_dihed_force = FourierDihedral(
+                        fields[2], fields[3], fields[4], fields[5],
+                        cs[0], cs[1], cs[2], cs[3])
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real', verbose=True):
@@ -598,12 +617,8 @@ class LammpsParser(object):
                     start = time.time()
                     print "        Writing bonds..."
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
-                    #atom1 = mol_type.moleculeSet[0]._atoms[bond.atom1 - 1]
-                    atom1 = molecule._atoms[bond.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    #atom2 = mol_type.moleculeSet[0]._atoms[bond.atom2 - 1]
-                    atom2 = molecule._atoms[bond.atom2 - 1]
-                    atomtype2 = atom2.bondtype
+                    atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
+                    atomtype2 = molecule._atoms[bond.atom2 - 1].bondtype
 
                     if isinstance(bond, Bond):
                         style = 'harmonic'
@@ -651,15 +666,9 @@ class LammpsParser(object):
                     start = time.time()
                     print "        Writing angles..."
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
-                    #atom1 = mol_type.moleculeSet[0]._atoms[angle.atom1 - 1]
-                    atom1 = molecule._atoms[angle.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    #atom2 = mol_type.moleculeSet[0]._atoms[angle.atom2 - 1]
-                    atom2 = molecule._atoms[angle.atom2 - 1]
-                    atomtype2 = atom2.bondtype
-                    #atom3 = mol_type.moleculeSet[0]._atoms[angle.atom3 - 1]
-                    atom3 = molecule._atoms[angle.atom3 - 1]
-                    atomtype3 = atom3.bondtype
+                    atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
+                    atomtype2 = molecule._atoms[angle.atom2 - 1].bondtype
+                    atomtype3 = molecule._atoms[angle.atom3 - 1].bondtype
 
                     if isinstance(angle, Angle):
                         style = 'harmonic'
@@ -696,18 +705,10 @@ class LammpsParser(object):
                     start = time.time()
                     print "        Writing dihedrals..."
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
-                    #atom1 = mol_type.moleculeSet[0]._atoms[dihedral.atom1 - 1]
-                    atom1 = molecule._atoms[dihedral.atom1 - 1]
-                    atomtype1 = atom1.bondtype
-                    #atom2 = mol_type.moleculeSet[0]._atoms[dihedral.atom2 - 1]
-                    atom2 = molecule._atoms[dihedral.atom2 - 1]
-                    atomtype2 = atom2.bondtype
-                    #atom3 = mol_type.moleculeSet[0]._atoms[dihedral.atom3 - 1]
-                    atom3 = molecule._atoms[dihedral.atom3 - 1]
-                    atomtype3 = atom3.bondtype
-                    #atom4 = mol_type.moleculeSet[0]._atoms[dihedral.atom4 - 1]
-                    atom4 = molecule._atoms[dihedral.atom4 - 1]
-                    atomtype4 = atom4.bondtype
+                    atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
+                    atomtype2 = molecule._atoms[dihedral.atom2 - 1].bondtype
+                    atomtype3 = molecule._atoms[dihedral.atom3 - 1].bondtype
+                    atomtype4 = molecule._atoms[dihedral.atom4 - 1].bondtype
 
                     if isinstance(dihedral, FourierDihedral):
                         style = 'opls'
