@@ -118,7 +118,7 @@ def main(args=''):
             GromacsTopologyParser._GroTopParser.parseTopology(top_in)
             print "Topology loaded\n"
             print "Reading in Gromacs structure {0}...".format(gro_in)
-            GromacsStructureParser.readStructure(filename)
+            GromacsStructureParser.readStructure(gro_in)
         except Exception as e:
             print 'Failed on read: {0}'.format(e)
             return 1 # failed on read, used in UnitTest.py
