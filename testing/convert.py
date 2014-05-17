@@ -24,11 +24,9 @@ def get_parser():
             help='.cms file for conversion from DESMOND file format')
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
-    # TODO: change functionality so that input file is read and expects
-    #       call to appropriate data file within itself
     group_in.add_argument('--lmp_in', nargs=1, metavar='file',
-            help='.lmp file for conversion from LAMMPS file format '
-                    + '(expects matching .input file)')
+            help='input file for conversion from LAMMPS file format (expects'
+                    + ' data file in same directory and a read_data call)')
 
     # output arguments
     group_out = parser.add_argument_group('Choose output conversion format(s)')
@@ -128,13 +126,11 @@ def main(args=''):
         if not os.path.isfile(args.lmp_in[0]):
             raise Exception('File not found: {0}'.format(args.lmp_in[0]))
         prefix = args.lmp_in[0][args.lmp_in[0].rfind('/') + 1:-4]
-        input_name = splitext(args.lmp_in[0])[0] + '.input'
         from intermol.lammps_extension.lammps_parser import LammpsParser
         print "Reading LAMMPS data & input files..."
         try:
             lammps_parser = LammpsParser()
-            lammps_parser.read_input(input_name)
-            lammps_parser.read_data(args.lmp_in[0])
+            lammps_parser.read_system(args.lmp_in[0])
         except Exception as e:
             print 'Failed on read: {0}'.format(e)
             return 1 # failed on read, used in UnitTest.py
@@ -181,7 +177,7 @@ def main(args=''):
             from intermol.lammps_extension.lammps_parser import LammpsParser
             lammps_parser = LammpsParser()
             lammps_parser.write('%s.lmp' % oname)
- 
+
     except Exception as e:
         print 'Failed on write: {0}'.format(e)
         return 2 # failed on write, used in UnitTest.py

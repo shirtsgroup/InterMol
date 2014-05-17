@@ -26,12 +26,25 @@ class LammpsParser(object):
 
         self.box_vector = np.zeros(shape=(3, 3), dtype=float)
 
+    def read_system(self, input_file):
+        """Reads a LAMMPS input file and a data file specified within.
+
+        Args:
+            input_file (str): Name of LAMMPS input file to read in.
+        """
+        self.read_input(input_file)
+        if self.data_file:
+            self.read_data(self.data_file)
+        else:
+            raise Exception("No data file found in input script")
+
     def read_input(self, input_file):
         """Reads a LAMMPS input file.
 
         Args:
             input_file (str): Name of LAMMPS input file to read in.
         """
+        self.basepath = os.path.dirname(os.path.realpath(input_file))
         parsable_keywords = {'units': self.parse_units,
                 'atom_style': self.parse_atom_style,
                 'dimension': self.parse_dimension,
@@ -43,7 +56,8 @@ class LammpsParser(object):
                 'angle_style': self.parse_angle_style,
                 'dihedral_style': self.parse_dihedral_style,
                 'improper_style': self.parse_improper_style,
-                'special_bonds': self.parse_special_bonds}
+                'special_bonds': self.parse_special_bonds,
+                'read_data': self.parse_read_data}
 
         with open(input_file, 'r') as input_lines:
             for line in input_lines:
@@ -240,6 +254,13 @@ class LammpsParser(object):
         else:
             warn("Unsupported special_bonds in input file.")
 
+    def parse_read_data(self, line):
+        """ """
+        if len(line) == 2:
+            self.data_file = os.path.join(self.basepath, line[1])
+        else:
+            warn("Unsupported read_data arguments in input file.")
+
     def parse_box(self, line, dim):
         """Read box information from data file.
 
@@ -371,7 +392,7 @@ class LammpsParser(object):
                     raise Exception("Dihedral type found in Dihedral Coeffs that "
                             "was not specified in dihedral_style: {0}".format(style))
                 if style == 'opls':
-                     self.dihedral_types[int(fields[0])] = [
+                    self.dihedral_types[int(fields[0])] = [
                             style,
                             float(fields[1]) * self.ENERGY,
                             float(fields[2]) * self.ENERGY,
@@ -500,7 +521,7 @@ class LammpsParser(object):
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real', verbose=True):
-        """Reads a LAMMPS data file.
+        """Writes a LAMMPS data and corresponding input file.
 
         Args:
             data_file (str): Name of LAMMPS data file to write to.
