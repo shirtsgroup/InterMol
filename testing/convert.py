@@ -2,6 +2,7 @@ import sys
 import os
 import argparse
 from warnings import warn
+import traceback
 import pdb
 
 import numpy as np
@@ -86,8 +87,10 @@ def main(args=''):
         print "Reading in Desmond structure '{0}'...".format(args.des_in[0])
         try:
             DesmondParser.readFile(args.des_in[0])
-        except Exception as e:
-            print 'Failed on read: {0}'.format(e)
+        except Exception as err:
+            print 'Failed on read'
+            print traceback.format_exc()
+            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Sructure loaded\n"
 
@@ -117,8 +120,10 @@ def main(args=''):
             print "Topology loaded\n"
             print "Reading in Gromacs structure {0}...".format(gro_in)
             GromacsStructureParser.readStructure(gro_in)
-        except Exception as e:
-            print 'Failed on read: {0}'.format(e)
+        except Exception as err:
+            print 'Failed on read'
+            print traceback.format_exc()
+            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Structure loaded\n"
 
@@ -131,8 +136,10 @@ def main(args=''):
         try:
             lammps_parser = LammpsParser()
             lammps_parser.read_system(args.lmp_in[0])
-        except Exception as e:
-            print 'Failed on read: {0}'.format(e)
+        except Exception as err:
+            print 'Failed on read'
+            print traceback.format_exc()
+            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Data loaded\n"
 
@@ -178,8 +185,10 @@ def main(args=''):
             lammps_parser = LammpsParser()
             lammps_parser.write('%s.lmp' % oname)
 
-    except Exception as e:
-        print 'Failed on write: {0}'.format(e)
+    except Exception as err:
+        print 'Failed on write'
+        print traceback.format_exc()
+        print sys.exc_info()[0]
         return 2 # failed on write, used in UnitTest.py
 
     # calculate energy of input and output files to compare
@@ -202,8 +211,10 @@ def main(args=''):
             else:
                 warn('Something weird went wrong! Code should have never made it here.')
                 pass # should never reach here
-        except Exception as e:
-            print 'Failed at evaluating energy of input file: {0}'.format(e)
+        except Exception as err:
+            print 'Failed at evaluating energy of input file'
+            print traceback.format_exc()
+            print sys.exc_info()[0]
             return 3 # failed at input energy, used in UnitTest.py
 
         # output
@@ -218,7 +229,9 @@ def main(args=''):
                 e_out, e_outfile = lammps_energies('%s.input' % oname,
                         args.lmppath)
         except Exception as e:
-            print 'Failed at evaluating energy of output file: {0}'.format(e)
+            print 'Failed at evaluating energy of output file'
+            print traceback.format_exc()
+            print sys.exc_info()[0]
             return 4
 
         print 'Input energy file:', e_infile
