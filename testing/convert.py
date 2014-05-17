@@ -90,7 +90,6 @@ def main(args=''):
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Sructure loaded\n"
 
@@ -123,7 +122,6 @@ def main(args=''):
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Structure loaded\n"
 
@@ -139,7 +137,6 @@ def main(args=''):
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            print sys.exc_info()[0]
             return 1 # failed on read, used in UnitTest.py
         print "Data loaded\n"
 
@@ -188,7 +185,6 @@ def main(args=''):
     except Exception as err:
         print 'Failed on write'
         print traceback.format_exc()
-        print sys.exc_info()[0]
         return 2 # failed on write, used in UnitTest.py
 
     # calculate energy of input and output files to compare
@@ -214,7 +210,6 @@ def main(args=''):
         except Exception as err:
             print 'Failed at evaluating energy of input file'
             print traceback.format_exc()
-            print sys.exc_info()[0]
             return 3 # failed at input energy, used in UnitTest.py
 
         # output
@@ -231,7 +226,6 @@ def main(args=''):
         except Exception as e:
             print 'Failed at evaluating energy of output file'
             print traceback.format_exc()
-            print sys.exc_info()[0]
             return 4
 
         print 'Input energy file:', e_infile
