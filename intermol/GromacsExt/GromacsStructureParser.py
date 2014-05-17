@@ -36,7 +36,6 @@ def readStructure(filename):
                     atom.residueIndex = int(lines[i][0:5])
                     atom.residueName = lines[i][5:10].strip()
                     atom.atomName = lines[i][10:15].strip()
-                    atom.atomIndex = int(lines[i][15:20])
                     variables = (lines[i][20:]).split()
                     position = np.zeros([3], float) * units.nanometers
                     velocity = np.zeros([3], float) * units.nanometers / units.picoseconds
@@ -92,7 +91,7 @@ def writeStructure(filename):
                              % (atom.residueIndex,
                                 atom.residueName,
                                 atom.atomName,
-                                atom.atomIndex,
+                                n,
                                 atom._position[0].in_units_of(units.nanometers)._value,
                                 atom._position[1].in_units_of(units.nanometers)._value,
                                 atom._position[2].in_units_of(units.nanometers)._value,

@@ -882,7 +882,7 @@ class DesmondParser():
                     try:
                         atom.atomIndex = int(aline[aicol])
                     except:
-                        pdb.set_trace()
+                        pass
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
                                      float(aline[zcol]) * units.angstroms)
