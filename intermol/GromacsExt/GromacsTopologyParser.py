@@ -1393,8 +1393,12 @@ class GromacsTopologyParser(object):
         # [ moleculetype]
         for moleculeType in System._sys._molecules.itervalues():
             lines.append('[ moleculetype ]\n')
+            # gromacs can't handle spaces in the molecule name
+            printname = moleculeType.name
+            printname = printname.replace(' ','_')
+            printname = printname.replace('"','')
             lines.append('%s%10d\n\n'
-                    % (moleculeType.name,
+                    % (printname,
                        moleculeType.nrexcl))
 
             # [ atoms ]
@@ -1538,6 +1542,7 @@ class GromacsTopologyParser(object):
                     # this atom index will be the same for all of types.
                     atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
                     if isinstance(dihedral, DihedralTrigDihedral):
+
                         # convienience array
                         darray = [dihedral.fc1,dihedral.fc2,dihedral.fc3,dihedral.fc4,dihedral.fc5,dihedral.fc6]
                         if (dihedral.improper):
@@ -1549,20 +1554,20 @@ class GromacsTopologyParser(object):
                                                     darray[j].in_units_of(units.kilojoules_per_mole)._value,
                                                     j+1))
                         else:
-                            if (dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees):
+                            c = ConvertDihedralFromDihedralTrigToRB(
+                                math.cos(dihedral.phi.in_units_of(units.radians)._value),
+                                dihedral.phi,
+                                dihedral.fc0,
+                                dihedral.fc1,
+                                dihedral.fc2,
+                                dihedral.fc3,
+                                dihedral.fc4,
+                                dihedral.fc5,
+                                dihedral.fc6)
+                            # there are some cases where some dihedrals will have c[6] values, which gromacs
+                            # can't yet handle.  We need a workaround, and will go through the route of multiple 9s.
+                            if ((dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees) and c[6]._value == 0):    
                                 d_type = 3
-                                c = ConvertDihedralFromDihedralTrigToRB(
-                                    math.cos(dihedral.phi.in_units_of(units.radians)._value),
-                                    dihedral.phi,
-                                    dihedral.fc0,
-                                    dihedral.fc1,
-                                    dihedral.fc2,
-                                    dihedral.fc3,
-                                    dihedral.fc4,
-                                    dihedral.fc5,
-                                    dihedral.fc6)
-                                if (c[6]._value != 0):
-                                    print "ERROR: Gromacs does not handle multiplicities of greater than 6"
                                 lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
                                              % (atomindex,
                                                 d_type,
@@ -1573,11 +1578,6 @@ class GromacsTopologyParser(object):
                                                 c[4].in_units_of(units.kilojoules_per_mole)._value,
                                                 c[5].in_units_of(units.kilojoules_per_mole)._value))
                             else:
-                                # print as a type 1 dihedral, or a series of type 9 dihedrals
-                                # note -- code not actually tested well, as may not be needed; I think all
-                                # of the dihedrals can be extracted as RB dihedrals as long as phi is always
-                                # the same.
-
                                 ncount = 0
 
                                 for j in range(6):
@@ -1591,7 +1591,8 @@ class GromacsTopologyParser(object):
                                     if darray[j]._value != 0:
                                         if darray[j]._value < 0:
                                             dihedral.phi = 180*units.degrees
-                                            darray[j] *= -1
+                                        else:
+                                            dihedral.phi = 0*units.degrees
                                         lines.append('%s%4d%18.8f%18.8f%6d\n'
                                         % (atomindex,
                                            dtype,
@@ -1646,8 +1647,11 @@ class GromacsTopologyParser(object):
         #keeping this for now, since we don't know when it might be preferable.
         # The following lines are more 'chemical'
         for molType in System._sys._molecules:
+            printname = molType
+            printname = printname.replace(' ','_')
+            printname = printname.replace('"','')            
             lines.append('%-15s%8d\n'
-                    % (molType,
+                    % (printname,
                       len(System._sys._molecules[molType].moleculeSet)))
 
         fout = open(filename, 'w')

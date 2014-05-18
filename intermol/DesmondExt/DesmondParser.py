@@ -610,12 +610,11 @@ class DesmondParser():
                             # this will fail if it's the wrong type of dihedral
                             try:
                                 dihedralmatch.sum_parameters(newDihedralForce) 
-                            except:
+                            except Exception:
                                 pass
-                        except:
+                        except Exception:
                             pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
-
                 #9 proper dihedrals, funct = 1
                 #3 improper dihedrals, funct = 2
                 #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
