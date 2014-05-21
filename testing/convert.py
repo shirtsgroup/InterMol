@@ -8,7 +8,6 @@ import pdb
 import numpy as np
 
 from intermol.System import System
-import evaluate
 from desmond_energies import desmond_energies
 from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
