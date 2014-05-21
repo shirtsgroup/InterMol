@@ -53,7 +53,7 @@ For example, to convert from desmond to gromacs and evalutate the energy of the 
 ````
 # current working directory is Intermol/testing
 mkdir test_output
-python convert.py --des_in Inputs/Desmond/RegTest/frag_opls2001.cms --gromacs --odir test_output -e
+python convert.py --des_in Inputs/Desmond/UnitTest/frag_opls2001/frag_opls2001.cms --gromacs --odir test_output -e
 ````
 
 Note that the program may not give the same ASCII output; the goal is to produce the same energy output, and there are frequently multiple ways to express the same molecular potential energy function using differently formatted files.
