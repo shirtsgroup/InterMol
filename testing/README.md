@@ -1,5 +1,7 @@
 Use the following two scripts to run InterMol. 
 
+convert.py
+==========
 ````
 $ python convert.py -h
 usage: convert.py [-h] [--des_in file] [--gro_in file file] [--lmp_in file]
@@ -43,6 +45,8 @@ Other optional arguments:
   -f, --force           ignore warnings
 ````
 
+UnitTest.py
+===========
 
 ````
 $ python UnitTest.py -h
@@ -53,8 +57,7 @@ usage: PROG [-h] [--desmond] [--gromacs] [--lammps] [-e] [-d path] [-g path]
          --------------------------------
             After specifying input type X, this script will convert files
             found in ./Inputs/X/UnitTest/ to all file formats. All output
-files
-            will be found in ./UnitTestOutput.  
+            files will be found in ./UnitTestOutput.  
              
          
 
