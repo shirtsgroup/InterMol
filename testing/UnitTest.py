@@ -1,3 +1,4 @@
+import sys
 import argparse
 import glob
 import numpy
@@ -14,15 +15,24 @@ LMP_IN = './Inputs/Lammps/UnitTest'
 OUTPUT_DIR = 'UnitTestOutput'
 
 def parse_args():
-    parser = argparse.ArgumentParser(description = 'Run InterMol unit test')
+    parser = argparse.ArgumentParser(prog='PROG',
+     formatter_class=argparse.RawDescriptionHelpFormatter,
+     description='''
+         InterMol Unit Testing Script
+         --------------------------------
+            After specifying input type X, this script will convert files
+            found in ./Inputs/X/UnitTest/ to all file formats. All output files
+            will be found in ./UnitTestOutput.  
+             
+         ''')
 
     group_out = parser.add_argument_group('Run unit test on the following input format(s)')
     group_out.add_argument('--desmond', action='store_true',
-            help='test conversion of DESMOND input files (Inputs/Desmond/UnitTest/)')
+            help='test conversion of DESMOND files found in Inputs/Desmond/UnitTest/')
     group_out.add_argument('--gromacs', action='store_true',
-            help='test conversion of GROMACS input files (Inputs/Gromacs/UnitTest/)')
+            help='test conversion of GROMACS files found in Inputs/Gromacs/UnitTest/')
     group_out.add_argument('--lammps', action='store_true',
-            help='test conversion of LAMMPS input files (Inputs/Lammps/UnitTest/)')
+            help='test conversion of LAMMPS files found in Inputs/Lammps/UnitTest/')
 
     group_misc = parser.add_argument_group('Other optional arguments')
     group_misc.add_argument('-e', '--energy', dest='energy', action='store_true',
@@ -36,6 +46,9 @@ def parse_args():
     group_misc.add_argument('-l', '--lmppath', dest='lmppath',
             metavar='path', default='lmp_openmpi',
             help='path for LAMMPS binary, needed for energy evaluation')
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
     return parser.parse_args()
 
 def add_flags(args, flags):
@@ -210,13 +223,13 @@ def summarize_results(input_type, files, results):
 
     col1_width = max(len(x) for x in files)
     col2_width = max(len(str(x)) for x in results)
-    col2_width = max(col2_width,9) # 9 is length of RMS/Error
+    col2_width = max(col2_width,16) # 9 is length of RMS/Error
     n = len(files)
 
     des_res = results[0:n]
     print ''
     print '*'*15 + 'Results for {0} to Desmond Conversion'.format(input_type) + '*'*15
-    print '{:{}}   {:{}}'.format('File', col1_width, 'RMS/Error', col2_width)
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, des_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
@@ -225,7 +238,7 @@ def summarize_results(input_type, files, results):
     gro_res = results[n:2*n]
     print ''
     print '*'*15 + 'Results for {0} to Gromacs Conversion'.format(input_type) + '*'*15  
-    print '{:{}}   {:{}}'.format('File', col1_width, 'RMS/Error', col2_width)
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, gro_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
@@ -234,7 +247,7 @@ def summarize_results(input_type, files, results):
     lmp_res = results[2*n::]
     print ''
     print '*'*15 + 'Results for {0} to Lammps Conversion'.format(input_type) + '*'*15
-    print '{:{}}   {:{}}'.format('File', col1_width, 'RMS/Error', col2_width)
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, lmp_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
