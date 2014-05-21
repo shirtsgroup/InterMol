@@ -610,12 +610,11 @@ class DesmondParser():
                             # this will fail if it's the wrong type of dihedral
                             try:
                                 dihedralmatch.sum_parameters(newDihedralForce) 
-                            except:
+                            except Exception:
                                 pass
-                        except:
+                        except Exception:
                             pass
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
-
                 #9 proper dihedrals, funct = 1
                 #3 improper dihedrals, funct = 2
                 #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
@@ -795,7 +794,7 @@ class DesmondParser():
         zcol = None
         rincol = None
         rncol = None
-        aicol = None
+        azcol = None
         pdbancol = None
         ancol = None
         vxcol = None
@@ -836,10 +835,10 @@ class DesmondParser():
                         if verbose:
                             print "   Parsing [ rname]..."
                         rncol = i - start
-                    elif match.group('aindex'):
+                    elif match.group('aZ'):
                         if verbose:
-                            print "   Parsing [ aindex]..."
-                        aicol = i - start
+                            print "   Parsing [ atomic number ]..."
+                        azcol = i - start
                     elif match.group('pdbaname'):
                         if verbose:
                             print "   Parsing [ pdb atom name]..."
@@ -880,9 +879,9 @@ class DesmondParser():
                     atom.residueIndex = int(aline[rincol])
                     atom.residueName = aline[rncol].strip()
                     try:
-                        atom.atomIndex = int(aline[aicol])
-                    except:
-                        pdb.set_trace()
+                        atom.Z = int(aline[azcol])
+                    except Exception:
+                        pass
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
                                      float(aline[zcol]) * units.angstroms)
@@ -1027,7 +1026,7 @@ class DesmondParser():
           |
           (?P<rname>\s*s_m_pdb_residue_name)
           |
-          (?P<aindex>\s*i_m_atomic_number)
+          (?P<aZ>\s*i_m_atomic_number)
           |
           (?P<pdbaname>\s*s_m_pdb_atom_name)
           |
@@ -1141,13 +1140,13 @@ class DesmondParser():
                     i += 1
                     lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s    %11.8f %11.8f %11.8f\n'
                                 %(i,
-                                1, #HAVE TO PUT SOMETHING HERE
+                                1, #HAVE TO PUT SOMETHING HERE OR ELSE DESMOND DIES, EVEN THOUGH IT DOESN'T USE IT
                                 float(atom._position[0].in_units_of(units.angstroms)._value),
                                 float(atom._position[1].in_units_of(units.angstroms)._value),
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
                                 atom.residueIndex,
                                 '"%s"'%atom.residueName,
-                                atom.atomIndex,
+                                atom.Z,
                                 '"%s"'%atom.atomName,
                                 float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
                                 float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
@@ -1287,7 +1286,7 @@ class DesmondParser():
             for molecule in moleculetype.moleculeSet:
                 for atom in molecule._atoms:
                     i += 1
-                    #NOT SURE WHAT TO PUT FOR MMOD TYPE; 7 is currently used.
+                    #NOT SURE WHAT TO PUT FOR MMOD TYPE; 1 is currently used.
                     #This can't be determined currently from the information provided,
                     # unless it is stored previous, nor is it used by desmond
                     lines.append('    %d        %d   %10.8f %10.8f %10.8f     %2d %4s    %2d  %2s   %11.8f %11.8f %11.8f\n'
@@ -1298,7 +1297,7 @@ class DesmondParser():
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
                                 atom.residueIndex,
                                 '"%s"'%atom.residueName,
-                                atom.atomIndex,
+                                atom.Z,
                                 '"%s"'%atom.atomName,
                                 float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
                                 float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
@@ -1652,7 +1651,7 @@ class DesmondParser():
             # Should probably be determined entirely by the bonds,
             # since settles now adds bonds.  For now, leave this in
             # for Desmond to Desmond conversion, where nrexcl is not
-            # determind.  Probably should switch eventually.
+            # determined.  Probably should switch eventually.
 
                 for exclusion in moleculetype.exclusions.itervalues():
                     i+=1
