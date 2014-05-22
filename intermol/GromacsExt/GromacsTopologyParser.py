@@ -1587,18 +1587,22 @@ class GromacsTopologyParser(object):
                                     dtype = 9
                                 else:
                                     dtype = 1
+                                # all of the terms should have consistent phi now    
                                 for j in range(6):
-                                    if darray[j]._value != 0:
-                                        if darray[j]._value < 0:
-                                            dihedral.phi = 180*units.degrees
+                                    if (darray[j]._value < 0):
+                                        darray[j] *= -1 # kludge for different definitions of trigonometric dihedral with multiplicity in the central representation and in GROMACS
+                                        if dihedral.phi.value_in_unit(units.degrees)==180:
+                                            printphi = 0*units.degrees
                                         else:
-                                            dihedral.phi = 0*units.degrees
-                                        lines.append('%s%4d%18.8f%18.8f%6d\n'
-                                        % (atomindex,
-                                           dtype,
-                                           dihedral.phi.in_units_of(units.degrees)._value,
-                                           darray[j].in_units_of(units.kilojoules_per_mole)._value,
-                                           j+1))
+                                            printphi = 180*units.degrees
+                                    else:
+                                        printphi = dihedral.phi
+                                    lines.append('%s%4d%18.8f%18.8f%6d\n'
+                                                 % (atomindex,
+                                                    dtype,
+                                                    printphi.in_units_of(units.degrees)._value,
+                                                    darray[j].in_units_of(units.kilojoules_per_mole)._value,
+                                                    j+1))
 
                     elif isinstance(dihedral, ImproperHarmonicDihedral):
                         d_type = 2

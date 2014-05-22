@@ -1,5 +1,8 @@
 import sys
+import numpy
 sys.path.append('..')
+from math import fabs as abs
+from math import cos, radians
 
 from intermol.Decorators import *
 from AbstractDihedralType import *
@@ -37,16 +40,17 @@ class DihedralTrigType(AbstractDihedralType):
 
     def sum_parameters(self, addterms):
         # addterms is another dihedral.
-
         compatible = False
         sign = 1
+
         if self.phi == addterms.phi:
             compatible = True
         else:
             # might not be compatible.  Check to see if they are offset by 180 degrees
-            if abs((self.phi - addterms.phi).value_in_unit(units.degrees)) == 180:
+            dphi = abs((self.phi - addterms.phi).value_in_unit(units.degrees))
+            if dphi == 180:
                 compatible = True
-                sign = -1
+                sign = cos(radians(dphi))
 
         if (compatible):
             self.fc0 += addterms.fc0   # zero term never get sign flipped.
