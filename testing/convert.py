@@ -4,21 +4,18 @@ import argparse
 from warnings import warn
 import traceback
 import pdb
-
 import numpy as np
 
 from intermol.System import System
 from desmond_energies import desmond_energies
 from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
-from helper_functions import combine_energy_results, print_energy_summary
+import helper_functions
 
 def get_parser():
     parser = argparse.ArgumentParser(description = 'Perform a file conversion')
 
     # input arguments
-    #   (FYI not using argparse's mutually exclusive group since it
-    #    doesn't support the description argument => ugly -h output)
     group_in = parser.add_argument_group('Choose input conversion format')
     group_in.add_argument('--des_in', nargs=1, metavar='file',
             help='.cms file for conversion from DESMOND file format')
@@ -59,46 +56,67 @@ def get_parser():
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-v', '--verbose', dest='verbose', action='store_true',
             help='verbosity')
-    group_misc.add_argument('-f', '--force', action='store_true',
-            help='ignore warnings') # I forget what I needed this for
+
+    # prints help if no arguments given
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
+
     return parser
 
 def main(args=''):
-    parser = get_parser()
-    if not args:
-        args = parser.parse_args() # args automatically obtained from sys.argv
-    else:
-        args = parser.parse_args(args) # flexibility to call main() from other scripts
+
+    #TODO: fix verbosity
+
+    parser = get_parser() # returns parser object
+    if not args: # args automatically obtained from sys.argv
+        args = parser.parse_args()
+    else: # flexibility to call main() from other scripts
+        args = parser.parse_args(args)
+
+
+    # check to make sure output directory exists before doing anything
+    if not os.path.exists(args.odir):
+        raise Exception('Output directory not found: {0}'.format(args.odir))
+
+    # check to make sure a conversion type is selected before doing anything
+    if not args.desmond and not args.gromacs and not args.lammps:
+        print 'ERROR: no conversion type selected'
+        sys.exit(1)
 
     print 'Performing InterMol conversion...'
-    # initialize System
     System._sys = System('InterMol')
     print 'System initialized'
 
-    # check if inputs files exist
-    # NOT checking extension type to allow flexibility in naming
-    if args.des_in:
+
+    # --------------- PROCESS INPUTS ----------------- #
+
+    if args.des_in: # input type is desmond
+        # check if input exists
         if not os.path.isfile(args.des_in[0]):
             raise Exception('File not found: {0}'.format(args.des_in[0]))
         prefix = args.des_in[0][args.des_in[0].rfind('/') + 1:-4]
         from intermol.DesmondExt.DesmondParser import DesmondParser as DesmondParser
         DesmondParser = DesmondParser()
-        print "Reading in Desmond structure '{0}'...".format(args.des_in[0])
+        print 'Reading in Desmond structure {0}...'.format(args.des_in[0])
         try:
-            DesmondParser.readFile(args.des_in[0])
+            DesmondParser.readFile(args.des_in[0], args.verbose)
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
             return 1 # failed on read, used in UnitTest.py
-        print "Sructure loaded\n"
+        print 'Sructure loaded\n'
 
-    elif args.gro_in:
-        for f in args.gro_in: # 2 arguments for top and gro file
+    elif args.gro_in: # input type is gromacs
+        # check if input exists
+        for f in args.gro_in:
             if not os.path.isfile(f):
                 raise Exception('File not found: {0}'.format(f))
+        # find the top file since order of inputs is not enforced
         top_in = [x for x in args.gro_in if x.endswith('.top')]
         assert(len(top_in)==1)
         top_in = top_in[0] # now just string instead of list
+        # find the gro file since order of inputs is not enforced
         gro_in = [x for x in args.gro_in if x.endswith('.gro')]
         assert(len(gro_in)==1)
         gro_in = gro_in[0]
@@ -124,7 +142,8 @@ def main(args=''):
             return 1 # failed on read, used in UnitTest.py
         print "Structure loaded\n"
 
-    elif args.lmp_in:
+    elif args.lmp_in: # input type is lammps
+        # check if file exists
         if not os.path.isfile(args.lmp_in[0]):
             raise Exception('File not found: {0}'.format(args.lmp_in[0]))
         prefix = args.lmp_in[0][args.lmp_in[0].rfind('/') + 1:-4]
@@ -143,18 +162,8 @@ def main(args=''):
         print 'No input file'
         sys.exit(1)
 
-    # check to make sure output directory exists before doing anything
-    if not os.path.exists(args.odir):
-        raise Exception('Output directory not found: {0}'.format(args.odir))
+    # ------------ WRITE OUTPUTS -------------- #
 
-    # check to make sure a conversion type is selected before doing anything
-    if not args.desmond and not args.gromacs and not args.lammps:
-        print 'WARNING: no conversion type selected'
-        print '         use -f to override'
-        if not args.force:
-            sys.exit(1)
-
-    # output
     if not args.oname: # default is to append _converted to the input prefix
         oname = '%s_converted' % prefix
     else:
@@ -166,7 +175,8 @@ def main(args=''):
             print 'Converting to Desmond...writing %s.cms...' % oname
             from intermol.DesmondExt.DesmondParser import DesmondParser
             DesmondParser = DesmondParser()
-            DesmondParser.writeFile('%s.cms' % oname)
+            DesmondParser.writeFile('%s.cms' % oname, args.verbose)
+
         if args.gromacs:
             print 'Converting to Gromacs...writing %s.gro, %s.top...' % (oname, oname)
             import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
@@ -175,6 +185,7 @@ def main(args=''):
             if not GromacsTopologyParser._GroTopParser:
                 GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
             GromacsTopologyParser._GroTopParser.writeTopology('%s.top' % oname)
+
         if args.lammps:
             print 'Converting to Lammps...writing %s.lmp...' % oname
             from intermol.lammps_extension.lammps_parser import LammpsParser
@@ -186,20 +197,23 @@ def main(args=''):
         print traceback.format_exc()
         return 2 # failed on write, used in UnitTest.py
 
-    # calculate energy of input and output files to compare
+
+    # ------------ ENERGY COMPARISON ----------- #
     # to do: remove hardcoded parmeter filenames
-    #        add lammps
     #        format printing of energy dictionary
     if args.energy:
-        # input
+        # evaluate input energy
         try:
             if args.des_in:
+                input_type = 'Desmond' # used for displaying results
                 e_in, e_infile = desmond_energies(args.des_in[0],
                         'Inputs/Desmond/onepoint.cfg', args.despath)
             elif args.gro_in:
+                input_type = 'Gromacs'
                 e_in, e_infile = gromacs_energies(top_in, gro_in,
                         'Inputs/Gromacs/grompp.mdp', args.gropath, '')
             elif args.lmp_in:
+                input_type = 'Lammps'
                 # TODO: fix this when --lmp_in gets changed to read input files
                 temp = args.lmp_in[0].split('.')[0] + '.input'
                 e_in, e_infile = lammps_energies(temp, args.lmppath)
@@ -211,28 +225,60 @@ def main(args=''):
             print traceback.format_exc()
             return 3 # failed at input energy, used in UnitTest.py
 
-        # output
-        try:
-            if args.desmond:
-                e_out, e_outfile = desmond_energies('%s.cms' % oname,
+        # evaluate output energy
+        output_type = []
+        e_outfile = []
+        e_out = []
+        if args.desmond:
+            output_type.append('Desmond')
+            try:
+                out, outfile = desmond_energies('%s.cms' % oname,
                         'Inputs/Desmond/onepoint.cfg', args.despath)
-            if args.gromacs:
-                e_out, e_outfile = gromacs_energies('%s.top' % oname,
-                        '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
-            if args.lammps:
-                e_out, e_outfile = lammps_energies('%s.input' % oname,
-                        args.lmppath)
-        except Exception as e:
-            print 'Failed at evaluating energy of output file'
-            print traceback.format_exc()
-            return 4
+                e_out.append(out)
+                e_outfile.append(outfile)
+            except Exception as e:
+                print 'Failed at evaluating energy of Desmond output file: {0}'.format(e)
+                print traceback.format_exc()
+                e_out.append(-1)
+                e_outfile.append(-1)
 
-        print 'Input energy file:', e_infile
-        print 'Output energy file:', e_outfile
-        results = combine_energy_results(e_in, e_out)
-        rms = print_energy_summary(results)
-        return rms # as a convenience for the regression test script
-    return 0
+        if args.gromacs:
+            output_type.append('Gromacs')
+            try:
+                out, outfile = gromacs_energies('%s.top' % oname,
+                        '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+                e_out.append(out)
+                e_outfile.append(outfile)
+            except Exception as e:
+                print 'Failed at evaluating energy of Gromacs output file: {0}'.format(e)
+                print traceback.format_exc()
+                e_out.append(-1)
+                e_outfile.append(-1)
+ 
+        if args.lammps:
+            output_type.append('Lammps')
+            try:
+                out, outfile = lammps_energies('%s.input' % oname,
+                        args.lmppath)
+                e_out.append(out)
+                e_outfile.append(outfile)
+            except Exception as e:
+                print 'Failed at evaluating energy of output file: {0}'.format(e)
+                print traceback.format_exc()
+                e_out.append(-1)
+                e_outfile.append(-1)
+
+        if len(e_out) > 1 and e_out[1:] == e_out[:-1]: # all failed to evaluate (all are -1)
+            return [4]*len(output_type) # 4 is errorcode for UnitTest.py script
+
+        # display energy comparison results
+        print '{0} input energy file: {1}'.format(input_type, e_infile)
+        for type, file in zip(output_type, e_outfile):
+            print '{0} output energy file: {1}'.format(type, file)
+        diff = helper_functions.print_multiple_energy_results(e_in, e_out, input_type, output_type)
+        return diff # difference in potential energy for UnitTest.py script
+
+    return 0 # converted sucessfully (no energy check)
 
 if __name__ == '__main__':
     main()

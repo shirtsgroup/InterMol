@@ -34,8 +34,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     print cmd
     exit = os.system(cmd)
     if exit:
-        print 'grompp failed for {0}'.format(top)
-        sys.exit(1)
+        raise Exception('grompp failed for {0}'.format(top))
     elif grompp_check:
         return
 
@@ -46,8 +45,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     print cmd
     exit = os.system(cmd)
     if exit:
-        print 'mdrun failed for {0}'.format(top)
-        sys.exit(1)
+        raise Exception('mdrun failed for {0}'.format(top))
 
     # energizin'
     select = " ".join(map(str, range(1, 20))) + " 0 "
@@ -56,8 +54,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     print cmd
     exit = os.system(cmd)
     if exit:
-        print 'g_energy failed for {0}'.format(top)
-        sys.exit(1)
+        raise Exception('g_energy failed for {0}'.format(top))
 
     # extract g_energy output and parse initial energies
     with open(ener_xvg) as f:

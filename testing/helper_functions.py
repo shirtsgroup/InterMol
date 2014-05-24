@@ -2,9 +2,62 @@ from collections import OrderedDict
 import numpy as np
 import pdb
 
+def find_match(key, dict, unit):
+    '''helper function for multiple_energy_results()'''
+    if key in dict:
+        return dict[key].in_units_of(unit)._value
+    else:
+        return np.nan
+
+def print_multiple_energy_results(energy_input, energy_outputs, input_type, output_types):
+    # remove failed evaluations (-1 in energy_outputs)
+    failed = [i for i,x in enumerate(energy_outputs) if x == -1]
+    failed = [output_types[i] for i in failed]
+    energy_outputs = [x for x in energy_outputs if x != -1]
+
+    #for i, out in enumerate(energy_outputs):
+    #    if out == -1:
+    #        energy_outputs.pop(i)
+    #        failed.append(output_types.pop(i))
+    # find all distinct labels
+    labels = set(energy_input.keys())
+    for out in energy_outputs:
+        for key, value in out.iteritems():
+            labels.add(key)
+    # set up energy comparison table
+    labels = list(labels)
+    unit = energy_input[labels[0]].unit
+    energy_all = [energy_input] + energy_outputs
+    data = np.empty((len(labels),len(energy_all)))
+    for i in range(len(data)):
+        for j in range(len(energy_all)):
+            data[i,j] = find_match(labels[i], energy_all[j], unit)
+    # sort table <= To do
+    # print table
+    print '======================================================================='
+    print 'Summary statistics'
+    header = '%20s %18s ' % ('Type', 'Input (%s)' % input_type)
+    for out in output_types:
+        header += '%18s ' %('Output (%s)' % out)
+    print header
+    for i in range(len(data)):
+        line = '%20s ' % labels[i]
+        for j in data[i]:
+            line += '%18.8f ' % j
+        print line
+    print ''
+    # get differences in potential energy
+    i = labels.index('Potential')
+    diff = data[i,1::] - data[i,0]
+    for d, out in zip(diff, output_types):
+        print 'Difference in potential energy from %s=>%s conversion: %18.8f' % (input_type, out, d)
+    for out in failed:
+        print 'Energy comparison for {0} output FAILED'.format(out)
+    return diff
+
 def combine_energy_results(e_in, e_out):
-    """
-    """
+    '''
+    '''
     data = OrderedDict()
     matches = []
     diff = []
@@ -36,18 +89,18 @@ def combine_energy_results(e_in, e_out):
     return data, rms
 
 def print_energy_summary(results):
-    """
-    """
+    '''
+    '''
     data, rms = results
-    print "======================================================================="
-    print "Summary statistics"
-    print "%20s %18s %18s %18s" % ("Type", "Input", "Output", "Diff")
+    print '======================================================================='
+    print 'Summary statistics'
+    print '%20s %18s %18s %18s' % ('Type', 'Input', 'Output', 'Diff')
     for (name, values) in data.iteritems():
-        print "%20s %18.8f %18.8f %18.8f" % (name,
+        print '%20s %18.8f %18.8f %18.8f' % (name,
                 values[0]._value if hasattr(values[0], '_value') else values[0], # in
                 values[1]._value if hasattr(values[1], '_value') else values[1], # out
                 values[2]._value if hasattr(values[2], '_value') else values[2]) # diff
 
-    print " "
-    print "RMS signed error: %18.8f" % (rms)
+    print ' '
+    print 'RMS signed error: %18.8f' % (rms)
     return rms
