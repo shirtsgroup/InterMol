@@ -104,9 +104,8 @@ def desmond_energies(cms, cfg, despath):
     print cmd
     exit = os.system(cmd)
     if exit: # exit status not 0
-        print 'Failed evaluating energy of {0}'.format(cms)
         os.chdir(cwd)
-        sys.exit(1)
+        raise Exception('Failed evaluating energy of {0}'.format(cms))
     
     # parse desmond energy file
     os.chdir(cwd)

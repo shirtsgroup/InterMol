@@ -951,7 +951,7 @@ class DesmondParser():
 
         System._sys.setBoxVector(v)
 
-    def readFile(self, filename):
+    def readFile(self, filename, verbose=True):
 
 #        Load in data from file
 
@@ -991,7 +991,6 @@ class DesmondParser():
         self.a_blockpos.append(i)
         self.b_blockpos.append(i)
         self.ffio_blockpos.append(i)
-        verbose = True
 
         sysDirectiveTop = re.compile(r"""
           ((?P<vdwtypes>\s*ffio_vdwtypes)
