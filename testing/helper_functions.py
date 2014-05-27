@@ -11,14 +11,9 @@ def find_match(key, dict, unit):
 
 def print_multiple_energy_results(energy_input, energy_outputs, input_type, output_types):
     # remove failed evaluations (-1 in energy_outputs)
-    failed = [i for i,x in enumerate(energy_outputs) if x == -1]
-    failed = [output_types[i] for i in failed]
+    failed_i = [i for i,x in enumerate(energy_outputs) if x == -1]
+    failed = [output_types.pop(i) for i in failed_i]
     energy_outputs = [x for x in energy_outputs if x != -1]
-
-    #for i, out in enumerate(energy_outputs):
-    #    if out == -1:
-    #        energy_outputs.pop(i)
-    #        failed.append(output_types.pop(i))
     # find all distinct labels
     labels = set(energy_input.keys())
     for out in energy_outputs:
@@ -26,7 +21,7 @@ def print_multiple_energy_results(energy_input, energy_outputs, input_type, outp
             labels.add(key)
     # set up energy comparison table
     labels = list(labels)
-    unit = energy_input[labels[0]].unit
+    unit = energy_input[energy_input.keys()[0]].unit
     energy_all = [energy_input] + energy_outputs
     data = np.empty((len(labels),len(energy_all)))
     for i in range(len(data)):
@@ -53,6 +48,12 @@ def print_multiple_energy_results(energy_input, energy_outputs, input_type, outp
         print 'Difference in potential energy from %s=>%s conversion: %18.8f' % (input_type, out, d)
     for out in failed:
         print 'Energy comparison for {0} output FAILED'.format(out)
+    print ''
+    print '======================================================================='
+    # insert error code for failed evaluations
+    diff = diff.tolist()
+    for i in failed_i:
+        diff.insert(i,4)
     return diff
 
 def combine_energy_results(e_in, e_out):

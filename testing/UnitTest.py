@@ -1,3 +1,4 @@
+import traceback
 import sys
 import argparse
 import glob
@@ -13,6 +14,7 @@ DES_IN = './Inputs/Desmond/UnitTest'
 GRO_IN = './Inputs/Gromacs/UnitTest' 
 LMP_IN = './Inputs/Lammps/UnitTest'
 OUTPUT_DIR = 'UnitTestOutput'
+N_FORMATS = 3
 
 def parse_args():
     parser = argparse.ArgumentParser(prog='PROG',
@@ -70,47 +72,28 @@ def test_desmond(args):
     files = [x for x in files if not x.endswith('-out.cms')] 
     results = []
 
-    odir = '%s/DesmondToDesmond' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
+    basedir = '%s/FromDesmond' % OUTPUT_DIR
+    if not os.path.isdir(basedir):
+        os.mkdir(basedir)
+
     for f in files:
         try:
-            flags = ['--des_in', f, '--desmond', '--odir', odir]
+            prefix = f[f.rfind('/') + 1:-4]
+            odir = '%s/%s' % (basedir, prefix)
+            if not os.path.isdir(odir):
+                os.mkdir(odir)
+            flags = ['--des_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
             flags = add_flags(args, flags)
             print 'converting %s to desmond file format with command' % f
             print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/DesmondToGromacs' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for f in files:
-        try:
-            flags = ['--des_in', f, '--gromacs', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to gromacs file format with command' % f
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/DesmondToLammps' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for f in files:
-        try:
-            flags = ['--des_in', f, '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to lammps file format with command' % f
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
+            diff = convert.main(flags) # reuses code from convert.py
+            if type(diff) is int: # a status code
+                results += [diff]*3 
+            else: # the difference in potential if energy evaluation suceeds
+                results += diff
+        except Exception as e:
+            print traceback.format_exc()
+            results += [-1,-1,-1]
     return files, results
 
 def test_gromacs(args):
@@ -118,94 +101,54 @@ def test_gromacs(args):
     top_files = glob.glob('%s/*/*.top' % GRO_IN) # return list of files that match the string
     results = []
 
-    odir = '%s/GromacsToDesmond' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
+    basedir = '%s/FromGromacs' % OUTPUT_DIR
+    if not os.path.isdir(basedir):
+        os.mkdir(basedir)
     for g, t in zip(gro_files, top_files):
         try:
-            flags = ['--gro_in', g, t, '--desmond', '--odir', odir]
+            prefix = g[g.rfind('/') + 1:-4]
+            odir = '%s/%s' % (basedir, prefix)
+            if not os.path.isdir(odir):
+                os.mkdir(odir)
+            flags = ['--gro_in', g, t, '--desmond', '--gromacs', '--lammps', '--odir', odir]
             flags = add_flags(args, flags)
             print 'converting {0}, {1} to desmond file format with command'.format(g,t)
             print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/GromacsToGromacs' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for g, t in zip(gro_files, top_files):
-        try:
-            flags = ['--gro_in', g, t, '--gromacs', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting {0}, {1} to gromacs file format with command'.format(g,t) 
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/DesmondToLammps' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for g, t in zip(gro_files, top_files):
-        try:
-            flags = ['--gro_in', g, t, '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting {0}, {1} to lammps file format with command'.format(g,t)
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
+            diff = convert.main(flags) # reuses code from convert.py
+            if type(diff) is int: # a status code
+                results += [diff]*3 
+            else: # the difference in potential if energy evaluation suceeds
+                results += diff
+        except Exception as e:
+            print traceback.format_exc()
+            results += [-1,-1,-1]
     return gro_files, results
 
 def test_lammps(args):
     files = glob.glob('%s/*/*.lmp' % LMP_IN) # return list of files that match the string
     results = []
 
-    odir = '%s/LammpsToDesmond' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
+    basedir = '%s/FromLammps' % OUTPUT_DIR
+    if not os.path.isdir(basedir):
+        os.mkdir(basedir)
     for f in files:
         try:
-            flags = ['--lmp_in', f, '--desmond', '--odir', odir]
+            prefix = f[f.rfind('/') + 1:-4]
+            odir = '%s/%s' % (basedir, prefix)
+            if not os.path.isdir(odir):
+                os.mkdir(odir)
+            flags = ['--lmp_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
             flags = add_flags(args, flags)
             print 'converting %s to desmond file format with command' % f
             print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/LammpsToGromacs' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for f in files:
-        try:
-            flags = ['--lmp_in', f, '--gromacs', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to gromacs file format with command' % f
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
-
-    odir = '%s/LammpsToLammps' % OUTPUT_DIR
-    if not os.path.isdir(odir):
-        os.mkdir(odir)
-    for f in files:
-        try:
-            flags = ['--lmp_in', f, '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to lammps file format with command' % f
-            print 'python convert.py', ' '.join(flags)
-            rms = convert.main(flags) # reuses code from convert.py
-            results.append(rms) 
-        except:
-            results.append(-1)
+            diff = convert.main(flags) # reuses code from convert.py
+            if type(diff) is int: # a status code
+                results += [diff]*3 
+            else: # the difference in potential if energy evaluation suceeds
+                results += diff
+        except Exception as e:
+            print traceback.format_exc()
+            results += [-1,-1,-1]
     return files, results
 
 def summarize_results(input_type, files, results):
@@ -220,34 +163,36 @@ def summarize_results(input_type, files, results):
             results[i] = 'Failed at evaluting energy of input'
         elif results[i] == 4:
             results[i] = 'Failed at evaluating energy of output'
+        elif results[i] == -1:
+            results[i] = 'Bug in UnitTest script'
 
     col1_width = max(len(x) for x in files)
     col2_width = max(len(str(x)) for x in results)
-    col2_width = max(col2_width,16) # 9 is length of RMS/Error
+    col2_width = max(col2_width,28) # 28 is length of Status/Potential Energy Diff
     n = len(files)
 
-    des_res = results[0:n]
+    des_res = results[::N_FORMATS]
     print ''
-    print '*'*15 + 'Results for {0} to Desmond Conversion'.format(input_type) + '*'*15
-    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
+    print '*'*15, 'Results for {0} to Desmond Conversion'.format(input_type), '*'*15
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/Potential Energy Diff', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, des_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
     print ''
 
-    gro_res = results[n:2*n]
+    gro_res = results[1:][::N_FORMATS]
     print ''
-    print '*'*15 + 'Results for {0} to Gromacs Conversion'.format(input_type) + '*'*15  
-    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
+    print '*'*15, 'Results for {0} to Gromacs Conversion'.format(input_type), '*'*15  
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/Potential Energy Diff', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, gro_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
     print ''
 
-    lmp_res = results[2*n::]
+    lmp_res = results[2:][::N_FORMATS]
     print ''
-    print '*'*15 + 'Results for {0} to Lammps Conversion'.format(input_type) + '*'*15
-    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/RMS Error', col2_width)
+    print '*'*15, 'Results for {0} to Lammps Conversion'.format(input_type), '*'*15
+    print '{:{}}   {:{}}'.format('File', col1_width, 'Status/Potential Energy Diff', col2_width)
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, lmp_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
