@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 2
 
    system
+   molecule
+   moleculetype
+   atom
 
 Indices and tables
 ==================

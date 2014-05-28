@@ -1,4 +1,4 @@
-\documentclass[12pt]{book}
+\documentclass[10pt]{book}
 \usepackage[margin = 1in]{geometry}
 \usepackage{hyperref}
 \usepackage{graphicx}
@@ -8,7 +8,6 @@
 \pagestyle{fancy}
 \usepackage[style=chem-acs, backend=biber]{biblatex}
 
-\pagestyle{fancy}
 \fancyhead{}
 \setlength{\headheight}{15pt}
 
@@ -39,11 +38,20 @@
 
 \section{Prerequisites}
 
-\par GMXLIB, gromacs binary, python 2.7
+\par python 2.7.x
 
 \section{Installation}
 
 \par Fill in this section after we create the egg.
+
+\section{Abstract Representation}
+
+\paragraph{System Objects} The InterMol abstract representation serves as an intermediate conversion layer between any two simulation packages. The representation is a custom build database to generally store coordinate, and force field parameter for a simulation. Any MD simulation consists of sets of molecules in a simulation box. A list of all \texttt{Molecules} in the system as well as box parameters, and other system configuration settings are stored in the \texttt{System} object. 
+
+\par Each \texttt{Molecule} is a list of \texttt{Atom}s which store the name, position, velocity information. as well as the basic atom specific parameters such as $\sigma$ and $\epsilon$ from the LJ-potential or the net charge, and mass. The bonded interactions are stored in a \texttt{MoleculeType} each type of molecule in the system is binned into its corresponding \texttt{MoleculeType}. All of the bonds, pairs, angles, dihedrals etc. are stored as hashed maps for quick lookup. 
+
+\par In between each of these custom objects, the basic parameters of any general MD simulation can be represented.
+
 
 \printbibliography
 \end{document}
