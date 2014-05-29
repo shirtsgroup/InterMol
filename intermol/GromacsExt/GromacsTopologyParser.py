@@ -1079,7 +1079,7 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         for j in range(len(split)):
                             if split[0] < split[j]:
-                                newExclusion = Exclusions([split[0],split[j]])
+                                newExclusion = Exclusions([int(split[0]),int(split[j])])
                                 currentMoleculeType.exclusions.add(newExclusion)
 
 
@@ -1347,7 +1347,8 @@ class GromacsTopologyParser(object):
         # [ atomtypes ]
         lines.append('[ atomtypes ]\n')
         lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
-        for atomtype in System._sys._atomtypes.itervalues():
+        atomtypelist = sorted(System._sys._atomtypes.itervalues(), key=lambda x: x.atomtype)
+        for atomtype in atomtypelist:
             if atomtype.atomtype.isdigit():
                 atomtype.atomtype = "LMP_" + atomtype.atomtype
             if atomtype.bondtype.isdigit():
@@ -1377,7 +1378,8 @@ class GromacsTopologyParser(object):
         if System._sys._nonbonded:
             # [ nonbond_params ]
             lines.append('[ nonbond_params ]\n')
-            for nonbonded in System._sys._nonbonded.itervalues():
+            nonbondedlist = sorted(moleculeType.bondForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2))
+            for nonbonded in nonbondedlist:
                 if System._sys._combinationRule == 1:
                     lines.append('{0:6s} {1:6s} {2:3d} {3:18.8e} {4:18.8e}\n'.format(
                             nonbonded.atom1, nonbonded.atom2, nonbonded.type,
@@ -1391,7 +1393,8 @@ class GromacsTopologyParser(object):
         lines.append('\n')
 
         # [ moleculetype]
-        for moleculeType in System._sys._molecules.itervalues():
+        moleculeTypelist = sorted(System._sys._molecules.itervalues(), key=lambda x: x.name)        
+        for moleculeType in moleculeTypelist:
             lines.append('[ moleculetype ]\n')
             # gromacs can't handle spaces in the molecule name
             printname = moleculeType.name
@@ -1442,7 +1445,7 @@ class GromacsTopologyParser(object):
                 # [ bonds ]
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
-                bondlist = sorted(moleculeType.bondForceSet.itervalues(), key=lambda x: x.atom1)
+                bondlist = sorted(moleculeType.bondForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2))
                 for bond in bondlist:
                     if isinstance(bond, Bond):
                         b_type = 1
@@ -1469,7 +1472,8 @@ class GromacsTopologyParser(object):
                 # [ pair ]
                 lines.append('[ pairs ]\n')
                 lines.append(';  ai    aj   funct\n')
-                for pair in moleculeType.pairForceSet.itervalues():
+                pairlist = sorted(moleculeType.pairForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2))
+                for pair in pairlist:
 
                     if isinstance(pair, AbstractPair):
                         p_type = 1
@@ -1487,7 +1491,7 @@ class GromacsTopologyParser(object):
                 lines.append('[ angles ]\n')
                 lines.append(';   ai     aj     ak    funct   theta         cth\n')
 
-                anglelist = sorted(moleculeType.angleForceSet.itervalues(), key=lambda x: x.atom1)
+                anglelist = sorted(moleculeType.angleForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3))
                 for angle in anglelist:
                     if isinstance(angle, Angle):
                         a_type = 1
@@ -1536,7 +1540,7 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-                dihedrallist = sorted(moleculeType.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
+                dihedrallist = sorted(moleculeType.dihedralForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
                 for dihedral in dihedrallist:
 
                     # this atom index will be the same for all of types.
@@ -1632,7 +1636,8 @@ class GromacsTopologyParser(object):
             if moleculeType.exclusions:
                 # [ exclusions ]
                 lines.append('[ exclusions ]\n')
-                for exclusion in moleculeType.exclusions.itervalues():
+                exclusionlist = sorted(moleculeType.exclusions.itervalues(), key=lambda x: (x.exclusions[0], x.exclusions[1]))
+                for exclusion in exclusionlist:
                     lines.append('%6s%6s\n'
                                  % (exclusion.exclusions[0],
                                     exclusion.exclusions[1]))

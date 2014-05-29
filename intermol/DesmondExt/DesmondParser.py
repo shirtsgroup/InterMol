@@ -711,7 +711,7 @@ class DesmondParser():
                 for j in range(ff_number):
                     temp = entry_values[j].split()
                     temp.remove(temp[0])
-                    newExclusion = Exclusions(temp)
+                    newExclusion = Exclusions(map(int,temp))  # convert to integers
                     currentMoleculeType.exclusions.add(newExclusion)
 
             elif match.group('restraints'):
