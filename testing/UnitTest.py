@@ -98,6 +98,7 @@ def test_desmond(args):
 
 def test_gromacs(args):
     gro_files = glob.glob('%s/*/*.gro' % GRO_IN) # return list of files that match the string
+    gro_files = [x for x in gro_files if not x.endswith('out.gro')] 
     top_files = glob.glob('%s/*/*.top' % GRO_IN) # return list of files that match the string
     results = []
 
