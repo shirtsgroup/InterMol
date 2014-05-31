@@ -88,7 +88,6 @@ def main(args=''):
     System._sys = System('InterMol')
     print 'System initialized'
 
-
     # --------------- PROCESS INPUTS ----------------- #
 
     if args.des_in: # input type is desmond
@@ -129,8 +128,7 @@ def main(args=''):
         from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
         import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
         print "Reading in Gromacs topology {0}...".format(top_in)
-        if not GromacsTopologyParser._GroTopParser:
-            GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
+        GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
         try:
             GromacsTopologyParser._GroTopParser.parseTopology(top_in)
             print "Topology loaded\n"

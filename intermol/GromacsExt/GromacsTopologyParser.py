@@ -743,11 +743,8 @@ class GromacsTopologyParser(object):
                         newAngleForce = None
 
                         if len(split) == 4:
-                            #atomtype1 = currentMolecule._atoms[int(split[0])-1].getAtomType()[0]
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
-                            #atomtype2 = currentMolecule._atoms[int(split[1])-1].getAtomType()[0]
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
-                            #atomtype3 = currentMolecule._atoms[int(split[2])-1].getAtomType()[0]
                             atomtype3 = currentMolecule._atoms[int(split[2])-1].bondtype
                             tempType = AbstractAngleType(atomtype1, atomtype2, atomtype3)
                             angleType = self.angletypes.get(tempType)
@@ -760,7 +757,7 @@ class GromacsTopologyParser(object):
                                 split.append(angleType.theta)
                                 split.append(angleType.k)
 
-                            if isinstance(angleType, G96BondType):
+                            if isinstance(angleType, G96AngleType):
                                 split.append(angleType.theta)
                                 split.append(angleType.k)
 
