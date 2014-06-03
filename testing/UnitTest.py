@@ -153,7 +153,6 @@ def test_lammps(args):
     return files, results
 
 def summarize_results(input_type, files, results):
-    pdb.set_trace()
     for i in range(len(results)):
         if results[i] == 0:
             results[i] = 'Converted'
