@@ -1,7 +1,7 @@
 from intermol.Decorators import *
 from AbstractBond import *
 
-class Morse(AbstractBond):
+class MorseBond(AbstractBond):
 
     @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole, units.nanometers**(-1))
     def __init__(self, atom1, atom2, length, D, beta):

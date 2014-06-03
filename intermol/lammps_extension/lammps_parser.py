@@ -475,7 +475,7 @@ class LammpsParser(object):
                 r = self.bond_types[coeff_num][3]
                 D = self.bond_types[coeff_num][1]
                 beta = self.bond_types[coeff_num][2]
-                new_bond_force = Morse(
+                new_bond_force = MorseBond(
                         fields[2], fields[3],
                         r, D, beta)
             self.current_mol_type.bondForceSet.add(new_bond_force)
@@ -654,7 +654,7 @@ class LammpsParser(object):
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
-                    elif isinstance(bond, Morse):
+                    elif isinstance(bond, MorseBond):
                         style = 'morse'
                         temp = MorseBondType(atomtype1, atomtype2,
                                 bond.length, bond.D, bond.beta)

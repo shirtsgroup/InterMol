@@ -23,7 +23,7 @@ __all__ = ["AbstractAngle",
     "LJ2PairCR23",
     "LJNBPairCR1",
     "LJNBPairCR23",
-    "Morse",
+    "MorseBond",
     "OrientationRestraint",
     "PositionRestraint",
     "DihedralTrigDihedral",       
@@ -67,7 +67,7 @@ from LJ2PairCR1 import LJ2PairCR1
 from LJ2PairCR23 import LJ2PairCR23
 from LJNBPairCR1 import LJNBPairCR1
 from LJNBPairCR23 import LJNBPairCR23
-from Morse import Morse
+from MorseBond import MorseBond
 from OrientationRestraint import OrientationRestraint
 from PositionRestraint import PositionRestraint
 from ProperDihedral9 import ProperDihedral9

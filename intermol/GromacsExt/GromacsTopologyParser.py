@@ -338,7 +338,7 @@ class GromacsTopologyParser(object):
                                     split[1],
                                     split[2],
                                     float(split[4]) * units.degrees,
-                                    float(split[5]) * units.kilojoules_per_mole * units.nanometers**(-2),
+                                    float(split[5]) * units.kilojoules_per_mole * units.radians**(-2),
                                     float(split[6]) * units.nanometers,
                                     float(split[7]) * units.kilojoules_per_mole * units.nanometers**(-2))
 
@@ -349,10 +349,10 @@ class GromacsTopologyParser(object):
                                     split[2],
                                     float(split[4]) * units.degrees,
                                     float(split[5]) * units.kilojoules_per_mole,
-                                    float(split[6]) * units.kilojoules_per_mole * units.radians*(-1),
-                                    float(split[7]) * units.kilojoules_per_mole * units.radians*(-2),
-                                    float(split[8]) * units.kilojoules_per_mole * units.radians*(-3),
-                                    float(split[9]) * units.kilojoules_per_mole * units.radians*(-4))
+                                    float(split[6]) * units.kilojoules_per_mole * units.radians**(-1),
+                                    float(split[7]) * units.kilojoules_per_mole * units.radians**(-2),
+                                    float(split[8]) * units.kilojoules_per_mole * units.radians**(-3),
+                                    float(split[9]) * units.kilojoules_per_mole * units.radians**(-4))
 
                         else:
                             print "could not find angle type"
@@ -633,7 +633,7 @@ class GromacsTopologyParser(object):
 
                             elif isinstance(bondType, G96BondType):
                                 split.append(bondType.length)
-                                split.append(bondType.l)
+                                split.append(bondType.k)
 
                             elif isinstance(bondType, CubicBondType):
                                 split.append(bondType.length)
@@ -703,7 +703,7 @@ class GromacsTopologyParser(object):
                                         split[4],
                                         split[5])
 
-                        if int(split[2]) == 5:
+                        if int(split[2]) == 6:
                             try:
                                 newBondForce = HarmonicBond(int(split[0]),
                                         int(split[1]),
@@ -771,6 +771,7 @@ class GromacsTopologyParser(object):
                                 split.append(angleType.r2)
                                 split.append(angleType.r3)
                                 split.append(angleType.k)
+
                             if isinstance(angleType, UreyBradleyAngleType):
                                 split.append(angleType.theta)
                                 split.append(angleType.k)
@@ -858,9 +859,9 @@ class GromacsTopologyParser(object):
                                         int(split[1]),
                                         int(split[2]),
                                         float(split[4]) * units.degrees,
-                                        float(split[5]) * units.kilojoules_per_mole,
+                                        float(split[5]) * units.kilojoules_per_mole * units.radians**(-2),
                                         float(split[6]) * units.nanometers,
-                                        float(split[7]) * units.kilojoules_per_mole)
+                                        float(split[7]) * units.kilojoules_per_mole * units.nanometers**(-2))
                             except:
                                 newAngleForce = UreyBradleyAngle(int(split[0]),
                                         int(split[1]),
@@ -873,7 +874,7 @@ class GromacsTopologyParser(object):
                         # Quartic
                         elif int(split[3]) == 6:
                             try:
-                                newAngleForce = Angle(int(split[0]),
+                                newAngleForce = QuarticAngle(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         float(split[4]) * units.degrees,
@@ -883,7 +884,7 @@ class GromacsTopologyParser(object):
                                         float(split[8]) * units.kilojoules_per_mole * units.radians**(-3),
                                         float(split[9]) * units.kilojoules_per_mole * units.radians**(-4))
                             except:
-                                newAngleForce = Angle(int(split[0]),
+                                newAngleForce = QuarticAngle(int(split[0]),
                                         int(split[1]),
                                         int(split[2]),
                                         split[4],
@@ -907,7 +908,6 @@ class GromacsTopologyParser(object):
                         dtype = int(split[4])
                         improper = (dtype == 4) or (dtype == 2)
                         if len(split) == 5:
-
 
                             atomtype1 = currentMolecule._atoms[int(split[0])-1].bondtype
                             atomtype2 = currentMolecule._atoms[int(split[1])-1].bondtype
@@ -945,7 +945,7 @@ class GromacsTopologyParser(object):
                             fc6 = dihedralType.fc6
 
                         if isinstance(dihedralType, ImproperHarmonicDihedralType):
-                            xi = dihedralType.xi
+                            phi = dihedralType.xi
                             k = dihedralType.k
 
                         atom1 = int(split[0])
@@ -970,12 +970,13 @@ class GromacsTopologyParser(object):
                         # Improper Dihedral 2
 
                         elif dtype == 2:
+
                             if nentries > 5:
                                 phi = float(split[5]) * units.degrees
                                 k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
 
                             newDihedralForce = ImproperHarmonicDihedral(
-                                atom1, atom2, atom3, atom4, xi, k)
+                                atom1, atom2, atom3, atom4, phi, k)
 
                         # RBDihedral
                         elif dtype == 3:
@@ -1459,7 +1460,25 @@ class GromacsTopologyParser(object):
                                    bond.atom2,
                                    b_type,
                                    bond.length.in_units_of(units.nanometers)._value,
-                                   bond.k.in_units_of(units.kilojoules_per_mole*units.nanometers**(-2))._value))
+                                   bond.k.in_units_of(units.kilojoules_per_mole*units.nanometers**(-4))._value))
+                    elif isinstance(bond, MorseBond):
+                        b_type = 3
+                        lines.append('%6d%7d%4d%5.8f%5.8f%5.8f\n'
+                                % (bond.atom1,
+                                   bond.atom2,
+                                   b_type,
+                                   bond.length.in_units_of(units.nanometers)._value,
+                                   bond.D.in_units_of(units.kilojoules_per_mole)._value,
+                                   bond.beta.in_units_of(units.nanometers**(-1))._value))
+                    elif isinstance(bond, CubicBond):
+                        b_type = 4
+                        lines.append('%6d%7d%4d%5.8f%5.8f%5.8f\n'
+                                % (bond.atom1,
+                                   bond.atom2,
+                                   b_type,
+                                   bond.length.in_units_of(units.nanometers)._value,
+                                   bond.C2.in_units_of(units.kilojoules_per_mole * units.nanometers**(-2))._value,
+                                   bond.C3.in_units_of(units.kilojoules_per_mole * units.nanometers**(-3))._value))
                     else:
                         print "ERROR (writeTopology): found unsupported bond type"
                 lines.append('\n')
@@ -1490,9 +1509,9 @@ class GromacsTopologyParser(object):
 
                 anglelist = sorted(moleculeType.angleForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3))
                 for angle in anglelist:
+                    atomindex = "%6d%7d%7d" % (angle.atom1,angle.atom2,angle.atom3)
                     if isinstance(angle, Angle):
                         a_type = 1
-                        atomindex = "%6d%7d%7d" % (angle.atom1,angle.atom2,angle.atom3)
                         lines.append('%s%4d%18.8e%18.8e\n'
                                 % (atomindex,
                                    a_type,
@@ -1506,7 +1525,7 @@ class GromacsTopologyParser(object):
                                         angle.theta.in_units_of(units.degrees)._value,
                                         angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value,
                                         angle.r.in_units_of(units.angstroms)._value,
-                                        angle.kUB.in_units_of(units.kilojoules_per_mole)._value))
+                                        angle.kUB.in_units_of(units.kilojoules_per_mole*units.nanometers**(-2))._value))
                     else:
                         print "ERROR (writeTopology): found unsupported angle type"
                 lines.append('\n')
