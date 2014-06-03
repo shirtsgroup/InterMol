@@ -215,7 +215,6 @@ def main():
     if args.desmond:
         summarize_results('Desmond', des_input_files, results_des)
     if args.gromacs:
-        pdb.set_trace()
         summarize_results('Gromacs', gro_input_files, results_gro)
     if args.lammps:
         summarize_results('Lammps', lmp_input_files, results_lmp)
