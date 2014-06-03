@@ -12,6 +12,13 @@ from gromacs_energies import gromacs_energies
 from lammps_energies import lammps_energies
 import helper_functions
 
+# global constants
+
+DES_POS = 0
+GRO_POS = 1
+LMP_POS = 2
+N_FILETYPES = 3
+
 def get_parser():
     parser = argparse.ArgumentParser(description = 'Perform a file conversion')
 
@@ -90,6 +97,7 @@ def main(args=''):
 
     # --------------- PROCESS INPUTS ----------------- #
 
+    results = [1]*N_FILETYPES  # failed on read, used in UnitTest.py
     if args.des_in: # input type is desmond
         # check if input exists
         if not os.path.isfile(args.des_in[0]):
@@ -100,10 +108,10 @@ def main(args=''):
         print 'Reading in Desmond structure {0}...'.format(args.des_in[0])
         try:
             DesmondParser.readFile(args.des_in[0], args.verbose)
+            results = [0]*N_FILETYPES # OK so far
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            return 1 # failed on read, used in UnitTest.py
         print 'Sructure loaded\n'
 
     elif args.gro_in: # input type is gromacs
@@ -134,10 +142,10 @@ def main(args=''):
             print "Topology loaded\n"
             print "Reading in Gromacs structure {0}...".format(gro_in)
             GromacsStructureParser.readStructure(gro_in)
+            results = [0]*N_FILETYPES # OK so far
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            return 1 # failed on read, used in UnitTest.py
         print "Structure loaded\n"
 
     elif args.lmp_in: # input type is lammps
@@ -150,10 +158,10 @@ def main(args=''):
         try:
             lammps_parser = LammpsParser()
             lammps_parser.read_system(args.lmp_in[0])
+            results = [0]*N_FILETYPES # OK so far
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-            return 1 # failed on read, used in UnitTest.py
         print "Data loaded\n"
 
     else:
@@ -168,14 +176,21 @@ def main(args=''):
         oname = args.oname
     oname = os.path.join(args.odir, oname) # prepend output directory to oname
 
-    try:
-        if args.desmond:
+    if args.desmond and results[DES_POS]==0:  # Desmond OK so far
+        results[DES_POS] == 2 # assume bad on write
+        try:
             print 'Converting to Desmond...writing %s.cms...' % oname
             from intermol.DesmondExt.DesmondParser import DesmondParser
             DesmondParser = DesmondParser()
             DesmondParser.writeFile('%s.cms' % oname, args.verbose)
+            results[DES_POS] = 0 # didn't fail on write, OK so far
+        except Exception as err:
+            print 'Failed on write for Desmond'
+            print traceback.format_exc()
 
-        if args.gromacs:
+    if args.gromacs and results[GRO_POS]==0:  #Gromacs OK so far
+        results[GRO_POS] == 2 # assume bad on write
+        try:
             print 'Converting to Gromacs...writing %s.gro, %s.top...' % (oname, oname)
             import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
             GromacsStructureParser.writeStructure('%s.gro' % oname)
@@ -183,18 +198,22 @@ def main(args=''):
             if not GromacsTopologyParser._GroTopParser:
                 GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
             GromacsTopologyParser._GroTopParser.writeTopology('%s.top' % oname)
+            results[GRO_POS] = 0
+        except Exception as err:
+            print 'Failed on write for Gromacs'
+            print traceback.format_exc()
 
-        if args.lammps:
+    if args.lammps and results[LMP_POS]==0:  # LAMMPS OK so far
+        results[LMP_POS] == 2 # assume bad on write
+        try:
             print 'Converting to Lammps...writing %s.lmp...' % oname
             from intermol.lammps_extension.lammps_parser import LammpsParser
             lammps_parser = LammpsParser()
             lammps_parser.write('%s.lmp' % oname)
-
-    except Exception as err:
-        print 'Failed on write'
-        print traceback.format_exc()
-        return 2 # failed on write, used in UnitTest.py
-
+            results[LMP_POS] = 0
+        except Exception as err:
+            print 'Failed on write for LAMMPS'
+            print traceback.format_exc()
 
     # ------------ ENERGY COMPARISON ----------- #
     # to do: remove hardcoded parmeter filenames
@@ -221,7 +240,9 @@ def main(args=''):
         except Exception as err:
             print 'Failed at evaluating energy of input file'
             print traceback.format_exc()
-            return 3 # failed at input energy, used in UnitTest.py
+            return [3]*N_FILETYPES # failed at input energy, used in UnitTest.py
+                                   # input is poorly formatted, overwrite the other errors.
+                                   # We can't expect conversion if the input energies are bad.
 
         # evaluate output energy
         output_type = []
@@ -276,7 +297,7 @@ def main(args=''):
         diff = helper_functions.print_multiple_energy_results(e_in, e_out, input_type, output_type)
         return diff # difference in potential energy for UnitTest.py script
 
-    return 0 # converted sucessfully (no energy check)
+    return results # converted sucessfully (no energy check)
 
 if __name__ == '__main__':
     main()

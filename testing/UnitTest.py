@@ -87,8 +87,8 @@ def test_desmond(args):
             print 'converting %s to desmond file format with command' % f
             print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff) is int: # a status code
-                results += [diff]*3 
+            if type(diff[0]) is int: # a status code
+                results.extend(diff)
             else: # the difference in potential if energy evaluation suceeds
                 results += diff
         except Exception as e:
@@ -116,8 +116,8 @@ def test_gromacs(args):
             print 'converting {0}, {1} to desmond file format with command'.format(g,t)
             print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff) is int: # a status code
-                results += [diff]*3 
+            if type(diff[0]) is int: # a status code
+                results.extend(diff)
             else: # the difference in potential if energy evaluation suceeds
                 results += diff
         except Exception as e:
@@ -143,8 +143,8 @@ def test_lammps(args):
             print 'converting %s to desmond file format with command' % f
             print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff) is int: # a status code
-                results += [diff]*3 
+            if type(diff[0]) is int: # a status code
+                results.extend(diff)
             else: # the difference in potential if energy evaluation suceeds
                 results += diff
         except Exception as e:
@@ -153,6 +153,7 @@ def test_lammps(args):
     return files, results
 
 def summarize_results(input_type, files, results):
+    pdb.set_trace()
     for i in range(len(results)):
         if results[i] == 0:
             results[i] = 'Converted'
@@ -215,6 +216,7 @@ def main():
     if args.desmond:
         summarize_results('Desmond', des_input_files, results_des)
     if args.gromacs:
+        pdb.set_trace()
         summarize_results('Gromacs', gro_input_files, results_gro)
     if args.lammps:
         summarize_results('Lammps', lmp_input_files, results_lmp)
