@@ -90,7 +90,8 @@ class LammpsParser(object):
                 'Pair Coeffs': self.parse_pair_coeffs,
                 'Bond Coeffs': self.parse_bond_coeffs,
                 'Angle Coeffs': self.parse_angle_coeffs,
-                'Dihedral Coeffs': self.parse_dihedral_coeffs}
+                'Dihedral Coeffs': self.parse_dihedral_coeffs,
+                'Improper Coeffs': self.parse_improper_coeffs}
 
         with open(data_file, 'r') as data_lines:
             self.molecule_name = next(data_lines).strip()
@@ -123,7 +124,8 @@ class LammpsParser(object):
         parsable_keywords = {'Atoms': self.parse_atoms,
                 'Bonds': self.parse_bonds,
                 'Angles': self.parse_angles,
-                'Dihedrals': self.parse_dihedrals}
+                'Dihedrals': self.parse_dihedrals,
+                'Impropers': self.parse_impropers}
 
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
@@ -401,6 +403,33 @@ class LammpsParser(object):
             else:
                 raise ValueError("No entries found in 'dihedral_style'.")
 
+    def parse_improper_coeffs(self, data_lines):
+        """Read improper coefficients from data file."""
+        next(data_lines)  # toss out blank line
+        self.improper_types = dict()
+        for line in data_lines:
+            if not line.strip():
+                break  # found another blank line
+            fields = line.split()
+            if len(self.improper_style) == 1:
+                if 'harmonic' in self.improper_style:
+                    self.improper_types[int(fields[0])] = [
+                            'harmonic',
+                            float(fields[1]) * self.ENERGY / self.RAD**2,
+                            float(fields[2]) * self.DEGREE]
+            elif len(self.improper_style) > 1:
+                style = fields[1]
+                if style not in self.improper_style:
+                    raise Exception("Improper type found in Improper Coeffs that "
+                            "was not specified in improper_style: {0}".format(style))
+                if style == 'harmonic':
+                    self.improper_types[int(fields[0])] = [
+                            style,
+                            float(fields[1]) * self.ENERGY / self.RAD**2,
+                            float(fields[2]) * self.DEGREE]
+            else:
+                raise ValueError("No entries found in 'improper_style'.")
+
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
         next(data_lines)  # toss out blank line
@@ -518,6 +547,24 @@ class LammpsParser(object):
                 new_dihed_force = FourierDihedral(
                         fields[2], fields[3], fields[4], fields[5],
                         cs[0], cs[1], cs[2], cs[3])
+            self.current_mol_type.dihedralForceSet.add(new_dihed_force)
+
+    def parse_impropers(self, data_lines):
+        """Read impropers from data file."""
+        next(data_lines)  # toss out blank line
+        for line in data_lines:
+            if not line.strip():
+                break  # found another blank line
+            fields = [int(field) for field in line.split()]
+
+            new_dihed_force = None
+            coeff_num = int(fields[1])
+            if  self.improper_types[coeff_num][0] == 'harmonic':
+                k = self.improper_types[fields[1]][1]
+                xi = self.improper_types[fields[1]][2]
+                new_dihed_force = ImproperHarmonicDihedral(
+                        fields[2], fields[3], fields[4], fields[5],
+                        xi, k)
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real', verbose=False):
@@ -677,8 +724,8 @@ class LammpsParser(object):
                             bond.atom1 + offset,
                             bond.atom2 + offset))
                     bond_style.add(style)
-                    if len(bond_style) > 1:
-                        warn("More than one bond style found!")
+                if len(bond_style) > 1:
+                    warn("More than one bond style found!")
                 if verbose:
                     print "        Done. ({0:.2f} s)".format(time.time() - start)
 
@@ -716,8 +763,8 @@ class LammpsParser(object):
                             angle.atom3 + offset))
 
                     angle_style.add(style)
-                    if len(angle_style) > 1:
-                        warn("More than one angle style found!")
+                if len(angle_style) > 1:
+                    warn("More than one angle style found!")
                 if verbose:
                     print "        Done. ({0:.2f} s)".format(time.time() - start)
 
@@ -725,6 +772,7 @@ class LammpsParser(object):
                 if verbose:
                     start = time.time()
                     print "        Writing dihedrals..."
+
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[dihedral.atom2 - 1].bondtype
@@ -735,15 +783,22 @@ class LammpsParser(object):
                         coefficients = [dihedral.fc1, dihedral.fc2, dihedral.fc3,
                                 dihedral.fc4, dihedral.fc5, dihedral.fc6]
                         if dihedral.improper:
+                            found_nonzero = False
                             for n, coeff in enumerate(coefficients):
                                 if coeff._value != 0.0:
+                                    if found_nonzero == False:
+                                        found_nonzero = True
+                                    else:
+                                        raise ValueError("Found more than one nonzero "
+                                                "coefficient in improper trigonal dihedral!")
                                     style = 'charmm'
                                     temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
                                             atomtype3, atomtype4,
                                             dihedral.phi, coeff, n + 1)
                                     if temp not in dihedral_type_dict:
                                         dihedral_type_dict[temp] = dih_type_i
-                                        # multiple alternating powers by -1 for sign convention
+                                        # NOTE: weighting factor assumed to be 0.0
+                                        # May need to add some additional checks here in the future
                                         dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18d} '
                                                     '{4:18d} {5:18.4f}\n'.format(
                                                 dih_type_i, style,
@@ -752,8 +807,22 @@ class LammpsParser(object):
                                                 int(dihedral.phi.in_units_of(units.degrees)._value),
                                                 0.0))
                                         dih_type_i += 1
+                                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                            i + j + 1,
+                                            dihedral_type_dict[temp],
+                                            dihedral.atom1 + offset,
+                                            dihedral.atom2 + offset,
+                                            dihedral.atom3 + offset,
+                                            dihedral.atom4 + offset))
+                                    dihedral_style.add(style)
 
                         else:
+                            # NOTE: the following logic could instead default to printing
+                            # out a series of charmm style dihedrals instead of attempting
+                            # to write a multi/harmonic. I presume one multi/harmonic vs.
+                            # multiple charmm dihedrals may be slightly (but probably
+                            # negligibly) faster but if anyone has a better reason to do
+                            # one or the other, please chime in!
                             rb_coeffs = ConvertDihedralFromDihedralTrigToRB(
                                     np.cos(dihedral.phi.in_units_of(units.radians)._value),
                                     dihedral.phi, dihedral.fc0, *coefficients)
@@ -784,34 +853,72 @@ class LammpsParser(object):
                                             -rb_coeffs[3].in_units_of(self.ENERGY)._value,
                                             rb_coeffs[4].in_units_of(self.ENERGY)._value))
                                     dih_type_i += 1
+                                dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                        i + j + 1,
+                                        dihedral_type_dict[temp],
+                                        dihedral.atom1 + offset,
+                                        dihedral.atom2 + offset,
+                                        dihedral.atom3 + offset,
+                                        dihedral.atom4 + offset))
+                                dihedral_style.add(style)
+
                             # If the 6th and/or 7th coefficients are non-zero, we decompose
                             # the dihedral into multiple CHARMM style dihedrals.
                             else:
-                                ncount = 0
-                                for coeff in coefficients:
-                                    if coeff._value != 0:
-                                        ncount += 1
-                                warn("Found unimplemented dihedral type for LAMMPS!")
-                                continue
+                                for n, coeff in enumerate(coefficients):
+                                    style = 'charmm'
+                                    temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
+                                            atomtype3, atomtype4,
+                                            dihedral.phi, coeff, n + 1)
+                                    if temp not in dihedral_type_dict:
+                                        dihedral_type_dict[temp] = dih_type_i
+                                        # NOTE: weighting factor assumed to be 0.0
+                                        # May need to add some additional checks here in the future
+                                        dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18d} '
+                                                    '{4:18d} {5:18.4f}\n'.format(
+                                                dih_type_i, style,
+                                                coeff.in_units_of(self.ENERGY)._value,
+                                                n + 1,
+                                                int(dihedral.phi.in_units_of(units.degrees)._value),
+                                                0.0))
+                                        dih_type_i += 1
+                                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                            i + j + 1,
+                                            dihedral_type_dict[temp],
+                                            dihedral.atom1 + offset,
+                                            dihedral.atom2 + offset,
+                                            dihedral.atom3 + offset,
+                                            dihedral.atom4 + offset))
+                                    dihedral_style.add(style)
 
                     elif isinstance(dihedral, ImproperHarmonicDihedral):
-                        warn("Found unimplemented dihedral type for LAMMPS!")
-                        continue
+                        stlye = 'harmonic'
+                        temp = ImproperHarmonicDihedralType(atomtype1, atomtype2,
+                                atomtype3, atomtype4, dihedral.xi, dihedral.k)
+                        if temp not in improper_type_dict:
+                            improper_type_dict[temp] = imp_type_i
+                            # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
+                            improper_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                                    imp_type_i, style,
+                                    0.5 * dihedral.k.in_units_of(self.ENERGY / self.RAD**2)._value,
+                                    dihedral.xi.in_units_of(self.DEGREE)._value))
+                            imp_type_i += 1
+                        improper_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                i + j + 1,
+                                improper_type_dict[temp],
+                                dihedral.atom1 + offset,
+                                dihedral.atom2 + offset,
+                                dihedral.atom3 + offset,
+                                dihedral.atom4 + offset))
+                        improper_style.add(style)
                     else:
                         raise Exception("InterMol expects all internally stored"
                                 " dihedrals to be of types ImproperHarmonic"
                                 " or DihedralTrig.")
-
-                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                            i + j + 1,
-                            dihedral_type_dict[temp],
-                            dihedral.atom1 + offset,
-                            dihedral.atom2 + offset,
-                            dihedral.atom3 + offset,
-                            dihedral.atom4 + offset))
-                    dihedral_style.add(style)
-                    if len(dihedral_style) > 1:
-                        warn("More than one dihedral style found!")
+                if len(dihedral_style) > 1:
+                    warn("More than one dihedral style found!")
+                if len(improper_style) > 1:
+                    warn("More than one improper style found!")
                 if verbose:
                     print "        Done. ({0:.2f} s)".format(time.time() - start)
 
