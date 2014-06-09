@@ -1523,7 +1523,7 @@ class GromacsTopologyParser(object):
                                         a_type,
                                         angle.theta.in_units_of(units.degrees)._value,
                                         angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value,
-                                        angle.r.in_units_of(units.angstroms)._value,
+                                        angle.r.in_units_of(units.nanometers)._value,
                                         angle.kUB.in_units_of(units.kilojoules_per_mole*units.nanometers**(-2))._value))
                     else:
                         print "ERROR (writeTopology): found unsupported angle type"
