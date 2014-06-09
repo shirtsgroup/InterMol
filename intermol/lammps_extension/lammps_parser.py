@@ -520,7 +520,7 @@ class LammpsParser(object):
                         cs[0], cs[1], cs[2], cs[3])
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
-    def write(self, data_file, unit_set='real', verbose=True):
+    def write(self, data_file, unit_set='real', verbose=False):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
@@ -731,25 +731,63 @@ class LammpsParser(object):
                     atomtype3 = molecule._atoms[dihedral.atom3 - 1].bondtype
                     atomtype4 = molecule._atoms[dihedral.atom4 - 1].bondtype
 
-                    if isinstance(dihedral, FourierDihedral):
-                        style = 'opls'
-                        temp = FourierDihedralType(atomtype1, atomtype2,
-                                atomtype3, atomtype4,
-                                dihedral.c1, dihedral.c1,
-                                dihedral.c2, dihedral.c3)
-                        if temp not in dihedral_type_dict:
-                            dihedral_type_dict[temp] = dih_type_i
-                            dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} {4:18.8f} {5:18.8f}\n'.format(
-                                    dih_type_i,
-                                    style,
-                                    dihedral.c1.in_units_of(self.ENERGY)._value,
-                                    dihedral.c2.in_units_of(self.ENERGY)._value,
-                                    dihedral.c3.in_units_of(self.ENERGY)._value,
-                                    dihedral.c4.in_units_of(self.ENERGY)._value))
-                            dih_type_i += 1
-                    else:
+                    if isinstance(dihedral, DihedralTrigDihedral):
+                        coefficients = [dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                dihedral.fc4, dihedral.fc5, dihedral.fc6]
+                        if dihedral.improper:
+                            for coeff in coefficients:
+                                if coeff._value != 0.0:
+                                    warn("Found unimplemented dihedral type for LAMMPS: ")
+                                    continue
+                        else:
+                            rb_coeffs = ConvertDihedralFromDihedralTrigToRB(
+                                    np.cos(dihedral.phi.in_units_of(units.radians)._value),
+                                    dihedral.phi, dihedral.fc0, *coefficients)
+
+                            # LAMMPS only supports multi/harmonic (Ryckaert-Bellemans)
+                            # up to 5 coefficients.
+                            if (dihedral.phi in [0*units.degrees, 180*units.degrees] and
+                                    rb_coeffs[5]._value == rb_coeffs[6]._value == 0.0):
+                                style ='multi/harmonic'
+                                temp = RBDihedralType(atomtype1, atomtype2,
+                                        atomtype3, atomtype4,
+                                        rb_coeffs[0],
+                                        rb_coeffs[1],
+                                        rb_coeffs[2],
+                                        rb_coeffs[3],
+                                        rb_coeffs[4],
+                                        0.0*units.kilojoules_per_mole,
+                                        0.0*units.kilojoules_per_mole)
+                                if temp not in dihedral_type_dict:
+                                    dihedral_type_dict[temp] = dih_type_i
+                                    # multiple alternating powers by -1 for sign convention
+                                    dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} '
+                                                '{4:18.8f} {5:18.8f} {6:18.8f}\n'.format(
+                                            dih_type_i,
+                                            style,
+                                            rb_coeffs[0].in_units_of(self.ENERGY)._value,
+                                            -rb_coeffs[1].in_units_of(self.ENERGY)._value,
+                                            rb_coeffs[2].in_units_of(self.ENERGY)._value,
+                                            -rb_coeffs[3].in_units_of(self.ENERGY)._value,
+                                            rb_coeffs[4].in_units_of(self.ENERGY)._value))
+                                    dih_type_i += 1
+                            # If the 6th and/or 7th coefficients are non-zero, we decompose
+                            # the dihedral into multiple CHARMM style dihedrals.
+                            else:
+                                ncount = 0
+                                for coeff in coefficients:
+                                    if coeff._value != 0:
+                                        ncount += 1
+                                warn("Found unimplemented dihedral type for LAMMPS!")
+                                continue
+
+                    elif isinstance(dihedral, ImproperHarmonicDihedral):
                         warn("Found unimplemented dihedral type for LAMMPS!")
                         continue
+                    else:
+                        raise Exception("InterMol expects all internally stored"
+                                " dihedrals to be of types ImproperHarmonic"
+                                " or DihedralTrig.")
 
                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
                             i + j + 1,
