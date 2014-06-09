@@ -27,7 +27,7 @@ class DihedralTrigType(AbstractDihedralType):
     def __init__(self, atom1, atom2, atom3, atom4, phi, fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper = False):
         """
         """
-        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4)
+        AbstractDihedralType.__init__(self, atom1, atom2, atom3, atom4, improper)
         self.phi = phi
         self.fc0 = fc0
         self.fc1 = fc1
@@ -36,7 +36,6 @@ class DihedralTrigType(AbstractDihedralType):
         self.fc4 = fc4
         self.fc5 = fc5
         self.fc6 = fc6
-        self.improper = improper
 
     def sum_parameters(self, addterms):
         # addterms is another dihedral.

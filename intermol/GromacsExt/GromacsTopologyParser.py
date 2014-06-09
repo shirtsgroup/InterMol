@@ -934,19 +934,21 @@ class GromacsTopologyParser(object):
                                 else:
                                     break
 
-                        if isinstance(dihedralType, DihedralTrigType):
-                            phi = dihedralType.phi
-                            fc0 = dihedralType.fc0
-                            fc1 = dihedralType.fc1
-                            fc2 = dihedralType.fc2
-                            fc3 = dihedralType.fc3
-                            fc4 = dihedralType.fc4
-                            fc5 = dihedralType.fc5
-                            fc6 = dihedralType.fc6
+                            if isinstance(dihedralType, DihedralTrigType):
+                                phi = dihedralType.phi
+                                fc0 = dihedralType.fc0
+                                fc1 = dihedralType.fc1
+                                fc2 = dihedralType.fc2
+                                fc3 = dihedralType.fc3
+                                fc4 = dihedralType.fc4
+                                fc5 = dihedralType.fc5
+                                fc6 = dihedralType.fc6
 
-                        if isinstance(dihedralType, ImproperHarmonicDihedralType):
-                            phi = dihedralType.xi
-                            k = dihedralType.k
+                            elif isinstance(dihedralType, ImproperHarmonicDihedralType):
+                                phi = dihedralType.xi
+                                k = dihedralType.k
+                            else:
+                                warn("Did not find matching dihedraltype!")
 
                         atom1 = int(split[0])
                         atom2 = int(split[1])
@@ -968,9 +970,7 @@ class GromacsTopologyParser(object):
                             # for dihedral type 9, there can be multiple interactions
 
                         # Improper Dihedral 2
-
                         elif dtype == 2:
-
                             if nentries > 5:
                                 phi = float(split[5]) * units.degrees
                                 k = float(split[6]) * units.kilojoules_per_mole * units.radians**(-2)
@@ -1586,7 +1586,7 @@ class GromacsTopologyParser(object):
                                 dihedral.fc6)
                             # there are some cases where some dihedrals will have c[6] values, which gromacs
                             # can't yet handle.  We need a workaround, and will go through the route of multiple 9s.
-                            if ((dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees) and c[6]._value == 0):    
+                            if ((dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees) and c[6]._value == 0):
                                 d_type = 3
                                 lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
                                              % (atomindex,
@@ -1599,7 +1599,6 @@ class GromacsTopologyParser(object):
                                                 c[5].in_units_of(units.kilojoules_per_mole)._value))
                             else:
                                 ncount = 0
-
                                 for j in range(6):
                                     if float(darray[j]._value) != 0:
                                         ncount +=1
@@ -1607,7 +1606,7 @@ class GromacsTopologyParser(object):
                                     dtype = 9
                                 else:
                                     dtype = 1
-                                # all of the terms should have consistent phi now    
+                                # all of the terms should have consistent phi now
                                 for j in range(6):
                                     if (darray[j]._value < 0):
                                         darray[j] *= -1 # kludge for different definitions of trigonometric dihedral with multiplicity in the central representation and in GROMACS
