@@ -12,7 +12,8 @@ def find_match(key, dict, unit):
 def print_multiple_energy_results(energy_input, energy_outputs, input_type, output_types):
     # remove failed evaluations (-1 in energy_outputs)
     failed_i = [i for i,x in enumerate(energy_outputs) if x == -1]
-    failed = [output_types.pop(i) for i in failed_i]
+    failed = [output_types[i] for i in failed_i]
+    output_types = [x for i,x in enumerate(output_types) if i not in failed_i]
     energy_outputs = [x for x in energy_outputs if x != -1]
     # find all distinct labels
     labels = set(energy_input.keys())

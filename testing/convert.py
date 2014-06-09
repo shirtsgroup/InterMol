@@ -109,10 +109,11 @@ def main(args=''):
         try:
             DesmondParser.readFile(args.des_in[0], args.verbose)
             results = [0]*N_FILETYPES # OK so far
+            print 'Sructure loaded\n'
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-        print 'Sructure loaded\n'
+            return results
 
     elif args.gro_in: # input type is gromacs
         # check if input exists
@@ -143,10 +144,11 @@ def main(args=''):
             print "Reading in Gromacs structure {0}...".format(gro_in)
             GromacsStructureParser.readStructure(gro_in)
             results = [0]*N_FILETYPES # OK so far
+            print "Structure loaded\n"
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-        print "Structure loaded\n"
+            return results
 
     elif args.lmp_in: # input type is lammps
         # check if file exists
@@ -159,10 +161,11 @@ def main(args=''):
             lammps_parser = LammpsParser()
             lammps_parser.read_system(args.lmp_in[0])
             results = [0]*N_FILETYPES # OK so far
+            print 'Structure loaded\n'
         except Exception as err:
             print 'Failed on read'
             print traceback.format_exc()
-        print "Data loaded\n"
+            return results
 
     else:
         print 'No input file'
