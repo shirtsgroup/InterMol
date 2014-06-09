@@ -154,17 +154,17 @@ def test_lammps(args):
 
 def summarize_results(input_type, files, results):
     for i in range(len(results)):
-        if results[i] == 0:
+        if results[i] is 0:
             results[i] = 'Converted'
-        elif results[i] == 1:
+        elif results[i] is 1:
             results[i] = 'Failed at reading input'
-        elif results[i] == 2:
+        elif results[i] is 2:
             results[i] = 'Failed at writing output'
-        elif results[i] == 3:
+        elif results[i] is 3:
             results[i] = 'Failed at evaluting energy of input'
-        elif results[i] == 4:
+        elif results[i] is 4:
             results[i] = 'Failed at evaluating energy of output'
-        elif results[i] == -1:
+        elif results[i] is -1:
             results[i] = 'Bug in UnitTest script'
 
     col1_width = max(len(x) for x in files)
