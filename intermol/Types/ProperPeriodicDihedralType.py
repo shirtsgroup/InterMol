@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 from intermol.Decorators import *
 from AbstractDihedralType import *
 

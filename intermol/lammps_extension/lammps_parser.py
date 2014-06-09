@@ -735,10 +735,24 @@ class LammpsParser(object):
                         coefficients = [dihedral.fc1, dihedral.fc2, dihedral.fc3,
                                 dihedral.fc4, dihedral.fc5, dihedral.fc6]
                         if dihedral.improper:
-                            for coeff in coefficients:
+                            for n, coeff in enumerate(coefficients):
                                 if coeff._value != 0.0:
-                                    warn("Found unimplemented dihedral type for LAMMPS: ")
-                                    continue
+                                    style = 'charmm'
+                                    temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
+                                            atomtype3, atomtype4,
+                                            dihedral.phi, coeff, n + 1)
+                                    if temp not in dihedral_type_dict:
+                                        dihedral_type_dict[temp] = dih_type_i
+                                        # multiple alternating powers by -1 for sign convention
+                                        dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18d} '
+                                                    '{4:18d} {5:18.4f}\n'.format(
+                                                dih_type_i, style,
+                                                coeff.in_units_of(self.ENERGY)._value,
+                                                n + 1,
+                                                int(dihedral.phi.in_units_of(units.degrees)._value),
+                                                0.0))
+                                        dih_type_i += 1
+
                         else:
                             rb_coeffs = ConvertDihedralFromDihedralTrigToRB(
                                     np.cos(dihedral.phi.in_units_of(units.radians)._value),
@@ -748,7 +762,7 @@ class LammpsParser(object):
                             # up to 5 coefficients.
                             if (dihedral.phi in [0*units.degrees, 180*units.degrees] and
                                     rb_coeffs[5]._value == rb_coeffs[6]._value == 0.0):
-                                style ='multi/harmonic'
+                                style = 'multi/harmonic'
                                 temp = RBDihedralType(atomtype1, atomtype2,
                                         atomtype3, atomtype4,
                                         rb_coeffs[0],
@@ -763,8 +777,7 @@ class LammpsParser(object):
                                     # multiple alternating powers by -1 for sign convention
                                     dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} '
                                                 '{4:18.8f} {5:18.8f} {6:18.8f}\n'.format(
-                                            dih_type_i,
-                                            style,
+                                            dih_type_i, style,
                                             rb_coeffs[0].in_units_of(self.ENERGY)._value,
                                             -rb_coeffs[1].in_units_of(self.ENERGY)._value,
                                             rb_coeffs[2].in_units_of(self.ENERGY)._value,
