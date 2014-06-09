@@ -865,6 +865,9 @@ class LammpsParser(object):
                             # If the 6th and/or 7th coefficients are non-zero, we decompose
                             # the dihedral into multiple CHARMM style dihedrals.
                             else:
+                                warn("Found unsupported dihedral style.")
+                                continue
+                                """
                                 for n, coeff in enumerate(coefficients):
                                     style = 'charmm'
                                     temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
@@ -890,6 +893,7 @@ class LammpsParser(object):
                                             dihedral.atom3 + offset,
                                             dihedral.atom4 + offset))
                                     dihedral_style.add(style)
+                                """
 
                     elif isinstance(dihedral, ImproperHarmonicDihedral):
                         stlye = 'harmonic'
