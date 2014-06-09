@@ -1,13 +1,12 @@
+import pdb
 import sys
 import os
 import re
 import copy
 from warnings import warn
-import math
 from collections import OrderedDict
 
-# for debugging eventually remove
-import pdb
+import numpy as np
 
 import intermol.unit as units
 from collections import deque
@@ -1539,15 +1538,23 @@ class GromacsTopologyParser(object):
             for pair in pairlist:
                 if isinstance(pair, LJ1PairCR1) or isinstance(pair, LJ1PairCR23)
                     type = 1
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value)
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type,
+                            pair.V.in_units_of(units.XXX)._value,
+                            pair.W.in_units_of(units.XXX)._value)
 
                 elif isinstance(pair, LJ2PairCR1) or isinstance(pair, LJ2PairCR23):
                     type = 2
-                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value))
+                    lines.append('%6d%7d%4d%18.8e%18.8e\n'%(pair.atom1, pair.atom2, type,
+                            pair.V.in_units_of(units.XXX)._value,
+                            pair.W.in_units_of(units.XXX)._value))
 
                 elif isinstance(pair, LJNBCR1) or isinstance( pair, LJNBCR23):
                     type = 1
-                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type, pair.qi.in_units_of(units.XXX)._value, pair.qj.in_units_of(units.XXX)._value, pair.V.in_units_of(units.XXX)._value, pair.W.in_units_of(units.XXX)._value))
+                    lines.append('%6d%7d%4d%18.8f%18.8f%18.8f%18.8f\n'%(pair.atom1, pair.atom2, type,
+                            pair.qi.in_units_of(units.XXX)._value,
+                            pair.qj.in_units_of(units.XXX)._value,
+                            pair.V.in_units_of(units.XXX)._value,
+                            pair.W.in_units_of(units.XXX)._value))
                 else:
                     print "Could not identify pair!"
             """
@@ -1556,60 +1563,61 @@ class GromacsTopologyParser(object):
                 # [ dihedrals ]
                 lines.append('[ dihedrals ]\n')
                 lines.append(';    i      j      k      l   func\n')
-                dihedrallist = sorted(moleculeType.dihedralForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+                dihedrallist = sorted(moleculeType.dihedralForceSet.itervalues(),
+                        key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
                 for dihedral in dihedrallist:
-
                     # this atom index will be the same for all of types.
-                    atomindex = "%7d%7d%7d%7d" % (dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4)
+                    atomindex = "%7d%7d%7d%7d" % (dihedral.atom1, dihedral.atom2,
+                            dihedral.atom3, dihedral.atom4)
                     if isinstance(dihedral, DihedralTrigDihedral):
-
                         # convienience array
-                        darray = [dihedral.fc1,dihedral.fc2,dihedral.fc3,dihedral.fc4,dihedral.fc5,dihedral.fc6]
-                        if (dihedral.improper):
-                            for j in range(6):  # only one of these should be nonzero
-                                if darray[j].in_units_of(units.kilojoules_per_mole)._value != 0:
+                        coefficients = [dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                dihedral.fc4, dihedral.fc5, dihedral.fc6]
+                        if dihedral.improper:
+                            found_nonzero = False
+                            for n, coeff in enumerate(coefficients):  # only one of these should be nonzero
+                                if coeff._value != 0.0:
+                                    if found_nonzero == False:
+                                        found_nonzero = True
+                                    else:
+                                        raise ValueError("Found more than one nonzero "
+                                                "coefficient in improper trigonal dihedral!")
                                     lines.append('%s%4d%18.8f%18.8f%6d\n'
                                                  % (atomindex, 4,
                                                     dihedral.phi.in_units_of(units.degrees)._value,
-                                                    darray[j].in_units_of(units.kilojoules_per_mole)._value,
-                                                    j+1))
+                                                    coeff.in_units_of(units.kilojoules_per_mole)._value,
+                                                    n + 1))
                         else:
-                            c = ConvertDihedralFromDihedralTrigToRB(
-                                math.cos(dihedral.phi.in_units_of(units.radians)._value),
-                                dihedral.phi,
-                                dihedral.fc0,
-                                dihedral.fc1,
-                                dihedral.fc2,
-                                dihedral.fc3,
-                                dihedral.fc4,
-                                dihedral.fc5,
-                                dihedral.fc6)
+                            rb_coeffs = ConvertDihedralFromDihedralTrigToRB(
+                                np.cos(dihedral.phi.in_units_of(units.radians)._value),
+                                dihedral.phi, dihedral.fc0, * coefficients)
                             # there are some cases where some dihedrals will have c[6] values, which gromacs
                             # can't yet handle.  We need a workaround, and will go through the route of multiple 9s.
-                            if ((dihedral.phi==0*units.degrees or dihedral.phi==180*units.degrees) and c[6]._value == 0):
+                            if (dihedral.phi in [0*units.degrees, 180*units.degrees] and
+                                    rb_coeffs[6]._value == 0):
                                 d_type = 3
                                 lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
                                              % (atomindex,
                                                 d_type,
-                                                c[0].in_units_of(units.kilojoules_per_mole)._value,
-                                                c[1].in_units_of(units.kilojoules_per_mole)._value,
-                                                c[2].in_units_of(units.kilojoules_per_mole)._value,
-                                                c[3].in_units_of(units.kilojoules_per_mole)._value,
-                                                c[4].in_units_of(units.kilojoules_per_mole)._value,
-                                                c[5].in_units_of(units.kilojoules_per_mole)._value))
+                                                rb_coeffs[0].in_units_of(units.kilojoules_per_mole)._value,
+                                                rb_coeffs[1].in_units_of(units.kilojoules_per_mole)._value,
+                                                rb_coeffs[2].in_units_of(units.kilojoules_per_mole)._value,
+                                                rb_coeffs[3].in_units_of(units.kilojoules_per_mole)._value,
+                                                rb_coeffs[4].in_units_of(units.kilojoules_per_mole)._value,
+                                                rb_coeffs[5].in_units_of(units.kilojoules_per_mole)._value))
                             else:
-                                ncount = 0
-                                for j in range(6):
-                                    if float(darray[j]._value) != 0:
-                                        ncount +=1
+                                ncount = sum(coeff._value != 0.0 for coeff in coefficients)
                                 if ncount > 1:
                                     dtype = 9
                                 else:
                                     dtype = 1
                                 # all of the terms should have consistent phi now
-                                for j in range(6):
-                                    if (darray[j]._value < 0):
-                                        darray[j] *= -1 # kludge for different definitions of trigonometric dihedral with multiplicity in the central representation and in GROMACS
+                                for n, coeff in enumerate(coefficients):
+                                    if coeff._value < 0:
+                                        # kludge for different definitions of trigonometric
+                                        # dihedral with multiplicity in the central representation
+                                        # and in GROMACS
+                                        coefficients[n] *= -1
                                         if dihedral.phi.value_in_unit(units.degrees)==180:
                                             printphi = 0*units.degrees
                                         else:
@@ -1620,8 +1628,8 @@ class GromacsTopologyParser(object):
                                                  % (atomindex,
                                                     dtype,
                                                     printphi.in_units_of(units.degrees)._value,
-                                                    darray[j].in_units_of(units.kilojoules_per_mole)._value,
-                                                    j+1))
+                                                    coeff.in_units_of(units.kilojoules_per_mole)._value,
+                                                    n + 1))
 
                     elif isinstance(dihedral, ImproperHarmonicDihedral):
                         d_type = 2
