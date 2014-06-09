@@ -1516,6 +1516,13 @@ class GromacsTopologyParser(object):
                                    a_type,
                                    angle.theta.in_units_of(units.degrees)._value,
                                    angle.k.in_units_of(units.kilojoules_per_mole*units.radians**(-2))._value))
+                    elif isinstance(angle, G96Angle):
+                        a_type = 2
+                        lines.append('%s%4d%18.8e%18.8e\n'
+                                     % (atomindex,
+                                        a_type,
+                                        angle.theta.in_units_of(units.degrees)._value,
+                                        angle.k.in_units_of(units.kilojoules_per_mole)._value))
                     elif isinstance(angle, UreyBradleyAngle):
                         a_type = 5
                         lines.append('%s%4d%18.8e%18.8e%18.8e%18.8e\n'

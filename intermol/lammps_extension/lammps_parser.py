@@ -751,7 +751,7 @@ class LammpsParser(object):
                                     0.5 * angle.k.in_units_of(self.ENERGY / self.RAD**2)._value,
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
-                    if isinstance(angle, UreyBradleyAngle):
+                    elif isinstance(angle, UreyBradleyAngle):
                         style = 'charmm'
                         temp = UreyBradleyAngleType(atomtype1, atomtype2, atomtype3,
                                 angle.theta, angle.k, angle.r, angle.kUB)
@@ -765,6 +765,19 @@ class LammpsParser(object):
                                     angle.theta.in_units_of(self.DEGREE)._value,
                                     0.5 * angle.kUB.in_units_of(self.ENERGY / self.DIST**2)._value,
                                     angle.r.in_units_of(self.DIST)._value))
+                            ang_type_i += 1
+                    elif isinstance(angle, G96Angle):
+                        style = 'cosine/squared'
+                        temp = G96AngleType(atomtype1, atomtype2, atomtype3,
+                                angle.theta, angle.k)
+                        # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
+                        if temp not in angle_type_dict:
+                            angle_type_dict[temp] = ang_type_i
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                                    ang_type_i,
+                                    style,
+                                    0.5 * angle.k.in_units_of(self.ENERGY)._value,
+                                    angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
                         warn("Found unimplemented angle type for LAMMPS!")
