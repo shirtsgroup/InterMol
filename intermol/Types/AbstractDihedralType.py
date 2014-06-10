@@ -7,20 +7,18 @@ class AbstractDihedralType(object):
         self.atom4 = atom4
         self.improper = improper
 
-    def __eq__(self, object):
-        if ((self.atom1 == object.atom1
-                and self.atom2 == object.atom2
-                and self.atom3 == object.atom3
-                and self.atom4 == object.atom4)
+    def __eq__(self, dihedral_type):
+        return ((self.atom1 == dihedral_type.atom1 and
+                 self.atom2 == dihedral_type.atom2 and
+                 self.atom3 == dihedral_type.atom3 and
+                 self.atom4 == dihedral_type.atom4)
                 or
-                (self.atom1 == object.atom4
-                and self.atom2 == object.atom3
-                and self.atom3 == object.atom2
-                and self.atom4 == object.atom1)) and self.improper == object.improper:
-            return True
-        else:
-            return False
-
+                (self.atom1 == dihedral_type.atom4 and
+                 self.atom2 == dihedral_type.atom3 and
+                 self.atom3 == dihedral_type.atom2 and
+                 self.atom4 == dihedral_type.atom1)
+                and
+                self.improper == dihedral_type.improper)
 
     def __hash__(self):
         if (self.atom1 == '*') and (self.atom4 == '*'):

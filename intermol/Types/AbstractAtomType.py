@@ -1,16 +1,7 @@
-import sys
-from intermol.Decorators import *
-
 class AbstractAtomType(object):
-
     __slots__ = ['atomtype', 'bondtype', 'Z', 'mass', 'charge', 'ptype']
-    def __init__(self,
-            atomtype,
-            bondtype = None,
-            Z =  None,
-            mass = None,
-            charge = None,
-            ptype = None):
+    def __init__(self, atomtype, bondtype=None, Z=None, mass=None,
+            charge=None, ptype=None):
         """An abstract representation of a generic atom type.
 
         Args:
