@@ -1,3 +1,4 @@
+import subprocess
 from collections import OrderedDict
 import sys
 import os
@@ -22,37 +23,42 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     state  = os.path.join(directory , 'state.cpt')
     traj  = os.path.join(directory , 'traj.trr')
     log  = os.path.join(directory , 'md.log')
+    stdout = os.path.join(directory, 'gromacs_stdout.txt')
+    stderr = os.path.join(directory, 'gromacs_stderr.txt')
 
     grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
     mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
     genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
-    cmd = ("{grompp_bin} -f {mdp} -c {gro} -p {top} -o {tpr} -po {mdout} -maxwarn 1".format(
-        grompp_bin=grompp_bin, mdp=mdp, top=top, gro=gro, tpr=tpr, mdout=mdout))
+    cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '1']
     print 'Running GROMACS with command:'
-    print cmd
-    exit = os.system(cmd)
+    print ' '.join(cmd)
+    with open(stdout, 'w') as out, open(stderr, 'w') as err:
+        exit = subprocess.call(cmd, stdout=out, stderr=err)
     if exit:
         raise Exception('grompp failed for {0}'.format(top))
     elif grompp_check:
         return
 
     # mdrunin'
-    cmd = ("{mdrun_bin} -nt 1 -s {tpr} -o {traj} -cpo {state} -c {conf} -e {ener} -g {log}".format(
-        mdrun_bin=mdrun_bin, tpr=tpr, traj=traj, state=state,
-        conf=conf, ener=ener, log=log))
-    print cmd
-    exit = os.system(cmd)
+    cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', 
+        conf, '-e', ener, '-g', log]
+    print 'Running GROMACS with command:'
+    print ' '.join(cmd)
+    with open(stdout, 'wa') as out, open(stderr, 'wa') as err:
+        exit = subprocess.call(cmd, stdout=out, stderr=err)
     if exit:
         raise Exception('mdrun failed for {0}'.format(top))
 
     # energizin'
     select = " ".join(map(str, range(1, 20))) + " 0 "
-    cmd = ("echo {select} | ".format(select=select) + "{genergy_bin} -f {ener} -o {ener_xvg} -dp".format(
-            genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg))
+    cmd = 'echo {select} | {genergy_bin} -f {ener} -o {ener_xvg} -dp'.format(
+            select=select, genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg)
+    print 'Running GROMACS with command:'
     print cmd
-    exit = os.system(cmd)
+    with open(stdout, 'wa') as out, open(stderr, 'wa') as err:
+        exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
     if exit:
         raise Exception('g_energy failed for {0}'.format(top))
 

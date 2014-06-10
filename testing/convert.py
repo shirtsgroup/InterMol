@@ -294,6 +294,7 @@ def main(args=''):
             return [4]*len(output_type) # 4 is errorcode for UnitTest.py script
 
         # display energy comparison results
+        print ''
         print '{0} input energy file: {1}'.format(input_type, e_infile)
         for type, file in zip(output_type, e_outfile):
             print '{0} output energy file: {1}'.format(type, file)

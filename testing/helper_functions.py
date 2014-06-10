@@ -51,6 +51,7 @@ def print_multiple_energy_results(energy_input, energy_outputs, input_type, outp
         print 'Energy comparison for {0} output FAILED'.format(out)
     print ''
     print '======================================================================='
+    print ''
     # insert error code for failed evaluations
     diff = diff.tolist()
     for i in failed_i:

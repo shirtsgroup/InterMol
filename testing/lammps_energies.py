@@ -1,8 +1,6 @@
 import os
 import subprocess
-
 import intermol.unit as units
-
 import pdb
 
 def lammps_energies(input_file, lmppath='lmp_openmpi',
@@ -15,19 +13,21 @@ def lammps_energies(input_file, lmppath='lmp_openmpi',
     """
 
     directory, input_file = os.path.split(input_file)
-    log = os.path.join(directory, 'log.lammps')
 
     # mdrunin'
     saved_path = os.getcwd()
     os.chdir(directory)
 
-    run_lammps = "{lmppath} < {input_file} > log.lammps".format(
+    cmd = "{lmppath} < {input_file}".format(
             lmppath=lmppath, input_file=input_file)
-    os.system(run_lammps)
+    with open('lammps_stdout.txt', 'w') as out, open('lammps_stderr.txt', 'w') as err:
+        exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
     os.chdir(saved_path)
+    if exit:
+        raise Exception('Lammps evaluation failed for {0}'.format(input_file))
 
     # energizin'
-    proc = subprocess.Popen(["awk '/E_bond/{getline; print}' %s" % (log)],
+    proc = subprocess.Popen(["awk '/E_bond/{getline; print}' %s/lammps_stdout.txt" % (directory)],
             stdout=subprocess.PIPE, shell=True)
     (energies, err) = proc.communicate()
     if not energies:
@@ -47,4 +47,4 @@ def lammps_energies(input_file, lmppath='lmp_openmpi',
     # groupings
     e_out['Electrostatic'] += e_out['Coul. recip.']
     e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
-    return e_out, log
+    return e_out, '%s/lammps_stdout.txt' % directory
