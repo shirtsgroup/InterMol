@@ -16,6 +16,7 @@ from intermol.System import System
 from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
+import math
 
 class GromacsTopologyParser(object):
     """

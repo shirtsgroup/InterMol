@@ -68,7 +68,7 @@ def add_flags(args, flags):
     return flags
 
 def test_desmond(args):
-    files = glob.glob('%s/*/*.cms' % DES_IN) # return list of files that match the string
+    files = sorted(glob.glob('%s/*/*.cms' % DES_IN)) # return list of files that match the string
     files = [x for x in files if not x.endswith('-out.cms')] 
     results = []
 
@@ -97,11 +97,11 @@ def test_desmond(args):
     return files, results
 
 def test_gromacs(args):
-    gro_files = glob.glob('%s/*/*.gro' % GRO_IN) # return list of files that match the string
+    gro_files = sorted(glob.glob('%s/*/*.gro' % GRO_IN)) # return list of files that match the string
     gro_files = [x for x in gro_files if not x.endswith('out.gro')] 
-    top_files = glob.glob('%s/*/*.top' % GRO_IN) # return list of files that match the string
+    top_files = sorted(glob.glob('%s/*/*.top' % GRO_IN)) # return list of files that match the string
     results = []
-
+    
     basedir = '%s/FromGromacs' % OUTPUT_DIR
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
@@ -126,7 +126,7 @@ def test_gromacs(args):
     return gro_files, results
 
 def test_lammps(args):
-    files = glob.glob('%s/*/*.lmp' % LMP_IN) # return list of files that match the string
+    files = sorted(glob.glob('%s/*/*.lmp' % LMP_IN)) # return list of files that match the string
     results = []
 
     basedir = '%s/FromLammps' % OUTPUT_DIR

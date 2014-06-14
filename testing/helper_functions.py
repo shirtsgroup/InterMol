@@ -34,12 +34,13 @@ def print_multiple_energy_results(energy_input, energy_outputs, input_type, outp
     print 'Summary statistics'
     header = '%20s %18s ' % ('Type', 'Input (%s)' % input_type)
     for out in output_types:
-        header += '%18s ' %('Output (%s)' % out)
+        header += '%37s' %('Output (%s) Diff (%s)' % (out, out))
     print header
     for i in range(len(data)):
         line = '%20s ' % labels[i]
-        for j in data[i]:
-            line += '%18.8f ' % j
+        line += '%18.8f ' % data[i][0]
+        for j in range(1,len(data[i])):
+            line += '%18.8f %18.8f' % (data[i][j],data[i][j]-data[i][0])
         print line
     print ''
     # get differences in potential energy
