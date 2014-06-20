@@ -17,13 +17,7 @@ N_FORMATS = 3
 
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
-logger.setLevel(logging.INFO) # specifies lowest severity log messages to handle (DEBUG will be ignored)
-h = logging.StreamHandler()
-#f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
-f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
-h.setFormatter(f)
-logger.addHandler(h)
-
+logger.setLevel(logging.DEBUG)
 
 def parse_args():
     parser = argparse.ArgumentParser(prog='PROG',
@@ -76,6 +70,26 @@ def add_flags(args, flags):
         flags.append(args.lmppath)
     return flags
 
+def add_handler(dir):
+    logger = logging.getLogger('InterMolLog')
+    h1 = logging.FileHandler('%s/UnitTestInfo.log' % dir, mode='w') # don't append to existing file
+    f1 = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+    h1.setFormatter(f1)
+    h1.setLevel(logging.INFO)
+    logger.addHandler(h1)
+
+    h2 = logging.FileHandler('%s/UnitTestDebug.log' % dir, mode='w')
+    f2 = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s", "%Y-%m-%d %H:%M:%S")
+    h2.setFormatter(f2)
+    h2.setLevel(logging.DEBUG)
+    logger.addHandler(h2)
+    return h1, h2
+
+def remove_handler(h1, h2):
+    logger = logging.getLogger('InterMolLog')
+    logger.removeHandler(h1)
+    logger.removeHandler(h2)
+
 def test_desmond(args):
     logger = logging.getLogger('InterMolLog')
     files = sorted(glob.glob('%s/*/*.cms' % DES_IN)) # return list of files that match the string
@@ -91,10 +105,10 @@ def test_desmond(args):
         odir = '%s/%s' % (basedir, prefix)
         if not os.path.isdir(odir):
             os.mkdir(odir)
+        h1, h2 = add_handler(odir)
         flags = ['--des_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('converting %s with command' % f)
-        logger.info('python convert.py ' + ' '.join(flags))
+        logger.info('Converting %s with command:\n    python convert.py %s' % (f,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
             assert(len(diff) == N_FORMATS)
@@ -102,6 +116,7 @@ def test_desmond(args):
         except Exception as e:
             logger.exception(e)
             results += [e]*N_FORMATS
+        remove_handler(h1, h2)
     return files, results
 
 def test_gromacs(args):
@@ -120,10 +135,11 @@ def test_gromacs(args):
         odir = '%s/%s' % (basedir, prefix)
         if not os.path.isdir(odir):
             os.mkdir(odir)
+        h1, h2 = add_handler(odir)
         flags = ['--gro_in', g, t, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('converting {0}, {1} with command'.format(g,t))
-        logger.info('python convert.py ' + ' '.join(flags))
+        logger.info('Converting %s, %s with command:\n    python convert.py %s' 
+                    % (g, t,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
             assert(len(diff) == N_FORMATS)
@@ -131,6 +147,7 @@ def test_gromacs(args):
         except Exception as e:
             logger.exception(e)
             results += [e]*N_FORMATS
+        remove_handler(h1, h2)
     return gro_files, results
 
 def test_lammps(args):
@@ -147,10 +164,10 @@ def test_lammps(args):
         odir = '%s/%s' % (basedir, prefix)
         if not os.path.isdir(odir):
             os.mkdir(odir)
+        h1, h2 = add_handler(odir)
         flags = ['--lmp_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('converting %s to desmond file format with command' % f)
-        logger.info('python convert.py ' + ' '.join(flags))
+        logger.info('Converting %s with command:\n    python convert.py %s' % (f,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
             assert(len(diff) == N_FORMATS)
@@ -158,6 +175,7 @@ def test_lammps(args):
         except Exception as e:
             logger.exception(e)
             results += [e]*N_FORMATS
+        remove_handler(h1, h2)
     return files, results
 
 def summarize_results(input_type, files, results):
@@ -191,6 +209,9 @@ def summarize_results(input_type, files, results):
     print '-'*(col1_width+3+col2_width)
     for f,r in zip(files, lmp_res):
         print '{:{}}   {:>{}}'.format(f, col1_width, r, col2_width)
+    print ''
+    print 'See %s/From%s/*/UnitTestInfo.log for the standard output of each conversion' % (OUTPUT_DIR, input_type)
+    print 'See %s/From%s/*/UnitTestDebug.log for a detailed DEBUG-level log of each conversion' % (OUTPUT_DIR, input_type)
     print ''
 
 def main():

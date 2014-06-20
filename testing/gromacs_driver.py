@@ -14,11 +14,11 @@ def readFile(top_in, gro_in, gropath):
     gromacs_energies(top_in, gro_in,
             'Inputs/Gromacs/grompp.mdp', gropath, '',
             grompp_check=True)
-    logger.info('Reading in Gromacs topology {0}...'.format(top_in))
+    logger.info('Reading GROMACS topology {0}'.format(top_in))
     GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
     GromacsTopologyParser._GroTopParser.parseTopology(top_in)
     logger.info('Topology loaded')
-    logger.info('Reading in Gromacs structure {0}...'.format(gro_in))
+    logger.info('Reading GROMACS structure {0}'.format(gro_in))
     GromacsStructureParser.readStructure(gro_in)
     logger.info('Structure loaded')
 
@@ -60,11 +60,11 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
 
     # grompp'n it up
     cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '1']
-    logger.debug('Running GROMACS with command:')
-    logger.debug(' '.join(cmd))
+    logger.debug('Running GROMACS with command:\n    %s' % ' '.join(cmd))
     with open(stdout, 'w') as out, open(stderr, 'w') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err)
     if exit:
+        logger.error('grompp failed. See %s' % stderr)
         raise Exception('grompp failed for {0}'.format(top))
     if grompp_check:
         return
@@ -72,22 +72,22 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     # mdrunin'
     cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', 
         conf, '-e', ener, '-g', log]
-    logger.debug('Running GROMACS with command:')
-    logger.debug(' '.join(cmd))
+    logger.debug('Running GROMACS with command:\n    %s' % ' '.join(cmd))
     with open(stdout, 'wa') as out, open(stderr, 'wa') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err)
     if exit:
+        logger.error('mdrun failed. See %s' % stderr)
         raise Exception('mdrun failed for {0}'.format(top))
 
     # energizin'
     select = " ".join(map(str, range(1, 20))) + " 0 "
     cmd = 'echo {select} | {genergy_bin} -f {ener} -o {ener_xvg} -dp'.format(
             select=select, genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg)
-    logger.debug('Running GROMACS with command:')
-    logger.debug(cmd)
+    logger.debug('Running GROMACS with command:\n    %s' % ' '.join(cmd))
     with open(stdout, 'wa') as out, open(stderr, 'wa') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
     if exit:
+        logger.error('g_energy failed. See %s' % stderr)
         raise Exception('g_energy failed for {0}'.format(top))
 
     # extract g_energy output and parse initial energies

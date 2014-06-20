@@ -9,7 +9,7 @@ from intermol.DesmondExt.DesmondParser import DesmondParser
 
 def readFile(infile):
     logger = logging.getLogger('InterMolLog')
-    logger.info('Reading in Desmond structure {0}'.format(infile))
+    logger.info('Reading DESMOND file {0}'.format(infile))
     parser = DesmondParser()
     parser.readFile(infile)
     logger.info('Structure loaded')
@@ -116,14 +116,14 @@ def desmond_energies(cms, cfg, despath):
     if os.path.exists('trj'):
         shutil.rmtree('trj')
     cmd = [desmond_bin, '-WAIT', '-P', '1', '-in', cms, '-JOBNAME', name, '-c', cfg]
-    logger.debug('Running DESMOND with command')
-    logger.debug(' '.join(cmd))
+    logger.debug('Running DESMOND with command:\n    %s' % ' '.join(cmd))
     with open('desmond_stdout.txt','w') as out, open('desmond_stderr.txt','w') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err)
     os.chdir(cwd)
 
     if exit: # exit status not 0
-        raise Exception('Failed evaluating energy of {0}'.format(cms))
+        logger.error('Energy evaluation failed. See %s/desmond_stderr.txt' % direc)
+        raise Exception('Energy evaluation failed for {0}'.format(cms))
     
     # parse desmond energy file
     tot_energy = get_desmond_energy_from_file(energy_file)

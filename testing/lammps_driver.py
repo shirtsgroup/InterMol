@@ -7,20 +7,19 @@ from intermol.lammps_extension.lammps_parser import LammpsParser
 
 def readFile(infile):
     logger = logging.getLogger('InterMolLog')
-    logger.info('Reading LAMMPS data & input files...')
+    logger.info('Reading LAMMPS files {0}'.format(infile))
     parser = LammpsParser()
     parser.read_system(infile)
     logger.info('Structure loaded')
 
 def writeFile(outfile):
     logger = logging.getLogger('InterMolLog')
-    logger.info('Converting to LAMMPS file {0}'.format(outfile))
+    logger.info('Writing LAMMPS file {0}'.format(outfile))
     parser = LammpsParser()
     parser.write(outfile)
     logger.info('Write complete')
 
-def lammps_energies(input_file, lmppath='lmp_openmpi',
-        verbose=False):
+def lammps_energies(input_file, lmppath='lmp_openmpi'):
     """Evaluate energies of LAMMPS files
 
     Args:
@@ -38,11 +37,13 @@ def lammps_energies(input_file, lmppath='lmp_openmpi',
 
     cmd = "{lmppath} < {input_file}".format(
             lmppath=lmppath, input_file=input_file)
+    logger.debug('Running LAMMPS with command:\n    %s' % cmd)
     with open('lammps_stdout.txt', 'w') as out, open('lammps_stderr.txt', 'w') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
     os.chdir(saved_path)
     if exit:
-        raise Exception('Lammps evaluation failed for {0}'.format(input_file))
+        logger.error('Energy evaluation failed. See %s/lammps_stderr.txt' % directory)
+        raise Exception('Energy evaluation failed for {0}'.format(input_file))
 
     # energizin'
     proc = subprocess.Popen(["awk '/E_bond/{getline; print}' %s/lammps_stdout.txt" % (directory)],

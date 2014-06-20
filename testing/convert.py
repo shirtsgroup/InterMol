@@ -210,12 +210,13 @@ def main(args=''):
                 e_outfile.append(-1)
 
         # display energy comparison results
-        print ''
-        print '{0} input energy file: {1}'.format(input_type, e_infile)
+        out = ['']
+        out.append('{0} input energy file: {1}'.format(input_type, e_infile))
         for type, file in zip(output_type, e_outfile):
-            print '{0} output energy file: {1}'.format(type, file)
-        helper_functions.print_multiple_energy_results(e_in, e_out, input_type, output_type)
-    status = [x if x else 'Converted' for x in status] # changes 0 to 'Converted'
+            out.append('{0} output energy file: {1}'.format(type, file))
+        out += helper_functions.summarize_energy_results(e_in, e_out, input_type, output_type)
+        logger.info('\n'.join(out))
+    status = ['Converted' if x is 0 else x for x in status] # changes 0 to 'Converted'
     return status
 
 if __name__ == '__main__':
