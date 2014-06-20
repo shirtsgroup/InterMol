@@ -51,6 +51,8 @@ def parse_args():
     group_misc.add_argument('-l', '--lmppath', dest='lmppath',
             metavar='path', default='lmp_openmpi',
             help='path for LAMMPS binary, needed for energy evaluation')
+    group_misc.add_argument('-v', '--verbose', dest='verbose', action='count',
+            help='print conversion output to console, -v for INFO level, -vv for DEBUG level')
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit(1)
@@ -216,6 +218,16 @@ def summarize_results(input_type, files, results):
 
 def main():
     args = parse_args()
+
+    if args.verbose:
+        h = logging.StreamHandler()
+        if args.verbose == 2:
+            h.setLevel(logging.DEBUG) # more verbosity
+        else: # == 1
+            h.setLevel(logging.INFO)
+        f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+        h.setFormatter(f)
+        logger.addHandler(h)
 
     if not os.path.isdir(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)

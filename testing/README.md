@@ -7,7 +7,7 @@ $ python convert.py -h
 usage: convert.py [-h] [--des_in file] [--gro_in file file] [--lmp_in file]
                   [--desmond] [--gromacs] [--lammps] [--odir directory]
                   [--oname prefix] [-e] [--efile EFILE] [-d path] [-g path]
-                  [-l path] [-v] [-f]
+                  [-l path] [-v]
 
 Perform a file conversion
 
@@ -41,8 +41,7 @@ Other optional arguments:
                         path for GROMACS binary, needed for energy evaluation
   -l path, --lmppath path
                         path for LAMMPS binary, needed for energy evaluation
-  -v, --verbose         verbosity
-  -f, --force           ignore warnings
+  -v, --verbose         high verbosity, includes DEBUG level output
 ````
 
 UnitTest.py
@@ -51,7 +50,7 @@ UnitTest.py
 ````
 $ python UnitTest.py -h
 usage: PROG [-h] [--desmond] [--gromacs] [--lammps] [-e] [-d path] [-g path]
-            [-l path]
+            [-l path] [-v]
 
          InterMol Unit Testing Script
          --------------------------------
@@ -81,4 +80,6 @@ Other optional arguments:
                         path for GROMACS binary, needed for energy evaluation
   -l path, --lmppath path
                         path for LAMMPS binary, needed for energy evaluation
+  -v, --verbose         print conversion output to console, -v for INFO level,
+                        -vv for DEBUG level
 ````
