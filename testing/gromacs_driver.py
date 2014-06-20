@@ -83,7 +83,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     select = " ".join(map(str, range(1, 20))) + " 0 "
     cmd = 'echo {select} | {genergy_bin} -f {ener} -o {ener_xvg} -dp'.format(
             select=select, genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg)
-    logger.debug('Running GROMACS with command:\n    %s' % ' '.join(cmd))
+    logger.debug('Running GROMACS with command:\n    %s' % cmd)
     with open(stdout, 'wa') as out, open(stderr, 'wa') as err:
         exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
     if exit:

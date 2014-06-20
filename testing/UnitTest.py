@@ -108,7 +108,7 @@ def test_desmond(args):
         h1, h2 = add_handler(odir)
         flags = ['--des_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('Converting %s with command:\n    python convert.py %s' % (f,' '.join(flags)))
+        logger.info('Converting %s with command:\n    python convert.py %s\n' % (f,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
             assert(len(diff) == N_FORMATS)
@@ -138,7 +138,7 @@ def test_gromacs(args):
         h1, h2 = add_handler(odir)
         flags = ['--gro_in', g, t, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('Converting %s, %s with command:\n    python convert.py %s' 
+        logger.info('Converting %s, %s with command:\n    python convert.py %s\n' 
                     % (g, t,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
@@ -167,7 +167,7 @@ def test_lammps(args):
         h1, h2 = add_handler(odir)
         flags = ['--lmp_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
         flags = add_flags(args, flags)
-        logger.info('Converting %s with command:\n    python convert.py %s' % (f,' '.join(flags)))
+        logger.info('Converting %s with command:\n    python convert.py %s\n' % (f,' '.join(flags)))
         try:
             diff = convert.main(flags) # reuses code from convert.py
             assert(len(diff) == N_FORMATS)

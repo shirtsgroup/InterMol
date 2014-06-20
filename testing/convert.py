@@ -21,9 +21,9 @@ N_FORMATS = 3
 # Make a global logging object.
 if __name__ == '__main__':
     logger = logging.getLogger('InterMolLog')
-    logger.setLevel(logging.INFO) # specifies lowest severity log messages to handle (DEBUG will be ignored)
+    logger.setLevel(logging.DEBUG) # specifies lowest severity log messages to handle
     h = logging.StreamHandler()
-    #f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
+    h.setLevel(logging.INFO) # ignores DEBUG level for now
     f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
     h.setFormatter(f)
     logger.addHandler(h)
@@ -71,7 +71,7 @@ def get_parser():
             metavar='path', default='lmp_openmpi',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-            help='verbosity')
+            help='high verbosity, includes DEBUG level output')
 
     # prints help if no arguments given
     if len(sys.argv)==1:
@@ -88,6 +88,8 @@ def main(args=''):
         args = parser.parse_args(args)
 
     logger = logging.getLogger('InterMolLog')
+    if args.verbose:
+        h.setLevel(logging.DEBUG)
     System._sys = System('InterMol')
 
     # --------------- PROCESS INPUTS ----------------- #
@@ -210,7 +212,7 @@ def main(args=''):
                 e_outfile.append(-1)
 
         # display energy comparison results
-        out = ['']
+        out = ['InterMol Conversion Energy Comparison Results','']
         out.append('{0} input energy file: {1}'.format(input_type, e_infile))
         for type, file in zip(output_type, e_outfile):
             out.append('{0} output energy file: {1}'.format(type, file))
