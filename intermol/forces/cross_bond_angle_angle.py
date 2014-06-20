@@ -3,12 +3,9 @@ from abstract_angle import *
 
 class CrossBondAngleAngle(AbstractAngle):
     __slots__ = ['r1', 'r2', 'r3', 'k']
-    @accepts_compatible_units(None, 
-            None, 
-            None, 
-            units.nanometers, 
-            units.nanometers, 
-            units.nanometers, 
+
+    @accepts_compatible_units(None, None, None, 
+            units.nanometers, units.nanometers, units.nanometers, 
             units.kilojoules_per_mole * units.nanometers**(-2))
     def __init__(self, atom1, atom2, atom3, r1, r2, r3, k):
         """

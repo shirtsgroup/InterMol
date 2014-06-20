@@ -6,7 +6,6 @@ from collections import OrderedDict
 import numpy as np
 
 from intermol.moleculetype import MoleculeType
-from intermol.orderedset import OrderedSet
 from intermol.hashmap import HashMap
 
 
@@ -28,19 +27,20 @@ class System(object):
         else:
             self._name = "Untitled"
 
-        self._nbFunc = 0
-        self._combinationRule = 0
-        self._genpairs = 'yes'
-        self._ljCorrection = 0
-        self._coulombCorrection = 0
+        self.nonbonded_function = 0
+        self.combination_rule = 0
+        self.genpairs = 'yes'
+        self.lj_correction = 0
+        self.coulomb_correction = 0
         self._molecules = OrderedDict()
         self._atomtypes = HashMap()
         self._nonbonded = HashMap()
-        self._boxVector = np.zeros([3, 3])
+        self._box_vector = np.zeros([3, 3])
 
         self._components = list()
 
-    def addMolecule(self, molecule):
+
+    def add_molecule(self, molecule):
         """Append a molecule into the System.
 
         Args:
@@ -49,9 +49,9 @@ class System(object):
         # If key is in the dictionary, return its value.
         # If not, insert key with a value of default and return default.
         self._molecules.setdefault(molecule.name,
-                MoleculeType(molecule.name)).addMolecule(molecule)
+                MoleculeType(molecule.name)).add_molecule(molecule)
 
-    def removeMoleculeType(self, molecule):
+    def remove_molecule_type(self, molecule):
         """Remove a molecule from the System.
 
         Args:
@@ -59,18 +59,20 @@ class System(object):
         """
         self._molecules[molecule.name].remove(molecule)
 
-    def getBoxVector(self):
+    @property
+    def box_vector(self):
         """Get the box vector coordinates
         """
-        return self._boxVector
+        return self._box_vector
 
-    def setBoxVector(self, v):
+    @box_vector.setter
+    def box_vector(self, v):
         """Sets the boxvector for the system.
 
         Assumes the box vector is in the correct form:
             [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
         """
-        self._boxVector = v
+        self._box_vector = v
 
     def __str__(self):
         """String representation of a System object

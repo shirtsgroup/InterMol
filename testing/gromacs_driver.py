@@ -16,7 +16,7 @@ def readFile(top_in, gro_in, gropath):
             grompp_check=True)
     logger.info('Reading GROMACS topology {0}'.format(top_in))
     GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
-    GromacsTopologyParser._GroTopParser.parseTopology(top_in)
+    GromacsTopologyParser._GroTopParser.parse_topology(top_in)
     logger.info('Topology loaded')
     logger.info('Reading GROMACS structure {0}'.format(gro_in))
     GromacsStructureParser.readStructure(gro_in)
@@ -29,7 +29,7 @@ def writeFile(outtop, outgro):
     logger.info('Writing GROMACS file {0}'.format(outtop))
     if not GromacsTopologyParser._GroTopParser:
         GromacsTopologyParser._GroTopParser = GromacsTopologyParser()
-    GromacsTopologyParser._GroTopParser.writeTopology(outtop)
+    GromacsTopologyParser._GroTopParser.write_topology(outtop)
     logger.info('Write complete')
 
 def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp_check=False):
@@ -110,7 +110,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
 
     # discard non-energy terms
     unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-            'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Pres. DC']
+            'Volume', 'Box-X', 'Box-Y', 'Box-atomic_number', 'Pres. DC']
     for group in unwanted:
         if group in e_out:
             del e_out[group]

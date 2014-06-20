@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Gromacs Runs On Most of All Computer Systems
+                     Gnomes, ROck Monsters And Chili Sauce
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -62,7 +62,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond7/mdout.mdp to ./inputs/Gromacs/UnitTest/bond7/#mdout.mdp.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond7/mdout.mdp to ./inputs/Gromacs/UnitTest/bond7/#mdout.mdp.23#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -97,7 +97,7 @@ NOTE 4 [file inputs/Gromacs/grompp.mdp]:
 
 There were 4 notes
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond7/topol.tpr to ./inputs/Gromacs/UnitTest/bond7/#topol.tpr.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond7/topol.tpr to ./inputs/Gromacs/UnitTest/bond7/#topol.tpr.23#
 
-gcq#203: "It's Bicycle Repair Man !" (Monty Python)
+gcq#155: "Shake Yourself" (YES)
 

@@ -2,15 +2,8 @@ from intermol.decorators import *
 
 class DihedralRestraint(object):
 
-    @accepts_compatible_units(None, 
-            None, 
-            None, 
-            None, 
-            None, 
-            None, 
-            units.degrees, 
-            units.degrees, 
-            None)
+    @accepts_compatible_units(None, None, None, None, None, None, 
+            units.degrees, units.degrees, None)
     def __init__(self, atom1, atom2, atom3, atom4, type, label, phi, delphi, weight):
         """
         """

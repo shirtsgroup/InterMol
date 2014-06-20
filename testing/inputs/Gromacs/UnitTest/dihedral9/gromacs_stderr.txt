@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-           Glycine aRginine prOline Methionine Alanine Cystine Serine
+                     Gnomes, ROck Monsters And Chili Sauce
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -63,7 +63,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral9/mdout.mdp to ./inputs/Gromacs/UnitTest/dihedral9/#mdout.mdp.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral9/mdout.mdp to ./inputs/Gromacs/UnitTest/dihedral9/#mdout.mdp.25#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -107,7 +107,7 @@ There were 4 notes
 
 There was 1 warning
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral9/topol.tpr to ./inputs/Gromacs/UnitTest/dihedral9/#topol.tpr.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral9/topol.tpr to ./inputs/Gromacs/UnitTest/dihedral9/#topol.tpr.25#
 
-gcq#316: "Screw a Lightbulb in your Head" (Gogol Bordello)
+gcq#155: "Shake Yourself" (YES)
 

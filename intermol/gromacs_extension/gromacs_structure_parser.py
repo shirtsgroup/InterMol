@@ -1,4 +1,3 @@
-import pdb
 import numpy as np
 from intermol.atom import *
 from intermol.molecule import *
@@ -25,13 +24,13 @@ def readStructure(filename):
 
     for component in System._sys._components:
         uniquec.add(component[0])
-    componentcount = dict(zip(uniquec, np.zeros(len(uniquec),int)))
+    componentcount = dict(zip(uniquec, np.zeros(len(uniquec), int)))
 
     for component in System._sys._components:
         moleculetype = System._sys._molecules[component[0]]
         molecules = moleculetype.moleculeSet.list
         ncomponent = componentcount[component[0]]
-        for n in range(ncomponent,ncomponent+component[1]):
+        for n in range(ncomponent, ncomponent+component[1]):
             molecule = molecules[n]
             for atom in molecule._atoms:
                 if lines[i]:
@@ -47,32 +46,32 @@ def readStructure(filename):
                             position[k] = float(positionElements[k]) * units.nanometers
                     atom.setPosition(position[0], position[1], position[2])
                     if len(variables) >= 6:
-                        velocityElements = variables[3:6]
+                        velocity_elements = variables[3:6]
                         for k in range(3):
-                            velocity[k] = float(velocityElements[k]) * units.nanometers / units.picoseconds
+                            velocity[k] = float(velocity_elements[k]) * units.nanometers / units.picoseconds
                     atom.setVelocity(velocity[0], velocity[1], velocity[2])
                     i += 1
                 else:
                     sys.exit()
         componentcount[component[0]] += component[1]
 
-    rawBoxVector = lines[i].split()
+    raw_box_vector = lines[i].split()
     v = np.zeros([3, 3], float) * units.nanometers
     # diagonals
     for i in range(3):
-        v[i, i] = float(rawBoxVector[i]) * units.nanometers
+        v[i, i] = float(raw_box_vector[i]) * units.nanometers
 
-    if len(rawBoxVector) == 9:
+    if len(raw_box_vector) == 9:
         k = 3
         # Then the off-diagonals
         for i in range(3):
             for j in range(3):
                 if  i != j:
-                    v[i, j] = float(rawBoxVector[k]) * units.nanometers
+                    v[i, j] = float(raw_box_vector[k]) * units.nanometers
                     k += 1
 
     # need to make this numpy sensitive so we can just pass the vector
-    System._sys.setBoxVector(v)
+    System._sys.box_vector = v
 
 
 def writeStructure(filename):
@@ -90,10 +89,7 @@ def writeStructure(filename):
                     atom.name = "LMP_" + atom.name
                 n += 1
                 lines.append('%5d%-4s%6s%5d%13.8f%13.8f%13.8f%13.8f%13.8f%13.8f\n'
-                             % (atom.residue_index,
-                                atom.residue_name,
-                                atom.name,
-                                n,
+                             % (atom.residue_index, atom.residue_name, atom.name, n,
                                 atom._position[0].in_units_of(units.nanometers)._value,
                                 atom._position[1].in_units_of(units.nanometers)._value,
                                 atom._position[2].in_units_of(units.nanometers)._value,
@@ -102,18 +98,18 @@ def writeStructure(filename):
                                 atom._velocity[2].in_units_of(units.nanometers / units.picoseconds)._value))
     # print the box vector
     # check for rectangular; should be symmetric, so we don't have to check 6 values
-    if (System._sys._boxVector[1, 0]._value == 0 and
-        System._sys._boxVector[2, 0]._value == 0 and
-        System._sys._boxVector[2, 1]._value == 0):
+    if (System._sys.box_vector[1, 0]._value == 0 and
+        System._sys.box_vector[2, 0]._value == 0 and
+        System._sys.box_vector[2, 1]._value == 0):
             for i in range(3):
-                lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
+                lines.append('%11.7f ' % System._sys.box_vector[i, i].in_units_of(units.nanometers)._value)
     else:
         for i in range(3):
-            lines.append('%11.7f ' % System._sys._boxVector[i, i].in_units_of(units.nanometers)._value)
+            lines.append('%11.7f ' % System._sys.box_vector[i, i].in_units_of(units.nanometers)._value)
         for i in range(3):
             for j in range(3):
                 if i != j:
-                    lines.append('%11.7f ' % System._sys._boxVector[i, j].in_units_of(units.nanometers)._value)
+                    lines.append('%11.7f ' % System._sys.box_vector[i, j].in_units_of(units.nanometers)._value)
 
     lines.append('\n')
 

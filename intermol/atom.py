@@ -11,7 +11,8 @@ from converter import convert_units
 
 class Atom(object):
     __slots__ = ['index', 'name', 'residue_index', 'residue_name',
-            '_position', '_velocity', '_force', '_atomtype', 'bondtype', 'Z',
+            '_position', '_velocity', '_force', '_atomtype', 'bondtype',
+            'atomic_number',
             'cgnr', '_mass', '_charge', 'ptype', '_sigma', '_epsilon']
     def __init__(self, index, name=None, residue_index=-1, residue_name=None):
         """Create an Atom object
@@ -39,7 +40,7 @@ class Atom(object):
         # These are added after data is read in and come from [ atomtypes ]
         self._atomtype = dict()
         self.bondtype = None
-        self.Z = None
+        self.atomic_number = None
         self.cgnr = None
         self._mass = dict()
         self._charge = dict()

@@ -4,10 +4,8 @@ from abstract_dihedral import *
 class FourierDihedral(AbstractDihedral):
 
     @accepts_compatible_units(None, None, None, None,
-                              units.kilojoules_per_mole,
-                              units.kilojoules_per_mole,
-                              units.kilojoules_per_mole,
-                              units.kilojoules_per_mole)
+        units.kilojoules_per_mole, units.kilojoules_per_mole,
+        units.kilojoules_per_mole, units.kilojoules_per_mole)
     def __init__(self, atom1, atom2, atom3, atom4, c1, c2, c3, c4):
         """
         """

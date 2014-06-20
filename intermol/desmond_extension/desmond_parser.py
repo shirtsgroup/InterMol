@@ -175,8 +175,8 @@ class DesmondParser():
         vdwtypercol = 0
 
         #DEFAULT VALUES WHEN CONVERTING TO GROMACS
-        System._sys._nbFunc = 1
-        System._sys._genpairs = 'yes'
+        System._sys.nonbonded_function = 1
+        System._sys.genpairs = 'yes'
 
         logger.debug('Parsing [ molecule %s]'%(moleculeName))
         logger.debug('Parsing [ ffio]')
@@ -197,11 +197,11 @@ class DesmondParser():
                 combrule = lines[i+combrcol]
                 if re.search("GEOMETRIC", combrule, re.IGNORECASE):
                     if re.search("ARITHMETIC", combrule, re.IGNORECASE):
-                        System._sys._combinationRule = 2
+                        System._sys.combination_rule = 2
                     else:
-                        System._sys._combinationRule = 3
+                        System._sys.combination_rule = 3
                 elif re.search("C6C12", combrule, re.IGNORECASE):
-                    System._sys._combinationRule = 1
+                    System._sys.combination_rule = 1
                 if (vdwtypercol > 0):
                     vdwrule = lines[i+vdwtypercol]
                 # MISSING: need to identify vdw rule here -- currently assuming LJ12_6_sig_epsilon!
@@ -279,21 +279,21 @@ class DesmondParser():
 
                         currentMolecule.addAtom(atom)
                         if not System._sys._atomtypes.get(AbstractAtomType(atom.getAtomType().get(0))): #if atomtype not in System, add it
-                            if System._sys._combinationRule == 1:
+                            if System._sys.combination_rule == 1:
                                 sigma = (etemp/stemp)**(1/6)
                                 epsilon = (stemp)/(4*sigma**6)
                                 newAtomType = AtomCR1Type(split[ivdwtypes],             #atomtype/name
                                               split[ivdwtype],                             #bondtype
-                                              -1,                               #Z
+                                              -1,                               #atomic_number
                                               float(split[imass]) * units.amu,      #mass
                                               float(split[icharge]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
                                               'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
                                               sigma * units.kilocalorie_per_mole * angstroms**(6),
                                               epsilon * units.kilocalorie_per_mole * unit.angstro,s**(12))
-                            elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
+                            elif (System._sys.combination_rule == 2) or (System._sys.combination_rule == 3):
                                 newAtomType = AtomCR23Type(split[ivdwtype], #atomtype/name
                                               split[ivdwtype],                 #bondtype
-                                              -1,                   #Z
+                                              -1,                   #atomic_number
                                               float(split[imass]) * units.amu,  #mass--NEED TO CONVERT TO ACTUAL UNITS
                                               float(split[icharge]) * units.elementary_charge,  #charge--NEED TO CONVERT TO ACTUAL UNIT
                                               'A',                  #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
@@ -311,7 +311,7 @@ class DesmondParser():
                 # now construct an atomlist with all the atoms
                 index = 0
                 for molecule in NewMolecules:
-                    System._sys.addMolecule(molecule)
+                    System._sys.add_molecule(molecule)
                     for atom in molecule._atoms:
                         # does this need to be a deep copy?
                         tmpatom = copy.deepcopy(atom)
@@ -437,18 +437,18 @@ class DesmondParser():
                         raise Exception("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
                     if ljcorr:
-                        if System._sys._ljCorrection:
-                            if System._sys._ljCorrection != ljcorr:
+                        if System._sys.lj_correction:
+                            if System._sys.lj_correction != ljcorr:
                                 raise Exception("ReadError: atoms have different LJ 1-4 correction terms")
                         else:
-                            System._sys._ljCorrection = ljcorr
+                            System._sys.lj_correction = ljcorr
 
                     if coulcorr:
-                        if System._sys._coulombCorrection:
-                            if System._sys._coulombCorrection != coulcorr:
+                        if System._sys.coulomb_correction:
+                            if System._sys.coulomb_correction != coulcorr:
                                 raise Exception("ReadError: atoms have different Coulomb 1-4 correction terms")
                         else:
-                            System._sys._coulombCorrection = coulcorr
+                            System._sys.coulomb_correction = coulcorr
 
                     if newPairForce:
                         currentMoleculeType.pairForceSet.add(newPairForce)
@@ -856,7 +856,7 @@ class DesmondParser():
                     atom.residue_index = int(aline[rincol])
                     atom.residue_name = aline[rncol].strip()
                     try:
-                        atom.Z = int(aline[azcol])
+                        atom.atomic_number = int(aline[azcol])
                     except Exception as e:
                         logger.exception(e) # EDZ: just pass statement before, now exception is recorded, but supressed
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
@@ -900,7 +900,7 @@ class DesmondParser():
         return molecules
 
 
-    def loadBoxVector(self, lines, start, end, verbose = False):
+    def load_box_vector(self, lines, start, end, verbose = False):
 
 #       Loading Box Vector
 #       Create a Box Vector to load into the System
@@ -926,9 +926,9 @@ class DesmondParser():
             v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
             nvec += 1
 
-        System._sys.setBoxVector(v)
+        System._sys.box_vector = v
 
-    def readFile(self, filename, verbose=True):
+    def read_file(self, filename, verbose=True):
 
 #        Load in data from file
 
@@ -1034,10 +1034,10 @@ class DesmondParser():
         #LOAD RAW BOX VECTOR-Same throughout cms
 
         logger.debug("Reading Box Vector...")
-        self.loadBoxVector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
+        self.load_box_vector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
 
 # 
-    def writeFile(self, filename, verbose=True):
+    def write_file(self, filename, verbose=True):
 
 #        Write this topology to file
 #        Write out this topology in Desmond format
@@ -1081,7 +1081,7 @@ class DesmondParser():
         lines.append('  :::\n')
 
         #box vector
-        bv = System._sys.getBoxVector()
+        bv = System._sys.box_vector
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
@@ -1121,7 +1121,7 @@ class DesmondParser():
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
                                 atom.residue_index,
                                 '"%s"'%atom.residue_name,
-                                atom.Z,
+                                atom.atomic_number,
                                 '"%s"'%atom.name,
                                 float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
                                 float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
@@ -1269,7 +1269,7 @@ class DesmondParser():
                                 float(atom._position[2].in_units_of(units.angstroms)._value),
                                 atom.residue_index,
                                 '"%s"'%atom.residue_name,
-                                atom.Z,
+                                atom.atomic_number,
                                 '"%s"'%atom.name,
                                 float(atom._velocity[0].in_units_of(units.angstroms/units.picoseconds)._value),
                                 float(atom._velocity[1].in_units_of(units.angstroms/units.picoseconds)._value),
@@ -1338,11 +1338,11 @@ class DesmondParser():
                 lines.append('    %s\n' % moleculetype.name)
 
             #Adding Combination Rule
-            if System._sys._combinationRule == 1:
+            if System._sys.combination_rule == 1:
                 lines.append('    C612\n')   # this may not exist in DESMOND, or if so, need to be corrected
-            elif System._sys._combinationRule == 2:
+            elif System._sys.combination_rule == 2:
                 lines.append('    ARITHMETIC/GEOMETRIC\n')
-            elif System._sys._combinationRule == 3:
+            elif System._sys.combination_rule == 3:
                 lines.append('    GEOMETRIC\n')
 
 
@@ -1357,7 +1357,7 @@ class DesmondParser():
             ep = None
             stemp = None
             etemp = None
-            combRule = System._sys._combinationRule
+            combRule = System._sys.combination_rule
             for atom in molecule._atoms:
                 i+=1
                 if atom.residue_index:
@@ -1687,10 +1687,10 @@ class DesmondParser():
                 i += 2
                 if isinstance(pair,LJ1PairCR23):
                     dlines.append('      %d %d %d %s %10.8f %10.8f\n' % (i-1, pair.atom1, pair.atom2, 'LJ12_6_sig_epsilon', pair.V.in_units_of(units.angstroms)._value,pair.W.in_units_of(units.kilocalorie_per_mole)._value))
-                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys.coulomb_correction))
                 elif re.match("Both", pair.type):
-                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
-                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, "LJ", System._sys.lj_correction))
+                    dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys.coulomb_correction))
                 else:
                     raise Exception("Unknown pair type!")
 

@@ -5,19 +5,12 @@ from math import fabs as abs
 from math import cos, radians
 
 class DihedralTrigDihedral(AbstractDihedral):
-    @accepts_compatible_units(None,
-            None,
-            None,
-            None,
-            units.degrees,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            units.kilojoules_per_mole,
-            None)
+
+    @accepts_compatible_units(None, None, None, None,
+            units.degrees, units.kilojoules_per_mole, units.kilojoules_per_mole,
+            units.kilojoules_per_mole, units.kilojoules_per_mole,
+            units.kilojoules_per_mole, units.kilojoules_per_mole,
+            units.kilojoules_per_mole, None)
 
     def __init__(self, atom1, atom2, atom3, atom4, phi, fc0, fc1, fc2, fc3, fc4, fc5, fc6, improper=False):
         """

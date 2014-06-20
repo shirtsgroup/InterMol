@@ -98,7 +98,7 @@ class LammpsParser(object):
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
             self.current_mol = Molecule(self.molecule_name)
-            System._sys.addMolecule(self.current_mol)
+            System._sys.add_molecule(self.current_mol)
             self.current_mol_type = System._sys._molecules[self.molecule_name]
             self.current_mol_type.nrexcl = 3  # TODO: automate determination
 
@@ -169,7 +169,7 @@ class LammpsParser(object):
             logger.warn("Hybrid pair styles not yet implemented.")
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
-            System._sys._nbFunc = 1
+            System._sys.nonbonded_function = 1
 
     def parse_kspace_style(self, line):
         """
@@ -184,9 +184,9 @@ class LammpsParser(object):
         """
         if line[1] == 'mix':
             if line[2] == 'geometric':
-                System._sys._combinationRule = 3
+                System._sys.combination_rule = 3
             elif line[2] == 'arithmetic':
-                System._sys._combinationRule = 2
+                System._sys.combination_rule = 2
             else:
                 logger.warn("Unsupported pair_modify mix argument in input file!")
         else:
@@ -221,7 +221,7 @@ class LammpsParser(object):
             self.dihedral_style.append(line[1])
             # TODO: correctly determine gen-pairs state
             if self.dihedral_style == 'opls':
-                System._sys._genpairs = 'yes'
+                System._sys.genpairs = 'yes'
         elif line[1] == 'hybrid':
             self.dihedral_style = []
             for style in line[2:]:
@@ -244,15 +244,15 @@ class LammpsParser(object):
     def parse_special_bonds(self, line):
         """ """
         if 'lj/coul' in line:
-            System._sys._ljCorrection = float(line[line.index('lj/coul') + 3])
-            System._sys._coulombCorrection = float(line[line.index('lj/coul') + 3])
+            System._sys.lj_correction = float(line[line.index('lj/coul') + 3])
+            System._sys.coulomb_correction = float(line[line.index('lj/coul') + 3])
         elif 'lj' in line and 'coul' in line:
-            System._sys._ljCorrection = float(line[line.index('lj') + 3])
-            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
+            System._sys.lj_correction = float(line[line.index('lj') + 3])
+            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
         elif 'lj' in line:
-            System._sys._ljCorrection = float(line[line.index('lj') + 3])
+            System._sys.lj_correction = float(line[line.index('lj') + 3])
         elif 'coul' in line:
-            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
+            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
         else:
             logger.warn("Unsupported special_bonds in input file.")
 
@@ -276,7 +276,7 @@ class LammpsParser(object):
             self.box_vector[dim, dim] = box_length
         else:
             raise ValueError("Negative box length specified in data file.")
-        System._sys.setBoxVector(self.box_vector * self.DIST)
+        System._sys.box_vector = self.box_vector * self.DIST
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -298,7 +298,7 @@ class LammpsParser(object):
             fields = [float(field) for field in line.split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
-                if System._sys._nbFunc == 1:
+                if System._sys.nonbonded_function == 1:
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
@@ -443,12 +443,12 @@ class LammpsParser(object):
                     # TODO: store image flags?
                     pass
                 new_atom_type = None
-                if System._sys._combinationRule == 1:
+                if System._sys.combination_rule == 1:
                     logger.warn("Combination rule '1' not yet implemented")
-                elif System._sys._combinationRule in [2, 3]:
+                elif System._sys.combination_rule in [2, 3]:
                     new_atom_type = AtomCR23Type(fields[2],    # atomtype
                             fields[2],                         # bondtype
-                            -1,                                # Z
+                            -1,                                # atomic_number
                             self.mass_dict[int(fields[2])],    # mass
                             float(fields[3]) * self.CHARGE,    # charge
                             'A',                               # ptype
@@ -1022,13 +1022,13 @@ class LammpsParser(object):
             # shifting of box dimensions
             f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
                     x_min,
-                    x_min + System._sys._boxVector[0][0].in_units_of(self.DIST)._value))
+                    x_min + System._sys.box_vector[0][0].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
                     y_min,
-                    y_min + System._sys._boxVector[1][1].in_units_of(self.DIST)._value))
+                    y_min + System._sys.box_vector[1][1].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
                     z_min,
-                    z_min + System._sys._boxVector[2][2].in_units_of(self.DIST)._value))
+                    z_min + System._sys.box_vector[2][2].in_units_of(self.DIST)._value))
 
             # masses
             for mass in mass_list:
@@ -1106,10 +1106,10 @@ class LammpsParser(object):
             f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(
                     0.0,
                     0.0,
-                    System._sys._ljCorrection,
+                    System._sys.lj_correction,
                     0.0,
                     0.0,
-                    System._sys._coulombCorrection))
+                    System._sys.coulomb_correction))
             f.write('\n')
 
             # read data

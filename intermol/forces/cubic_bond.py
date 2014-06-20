@@ -3,10 +3,9 @@ from abstract_bond import *
 
 class CubicBond(AbstractBond):
     __slots__ = ['length', 'C2', 'C3', 'order','c'] 
-    @accepts_compatible_units(None,
-            None,
-            units.nanometers,
-            units.kilojoules_per_mole * units.nanometers**(-2),
+
+    @accepts_compatible_units(None, None,
+            units.nanometers, units.kilojoules_per_mole * units.nanometers**(-2),
             units.kilojoules_per_mole * units.nanometers**(-3), None, None)
     def __init__(self, atom1, atom2, length, C2, C3, order=1, c=False): # default bond order is 1
         """

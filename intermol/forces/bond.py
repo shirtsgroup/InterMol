@@ -1,9 +1,9 @@
-import pdb
 from intermol.decorators import *
 from abstract_bond import *
 
 class Bond(AbstractBond):
     __slots__ = ['length', 'k', 'order', 'c']
+
     @accepts_compatible_units(None, 
             None, 
             units.nanometers, 

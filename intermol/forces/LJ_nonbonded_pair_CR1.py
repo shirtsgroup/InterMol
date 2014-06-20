@@ -2,9 +2,12 @@ from intermol.decorators import *
 from abstract_pair import *
 
 class LJNBPairCR1(AbstractPair):
-
     __slots__ = ['fudgeQQ', 'qi', 'qj', 'V', 'W']
-    @accepts_compatible_units(None, None, units.elementary_charge, units.elementary_charge,  units.kilojoules_per_mole * units.nanometers**(6), units.kilojoules_per_mole * units.nanometers**(12))
+
+    @accepts_compatible_units(None, None,
+            units.elementary_charge, units.elementary_charge,
+            units.kilojoules_per_mole * units.nanometers**(6),
+            units.kilojoules_per_mole * units.nanometers**(12))
     def __init__(self, atom1, atom2, qi, qj, V, W):
         """
         """

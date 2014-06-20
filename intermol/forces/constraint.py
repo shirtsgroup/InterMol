@@ -3,23 +3,9 @@ import re
 
 class Constraint(object):
 
-    @accepts_compatible_units(None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
-            units.nanometers,
+    @accepts_compatible_units(None, None, None, None, None, None, None, None, None,
+            units.nanometers, units.nanometers, units.nanometers, units.nanometers,
+            units.nanometers, units.nanometers, units.nanometers, units.nanometers,
             None)
 
     def __init__(self, atom1, atom2, length1, type, atom3=None, length2=None, atom4=None, length3=None, atom5=None, length4=None, atom6=None, length5=None, atom7=None, length6=None, atom8=None, length7=None, atom9=None, length8=None):

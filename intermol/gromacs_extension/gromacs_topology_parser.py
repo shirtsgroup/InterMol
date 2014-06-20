@@ -1,4 +1,3 @@
-import pdb
 import sys
 import os
 import re
@@ -50,7 +49,7 @@ class GromacsTopologyParser(object):
             self.defines["FLEX_SPC"] = None
             self.defines["POSRE"] = None
 
-    def parseTopology(self, topfile, verbose=False):
+    def parse_topology(self, topfile, verbose=False):
         """
         Parses a Gromacs topology reading into the abstract
 
@@ -60,9 +59,9 @@ class GromacsTopologyParser(object):
         """
         lines = self.preprocess(topfile, verbose)
         if lines:
-            self.readTopology(lines, verbose)
+            self.read_topology(lines, verbose)
 
-    def readTopology(self, expanded, verbose=False):
+    def read_topology(self, expanded, verbose=False):
         """
         Read in a previously preprocessed Gromacs topology file
 
@@ -101,11 +100,11 @@ class GromacsTopologyParser(object):
                     expanded.pop(i)
 
                     fields = expanded[i].split()
-                    System._sys._nbFunc = int(fields[0])
-                    System._sys._combinationRule = int(fields[1])
-                    System._sys._genpairs = fields[2]
-                    System._sys._ljCorrection = float(fields[3])
-                    System._sys._coulombCorrection = float(fields[4])
+                    System._sys.nonbonded_function = int(fields[0])
+                    System._sys.combination_rule = int(fields[1])
+                    System._sys.genpairs = fields[2]
+                    System._sys.lj_correction = float(fields[3])
+                    System._sys.coulomb_correction = float(fields[4])
 
                     expanded.pop(i)
 
@@ -122,38 +121,38 @@ class GromacsTopologyParser(object):
                         if len(split) == 7:  # atom name and bond type are the same, or there is no z.
                             d = 0  #offset
                             if (split[1].isdigit()):
-                                Z = int(split[1])
+                                atomic_number = int(split[1])
                                 bondtype = split[0].strip()
                             else:
-                                Z = -1
+                                atomic_number = -1
                                 bondtype = split[1].strip()
-                        elif len(split) == 8: #atom and bond name and Z
+                        elif len(split) == 8: #atom and bond name and atomic_number
                             d = 1
                             bondtype = split[1].strip()            # bondtype
-                            Z = split[2]                           # Z
+                            atomic_number = split[2]                           # atomic_number
                         else:
                             raise Exception("Incorrect number of points in atomtype entry (%s)" % split)
 
                         mass =  float(split[2+d]) * units.amu
                         charge = float(split[3+d]) * units.elementary_charge
                         ptype = split[4+d]
-                        if System._sys._combinationRule == 1:
+                        if System._sys.combination_rule == 1:
                             sigma = (float(split[6+d]) / float(split[5+d])) ** (1.0/6.0)
                             epsilon = float(split[5+d]) / (4*sigma**6)
 
                             newAtomType = AtomCR1Type(atomtype,
                                                       bondtype,
-                                                      Z,
+                                                      atomic_number,
                                                       mass,
                                                       charge,
                                                       ptype,
                                                       sigma * units.kilojoules_per_mole * units.nanometers**(6),      # C6
                                                       epsilon * units.kilojoules_per_mole * units.nanometers**(12))   # C12
 
-                        elif (System._sys._combinationRule == 2) or (System._sys._combinationRule == 3):
+                        elif (System._sys.combination_rule == 2) or (System._sys.combination_rule == 3):
                             newAtomType = AtomCR23Type(atomtype,
                                                        bondtype,
-                                                       Z,
+                                                       atomic_number,
                                                        mass,
                                                        charge,
                                                        ptype,
@@ -201,7 +200,7 @@ class GromacsTopologyParser(object):
 
                         # Harmonic
                         elif int(split[2]) == 6:
-                            newBondType = HarmonicBondType(split[0],
+                            newBondType = HarmonicPotentialType(split[0],
                                         split[1],
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
@@ -222,14 +221,14 @@ class GromacsTopologyParser(object):
                         if int(split[2]) == 1:
                             # LJ/Coul. 1-4 (Type 1)
                             if len(split) == 5:
-                                if System._sys._combinationRule == 1:
+                                if System._sys.combination_rule == 1:
                                     newPairType = LJ1PairCR1Type(split[0],
                                             split[1],
                                             split[2],
                                             float(split[3]) * units.kilojoules_per_mole * units.nanometers**(6),
                                             float(split[4]) * units.kilojoules_per_mole * units.nanometers**(12))
 
-                                elif System._sys._combinationRule == (2 or 3):
+                                elif System._sys.combination_rule == (2 or 3):
                                     newPairType = LJ1PairCR1Type(split[0],
                                             split[1],
                                             split[2],
@@ -238,7 +237,7 @@ class GromacsTopologyParser(object):
 
                             # LJ/C. pair NB
                             elif len(split) == 7:
-                                if System._sys._combinationRule == 1:
+                                if System._sys.combination_rule == 1:
                                     newPairType = LJ1PairCR1Type(split[0],
                                             split[1],
                                             split[2],
@@ -247,7 +246,7 @@ class GromacsTopologyParser(object):
                                             float(split[5]) * units.kilojoules_per_mole * units.nanometers**(6),
                                             float(split[6]) * units.kilojoules_per_mole * units.nanometers**(12))
 
-                                elif System._sys._combinationRule == (2 or 3):
+                                elif System._sys.combination_rule == (2 or 3):
                                     newPairType = LJ1PairCR1Type(split[0],
                                             split[1],
                                             split[2],
@@ -258,7 +257,7 @@ class GromacsTopologyParser(object):
 
                         # LJ/Coul. 1-4 (Type 2)
                         elif int(split[2]) == 2:
-                            if System._sys._combinationRule == 1:
+                            if System._sys.combination_rule == 1:
                                 newPairType = LJ1PairCR1Type(split[0],
                                         split[1],
                                         split[2],
@@ -268,7 +267,7 @@ class GromacsTopologyParser(object):
                                         float(split[6]) * units.kilojoules_per_mole * units.nanometers**(6),
                                         float(split[7]) * units.kilojoules_per_mole * units.nanometers**(12))
 
-                            elif System._sys._combinationRule == (2 or 3):
+                            elif System._sys.combination_rule == (2 or 3):
                                 newPairType = LJ1PairCR1Type(split[0],
                                          split[1],
                                          split[2],
@@ -471,14 +470,14 @@ class GromacsTopologyParser(object):
                         split = expanded.pop(i).split()
                         newNonbondedType = None
                         if int(split[2]) == 1:
-                            if System._sys._combinationRule == 1:
+                            if System._sys.combination_rule == 1:
                                 sigma = (float(split[4]) / float(split[3])) ** (1.0/6.0)
                                 sigma *= units.kilojoules_per_mole * units.nanometers**(6)
                                 epsilon = float(split[3]) / (4 * sigma**6)
                                 epsilon *= units.kilojoules_per_mole * units.nanometers**(12)
                                 newNonbondedType = NonbondedLJCR1Type(split[0], split[1], split[2],
                                         sigma, epsilon)
-                            elif System._sys._combinationRule in (2, 3):
+                            elif System._sys.combination_rule in (2, 3):
                                 sigma = float(split[3]) * units.nanometers
                                 epsilon = float(split[4]) * units.kilojoules_per_mole
                                 newNonbondedType = NonbondedLJCR23Type(split[0], split[1], split[2],
@@ -538,7 +537,7 @@ class GromacsTopologyParser(object):
 
                     moleculeName = split[0]
                     currentMolecule = Molecule(moleculeName)
-                    System._sys.addMolecule(currentMolecule)
+                    System._sys.add_molecule(currentMolecule)
                     currentMoleculeType = System._sys._molecules[moleculeName]
                     currentMoleculeType.nrexcl = int(split[1])
                     expanded.pop(i)
@@ -573,7 +572,7 @@ class GromacsTopologyParser(object):
                             tempType = AbstractAtomType(atom._atomtype[index])
                             atomType = System._sys._atomtypes.get(tempType)
                             if atomType:
-                                atom.Z = atomType.Z
+                                atom.atomic_number = atomType.atomic_number
                                 if not atom.bondtype:
                                     if atomType.bondtype:
                                         atom.bondtype = atomType.bondtype
@@ -633,7 +632,7 @@ class GromacsTopologyParser(object):
                                 split.append(bondType.D)
                                 split.append(bondType.beta)
 
-                            elif isinstance(bondType, HarmonicBondType):
+                            elif isinstance(bondType, HarmonicPotentialType):
                                 split.append(bondType.length)
                                 split.append(bondType.k)
                             else:
@@ -693,12 +692,12 @@ class GromacsTopologyParser(object):
 
                         if int(split[2]) == 6:
                             try:
-                                newBondForce = HarmonicBond(int(split[0]),
+                                newBondForce = HarmonicPotential(int(split[0]),
                                         int(split[1]),
                                         float(split[3]) * units.nanometers,
                                         float(split[4]) * units.kilojoules_per_mole * units.nanometers**(-2))
                             except:
-                                newBondForce = HarmonicBond(int(split[0]),
+                                newBondForce = HarmonicPotential(int(split[0]),
                                         int(split[1]),
                                         split[3],
                                         split[4])
@@ -1081,7 +1080,7 @@ class GromacsTopologyParser(object):
                             n = 1
                         while n < mol_num:
                             mol = copy.deepcopy(tempMolecule)
-                            System._sys.addMolecule(mol)
+                            System._sys.add_molecule(mol)
                             n += 1
                     System._sys._molecules = ordered_moleculetypes
                 else:
@@ -1293,7 +1292,7 @@ class GromacsTopologyParser(object):
                 logger.exception("Unrecoverable I/O error(%d): can'd find %s anywhere: '%s'\n" % (errno, strerror, filename))
                 sys.exit()
 
-    def writeTopology(self, filename):
+    def write_topology(self, filename):
         """Write this topology in GROMACS file format.
 
         Args:
@@ -1305,37 +1304,37 @@ class GromacsTopologyParser(object):
         lines.append('[ defaults ]\n')
         lines.append('; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n')
         lines.append('%d%16d%18s%20.4f%8.4f\n'
-                % (System._sys._nbFunc,
-                   System._sys._combinationRule,
-                   System._sys._genpairs,
-                   System._sys._ljCorrection,
-                   System._sys._coulombCorrection))
+                % (System._sys.nonbonded_function,
+                   System._sys.combination_rule,
+                   System._sys.genpairs,
+                   System._sys.lj_correction,
+                   System._sys.coulomb_correction))
         lines.append('\n')
 
         # [ atomtypes ]
         lines.append('[ atomtypes ]\n')
-        lines.append(';type, bondtype, Z, mass, charge, ptype, sigma, epsilon\n')
+        lines.append(';type, bondtype, atomic_number, mass, charge, ptype, sigma, epsilon\n')
         atomtypelist = sorted(System._sys._atomtypes.itervalues(), key=lambda x: x.atomtype)
         for atomtype in atomtypelist:
             if atomtype.atomtype.isdigit():
                 atomtype.atomtype = "LMP_" + atomtype.atomtype
             if atomtype.bondtype.isdigit():
                 atomtype.bondtype = "LMP_" + atomtype.bondtype
-            if System._sys._combinationRule == 1:
+            if System._sys.combination_rule == 1:
                 lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                         % (atomtype.atomtype,
                            atomtype.bondtype,
-                           int(atomtype.Z),
+                           int(atomtype.atomic_number),
                            atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
                            atomtype.charge.in_units_of(units.elementary_charge)._value,
                            atomtype.ptype,
                            atomtype.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
                            atomtype.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
-            elif System._sys._combinationRule in (2, 3):
+            elif System._sys.combination_rule in (2, 3):
                 lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                         % (atomtype.atomtype,
                            atomtype.bondtype,
-                           int(atomtype.Z),
+                           int(atomtype.atomic_number),
                            atomtype.mass.in_units_of(units.atomic_mass_unit)._value,
                            atomtype.charge.in_units_of(units.elementary_charge)._value,
                            atomtype.ptype,
@@ -1348,12 +1347,12 @@ class GromacsTopologyParser(object):
             lines.append('[ nonbond_params ]\n')
             nonbondedlist = sorted(moleculeType.bondForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2))
             for nonbonded in nonbondedlist:
-                if System._sys._combinationRule == 1:
+                if System._sys.combination_rule == 1:
                     lines.append('{0:6s} {1:6s} {2:3d} {3:18.8e} {4:18.8e}\n'.format(
                             nonbonded.atom1, nonbonded.atom2, nonbonded.type,
                             nonbonded.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
                             nonbonded.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
-                elif System._sys._combinationRule in (2, 3):
+                elif System._sys.combination_rule in (2, 3):
                     lines.append('{0:6s} {1:6s} {2:3s} {3:18.8e} {4:18.8e}\n'.format(
                             nonbonded.atom1, nonbonded.atom2, nonbonded.type,
                             nonbonded.sigma.in_units_of(units.nanometers)._value,
@@ -1669,26 +1668,3 @@ class GromacsTopologyParser(object):
             fout.write(line)
         fout.close()
 
-    def getComments(self):
-        """
-        Get comments
-        """
-        return self.comments
-
-    def getExpanded(self):
-        """
-        Get expanded list of directives
-        """
-        return self.expanded
-
-    def getIncludes(self):
-        """
-        Get list of includes
-        """
-        return self.includes
-
-    def getDefines(self):
-        """
-        Get list of defines
-        """
-        return self.defines

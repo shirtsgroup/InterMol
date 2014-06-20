@@ -3,6 +3,7 @@ from abstract_bond import *
 
 class G96Bond(AbstractBond):
     __slots__ = ['length', 'k', 'order', 'c']
+
     @accepts_compatible_units(None, None, units.nanometers, units.kilojoules_per_mole * units.nanometers**(-4), None, None)
     def __init__(self, atom1, atom2, length, k, order=1, c=False):  # default bond order is 1
         """

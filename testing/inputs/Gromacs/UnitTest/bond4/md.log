@@ -1,5 +1,5 @@
-Log file opened on Fri Jun 20 11:07:34 2014
-Host: Christophs-MacBook-Air.local  pid: 20406  nodeid: 0  nnodes:  1
+Log file opened on Fri Jun 20 15:52:33 2014
+Host: Christophs-MacBook-Air.local  pid: 23325  nodeid: 0  nnodes:  1
 Gromacs version:    VERSION 4.6.3
 Precision:          single
 Memory model:       64 bit
@@ -24,7 +24,7 @@ C compiler flags:   -mavx    -Wall -Wno-unused -Wunused-value -Wno-unknown-pragm
 
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Gromacs Runs On Most of All Computer Systems
+                   Great Red Oystrich Makes All Chemists Sane
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -300,7 +300,7 @@ Max number of graph edges per atom is 4
 Total number of graph edges is 16
 Initial temperature: 258.625 K
 
-Started mdrun on node 0 Fri Jun 20 11:07:34 2014
+Started mdrun on node 0 Fri Jun 20 15:52:33 2014
 
            Step           Time         Lambda
               0        0.00000        0.00000
@@ -379,23 +379,23 @@ Grid: 2 x 2 x 2 cells
 
  Computing:         Nodes   Th.     Count  Wall t (s)     G-Cycles       %
 -----------------------------------------------------------------------------
- Neighbor search        1    1          1       0.000        0.000     6.1
- Force                  1    1          1       0.000        0.000     4.0
- PME mesh               1    1          1       0.001        0.002    45.5
- Write traj.            1    1          1       0.001        0.001    31.5
+ Neighbor search        1    1          1       0.000        0.000     5.9
+ Force                  1    1          1       0.000        0.000     4.1
+ PME mesh               1    1          1       0.001        0.002    52.0
+ Write traj.            1    1          1       0.000        0.001    24.2
  Update                 1    1          1       0.000        0.000     0.4
- Rest                   1                       0.000        0.001    12.5
+ Rest                   1                       0.000        0.001    13.4
 -----------------------------------------------------------------------------
  Total                  1                       0.002        0.004   100.0
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
- PME spread/gather      1    1          2       0.000        0.000     4.7
- PME 3D-FFT             1    1          2       0.000        0.001    20.0
- PME solve              1    1          1       0.000        0.001    20.2
+ PME spread/gather      1    1          2       0.000        0.000     5.3
+ PME 3D-FFT             1    1          2       0.000        0.001    24.4
+ PME solve              1    1          1       0.000        0.001    21.4
 -----------------------------------------------------------------------------
 
                Core t (s)   Wall t (s)        (%)
-       Time:        0.002        0.002       92.1
+       Time:        0.002        0.002       99.9
                  (ns/day)    (hour/ns)
-Performance:       96.921        0.248
-Finished mdrun on node 0 Fri Jun 20 11:07:34 2014
+Performance:      103.112        0.233
+Finished mdrun on node 0 Fri Jun 20 15:52:33 2014

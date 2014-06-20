@@ -23,7 +23,7 @@ class MoleculeType(object):
         self.settles = None
         self.nrexcl = None
 
-    def addMolecule(self, molecule):
+    def add_molecule(self, molecule):
         """Add a molecule into the moleculetype container
 
         Args:
@@ -31,7 +31,7 @@ class MoleculeType(object):
         """
         self.moleculeSet.add(molecule)
 
-    def removeMolecule(self, molecule):
+    def remove_molecule(self, molecule):
         """Remove a molecule from the system.
 
         Args:

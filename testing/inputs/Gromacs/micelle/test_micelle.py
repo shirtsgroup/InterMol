@@ -6,6 +6,6 @@ Driver.loadTopology("micelle.top")
 Driver.loadStructure("micelle.gro")
 
 Driver.writeStructure("micelle_out.gro")
-Driver.writeTopology("micelle_out.top")
+Driver.write_topology("micelle_out.top")
 
 

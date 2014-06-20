@@ -1,6 +1,6 @@
 from intermol.decorators import *
 from abstract_angle import *
-      
+
 class G96Angle(AbstractAngle):
 
     @accepts_compatible_units(None, None, None, units.degrees, units.kilojoules_per_mole)

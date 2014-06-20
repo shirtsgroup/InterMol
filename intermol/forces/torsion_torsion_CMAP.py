@@ -1,18 +1,9 @@
 from intermol.decorators import *
-import re
 
 class TorsionTorsionCMAP(object):
 
-    @accepts_compatible_units(None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,                  
-            None)
+    @accepts_compatible_units(None, None, None, None, None, None, None, None,
+            None, None)
 
     def __init__(self, atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, type, chart):
         """

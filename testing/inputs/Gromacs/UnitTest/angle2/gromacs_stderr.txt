@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-        Getting the Right Output Means no Artefacts in Calculating Stuff
+                     Gyas ROwers Mature At Cryogenic Speed
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -62,7 +62,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/mdout.mdp to ./inputs/Gromacs/UnitTest/angle2/#mdout.mdp.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/mdout.mdp to ./inputs/Gromacs/UnitTest/angle2/#mdout.mdp.26#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -106,7 +106,7 @@ There were 4 notes
 
 There was 1 warning
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/topol.tpr to ./inputs/Gromacs/UnitTest/angle2/#topol.tpr.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/topol.tpr to ./inputs/Gromacs/UnitTest/angle2/#topol.tpr.26#
 
-gcq#337: "Ich war schwanger, mir gings zum kotzen" (Nina Hagen)
+gcq#42: "May the Force Be With You" (Star Wars)
 

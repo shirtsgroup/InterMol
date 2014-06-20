@@ -15,7 +15,7 @@ from bond_type import BondType
 from g96_bond_type import G96BondType
 from morse_bond_type import MorseBondType
 from cubic_bond_type import CubicBondType
-from harmonic_bond_type import HarmonicBondType
+from harmonic_potential_type import HarmonicPotentialType
 
 from LJ1_pair_CR1_type import LJ1PairCR1Type
 from LJ1_pair_CR23_type import LJ1PairCR23Type

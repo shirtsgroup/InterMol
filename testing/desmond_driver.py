@@ -11,14 +11,14 @@ def readFile(infile):
     logger = logging.getLogger('InterMolLog')
     logger.info('Reading DESMOND file {0}'.format(infile))
     parser = DesmondParser()
-    parser.readFile(infile)
+    parser.read_file(infile)
     logger.info('Structure loaded')
 
 def writeFile(outfile):
     logger = logging.getLogger('InterMolLog')
     logger.info('Writing DESMOND file {0}'.format(outfile))
     parser = DesmondParser()
-    parser.writeFile(outfile)
+    parser.write_file(outfile)
     logger.info('Write complete')
 
 # --------- energy evaluation methods ---------- #

@@ -3,11 +3,8 @@ from abstract_angle import *
 
 class QuarticAngle(AbstractAngle):
     
-    @accepts_compatible_units(None, 
-            None, 
-            None, 
-            units.degrees, 
-            units.kilojoules_per_mole, 
+    @accepts_compatible_units(None, None, None, 
+            units.degrees, units.kilojoules_per_mole, 
             units.kilojoules_per_mole * units.radians**(-1), 
             units.kilojoules_per_mole * units.radians**(-2), 
             units.kilojoules_per_mole * units.radians**(-3), 

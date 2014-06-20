@@ -6,6 +6,6 @@ Driver.loadTopology("complex.top")
 Driver.loadStructure("complex.gro")
 
 Driver.writeStructure("complex_out.gro")
-Driver.writeTopology("complex_out.top")
+Driver.write_topology("complex_out.top")
 
 

@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                      GROup of MAchos and Cynical Suckers
+                     Gyas ROwers Mature At Cryogenic Speed
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -62,7 +62,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond1/mdout.mdp to ./inputs/Gromacs/UnitTest/bond1/#mdout.mdp.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond1/mdout.mdp to ./inputs/Gromacs/UnitTest/bond1/#mdout.mdp.25#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -106,7 +106,7 @@ There were 4 notes
 
 There was 1 warning
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond1/topol.tpr to ./inputs/Gromacs/UnitTest/bond1/#topol.tpr.1#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond1/topol.tpr to ./inputs/Gromacs/UnitTest/bond1/#topol.tpr.25#
 
-gcq#90: "Once Again Let Me Do This" (Urban Dance Squad)
+gcq#42: "May the Force Be With You" (Star Wars)
 
