@@ -6,6 +6,7 @@ import math
 import re
 import numpy as np
 from collections import deque
+import logging
 
 import intermol.unit as units
 from intermol.Atom import *
@@ -15,6 +16,8 @@ from intermol.Types import *
 from intermol.Force import *
 from intermol.HashMap import *
 import cmap_parameters
+
+logger = logging.getLogger('InterMolLog')
 
 #   helper functions
 def endheadersection(blanksection,header,hlines):
@@ -175,9 +178,8 @@ class DesmondParser():
         System._sys._nbFunc = 1
         System._sys._genpairs = 'yes'
 
-        if verbose:
-            print 'Parsing [ molecule %s]'%(moleculeName)
-            print "Parsing [ ffio]"
+        logger.debug('Parsing [ molecule %s]'%(moleculeName))
+        logger.debug('Parsing [ ffio]')
 
         while i < end:
             if not bPreambleRead:
@@ -236,15 +238,14 @@ class DesmondParser():
                 # we can't use yet, and then process them in the
                 # order we want.
 
-                if verbose:
-                    print "Parsing [ vdwtypes]..."
+                logger.debug("Parsing [ vdwtypes]...")
                 for j in range(ff_number):
                     vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
                     vdwtypeskeys.append(entry_values[j].split()[1])
 
             elif match.group('sites'):   #correlate with atomtypes and atoms in GROMACS
-                if verbose:                #also edit vdwtypes
-                    print "Parsing [ sites]..."
+                                         #also edit vdwtypes
+                logger.debug("Parsing [ sites]...")
                     
                 #set indices to avoid continually calling list functions.    
                 ivdwtype = entry_data.index('s_ffio_vdwtype')+1
@@ -331,8 +332,7 @@ class DesmondParser():
                         forces = self.loadMBonds(lines,self.b_blockpos[0], i, npermol, verbose)
                         currentMoleculeType.bondForceSet = forces[0]
                         self.b_blockpos.pop(0)
-                if verbose:
-                    print "Parsing [ bonds ]..."
+                logger.debug("Parsing [ bonds ]...")
 
                 for j in range(ff_number):
                     split = entry_values[j].split()
@@ -392,7 +392,7 @@ class DesmondParser():
                                            None,
                                            0)
                     else:
-                        print "ERROR (readFile): found unsupported bond"
+                        raise Exception("ReadError: found unsupported bond")
 
                     if newBondForce:
                         if newBondForce in currentMoleculeType.bondForceSet: #bondForceSet already contains i,j, bond order
@@ -404,8 +404,7 @@ class DesmondParser():
                         self.bondtypes.add(newBondType)
 
             elif match.group('pairs'):
-                if verbose:
-                    print "Parsing [ pairs]..."
+                logger.debug("Parsing [ pairs]...")
                 #pairlist_coul = []
                 ljcorr = False
                 coulcorr = False
@@ -435,19 +434,19 @@ class DesmondParser():
                         # the same indices.
                         #pairlist_coul.append([int(split[1]),int(split[2])])
                     else:
-                        print "ERROR (readFile): didn't recognize type %s in line %s", split[3], entry_values[j]
+                        raise Exception("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
                     if ljcorr:
                         if System._sys._ljCorrection:
                             if System._sys._ljCorrection != ljcorr:
-                                "ERROR (readFile): atoms have different LJ 1-4 correction terms"
+                                raise Exception("ReadError: atoms have different LJ 1-4 correction terms")
                         else:
                             System._sys._ljCorrection = ljcorr
 
                     if coulcorr:
                         if System._sys._coulombCorrection:
                             if System._sys._coulombCorrection != coulcorr:
-                                "ERROR (readFile): atoms have different Coulomb 1-4 correction terms"
+                                raise Exception("ReadError: atoms have different Coulomb 1-4 correction terms")
                         else:
                             System._sys._coulombCorrection = coulcorr
 
@@ -459,8 +458,7 @@ class DesmondParser():
                     # same energy.  This could eventually be improved by checking versus the sites.
 
             elif match.group('angles'): #add more stuff later once you have more samples to work with
-                if verbose:
-                    print "Parsing [ angles]..."
+                logger.debug("Parsing [ angles]...")
                 for j in range(ff_number):
                     split = entry_values[j].split()
                     newAngleForce = None
@@ -515,8 +513,7 @@ class DesmondParser():
                                             2*float(split[6]))
 
                     else:
-                        print "ERROR (readFile): found unsupported angle in: ",
-                        print lines[i]
+                        raise Exception("ReadError: found unsupported angle in: %s" %str(lines[i]))
 
                     if newAngleForce:
                         # check to see if this angle already has terms associated with it.
@@ -535,14 +532,13 @@ class DesmondParser():
                                 newAngleForce.k = oldAngleForce.k
                                 newAngleForce.theta = oldAngleForce.theta
                             else:
-                                print "warning: duplicate angle type! Shouldn't reach this point of code!"
+                                logger.warn("Duplicate angle type! Shouldn't reach this point of code!")
 
                         # add it on
                         currentMoleculeType.angleForceSet.add(newAngleForce)
 
             elif match.group('dihedrals'):
-                if verbose:
-                    print "Parsing [ dihedrals]..."
+                logger.debug("Parsing [ dihedrals]...")
 
                 for j in range(ff_number):
                     split = entry_values[j].split()
@@ -601,8 +597,7 @@ class DesmondParser():
                             0 * units.degrees,
                             fc0, fc1, fc2, fc3, fc4, fc5, fc6)
                     else:
-                        print "ERROR (readFile): found unsupported dihedral in:",
-                        print line[i]
+                        raise Exception("ReadError: found unsupported dihedral in: %s" % str(line[i]))
                     if newDihedralForce:
                         try:
                             # we can have multiple parameters with DESMOND, and append if we do
@@ -610,18 +605,18 @@ class DesmondParser():
                             # this will fail if it's the wrong type of dihedral
                             try:
                                 dihedralmatch.sum_parameters(newDihedralForce) 
-                            except Exception:
-                                pass
-                        except Exception:
-                            pass
+                            except Exception as e:
+                                logger.exception(e) #EDZ: these were just pass statements before, 
+                                                    #     now they are recorded but not raised
+                        except Exception as e:
+                            logger.exception(e)
                         currentMoleculeType.dihedralForceSet.add(newDihedralForce)
                 #9 proper dihedrals, funct = 1
                 #3 improper dihedrals, funct = 2
                 #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
 
             elif match.group('torsiontorsion'):
-                if verbose:
-                    print "Parsing [ torsion-torsion]..."
+                logger.debug("Parsing [ torsion-torsion]...")
                 for j in range(ff_number):
                     split = entry_values[j].split()
                     newTorsionTorsionForce = None
@@ -638,14 +633,12 @@ class DesmondParser():
                                                                     'cmap',
                                                                     int(split[10]))
                     else:
-                        print "ERROR (readFile): found unsupported torsion-torsion type in:",
-                        print line[i]
+                        raise Exception("ReadError: found unsupported torsion-torsion type in: %s" % str(line[i]))
                     if newTorsionTorsionForce:
                         currentMoleculeType.torsiontorsionForceSet.add(newTorsionTorsionForce)
 
             elif match.group('constraints'):
-                if verbose:
-                    print "Parsing [ constraints]..."
+                logger.debug("Parsing [ constraints]...")
                 ctype = 1
                 funct_pos = 0
                 atompos = [] #position of atoms in constraints; spread all over the place
@@ -701,13 +694,12 @@ class DesmondParser():
                         elif templen == 8:
                             newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
                     else:
-                        print "ERROR (readFile): found unsupported constraint"
+                        raise Exception("ReadError: found unsupported constraint")
                     if newConstraint:
                         currentMoleculeType.constraints.add(newConstraint)
 
             elif match.group('exclusions'):
-                if verbose:
-                    print "Parsing [ exclusions]..."
+                logger.debug("Parsing [ exclusions]...")
                 for j in range(ff_number):
                     temp = entry_values[j].split()
                     temp.remove(temp[0])
@@ -715,8 +707,7 @@ class DesmondParser():
                     currentMoleculeType.exclusions.add(newExclusion)
 
             elif match.group('restraints'):
-                if verbose:
-                    print "Parsing [ restraints]..."
+                logger.warn("Parsing [ restraints] not yet implemented")
 
         else:  # no matches
             while '}' not in lines[i]:
@@ -730,8 +721,7 @@ class DesmondParser():
 #           start: beginning of where m_bonds starts for each molecule
 #           end: ending of where m_bondsends for each molecule
 
-        if verbose:
-            print "Parsing [ m_bonds]..."
+        logger.debug("Parsing [ m_bonds]...")
         bg = False
         newBondForce = None
         split = []
@@ -786,8 +776,7 @@ class DesmondParser():
 #           slength: number of unique atoms in m_atoms, used to calculate repetitions
 #           sysDirective: help locate positions of specific data in m_atoms
 
-        if verbose:
-            print "Parsing [ m_atom ]..."
+        logger.debug("Parsing [ m_atom ]...")
         i = start
         xcol = None
         ycol = None
@@ -816,48 +805,37 @@ class DesmondParser():
                     if match.group('First'):
                         start+=1
                     if match.group('xcoord'):
-                        if verbose:
-                            print "   Parsing [ xcoord]..."
+                        logger.debug("   Parsing [ xcoord]...")
                         xcol = i - start
                     elif match.group('ycoord'):
-                        if verbose:
-                            print "   Parsing [ ycoord]..."
+                        logger.debug("   Parsing [ ycoord]...")
                         ycol = i - start
                     elif match.group('zcoord'):
-                        if verbose:
-                            print "   Parsing [ zcoord]..."
+                        logger.debug("   Parsing [ zcoord]...")
                         zcol = i - start
                     elif match.group('rindex'):
-                        if verbose:
-                            print "   Parsing [ rindex]..."
+                        logger.debug("   Parsing [ rindex]...")
                         rincol = i - start
                     elif match.group('rname'):
-                        if verbose:
-                            print "   Parsing [ rname]..."
+                        logger.debug("   Parsing [ rname]...")
                         rncol = i - start
                     elif match.group('aZ'):
-                        if verbose:
-                            print "   Parsing [ atomic number ]..."
+                        logger.debug("   Parsing [ atomic number ]...")
                         azcol = i - start
                     elif match.group('pdbaname'):
-                        if verbose:
-                            print "   Parsing [ pdb atom name]..."
+                        logger.debug("   Parsing [ pdb atom name]...")
                         pdbancol = i - start
                     elif match.group('aname'):
-                        if verbose:
-                            print "   Parsing [ atom name]..."
+                        logger.debug("   Parsing [ atom name]...")
                         ancol = i - start
                     elif match.group('xvelocity'):
-                        if verbose:
-                            print "   Parsing [ xvelocity]..."
+                        logger.debug("   Parsing [ xvelocity]...")
                         vxcol = i - start
                     elif match.group('yvelocity'):
-                        if verbose:
-                            print "   Parsing [ yvelocity]..."
+                        logger.debug("   Parsing [ yvelocity]...")
                         vycol = i - start
                     elif match.group('zvelocity'):
-                        if verbose:
-                            print "   Parsing [ zvelocity]..."
+                        logger.debug("   Parsing [ zvelocity]...")
                         vzcol = i - start
             i+=1
 
@@ -865,8 +843,7 @@ class DesmondParser():
 
         newMoleculeAtoms = []
         j = 0
-        if verbose:
-            print "   Parsing atoms..."
+        logger.debug("   Parsing atoms...")
 
         molecules = []    
         while j < mult:
@@ -880,8 +857,8 @@ class DesmondParser():
                     atom.residueName = aline[rncol].strip()
                     try:
                         atom.Z = int(aline[azcol])
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.exception(e) # EDZ: just pass statement before, now exception is recorded, but supressed
                     atom.setPosition(float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
                                      float(aline[zcol]) * units.angstroms)
@@ -1042,7 +1019,7 @@ class DesmondParser():
 
         #LOADING Ffio blocks
 
-        print "Reading Ffio Block..."
+        logger.debug("Reading Ffio Block...")
         #MRS: warning -- currently no check to avoid duplicated molecule names. Investigate.
         i = 0
         j = 0
@@ -1056,7 +1033,7 @@ class DesmondParser():
 
         #LOAD RAW BOX VECTOR-Same throughout cms
 
-        print "Reading Box Vector..."
+        logger.debug("Reading Box Vector...")
         self.loadBoxVector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
 
 # 
@@ -1077,7 +1054,7 @@ class DesmondParser():
         stemp = None
         etemp = None
 
-        print "WARNING: MacroModel atom type is not defined in other files, is set to 1 for all cases as it must be validly defined for desmond files to run.  However, it does not affect the energies."
+        logger.warn("MacroModel atom type is not defined in other files, is set to 1 for all cases as it must be validly defined for desmond files to run.  However, it does not affect the energies.")
 
         # for all CMS files
         lines.append('{\n')
@@ -1088,8 +1065,7 @@ class DesmondParser():
 
         #FIRST F_M_CT BLOCK
 
-        if verbose:
-            print "Writing first f_m_ct..."
+        logger.debug("Writing first f_m_ct...")
         lines.append('f_m_ct {\n')
         lines.append('  s_m_title\n')
         lines.append('  r_chorus_box_ax\n')
@@ -1192,8 +1168,8 @@ class DesmondParser():
                                         1))
                     elif not bond:
                         nonecnt+=1
-                if nonecnt > 0 and verbose:
-                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+                if nonecnt > 0:
+                    logger.debug('FOUND %d BONDS THAT DO NOT EXIST' % nonecnt)
             nmol +=1
 
         hlines[0] = '  m_bond[%d] {\n' % i    
@@ -1211,12 +1187,10 @@ class DesmondParser():
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
         for moleculetype in System._sys._molecules.itervalues():
-            if verbose:
-                print 'Writing molecule block %s...'% moleculetype.name
+            logger.debug('Writing molecule block %s...'% moleculetype.name)
             #BEGINNING BLOCK
             
-            if verbose:
-                print "  Writing f_m_ct..."
+            logger.debug("  Writing f_m_ct...")
             lines.append('f_m_ct {\n')
             lines.append('  s_m_title\n')
             bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
@@ -1263,8 +1237,7 @@ class DesmondParser():
 
             #M_ATOMS
 
-            if verbose:
-                print "  Writing m_atoms..."
+            logger.debug("  Writing m_atoms...")
             apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
             lines.append('m_atom\n')
             lines.append('    # First column is atom index #\n')
@@ -1306,8 +1279,7 @@ class DesmondParser():
             lines.append('  }\n')
 
             #M_BONDS
-            if verbose:
-                print "  Writing m_bonds..."
+            logger.debug("  Writing m_bonds...")
 
             hlines = list()
             dlines =  list()
@@ -1338,8 +1310,8 @@ class DesmondParser():
                                         1))
                     else:
                         nonecnt+=1
-                if nonecnt > 0 and verbose:
-                    print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+                if nonecnt > 0:
+                    logger.debug('FOUND %d BONDS THAT DO NOT EXIST' % nonecnt)
 
             header = '  m_bond[%d] {\n'%i
 
@@ -1352,8 +1324,7 @@ class DesmondParser():
 
             #FFIO
             molecule =  moleculetype.moleculeSet[0]
-            if verbose:
-                print "  Writing ffio..."
+            logger.debug("  Writing ffio...")
             lines.append('  ffio_ff {\n')
             lines.append('    s_ffio_name\n')
             lines.append('    s_ffio_comb_rule\n')
@@ -1364,7 +1335,6 @@ class DesmondParser():
             if re.search("Viparr", moleculetype.name):
                 lines.append('    Generated by Viparr\n')
             else:
-                #print moleculetype.name
                 lines.append('    %s\n' % moleculetype.name)
 
             #Adding Combination Rule
@@ -1405,8 +1375,7 @@ class DesmondParser():
                 if ' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)) not in vdwtypes:
                     vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom._atomtype[0],"LJ12_6_sig_epsilon",float(stemp),float(etemp)))
 
-            if verbose:
-                print "   -Writing vdwtypes..."
+            logger.debug("   -Writing vdwtypes...")
             lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
             lines.append("      s_ffio_name\n")
             lines.append("      s_ffio_funct\n")
@@ -1420,8 +1389,7 @@ class DesmondParser():
             lines.append("      :::\n")
             lines.append("    }\n")
 
-            if verbose:
-                print "   -Writing sites..."
+            logger.debug("   -Writing sites...")
             lines.append("    ffio_sites[%d] {\n"%(len(sites)))
             lines.append("      s_ffio_type\n")
             lines.append("      r_ffio_charge\n")
@@ -1437,8 +1405,7 @@ class DesmondParser():
             lines.append("    }\n")
 
             #-ADDING BONDS
-            if verbose:
-                print "   -Writing bonds..."
+            logger.debug("   -Writing bonds...")
 
             dlines = list()
             hlines = list()
@@ -1478,8 +1445,8 @@ class DesmondParser():
                                    0.5*k))
                 elif not bond:
                     nonecnt+=1
-            if nonecnt > 0 and verbose:
-                print 'FOUND %d BONDS THAT DO NOT EXIST'%nonecnt
+            if nonecnt > 0:
+                logger.debug('FOUND %d BONDS THAT DO NOT EXIST' %  nonecnt)
             header = "    ffio_bonds[%d] {\n" % (i)
             hlines = endheadersection(i==0,header,hlines)
             lines.extend(hlines)
@@ -1488,8 +1455,7 @@ class DesmondParser():
             lines.append("    }\n")
 
             #-ADDING ANGLES
-            if verbose:
-                print "   -Writing angles..."
+            logger.debug("   -Writing angles...")
 
             dlines = list()
             hlines = list()
@@ -1523,8 +1489,7 @@ class DesmondParser():
 
 
             #-ADDING DIHEDRALS
-            if verbose:
-                print "   -Writing dihedrals..."
+            logger.debug("   -Writing dihedrals...")
             dlines = list()
             hlines = list()
             hlines.append("    ffio_dihedrals_placeholder\n")
@@ -1570,9 +1535,8 @@ class DesmondParser():
                             float(dihedral.fc5.in_units_of(units.kilocalories_per_mole)._value),
                             float(dihedral.fc6.in_units_of(units.kilocalories_per_mole)._value)))
                 else:
-                    print "ERROR (writeFile): found unsupported dihedral."
-                    print dihedral,
-                    print "Printing zero-energy placeholder."
+                    logger.error("WriteError: found unsupported dihedral. \n    %s\n    Printing zero-energy placeholder."
+                            % str(dihedral))
                     dlines.append('%s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
                                   (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
                                    0, 0, 0, 0, 0, 0, 0))
@@ -1585,8 +1549,7 @@ class DesmondParser():
             lines.append("    }\n")
 
             # adding TORSION-TORSION terms
-            if verbose:
-                print "   -Writing torsion-torsions..."
+            logger.debug("   -Writing torsion-torsions...")
 
             bpos = len(lines) #storing position for torsions
             hlines = list()
@@ -1635,8 +1598,7 @@ class DesmondParser():
 
             #ADDING EXCLUSIONS
             i = 0
-            if verbose:
-                print "   -Writing exclusions..."
+            logger.debug("   -Writing exclusions...")
             bpos = len(lines) #storing position for exclusions instead of bonds
             hlines = list()
             dlines = list()
@@ -1658,7 +1620,7 @@ class DesmondParser():
 
             else:
                 if moleculetype.nrexcl > 4:
-                    print "ERROR: can't handle more than excluding 1-4 interactions right now!"
+                    raise Exception("Can't handle more than excluding 1-4 interactions right now!")
 
                 bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
 
@@ -1709,8 +1671,7 @@ class DesmondParser():
             lines.append("    }\n")
 
             #-ADDING PAIRS
-            if verbose:
-                print "   -Writing pairs..."
+            logger.debug("   -Writing pairs...")
                 
             dlines = list()
             hlines = list()
@@ -1731,7 +1692,7 @@ class DesmondParser():
                     dlines.append('      %d %d %d %s %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, "LJ", System._sys._ljCorrection))
                     dlines.append('      %d %d %d %s %10.8f <>\n' % (i, pair.atom1, pair.atom2, "Coulomb", System._sys._coulombCorrection))
                 else:
-                    print "ERROR: unknown pair type!"
+                    raise Exception("Unknown pair type!")
 
             header = "    ffio_pairs[%d] {\n"%(i)
             hlines = endheadersection(i==0,header,hlines)
@@ -1746,8 +1707,7 @@ class DesmondParser():
             # STILL NEED TO ADD
             
             #ADDING CONSTRAINTS
-            if verbose:
-                print "   -Writing constraints..."
+            logger.debug("   -Writing constraints...")
             isHOH = False
 
             if (moleculetype.settles):
