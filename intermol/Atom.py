@@ -6,31 +6,26 @@
 Lee <ctl4f@virginia.edu>
 """
 import intermol.unit as units
-
-from Converter import convert_units
+from converter import convert_units
 
 
 class Atom(object):
-    __slots__ = ['atomIndex', 'atomName', 'residueIndex', 'residueName',
+    __slots__ = ['index', 'name', 'residue_index', 'residue_name',
             '_position', '_velocity', '_force', '_atomtype', 'bondtype', 'Z',
             'cgnr', '_mass', '_charge', 'ptype', '_sigma', '_epsilon']
-    def __init__(self,
-                atomIndex,
-                atomName=None,
-                residueIndex=-1,
-                residueName=None):
+    def __init__(self, index, name=None, residue_index=-1, residue_name=None):
         """Create an Atom object
 
         Args:
-            atomIndex (int): index of atom in the molecule
-            atomName (str): name of the atom (eg., N, C, H, O)
-            residueIndex (int): index of residue in the molecule
-            residueName (str): name of the residue (eg., THR, CYS)
+            index (int): index of atom in the molecule
+            name (str): name of the atom (eg., N, C, H, O)
+            residue_index (int): index of residue in the molecule
+            residue_name (str): name of the residue (eg., THR, CYS)
         """
-        self.atomIndex = atomIndex
-        self.atomName = atomName
-        self.residueIndex = residueIndex
-        self.residueName = residueName
+        self.index = index
+        self.name = name
+        self.residue_index = residue_index
+        self.residue_name = residue_name
         self._position = [0 * units.nanometers,
                             0 * units.nanometers,
                             0 * units.nanometers]
@@ -51,6 +46,31 @@ class Atom(object):
         self.ptype = "A"
         self._sigma = dict()
         self._epsilon = dict()
+
+    def getAtomType(self, index=None):
+        """Gets the atomtype
+
+        Args:
+            index (str): the value corresponding with type precedence (A Type, B Type)
+
+        Returns:
+            atomtype (list, str): Returns the atomtype list or the value at
+                                  index if index is specified
+        """
+        if index:
+            return self._atomtype[index]
+        return self._atomtype
+
+    def setAtomType(self, index, atomtype):
+        """Sets the atomtype
+
+        Args:
+            atomtype (str): the atomtype of the atom
+            index (str): the value corresponding with type precedence (A Type, B Type)
+        """
+        self._atomtype[index] = atomtype
+
+
 
     def setSigma(self, index, sigma):
         """Sets the sigma
@@ -108,28 +128,6 @@ class Atom(object):
             return self._cgnr[index]
         return self._cgnr
 
-    def setAtomType(self, index, atomtype):
-        """Sets the atomtype
-
-        Args:
-            atomtype (str): the atomtype of the atom
-            index (str): the value corresponding with type precedence (A Type, B Type)
-        """
-        self._atomtype[index] = atomtype
-
-    def getAtomType(self, index = None):
-        """Gets the atomtype
-
-        Args:
-            index (str): the value corresponding with type precedence (A Type, B Type)
-
-        Returns:
-            atomtype (list, str): Returns the atomtype list or the value at
-                                  index if index is specified
-        """
-        if index:
-            return self._atomtype[index]
-        return self._atomtype
 
     def setPosition(self, x, y, z):
         """Sets the position of the atom
@@ -242,13 +240,13 @@ class Atom(object):
         return self._charge
 
     def __repr__(self):
-        return 'Atom({0}, {1})'.format(self.atomIndex, self.atomName)
+        return 'Atom({0}, {1})'.format(self.index, self.name)
 
     def __cmp__(self, other):
-        return self.atomIndex - other.atomIndex
+        return self.index - other.index
 
     def __eq__(self, other):
-        return self.atomIndex == other.atomIndex
+        return self.index == other.index
 
     def __hash__(self):
-        return hash(self.atomIndex)
+        return hash(self.index)

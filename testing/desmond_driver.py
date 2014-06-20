@@ -5,7 +5,7 @@ import shutil
 import intermol.unit as units
 from collections import OrderedDict
 import logging
-from intermol.DesmondExt.DesmondParser import DesmondParser
+from intermol.desmond_extension.desmond_parser import DesmondParser
 
 def readFile(infile):
     logger = logging.getLogger('InterMolLog')

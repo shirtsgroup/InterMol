@@ -5,9 +5,9 @@
 from collections import OrderedDict
 import numpy as np
 
-from intermol.MoleculeType import MoleculeType
-from intermol.OrderedSet import OrderedSet
-from intermol.HashMap import HashMap
+from intermol.moleculetype import MoleculeType
+from intermol.orderedset import OrderedSet
+from intermol.hashmap import HashMap
 
 
 class System(object):

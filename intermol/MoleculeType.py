@@ -1,5 +1,5 @@
-from OrderedSet import OrderedSet
-from HashMap import HashMap
+from orderedset import OrderedSet
+from hashmap import HashMap
 
 
 class MoleculeType(object):
@@ -48,26 +48,26 @@ class MoleculeType(object):
         return get_equivalent(self.moleculeSet, molecule, False)
 
     def addForce(self, force):
-        """Add a force to the moleculeType
+        """Add a forces to the moleculeType
 
         Args:
-            force (AbstractForce): Add a force or contraint to the moleculeType
+            forces (AbstractForce): Add a forces or contraint to the moleculeType
         """
         self.forceSet.add(force)
 
     def removeForce(self, force):
-        """Remove a force from the moleculeType
+        """Remove a forces from the moleculeType
 
         Args:
-            force (AbstractForce): Remove a force from the moleculeType
+            forces (AbstractForce): Remove a forces from the moleculeType
         """
         self.forceSet.remove(force)
 
     def getForce(self, force):
-        """Get a force from the moleculeType
+        """Get a forces from the moleculeType
 
         Args:
-            force (AbstractForce): Retrieve a force from the moleculeType
+            forces (AbstractForce): Retrieve a forces from the moleculeType
         """
         return get_equivalent(self.forceSet, force, False)
 

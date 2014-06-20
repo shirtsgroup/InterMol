@@ -5,14 +5,14 @@ import os
 import pdb
 import logging
 import intermol.unit as units
-from intermol.GromacsExt.GromacsTopologyParser import GromacsTopologyParser
-import intermol.GromacsExt.GromacsStructureParser as GromacsStructureParser
+from intermol.gromacs_extension.gromacs_topology_parser import GromacsTopologyParser
+import intermol.gromacs_extension.gromacs_structure_parser as GromacsStructureParser
 
 def readFile(top_in, gro_in, gropath):
     logger = logging.getLogger('InterMolLog')
     # ensure .gro and .top are a valid match
     gromacs_energies(top_in, gro_in,
-            'Inputs/Gromacs/grompp.mdp', gropath, '',
+            'inputs/Gromacs/grompp.mdp', gropath, '',
             grompp_check=True)
     logger.info('Reading GROMACS topology {0}'.format(top_in))
     GromacsTopologyParser._GroTopParser = GromacsTopologyParser()

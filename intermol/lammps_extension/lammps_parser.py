@@ -9,11 +9,11 @@ import logging
 import numpy as np
 
 import intermol.unit as units
-from intermol.Atom import Atom
-from intermol.Molecule import Molecule
-from intermol.System import System
-from intermol.Types import *
-from intermol.Force import *
+from intermol.atom import Atom
+from intermol.molecule import Molecule
+from intermol.system import System
+from intermol.types import *
+from intermol.forces import *
 
 logger = logging.getLogger('InterMolLog')
 
@@ -457,10 +457,10 @@ class LammpsParser(object):
 
                 System._sys._atomtypes.add(new_atom_type)
 
-                atom = Atom(int(fields[0]),  # AtomNum
-                        fields[2],           # atomName
-                        int(fields[1]),      # resNum (molNum)
-                        fields[1])           # resName (molNum)
+                atom = Atom(int(fields[0]),  # index
+                        fields[2],           # name
+                        int(fields[1]),      # residue_index (molNum)
+                        fields[1])           # residue_name (molNum)
                 atom.setAtomType(0, fields[2])  # atomNum for LAMMPS
                 atom.cgnr = 0  # TODO: look into alternatives
                 atom.setCharge(0, float(fields[3]) * self.CHARGE)
@@ -673,7 +673,7 @@ class LammpsParser(object):
             # atom index offsets from 1 for each molecule
             offsets = list()
             for molecule in mol_type.moleculeSet:
-                offsets.append(molecule._atoms[0].atomIndex - 1)
+                offsets.append(molecule._atoms[0].index - 1)
 
             molecule = mol_type.moleculeSet[0]
             atoms = molecule._atoms
@@ -969,8 +969,8 @@ class LammpsParser(object):
 
                     # atom
                     atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
-                            atom.atomIndex,
-                            atom.residueIndex,
+                            atom.index,
+                            atom.residue_index,
                             atom_type_dict[atom._atomtype[0]],
                             atom._charge[0].in_units_of(self.CHARGE)._value,
                             x_coord,
@@ -978,7 +978,7 @@ class LammpsParser(object):
                             z_coord))
                     # velocity
                     vel_list.append('{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                            atom.atomIndex,
+                            atom.index,
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))

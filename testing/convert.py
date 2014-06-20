@@ -5,7 +5,7 @@ import logging
 import pdb
 import numpy as np
 
-from intermol.System import System
+from intermol.system import System
 import helper_functions
 import desmond_driver
 import gromacs_driver
@@ -151,11 +151,11 @@ def main(args=''):
         if args.des_in:
             input_type = 'Desmond' # used for displaying results
             e_in, e_infile = desmond_driver.desmond_energies(args.des_in[0],
-                    'Inputs/Desmond/onepoint.cfg', args.despath)
+                    'inputs/Desmond/onepoint.cfg', args.despath)
         elif args.gro_in:
             input_type = 'Gromacs'
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
-                    'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+                    'inputs/Gromacs/grompp.mdp', args.gropath, '')
         elif args.lmp_in:
             input_type = 'Lammps'
             # TODO: fix this when --lmp_in gets changed to read input files
@@ -173,7 +173,7 @@ def main(args=''):
             output_type.append('Desmond')
             try:
                 out, outfile = desmond_driver.desmond_energies('%s.cms' % oname,
-                        'Inputs/Desmond/onepoint.cfg', args.despath)
+                        'inputs/Desmond/onepoint.cfg', args.despath)
                 status[DES_POS] = helper_functions.get_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
@@ -187,7 +187,7 @@ def main(args=''):
             output_type.append('Gromacs')
             try:
                 out, outfile = gromacs_driver.gromacs_energies('%s.top' % oname,
-                        '%s.gro' % oname, 'Inputs/Gromacs/grompp.mdp', args.gropath, '')
+                        '%s.gro' % oname, 'inputs/Gromacs/grompp.mdp', args.gropath, '')
                 status[GRO_POS] = helper_functions.get_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)

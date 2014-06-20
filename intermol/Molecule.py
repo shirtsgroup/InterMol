@@ -6,8 +6,8 @@
 Lee <ctl4f@virginia.edu>
 """
 
-from Atom import *
-from OrderedSet import OrderedSet
+from atom import *
+from orderedset import OrderedSet
 
 class Molecule(object):
     """An abstract molecule object.
