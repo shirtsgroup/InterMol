@@ -1,0 +1,15 @@
+#include "amber99sb-ildn.ff/forcefield.itp"
+#include "../itps/L12.itp"
+#include "../itps/FKBP.itp"
+#include "amber99sb-ildn.ff/tip3p.itp"
+#include "amber99sb-ildn.ff/ions.itp"
+
+[ system ] 
+L12 complex
+
+[ molecules ]
+; Compound        #mols
+FKBP               1
+L12                1        
+SOL             4344  
+CL                 4

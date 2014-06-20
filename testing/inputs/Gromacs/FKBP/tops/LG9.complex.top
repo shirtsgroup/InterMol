@@ -1,0 +1,15 @@
+#include "amber99sb-ildn.ff/forcefield.itp"
+#include "../itps/LG9.itp"
+#include "../itps/FKBP.itp"
+#include "amber99sb-ildn.ff/tip3p.itp"
+#include "amber99sb-ildn.ff/ions.itp"
+
+[ system ] 
+LG9 complex
+
+[ molecules ]
+; Compound        #mols
+FKBP               1
+LG9                1        
+SOL             4384  
+CL                 4
