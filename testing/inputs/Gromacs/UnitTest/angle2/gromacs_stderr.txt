@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                   Good gRace! Old Maple Actually Chews Slate
+        Getting the Right Output Means no Artefacts in Calculating Stuff
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -62,7 +62,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/mdout.mdp to ./inputs/Gromacs/UnitTest/angle2/#mdout.mdp.55#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/mdout.mdp to ./inputs/Gromacs/UnitTest/angle2/#mdout.mdp.1#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -106,7 +106,7 @@ There were 4 notes
 
 There was 1 warning
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/topol.tpr to ./inputs/Gromacs/UnitTest/angle2/#topol.tpr.55#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/angle2/topol.tpr to ./inputs/Gromacs/UnitTest/angle2/#topol.tpr.1#
 
-gcq#5: "We Can Dance Like Iggy Pop" (Red Hot Chili Peppers)
+gcq#337: "Ich war schwanger, mir gings zum kotzen" (Nina Hagen)
 

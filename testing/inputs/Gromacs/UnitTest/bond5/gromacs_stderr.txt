@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Green Red Orange Magenta Azure Cyan Skyblue
+                  Gromacs Runs On Most of All Computer Systems
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -62,7 +62,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond5/mdout.mdp to ./inputs/Gromacs/UnitTest/bond5/#mdout.mdp.31#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/bond5/mdout.mdp to ./inputs/Gromacs/UnitTest/bond5/#mdout.mdp.1#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -114,5 +114,5 @@ For more information and tips for troubleshooting, please check the GROMACS
 website at http://www.gromacs.org/Documentation/Errors
 -------------------------------------------------------
 
-"Got Coffee, Got Donuts, Got Wasted" (F. Black)
+"It's Bicycle Repair Man !" (Monty Python)
 

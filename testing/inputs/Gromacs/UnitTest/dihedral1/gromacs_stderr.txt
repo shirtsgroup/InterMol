@@ -1,6 +1,6 @@
                          :-)  G  R  O  M  A  C  S  (-:
 
-                  Green Red Orange Magenta Azure Cyan Skyblue
+                  Gromacs Runs On Most of All Computer Systems
 
                             :-)  VERSION 4.6.3  (-:
 
@@ -63,7 +63,7 @@ Option       Type   Value   Description
                             atomtypes
 
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral1/mdout.mdp to ./inputs/Gromacs/UnitTest/dihedral1/#mdout.mdp.69#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral1/mdout.mdp to ./inputs/Gromacs/UnitTest/dihedral1/#mdout.mdp.1#
 
 NOTE 1 [file inputs/Gromacs/grompp.mdp]:
   nstcomm < nstcalcenergy defeats the purpose of nstcalcenergy, setting
@@ -107,7 +107,7 @@ There were 4 notes
 
 There was 1 warning
 
-Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral1/topol.tpr to ./inputs/Gromacs/UnitTest/dihedral1/#topol.tpr.69#
+Back Off! I just backed up ./inputs/Gromacs/UnitTest/dihedral1/topol.tpr to ./inputs/Gromacs/UnitTest/dihedral1/#topol.tpr.1#
 
-gcq#231: "Got Coffee, Got Donuts, Got Wasted" (F. Black)
+gcq#203: "It's Bicycle Repair Man !" (Monty Python)
 
