@@ -4,9 +4,8 @@
 .. moduleauthor:: Christoph Klein <christoph.t.klein@me.com>
 """
 import os
-from warnings import warn
 import pdb
-
+import logging
 import numpy as np
 
 import intermol.unit as units
@@ -16,6 +15,7 @@ from intermol.System import System
 from intermol.Types import *
 from intermol.Force import *
 
+logger = logging.getLogger('InterMolLog')
 
 class LammpsParser(object):
     """A class containing methods to read and write LAMMPS files."""
@@ -146,7 +146,7 @@ class LammpsParser(object):
         """
         self.atom_style = line[1]
         if len(line) > 2:
-            warn("Unsupported atom_style in input file.")
+            logger.warn("Unsupported atom_style in input file.")
 
     def parse_dimension(self, line):
         """ """
@@ -166,7 +166,7 @@ class LammpsParser(object):
         """ """
         self.pair_style = []
         if line[1] == 'hybrid':
-            warn("Hybrid pair styles not yet implemented.")
+            logger.warn("Hybrid pair styles not yet implemented.")
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
             System._sys._nbFunc = 1
@@ -188,9 +188,9 @@ class LammpsParser(object):
             elif line[2] == 'arithmetic':
                 System._sys._combinationRule = 2
             else:
-                warn("Unsupported pair_modify mix argument in input file!")
+                logger.warn("Unsupported pair_modify mix argument in input file!")
         else:
-            warn("Unsupported pair_modify style in input file!")
+            logger.warn("Unsupported pair_modify style in input file!")
 
     def parse_bond_style(self, line):
         """ """
@@ -254,14 +254,14 @@ class LammpsParser(object):
         elif 'coul' in line:
             System._sys._coulombCorrection = float(line[line.index('coul') + 3])
         else:
-            warn("Unsupported special_bonds in input file.")
+            logger.warn("Unsupported special_bonds in input file.")
 
     def parse_read_data(self, line):
         """ """
         if len(line) == 2:
             self.data_file = os.path.join(self.basepath, line[1])
         else:
-            warn("Unsupported read_data arguments in input file.")
+            logger.warn("Unsupported read_data arguments in input file.")
 
     def parse_box(self, line, dim):
         """Read box information from data file.
@@ -302,9 +302,9 @@ class LammpsParser(object):
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    warn("Unsupported pair coeff formatting in data file!")
+                    logger.warn("Unsupported pair coeff formatting in data file!")
             else:
-                warn("Unsupported pair coeff formatting in data file!")
+                logger.warn("Unsupported pair coeff formatting in data file!")
 
     def parse_bond_coeffs(self, data_lines):
         """Read bond coefficients from data file."""
@@ -444,7 +444,7 @@ class LammpsParser(object):
                     pass
                 new_atom_type = None
                 if System._sys._combinationRule == 1:
-                    warn("Combination rule '1' not yet implemented")
+                    logger.warn("Combination rule '1' not yet implemented")
                 elif System._sys._combinationRule in [2, 3]:
                     new_atom_type = AtomCR23Type(fields[2],    # atomtype
                             fields[2],                         # bondtype
@@ -478,7 +478,7 @@ class LammpsParser(object):
                         atom.setEpsilon(ab_state, atom_type.epsilon)
                         atom.bondtype = atom_type.bondtype
                     else:
-                        warn("Corresponding AtomType was not found. "
+                        logger.warn("Corresponding AtomType was not found. "
                                 "Insert missing values yourself.")
             self.current_mol.addAtom(atom)
 
@@ -669,10 +669,7 @@ class LammpsParser(object):
 
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
-            if verbose:
-                import time
-                mol_start = time.time()
-                print "    Writing moleculetype {0}...".format(mol_type.name)
+            logger.debug("    Writing moleculetype {0}...".format(mol_type.name))
             # atom index offsets from 1 for each molecule
             offsets = list()
             for molecule in mol_type.moleculeSet:
@@ -681,9 +678,7 @@ class LammpsParser(object):
             molecule = mol_type.moleculeSet[0]
             atoms = molecule._atoms
             for i, offset in enumerate(offsets):
-                if verbose:
-                    start = time.time()
-                    print "        Writing bonds..."
+                logger.debug("        Writing bonds...")
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[bond.atom2 - 1].bondtype
@@ -715,7 +710,7 @@ class LammpsParser(object):
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
                     else:
-                        warn("Found unimplemented bond type for LAMMPS!")
+                        logger.warn("Found unimplemented bond type for LAMMPS!")
                         continue
 
                     bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
@@ -725,14 +720,10 @@ class LammpsParser(object):
                             bond.atom2 + offset))
                     bond_style.add(style)
                 if len(bond_style) > 1:
-                    warn("More than one bond style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                    logger.warn("More than one bond style found!")
 
                 # angle types
-                if verbose:
-                    start = time.time()
-                    print "        Writing angles..."
+                logger.debug("        Writing angles...")
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
                     atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[angle.atom2 - 1].bondtype
@@ -780,7 +771,7 @@ class LammpsParser(object):
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
-                        warn("Found unimplemented angle type for LAMMPS!")
+                        logger.warn("Found unimplemented angle type for LAMMPS!")
                         continue
 
                     angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
@@ -792,14 +783,10 @@ class LammpsParser(object):
 
                     angle_style.add(style)
                 if len(angle_style) > 1:
-                    warn("More than one angle style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                    logger.warn("More than one angle style found!")
 
                 # dihedrals
-                if verbose:
-                    start = time.time()
-                    print "        Writing dihedrals..."
+                logger.debug("        Writing dihedrals...")
 
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
@@ -893,7 +880,7 @@ class LammpsParser(object):
                             # If the 6th and/or 7th coefficients are non-zero, we decompose
                             # the dihedral into multiple CHARMM style dihedrals.
                             else:
-                                warn("Found unsupported dihedral style.")
+                                logger.warn("Found unsupported dihedral style.")
                                 continue
                                 """
                                 for n, coeff in enumerate(coefficients):
@@ -948,17 +935,13 @@ class LammpsParser(object):
                                 " dihedrals to be of types ImproperHarmonic"
                                 " or DihedralTrig.")
                 if len(dihedral_style) > 1:
-                    warn("More than one dihedral style found!")
+                    logger.warn("More than one dihedral style found!")
                 if len(improper_style) > 1:
-                    warn("More than one improper style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                    logger.warn("More than one improper style found!")
 
             # atom specific information
             x_min = y_min = z_min = np.inf
-            if verbose:
-                start = time.time()
-                print "    Writing atoms..."
+            logger.debug("    Writing atoms...")
             for molecule in mol_type.moleculeSet:
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
@@ -999,10 +982,6 @@ class LammpsParser(object):
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
-            if verbose:
-                print "    Done. ({0:.2f} s)".format(time.time() - start)
-        if verbose:
-            print "    Done. ({0:.2f} s)".format(time.time() - mol_start)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
