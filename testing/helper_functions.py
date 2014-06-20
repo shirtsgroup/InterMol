@@ -2,6 +2,12 @@ from collections import OrderedDict
 import numpy as np
 import pdb
 
+def get_diff(e_in, e_out):
+    type = 'Potential' # getting difference in potential energy
+    input = e_in[type]
+    diff = e_out[type].in_units_of(input.unit) - input
+    return diff._value
+
 def find_match(key, dict, unit):
     '''helper function for multiple_energy_results()'''
     if key in dict:

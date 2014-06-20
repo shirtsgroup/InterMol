@@ -3,11 +3,10 @@ import sys
 import argparse
 import glob
 import numpy
-import convert
 import os
 import pdb
-
-
+import logging
+import convert
 # This script runs a unit test on subdirectories found within Inputs/*/UnitTest/
 
 DES_IN = './Inputs/Desmond/UnitTest'
@@ -15,6 +14,16 @@ GRO_IN = './Inputs/Gromacs/UnitTest'
 LMP_IN = './Inputs/Lammps/UnitTest'
 OUTPUT_DIR = 'UnitTestOutput'
 N_FORMATS = 3
+
+# Make a global logging object.
+logger = logging.getLogger('InterMolLog')
+logger.setLevel(logging.INFO) # specifies lowest severity log messages to handle (DEBUG will be ignored)
+h = logging.StreamHandler()
+#f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
+f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+h.setFormatter(f)
+logger.addHandler(h)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prog='PROG',
@@ -68,6 +77,7 @@ def add_flags(args, flags):
     return flags
 
 def test_desmond(args):
+    logger = logging.getLogger('InterMolLog')
     files = sorted(glob.glob('%s/*/*.cms' % DES_IN)) # return list of files that match the string
     files = [x for x in files if not x.endswith('-out.cms')] 
     results = []
@@ -77,26 +87,25 @@ def test_desmond(args):
         os.mkdir(basedir)
 
     for f in files:
+        prefix = f[f.rfind('/') + 1:-4]
+        odir = '%s/%s' % (basedir, prefix)
+        if not os.path.isdir(odir):
+            os.mkdir(odir)
+        flags = ['--des_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
+        flags = add_flags(args, flags)
+        logger.info('converting %s with command' % f)
+        logger.info('python convert.py ' + ' '.join(flags))
         try:
-            prefix = f[f.rfind('/') + 1:-4]
-            odir = '%s/%s' % (basedir, prefix)
-            if not os.path.isdir(odir):
-                os.mkdir(odir)
-            flags = ['--des_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to desmond file format with command' % f
-            print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff[0]) is int: # a status code
-                results.extend(diff)
-            else: # the difference in potential if energy evaluation suceeds
-                results += diff
+            assert(len(diff) == N_FORMATS)
+            results += diff
         except Exception as e:
-            print traceback.format_exc()
-            results += [-1,-1,-1]
+            logger.exception(e)
+            results += [e]*N_FORMATS
     return files, results
 
 def test_gromacs(args):
+    logger = logging.getLogger('InterMolLog')
     gro_files = sorted(glob.glob('%s/*/*.gro' % GRO_IN)) # return list of files that match the string
     gro_files = [x for x in gro_files if not x.endswith('out.gro')] 
     top_files = sorted(glob.glob('%s/*/*.top' % GRO_IN)) # return list of files that match the string
@@ -105,68 +114,53 @@ def test_gromacs(args):
     basedir = '%s/FromGromacs' % OUTPUT_DIR
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
+
     for g, t in zip(gro_files, top_files):
+        prefix = g[g.rfind('/') + 1:-4]
+        odir = '%s/%s' % (basedir, prefix)
+        if not os.path.isdir(odir):
+            os.mkdir(odir)
+        flags = ['--gro_in', g, t, '--desmond', '--gromacs', '--lammps', '--odir', odir]
+        flags = add_flags(args, flags)
+        logger.info('converting {0}, {1} with command'.format(g,t))
+        logger.info('python convert.py ' + ' '.join(flags))
         try:
-            prefix = g[g.rfind('/') + 1:-4]
-            odir = '%s/%s' % (basedir, prefix)
-            if not os.path.isdir(odir):
-                os.mkdir(odir)
-            flags = ['--gro_in', g, t, '--desmond', '--gromacs', '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting {0}, {1} to desmond file format with command'.format(g,t)
-            print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff[0]) is int: # a status code
-                results.extend(diff)
-            else: # the difference in potential if energy evaluation suceeds
-                results += diff
+            assert(len(diff) == N_FORMATS)
+            results += diff
         except Exception as e:
-            print traceback.format_exc()
-            results += [-1,-1,-1]
+            logger.exception(e)
+            results += [e]*N_FORMATS
     return gro_files, results
 
 def test_lammps(args):
+    logger = logging.getLogger('InterMolLog')
     files = sorted(glob.glob('%s/*/*.lmp' % LMP_IN)) # return list of files that match the string
     results = []
 
     basedir = '%s/FromLammps' % OUTPUT_DIR
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
+
     for f in files:
+        prefix = f[f.rfind('/') + 1:-4]
+        odir = '%s/%s' % (basedir, prefix)
+        if not os.path.isdir(odir):
+            os.mkdir(odir)
+        flags = ['--lmp_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
+        flags = add_flags(args, flags)
+        logger.info('converting %s to desmond file format with command' % f)
+        logger.info('python convert.py ' + ' '.join(flags))
         try:
-            prefix = f[f.rfind('/') + 1:-4]
-            odir = '%s/%s' % (basedir, prefix)
-            if not os.path.isdir(odir):
-                os.mkdir(odir)
-            flags = ['--lmp_in', f, '--desmond', '--gromacs', '--lammps', '--odir', odir]
-            flags = add_flags(args, flags)
-            print 'converting %s to desmond file format with command' % f
-            print 'python convert.py', ' '.join(flags)
             diff = convert.main(flags) # reuses code from convert.py
-            if type(diff[0]) is int: # a status code
-                results.extend(diff)
-            else: # the difference in potential if energy evaluation suceeds
-                results += diff
+            assert(len(diff) == N_FORMATS)
+            results += diff
         except Exception as e:
-            print traceback.format_exc()
-            results += [-1,-1,-1]
+            logger.exception(e)
+            results += [e]*N_FORMATS
     return files, results
 
 def summarize_results(input_type, files, results):
-    for i in range(len(results)):
-        if results[i] is 0:
-            results[i] = 'Converted'
-        elif results[i] is 1:
-            results[i] = 'Failed at reading input'
-        elif results[i] is 2:
-            results[i] = 'Failed at writing output'
-        elif results[i] is 3:
-            results[i] = 'Failed at evaluting energy of input'
-        elif results[i] is 4:
-            results[i] = 'Failed at evaluating energy of output'
-        elif results[i] is -1:
-            results[i] = 'Bug in UnitTest script'
-
     col1_width = max(len(x) for x in files)
     col2_width = max(len(str(x)) for x in results)
     col2_width = max(col2_width,28) # 28 is length of Status/Potential Energy Diff
