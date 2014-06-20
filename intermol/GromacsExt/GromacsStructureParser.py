@@ -3,7 +3,9 @@ import numpy as np
 from intermol.Atom import *
 from intermol.Molecule import *
 from intermol.System import System
+import logging
 
+logger = logging.getLogger('InterMolLog')
 
 def readStructure(filename):
     """Read in a Gromacs structure file
