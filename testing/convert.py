@@ -19,8 +19,8 @@ LMP_POS = 2
 N_FORMATS = 3
 
 # Make a global logging object.
+logger = logging.getLogger('InterMolLog')
 if __name__ == '__main__':
-    logger = logging.getLogger('InterMolLog')
     logger.setLevel(logging.DEBUG) # specifies lowest severity log messages to handle
     h = logging.StreamHandler()
     h.setLevel(logging.INFO) # ignores DEBUG level for now
@@ -87,7 +87,6 @@ def main(args=''):
     else: # flexibility to call main() from other scripts
         args = parser.parse_args(args)
 
-    logger = logging.getLogger('InterMolLog')
     if args.verbose:
         h.setLevel(logging.DEBUG)
     System._sys = System('InterMol')

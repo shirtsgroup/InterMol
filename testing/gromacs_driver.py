@@ -8,8 +8,9 @@ import intermol.unit as units
 from intermol.gromacs_extension.gromacs_topology_parser import GromacsTopologyParser
 import intermol.gromacs_extension.gromacs_structure_parser as GromacsStructureParser
 
+logger = logging.getLogger('InterMolLog')
+
 def readFile(top_in, gro_in, gropath):
-    logger = logging.getLogger('InterMolLog')
     # ensure .gro and .top are a valid match
     gromacs_energies(top_in, gro_in,
             'inputs/Gromacs/grompp.mdp', gropath, '',
@@ -23,7 +24,6 @@ def readFile(top_in, gro_in, gropath):
     logger.info('Structure loaded')
 
 def writeFile(outtop, outgro):
-    logger = logging.getLogger('InterMolLog')
     logger.info('Writing GROMACS file {0}'.format(outgro))
     GromacsStructureParser.writeStructure(outgro)
     logger.info('Writing GROMACS file {0}'.format(outtop))
@@ -37,7 +37,6 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath='',grosuff='', grompp
     gropath = path to gromacs binaries
     grosuff = suffix of gromacs binaries, usually '' or '_d'
     """
-    logger = logging.getLogger('InterMolLog')
     if not grompp_check:
         logger.info('Evaluating energy of {0}'.format(gro))
 

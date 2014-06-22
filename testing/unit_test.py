@@ -73,7 +73,17 @@ def add_flags(args, flags):
     return flags
 
 def add_handler(dir):
-    logger = logging.getLogger('InterMolLog')
+    ''' 
+    Adds two FileHandlers to the global logger object
+    args:
+        dir: path to output directory of the conversion
+    return: 
+        h1, h2 -- FileHandlers so that they can be removed later
+
+    h1: logs all >=INFO-level messages to dir/UnitTestInfo.log
+    h2: logs all >=DEBUG-level messages to dir/UnitTestDebug.log
+        also includes function and line number for each message 
+    '''
     h1 = logging.FileHandler('%s/UnitTestInfo.log' % dir, mode='w') # don't append to existing file
     f1 = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
     h1.setFormatter(f1)
@@ -88,12 +98,11 @@ def add_handler(dir):
     return h1, h2
 
 def remove_handler(h1, h2):
-    logger = logging.getLogger('InterMolLog')
+    '''Removes the filehandlers h1, h2 so that messages do not continue to be logged to their respective files'''
     logger.removeHandler(h1)
     logger.removeHandler(h2)
 
 def test_desmond(args):
-    logger = logging.getLogger('InterMolLog')
     files = sorted(glob.glob('%s/*/*.cms' % DES_IN)) # return list of files that match the string
     files = [x for x in files if not x.endswith('-out.cms')] 
     results = []
@@ -122,7 +131,6 @@ def test_desmond(args):
     return files, results
 
 def test_gromacs(args):
-    logger = logging.getLogger('InterMolLog')
     gro_files = sorted(glob.glob('%s/*/*.gro' % GRO_IN)) # return list of files that match the string
     gro_files = [x for x in gro_files if not x.endswith('out.gro')] 
     top_files = sorted(glob.glob('%s/*/*.top' % GRO_IN)) # return list of files that match the string
@@ -153,7 +161,6 @@ def test_gromacs(args):
     return gro_files, results
 
 def test_lammps(args):
-    logger = logging.getLogger('InterMolLog')
     files = sorted(glob.glob('%s/*/*.lmp' % LMP_IN)) # return list of files that match the string
     results = []
 

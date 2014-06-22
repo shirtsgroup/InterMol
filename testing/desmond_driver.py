@@ -7,15 +7,15 @@ from collections import OrderedDict
 import logging
 from intermol.desmond_extension.desmond_parser import DesmondParser
 
+logger = logging.getLogger('InterMolLog')
+
 def readFile(infile):
-    logger = logging.getLogger('InterMolLog')
     logger.info('Reading DESMOND file {0}'.format(infile))
     parser = DesmondParser()
     parser.read_file(infile)
     logger.info('Structure loaded')
 
 def writeFile(outfile):
-    logger = logging.getLogger('InterMolLog')
     logger.info('Writing DESMOND file {0}'.format(outfile))
     parser = DesmondParser()
     parser.write_file(outfile)
@@ -95,7 +95,6 @@ def desmond_energies(cms, cfg, despath):
         despath = path to DESMOND binaries
 
     """
-    logger = logging.getLogger('InterMolLog')
     logger.info('Evaluating energy of {0}'.format(cms))
 
     cms = os.path.abspath(cms)

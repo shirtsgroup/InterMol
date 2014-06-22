@@ -5,15 +5,15 @@ import pdb
 import logging
 from intermol.lammps_extension.lammps_parser import LammpsParser
 
+logger = logging.getLogger('InterMolLog')
+
 def readFile(infile):
-    logger = logging.getLogger('InterMolLog')
     logger.info('Reading LAMMPS files {0}'.format(infile))
     parser = LammpsParser()
     parser.read_system(infile)
     logger.info('Structure loaded')
 
 def writeFile(outfile):
-    logger = logging.getLogger('InterMolLog')
     logger.info('Writing LAMMPS file {0}'.format(outfile))
     parser = LammpsParser()
     parser.write(outfile)
@@ -26,7 +26,6 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
         input_file = path to input file (expects data file in same folder)
         lmppath = path to LAMMPS binaries
     """
-    logger = logging.getLogger('InterMolLog')
     logger.info('Evaluating energy of {0}'.format(input_file))
 
     directory, input_file = os.path.split(input_file)
