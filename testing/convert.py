@@ -28,7 +28,7 @@ if __name__ == '__main__':
     h.setFormatter(f)
     logger.addHandler(h)
 
-def get_parser():
+def parse_args(args):
     parser = argparse.ArgumentParser(description = 'Perform a file conversion')
 
     # input arguments
@@ -77,15 +77,10 @@ def get_parser():
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit(1)
+    return parser.parse_args(args)
 
-    return parser
-
-def main(args=''):
-    parser = get_parser() # returns parser object
-    if not args: # args automatically obtained from sys.argv
-        args = parser.parse_args()
-    else: # flexibility to call main() from other scripts
-        args = parser.parse_args(args)
+def main(args=None):
+    args = parse_args(args)
 
     if args.verbose:
         h.setLevel(logging.DEBUG)
@@ -218,7 +213,7 @@ def main(args=''):
         out += helper_functions.summarize_energy_results(e_in, e_out, input_type, output_type)
         logger.info('\n'.join(out))
     status = ['Converted' if x is 0 else x for x in status] # changes 0 to 'Converted'
-    return status
+    return status # for systems_test.py
 
 if __name__ == '__main__':
     logger.info('Beginning InterMol conversion')
