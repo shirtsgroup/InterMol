@@ -30,7 +30,7 @@ Some features of this implementation:
   * Units are NOT necessarily stored in terms of SI units internally.
     This is very important for me, because one important application
     area for us is at the molecular scale. Using SI units internally
-    can lead to exponent overflow in commonly used molecular force
+    can lead to exponent overflow in commonly used molecular forces
     calculations. Internally, all unit systems are equally fundamental
     in SimTK.
 

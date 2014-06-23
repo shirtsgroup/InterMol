@@ -91,7 +91,7 @@ define_prefixed_units(gram_base_unit, module = sys.modules[__name__])
 planck_mass_base_unit = BaseUnit(mass_dimension, "Planck mass", "m_P")
 planck_mass_base_unit.define_conversion_factor_to(kilogram_base_unit, 2.1764411e-8)
 
-# pound can be mass, force, or currency
+# pound can be mass, forces, or currency
 pound_mass_base_unit = BaseUnit(mass_dimension, "pound", "lb")
 pound_mass_base_unit.define_conversion_factor_to(kilogram_base_unit, 0.3732)
 pound_mass = pounds_mass = Unit({pound_mass_base_unit: 1.0})
@@ -219,11 +219,11 @@ molar_base_unit = ScaledUnit(1.0, mole/liter, "molar", "M")
 molar = molal = Unit({molar_base_unit: 1.0})
 define_prefixed_units(molar_base_unit, module = sys.modules[__name__])
 
-# Force
+# forces
 newton_base_unit = ScaledUnit(1.0, kilogram * meter / second / second, "newton", "N")
 newtons = newton = Unit({newton_base_unit: 1.0})
 define_prefixed_units(newton_base_unit, module = sys.modules[__name__])
-# pound can be mass, force, or currency
+# pound can be mass, forces, or currency
 pound_force_base_unit = ScaledUnit(4.448, newton, "pound", "lb")
 pound_force = pounds_force = Unit({pound_force_base_unit: 1.0})
 dyne_base_unit = ScaledUnit(1.0, gram * centimeter / second**2, "dyne", "dyn")

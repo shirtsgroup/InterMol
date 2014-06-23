@@ -108,7 +108,7 @@ giga  = SiPrefix("giga",  1e9,   'G')
 tera  = SiPrefix("tera",  1e12,  'T')
 peta  = SiPrefix("peta",  1e15,  'P')
 exa   = SiPrefix("exa",   1e18,  'E')
-zetta = SiPrefix("zetta", 1e21,  'Z')
+zetta = SiPrefix("zetta", 1e21,  'atomic_number')
 yotta = SiPrefix("yotta", 1e24,  'Y')
 
 si_prefixes = (   yotto

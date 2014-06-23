@@ -4,18 +4,18 @@
 .. moduleauthor:: Christoph Klein <christoph.t.klein@me.com>
 """
 import os
-from warnings import warn
 import pdb
-
+import logging
 import numpy as np
 
 import intermol.unit as units
-from intermol.Atom import Atom
-from intermol.Molecule import Molecule
-from intermol.System import System
-from intermol.Types import *
-from intermol.Force import *
+from intermol.atom import Atom
+from intermol.molecule import Molecule
+from intermol.system import System
+from intermol.types import *
+from intermol.forces import *
 
+logger = logging.getLogger('InterMolLog')
 
 class LammpsParser(object):
     """A class containing methods to read and write LAMMPS files."""
@@ -90,14 +90,15 @@ class LammpsParser(object):
                 'Pair Coeffs': self.parse_pair_coeffs,
                 'Bond Coeffs': self.parse_bond_coeffs,
                 'Angle Coeffs': self.parse_angle_coeffs,
-                'Dihedral Coeffs': self.parse_dihedral_coeffs}
+                'Dihedral Coeffs': self.parse_dihedral_coeffs,
+                'Improper Coeffs': self.parse_improper_coeffs}
 
         with open(data_file, 'r') as data_lines:
             self.molecule_name = next(data_lines).strip()
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
             self.current_mol = Molecule(self.molecule_name)
-            System._sys.addMolecule(self.current_mol)
+            System._sys.add_molecule(self.current_mol)
             self.current_mol_type = System._sys._molecules[self.molecule_name]
             self.current_mol_type.nrexcl = 3  # TODO: automate determination
 
@@ -123,7 +124,8 @@ class LammpsParser(object):
         parsable_keywords = {'Atoms': self.parse_atoms,
                 'Bonds': self.parse_bonds,
                 'Angles': self.parse_angles,
-                'Dihedrals': self.parse_dihedrals}
+                'Dihedrals': self.parse_dihedrals,
+                'Impropers': self.parse_impropers}
 
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
@@ -144,7 +146,7 @@ class LammpsParser(object):
         """
         self.atom_style = line[1]
         if len(line) > 2:
-            warn("Unsupported atom_style in input file.")
+            logger.warn("Unsupported atom_style in input file.")
 
     def parse_dimension(self, line):
         """ """
@@ -164,10 +166,10 @@ class LammpsParser(object):
         """ """
         self.pair_style = []
         if line[1] == 'hybrid':
-            warn("Hybrid pair styles not yet implemented.")
+            logger.warn("Hybrid pair styles not yet implemented.")
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
-            System._sys._nbFunc = 1
+            System._sys.nonbonded_function = 1
 
     def parse_kspace_style(self, line):
         """
@@ -182,13 +184,13 @@ class LammpsParser(object):
         """
         if line[1] == 'mix':
             if line[2] == 'geometric':
-                System._sys._combinationRule = 3
+                System._sys.combination_rule = 3
             elif line[2] == 'arithmetic':
-                System._sys._combinationRule = 2
+                System._sys.combination_rule = 2
             else:
-                warn("Unsupported pair_modify mix argument in input file!")
+                logger.warn("Unsupported pair_modify mix argument in input file!")
         else:
-            warn("Unsupported pair_modify style in input file!")
+            logger.warn("Unsupported pair_modify style in input file!")
 
     def parse_bond_style(self, line):
         """ """
@@ -219,7 +221,7 @@ class LammpsParser(object):
             self.dihedral_style.append(line[1])
             # TODO: correctly determine gen-pairs state
             if self.dihedral_style == 'opls':
-                System._sys._genpairs = 'yes'
+                System._sys.genpairs = 'yes'
         elif line[1] == 'hybrid':
             self.dihedral_style = []
             for style in line[2:]:
@@ -242,24 +244,24 @@ class LammpsParser(object):
     def parse_special_bonds(self, line):
         """ """
         if 'lj/coul' in line:
-            System._sys._ljCorrection = float(line[line.index('lj/coul') + 3])
-            System._sys._coulombCorrection = float(line[line.index('lj/coul') + 3])
+            System._sys.lj_correction = float(line[line.index('lj/coul') + 3])
+            System._sys.coulomb_correction = float(line[line.index('lj/coul') + 3])
         elif 'lj' in line and 'coul' in line:
-            System._sys._ljCorrection = float(line[line.index('lj') + 3])
-            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
+            System._sys.lj_correction = float(line[line.index('lj') + 3])
+            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
         elif 'lj' in line:
-            System._sys._ljCorrection = float(line[line.index('lj') + 3])
+            System._sys.lj_correction = float(line[line.index('lj') + 3])
         elif 'coul' in line:
-            System._sys._coulombCorrection = float(line[line.index('coul') + 3])
+            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
         else:
-            warn("Unsupported special_bonds in input file.")
+            logger.warn("Unsupported special_bonds in input file.")
 
     def parse_read_data(self, line):
         """ """
         if len(line) == 2:
             self.data_file = os.path.join(self.basepath, line[1])
         else:
-            warn("Unsupported read_data arguments in input file.")
+            logger.warn("Unsupported read_data arguments in input file.")
 
     def parse_box(self, line, dim):
         """Read box information from data file.
@@ -274,7 +276,7 @@ class LammpsParser(object):
             self.box_vector[dim, dim] = box_length
         else:
             raise ValueError("Negative box length specified in data file.")
-        System._sys.setBoxVector(self.box_vector * self.DIST)
+        System._sys.box_vector = self.box_vector * self.DIST
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -296,13 +298,13 @@ class LammpsParser(object):
             fields = [float(field) for field in line.split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
-                if System._sys._nbFunc == 1:
+                if System._sys.nonbonded_function == 1:
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    warn("Unsupported pair coeff formatting in data file!")
+                    logger.warn("Unsupported pair coeff formatting in data file!")
             else:
-                warn("Unsupported pair coeff formatting in data file!")
+                logger.warn("Unsupported pair coeff formatting in data file!")
 
     def parse_bond_coeffs(self, data_lines):
         """Read bond coefficients from data file."""
@@ -355,7 +357,7 @@ class LammpsParser(object):
                 if 'harmonic' in self.angle_style:
                     self.angle_types[int(fields[0])] = [
                             'harmonic',
-                            2 * float(fields[1]) * self.ENERGY / (self.RAD*self.RAD),
+                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
                             float(fields[2]) * self.DEGREE]
             elif len(self.angle_style) > 1:
                 style = fields[1]
@@ -365,7 +367,7 @@ class LammpsParser(object):
                 if style == 'harmonic':
                     self.angle_types[int(fields[0])] = [
                             style,
-                            2 * float(fields[1]) * self.ENERGY / (self.RAD*self.RAD),
+                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
                             float(fields[2]) * self.DEGREE]
             else:
                 raise ValueError("No entries found in 'angle_style'.")
@@ -401,6 +403,33 @@ class LammpsParser(object):
             else:
                 raise ValueError("No entries found in 'dihedral_style'.")
 
+    def parse_improper_coeffs(self, data_lines):
+        """Read improper coefficients from data file."""
+        next(data_lines)  # toss out blank line
+        self.improper_types = dict()
+        for line in data_lines:
+            if not line.strip():
+                break  # found another blank line
+            fields = line.split()
+            if len(self.improper_style) == 1:
+                if 'harmonic' in self.improper_style:
+                    self.improper_types[int(fields[0])] = [
+                            'harmonic',
+                            float(fields[1]) * self.ENERGY / self.RAD**2,
+                            float(fields[2]) * self.DEGREE]
+            elif len(self.improper_style) > 1:
+                style = fields[1]
+                if style not in self.improper_style:
+                    raise Exception("Improper type found in Improper Coeffs that "
+                            "was not specified in improper_style: {0}".format(style))
+                if style == 'harmonic':
+                    self.improper_types[int(fields[0])] = [
+                            style,
+                            float(fields[1]) * self.ENERGY / self.RAD**2,
+                            float(fields[2]) * self.DEGREE]
+            else:
+                raise ValueError("No entries found in 'improper_style'.")
+
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
         next(data_lines)  # toss out blank line
@@ -414,12 +443,12 @@ class LammpsParser(object):
                     # TODO: store image flags?
                     pass
                 new_atom_type = None
-                if System._sys._combinationRule == 1:
-                    warn("Combination rule '1' not yet implemented")
-                elif System._sys._combinationRule in [2, 3]:
+                if System._sys.combination_rule == 1:
+                    logger.warn("Combination rule '1' not yet implemented")
+                elif System._sys.combination_rule in [2, 3]:
                     new_atom_type = AtomCR23Type(fields[2],    # atomtype
                             fields[2],                         # bondtype
-                            -1,                                # Z
+                            -1,                                # atomic_number
                             self.mass_dict[int(fields[2])],    # mass
                             float(fields[3]) * self.CHARGE,    # charge
                             'A',                               # ptype
@@ -428,10 +457,10 @@ class LammpsParser(object):
 
                 System._sys._atomtypes.add(new_atom_type)
 
-                atom = Atom(int(fields[0]),  # AtomNum
-                        fields[2],           # atomName
-                        int(fields[1]),      # resNum (molNum)
-                        fields[1])           # resName (molNum)
+                atom = Atom(int(fields[0]),  # index
+                        fields[2],           # name
+                        int(fields[1]),      # residue_index (molNum)
+                        fields[1])           # residue_name (molNum)
                 atom.setAtomType(0, fields[2])  # atomNum for LAMMPS
                 atom.cgnr = 0  # TODO: look into alternatives
                 atom.setCharge(0, float(fields[3]) * self.CHARGE)
@@ -449,7 +478,7 @@ class LammpsParser(object):
                         atom.setEpsilon(ab_state, atom_type.epsilon)
                         atom.bondtype = atom_type.bondtype
                     else:
-                        warn("Corresponding AtomType was not found. "
+                        logger.warn("Corresponding AtomType was not found. "
                                 "Insert missing values yourself.")
             self.current_mol.addAtom(atom)
 
@@ -475,7 +504,7 @@ class LammpsParser(object):
                 r = self.bond_types[coeff_num][3]
                 D = self.bond_types[coeff_num][1]
                 beta = self.bond_types[coeff_num][2]
-                new_bond_force = Morse(
+                new_bond_force = MorseBond(
                         fields[2], fields[3],
                         r, D, beta)
             self.current_mol_type.bondForceSet.add(new_bond_force)
@@ -520,7 +549,25 @@ class LammpsParser(object):
                         cs[0], cs[1], cs[2], cs[3])
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
-    def write(self, data_file, unit_set='real', verbose=True):
+    def parse_impropers(self, data_lines):
+        """Read impropers from data file."""
+        next(data_lines)  # toss out blank line
+        for line in data_lines:
+            if not line.strip():
+                break  # found another blank line
+            fields = [int(field) for field in line.split()]
+
+            new_dihed_force = None
+            coeff_num = int(fields[1])
+            if  self.improper_types[coeff_num][0] == 'harmonic':
+                k = self.improper_types[fields[1]][1]
+                xi = self.improper_types[fields[1]][2]
+                new_dihed_force = ImproperHarmonicDihedral(
+                        fields[2], fields[3], fields[4], fields[5],
+                        xi, k)
+            self.current_mol_type.dihedralForceSet.add(new_dihed_force)
+
+    def write(self, data_file, unit_set='real', verbose=False):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
@@ -622,21 +669,16 @@ class LammpsParser(object):
 
         # read all atom specific and FF information
         for mol_type in System._sys._molecules.itervalues():
-            if verbose:
-                import time
-                mol_start = time.time()
-                print "    Writing moleculetype {0}...".format(mol_type.name)
+            logger.debug("    Writing moleculetype {0}...".format(mol_type.name))
             # atom index offsets from 1 for each molecule
             offsets = list()
             for molecule in mol_type.moleculeSet:
-                offsets.append(molecule._atoms[0].atomIndex - 1)
+                offsets.append(molecule._atoms[0].index - 1)
 
             molecule = mol_type.moleculeSet[0]
             atoms = molecule._atoms
             for i, offset in enumerate(offsets):
-                if verbose:
-                    start = time.time()
-                    print "        Writing bonds..."
+                logger.debug("        Writing bonds...")
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[bond.atom2 - 1].bondtype
@@ -654,7 +696,7 @@ class LammpsParser(object):
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
-                    elif isinstance(bond, Morse):
+                    elif isinstance(bond, MorseBond):
                         style = 'morse'
                         temp = MorseBondType(atomtype1, atomtype2,
                                 bond.length, bond.D, bond.beta)
@@ -668,7 +710,7 @@ class LammpsParser(object):
                                     bond.length.in_units_of(self.DIST)._value))
                             b_type_i += 1
                     else:
-                        warn("Found unimplemented bond type for LAMMPS!")
+                        logger.warn("Found unimplemented bond type for LAMMPS!")
                         continue
 
                     bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
@@ -677,15 +719,11 @@ class LammpsParser(object):
                             bond.atom1 + offset,
                             bond.atom2 + offset))
                     bond_style.add(style)
-                    if len(bond_style) > 1:
-                        warn("More than one bond style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                if len(bond_style) > 1:
+                    logger.warn("More than one bond style found!")
 
                 # angle types
-                if verbose:
-                    start = time.time()
-                    print "        Writing angles..."
+                logger.debug("        Writing angles...")
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
                     atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[angle.atom2 - 1].bondtype
@@ -701,11 +739,39 @@ class LammpsParser(object):
                             angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
                                     ang_type_i,
                                     style,
-                                    0.5 * angle.k.in_units_of(self.ENERGY / (self.RAD*self.RAD))._value,
+                                    0.5 * angle.k.in_units_of(self.ENERGY / self.RAD**2)._value,
+                                    angle.theta.in_units_of(self.DEGREE)._value))
+                            ang_type_i += 1
+                    elif isinstance(angle, UreyBradleyAngle):
+                        style = 'charmm'
+                        temp = UreyBradleyAngleType(atomtype1, atomtype2, atomtype3,
+                                angle.theta, angle.k, angle.r, angle.kUB)
+                        # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
+                        if temp not in angle_type_dict:
+                            angle_type_dict[temp] = ang_type_i
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} {4:18.8f} {5:18.8f}\n'.format(
+                                    ang_type_i,
+                                    style,
+                                    0.5 * angle.k.in_units_of(self.ENERGY / self.RAD**2)._value,
+                                    angle.theta.in_units_of(self.DEGREE)._value,
+                                    0.5 * angle.kUB.in_units_of(self.ENERGY / self.DIST**2)._value,
+                                    angle.r.in_units_of(self.DIST)._value))
+                            ang_type_i += 1
+                    elif isinstance(angle, G96Angle):
+                        style = 'cosine/squared'
+                        temp = G96AngleType(atomtype1, atomtype2, atomtype3,
+                                angle.theta, angle.k)
+                        # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
+                        if temp not in angle_type_dict:
+                            angle_type_dict[temp] = ang_type_i
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                                    ang_type_i,
+                                    style,
+                                    0.5 * angle.k.in_units_of(self.ENERGY)._value,
                                     angle.theta.in_units_of(self.DEGREE)._value))
                             ang_type_i += 1
                     else:
-                        warn("Found unimplemented angle type for LAMMPS!")
+                        logger.warn("Found unimplemented angle type for LAMMPS!")
                         continue
 
                     angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
@@ -716,59 +782,166 @@ class LammpsParser(object):
                             angle.atom3 + offset))
 
                     angle_style.add(style)
-                    if len(angle_style) > 1:
-                        warn("More than one angle style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                if len(angle_style) > 1:
+                    logger.warn("More than one angle style found!")
 
                 # dihedrals
-                if verbose:
-                    start = time.time()
-                    print "        Writing dihedrals..."
+                logger.debug("        Writing dihedrals...")
+
                 for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
                     atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[dihedral.atom2 - 1].bondtype
                     atomtype3 = molecule._atoms[dihedral.atom3 - 1].bondtype
                     atomtype4 = molecule._atoms[dihedral.atom4 - 1].bondtype
 
-                    if isinstance(dihedral, FourierDihedral):
-                        style = 'opls'
-                        temp = FourierDihedralType(atomtype1, atomtype2,
-                                atomtype3, atomtype4,
-                                dihedral.c1, dihedral.c1,
-                                dihedral.c2, dihedral.c3)
-                        if temp not in dihedral_type_dict:
-                            dihedral_type_dict[temp] = dih_type_i
-                            dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} {4:18.8f} {5:18.8f}\n'.format(
-                                    dih_type_i,
-                                    style,
-                                    dihedral.c1.in_units_of(self.ENERGY)._value,
-                                    dihedral.c2.in_units_of(self.ENERGY)._value,
-                                    dihedral.c3.in_units_of(self.ENERGY)._value,
-                                    dihedral.c4.in_units_of(self.ENERGY)._value))
-                            dih_type_i += 1
-                    else:
-                        warn("Found unimplemented dihedral type for LAMMPS!")
-                        continue
+                    if isinstance(dihedral, DihedralTrigDihedral):
+                        coefficients = [dihedral.fc1, dihedral.fc2, dihedral.fc3,
+                                dihedral.fc4, dihedral.fc5, dihedral.fc6]
+                        if dihedral.improper:
+                            found_nonzero = False
+                            for n, coeff in enumerate(coefficients):
+                                if coeff._value != 0.0:
+                                    if found_nonzero == False:
+                                        found_nonzero = True
+                                    else:
+                                        raise ValueError("Found more than one nonzero "
+                                                "coefficient in improper trigonal dihedral!")
+                                    style = 'charmm'
+                                    temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
+                                            atomtype3, atomtype4,
+                                            dihedral.phi, coeff, n + 1)
+                                    if temp not in dihedral_type_dict:
+                                        dihedral_type_dict[temp] = dih_type_i
+                                        # NOTE: weighting factor assumed to be 0.0
+                                        # May need to add some additional checks here in the future
+                                        dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18d} '
+                                                    '{4:18d} {5:18.4f}\n'.format(
+                                                dih_type_i, style,
+                                                coeff.in_units_of(self.ENERGY)._value,
+                                                n + 1,
+                                                int(dihedral.phi.in_units_of(units.degrees)._value),
+                                                0.0))
+                                        dih_type_i += 1
+                                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                            i + j + 1,
+                                            dihedral_type_dict[temp],
+                                            dihedral.atom1 + offset,
+                                            dihedral.atom2 + offset,
+                                            dihedral.atom3 + offset,
+                                            dihedral.atom4 + offset))
+                                    dihedral_style.add(style)
 
-                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                            i + j + 1,
-                            dihedral_type_dict[temp],
-                            dihedral.atom1 + offset,
-                            dihedral.atom2 + offset,
-                            dihedral.atom3 + offset,
-                            dihedral.atom4 + offset))
-                    dihedral_style.add(style)
-                    if len(dihedral_style) > 1:
-                        warn("More than one dihedral style found!")
-                if verbose:
-                    print "        Done. ({0:.2f} s)".format(time.time() - start)
+                        else:
+                            # NOTE: the following logic could instead default to printing
+                            # out a series of charmm style dihedrals instead of attempting
+                            # to write a multi/harmonic. I presume one multi/harmonic vs.
+                            # multiple charmm dihedrals may be slightly (but probably
+                            # negligibly) faster but if anyone has a better reason to do
+                            # one or the other, please chime in!
+                            rb_coeffs = ConvertDihedralFromDihedralTrigToRB(
+                                    np.cos(dihedral.phi.in_units_of(units.radians)._value),
+                                    dihedral.phi, dihedral.fc0, *coefficients)
+
+                            # LAMMPS only supports multi/harmonic (Ryckaert-Bellemans)
+                            # up to 5 coefficients.
+                            if (dihedral.phi in [0*units.degrees, 180*units.degrees] and
+                                    rb_coeffs[5]._value == rb_coeffs[6]._value == 0.0):
+                                style = 'multi/harmonic'
+                                temp = RBDihedralType(atomtype1, atomtype2,
+                                        atomtype3, atomtype4,
+                                        rb_coeffs[0],
+                                        rb_coeffs[1],
+                                        rb_coeffs[2],
+                                        rb_coeffs[3],
+                                        rb_coeffs[4],
+                                        0.0*units.kilojoules_per_mole,
+                                        0.0*units.kilojoules_per_mole)
+                                if temp not in dihedral_type_dict:
+                                    dihedral_type_dict[temp] = dih_type_i
+                                    # multiple alternating powers by -1 for sign convention
+                                    dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} '
+                                                '{4:18.8f} {5:18.8f} {6:18.8f}\n'.format(
+                                            dih_type_i, style,
+                                            rb_coeffs[0].in_units_of(self.ENERGY)._value,
+                                            -rb_coeffs[1].in_units_of(self.ENERGY)._value,
+                                            rb_coeffs[2].in_units_of(self.ENERGY)._value,
+                                            -rb_coeffs[3].in_units_of(self.ENERGY)._value,
+                                            rb_coeffs[4].in_units_of(self.ENERGY)._value))
+                                    dih_type_i += 1
+                                dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                        i + j + 1,
+                                        dihedral_type_dict[temp],
+                                        dihedral.atom1 + offset,
+                                        dihedral.atom2 + offset,
+                                        dihedral.atom3 + offset,
+                                        dihedral.atom4 + offset))
+                                dihedral_style.add(style)
+
+                            # If the 6th and/or 7th coefficients are non-zero, we decompose
+                            # the dihedral into multiple CHARMM style dihedrals.
+                            else:
+                                logger.warn("Found unsupported dihedral style.")
+                                continue
+                                """
+                                for n, coeff in enumerate(coefficients):
+                                    style = 'charmm'
+                                    temp = ProperPeriodicDihedralType(atomtype1, atomtype2,
+                                            atomtype3, atomtype4,
+                                            dihedral.phi, coeff, n + 1)
+                                    if temp not in dihedral_type_dict:
+                                        dihedral_type_dict[temp] = dih_type_i
+                                        # NOTE: weighting factor assumed to be 0.0
+                                        # May need to add some additional checks here in the future
+                                        dihedral_coeffs.append('{0:d} {1} {2:18.8f} {3:18d} '
+                                                    '{4:18d} {5:18.4f}\n'.format(
+                                                dih_type_i, style,
+                                                coeff.in_units_of(self.ENERGY)._value,
+                                                n + 1,
+                                                int(dihedral.phi.in_units_of(units.degrees)._value),
+                                                0.0))
+                                        dih_type_i += 1
+                                    dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                            i + j + 1,
+                                            dihedral_type_dict[temp],
+                                            dihedral.atom1 + offset,
+                                            dihedral.atom2 + offset,
+                                            dihedral.atom3 + offset,
+                                            dihedral.atom4 + offset))
+                                    dihedral_style.add(style)
+                                """
+
+                    elif isinstance(dihedral, ImproperHarmonicDihedral):
+                        stlye = 'harmonic'
+                        temp = ImproperHarmonicDihedralType(atomtype1, atomtype2,
+                                atomtype3, atomtype4, dihedral.xi, dihedral.k)
+                        if temp not in improper_type_dict:
+                            improper_type_dict[temp] = imp_type_i
+                            # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
+                            improper_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                                    imp_type_i, style,
+                                    0.5 * dihedral.k.in_units_of(self.ENERGY / self.RAD**2)._value,
+                                    dihedral.xi.in_units_of(self.DEGREE)._value))
+                            imp_type_i += 1
+                        improper_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
+                                i + j + 1,
+                                improper_type_dict[temp],
+                                dihedral.atom1 + offset,
+                                dihedral.atom2 + offset,
+                                dihedral.atom3 + offset,
+                                dihedral.atom4 + offset))
+                        improper_style.add(style)
+                    else:
+                        raise Exception("InterMol expects all internally stored"
+                                " dihedrals to be of types ImproperHarmonic"
+                                " or DihedralTrig.")
+                if len(dihedral_style) > 1:
+                    logger.warn("More than one dihedral style found!")
+                if len(improper_style) > 1:
+                    logger.warn("More than one improper style found!")
 
             # atom specific information
             x_min = y_min = z_min = np.inf
-            if verbose:
-                start = time.time()
-                print "    Writing atoms..."
+            logger.debug("    Writing atoms...")
             for molecule in mol_type.moleculeSet:
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
@@ -796,8 +969,8 @@ class LammpsParser(object):
 
                     # atom
                     atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
-                            atom.atomIndex,
-                            atom.residueIndex,
+                            atom.index,
+                            atom.residue_index,
                             atom_type_dict[atom._atomtype[0]],
                             atom._charge[0].in_units_of(self.CHARGE)._value,
                             x_coord,
@@ -805,14 +978,10 @@ class LammpsParser(object):
                             z_coord))
                     # velocity
                     vel_list.append('{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                            atom.atomIndex,
+                            atom.index,
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
-            if verbose:
-                print "    Done. ({0:.2f} s)".format(time.time() - start)
-        if verbose:
-            print "    Done. ({0:.2f} s)".format(time.time() - mol_start)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
@@ -853,13 +1022,13 @@ class LammpsParser(object):
             # shifting of box dimensions
             f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
                     x_min,
-                    x_min + System._sys._boxVector[0][0].in_units_of(self.DIST)._value))
+                    x_min + System._sys.box_vector[0][0].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
                     y_min,
-                    y_min + System._sys._boxVector[1][1].in_units_of(self.DIST)._value))
+                    y_min + System._sys.box_vector[1][1].in_units_of(self.DIST)._value))
             f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
                     z_min,
-                    z_min + System._sys._boxVector[2][2].in_units_of(self.DIST)._value))
+                    z_min + System._sys.box_vector[2][2].in_units_of(self.DIST)._value))
 
             # masses
             for mass in mass_list:
@@ -937,10 +1106,10 @@ class LammpsParser(object):
             f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(
                     0.0,
                     0.0,
-                    System._sys._ljCorrection,
+                    System._sys.lj_correction,
                     0.0,
                     0.0,
-                    System._sys._coulombCorrection))
+                    System._sys.coulomb_correction))
             f.write('\n')
 
             # read data
