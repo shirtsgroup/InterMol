@@ -1,0 +1,39 @@
+# GROMACS #
+\#*\#
+*.trr
+*.edr
+*.xvg
+*.tpr
+*.mdp
+*out.gro
+md.log
+*stderr.txt
+*stdout.txt
+
+# DESMOND #
+*out.cfg
+*out.cms
+*out.idx
+*.ene
+*.dat
+trj
+*.cpt
+*.log
+
+# VIM #
+*.swp
+*.swo
+*.swn
+*.swm
+
+# OS Stuff #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# python #
+*.pyc
