@@ -1036,8 +1036,13 @@ class GromacsTopologyParser(object):
                         # we need to add a constrainted bonded forces as well between the atoms in these molecules.
                         # we assume the gromacs default of 1. O, 2. H, 3. H
                         # reference bond strength is 900 kj/mol, but doesn't really matter since constrainted.
-                        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
-                        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+                        #waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
+                        #wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+                        
+                        # From oplsaa.ff/tip3p.itp - JPT
+                        waterbondrefk = 502416.0 * units.kilojoules_per_mole * units.nanometers**(-2)
+                        wateranglerefk = 628.02 * units.kilojoules_per_mole * units.radians**(-2)
+
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
                         dOH = float(split[2]) * units.nanometers
 

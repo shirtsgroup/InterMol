@@ -668,16 +668,22 @@ class LammpsParser(object):
         imp_type_i = 1
 
         # read all atom specific and FF information
+        offset = 0
+        bond_i = 1
+        angle_i = 1
+        dihedral_i = 1
+        improper_i = 1
+        x_min = y_min = z_min = np.inf
         for mol_type in System._sys._molecules.itervalues():
             logger.debug("    Writing moleculetype {0}...".format(mol_type.name))
-            # atom index offsets from 1 for each molecule
-            offsets = list()
-            for molecule in mol_type.moleculeSet:
-                offsets.append(molecule._atoms[0].index - 1)
 
-            molecule = mol_type.moleculeSet[0]
-            atoms = molecule._atoms
-            for i, offset in enumerate(offsets):
+#            molecule = mol_type.moleculeSet[0]
+#            atoms = molecule._atoms
+
+#            for i, offset in enumerate(offsets):
+            for molecule in mol_type.moleculeSet:
+
+                # bonds
                 logger.debug("        Writing bonds...")
                 for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
                     atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
@@ -690,11 +696,12 @@ class LammpsParser(object):
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in bond_type_dict:
                             bond_type_dict[temp] = b_type_i
-                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} # {4:2s}-{5:2s}\n'.format(
                                     b_type_i,
                                     style,
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
-                                    bond.length.in_units_of(self.DIST)._value))
+                                    bond.length.in_units_of(self.DIST)._value,
+                                    atomtype1, atomtype2))
                             b_type_i += 1
                     elif isinstance(bond, MorseBond):
                         style = 'morse'
@@ -714,15 +721,16 @@ class LammpsParser(object):
                         continue
 
                     bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
-                            i + j + 1,
+                            bond_i,
                             bond_type_dict[temp],
                             bond.atom1 + offset,
                             bond.atom2 + offset))
+                    bond_i += 1
                     bond_style.add(style)
                 if len(bond_style) > 1:
                     logger.warn("More than one bond style found!")
 
-                # angle types
+                # angles
                 logger.debug("        Writing angles...")
                 for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
                     atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
@@ -736,11 +744,12 @@ class LammpsParser(object):
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in angle_type_dict:
                             angle_type_dict[temp] = ang_type_i
-                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} # {4:2s}-{5:2s}-{6:2s}\n'.format(
                                     ang_type_i,
                                     style,
                                     0.5 * angle.k.in_units_of(self.ENERGY / self.RAD**2)._value,
-                                    angle.theta.in_units_of(self.DEGREE)._value))
+                                    angle.theta.in_units_of(self.DEGREE)._value,
+                                    atomtype1, atomtype2, atomtype3))
                             ang_type_i += 1
                     elif isinstance(angle, UreyBradleyAngle):
                         style = 'charmm'
@@ -775,12 +784,12 @@ class LammpsParser(object):
                         continue
 
                     angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
-                            i + j + 1,
+                            angle_i,
                             angle_type_dict[temp],
                             angle.atom1 + offset,
                             angle.atom2 + offset,
                             angle.atom3 + offset))
-
+                    angle_i += 1
                     angle_style.add(style)
                 if len(angle_style) > 1:
                     logger.warn("More than one angle style found!")
@@ -823,12 +832,13 @@ class LammpsParser(object):
                                                 0.0))
                                         dih_type_i += 1
                                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                            i + j + 1,
+                                            dihedral_i,
                                             dihedral_type_dict[temp],
                                             dihedral.atom1 + offset,
                                             dihedral.atom2 + offset,
                                             dihedral.atom3 + offset,
                                             dihedral.atom4 + offset))
+                                    dihedral_i += 1
                                     dihedral_style.add(style)
 
                         else:
@@ -869,12 +879,13 @@ class LammpsParser(object):
                                             rb_coeffs[4].in_units_of(self.ENERGY)._value))
                                     dih_type_i += 1
                                 dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                        i + j + 1,
+                                        dihedral_i,
                                         dihedral_type_dict[temp],
                                         dihedral.atom1 + offset,
                                         dihedral.atom2 + offset,
                                         dihedral.atom3 + offset,
                                         dihedral.atom4 + offset))
+                                dihedral_i += 1
                                 dihedral_style.add(style)
 
                             # If the 6th and/or 7th coefficients are non-zero, we decompose
@@ -923,12 +934,13 @@ class LammpsParser(object):
                                     dihedral.xi.in_units_of(self.DEGREE)._value))
                             imp_type_i += 1
                         improper_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                i + j + 1,
+                                improper_i,
                                 improper_type_dict[temp],
                                 dihedral.atom1 + offset,
                                 dihedral.atom2 + offset,
                                 dihedral.atom3 + offset,
                                 dihedral.atom4 + offset))
+                        improper_i += 1
                         improper_style.add(style)
                     else:
                         raise Exception("InterMol expects all internally stored"
@@ -939,21 +951,22 @@ class LammpsParser(object):
                 if len(improper_style) > 1:
                     logger.warn("More than one improper style found!")
 
-            # atom specific information
-            x_min = y_min = z_min = np.inf
-            logger.debug("    Writing atoms...")
-            for molecule in mol_type.moleculeSet:
+                # atom specific information
+                logger.debug("    Writing atoms...")
+
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
                     if atom._atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom._atomtype[0]] = a_type_i
-                        mass_list.append('%d %8.4f\n'
+                        mass_list.append('%d %8.4f # %s\n'
                                     % (a_type_i,
-                                       atom._mass[0].in_units_of(self.MASS)._value))
-                        pair_coeff_list.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
+                                       atom._mass[0].in_units_of(self.MASS)._value,
+                                       atom.bondtype))
+                        pair_coeff_list.append('{0:d} {1:8.4f} {2:8.4f} # {3:s}\n'.format(
                                        a_type_i,
                                        atom._epsilon[0].in_units_of(self.ENERGY)._value,
-                                       atom._sigma[0].in_units_of(self.DIST)._value))
+                                       atom._sigma[0].in_units_of(self.DIST)._value,
+                                       atom.bondtype))
                         a_type_i += 1
 
                     # box minima
@@ -969,7 +982,7 @@ class LammpsParser(object):
 
                     # atom
                     atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
-                            atom.index,
+                            atom.index + offset,
                             atom.residue_index,
                             atom_type_dict[atom._atomtype[0]],
                             atom._charge[0].in_units_of(self.CHARGE)._value,
@@ -978,10 +991,12 @@ class LammpsParser(object):
                             z_coord))
                     # velocity
                     vel_list.append('{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                            atom.index,
+                            atom.index + offset,
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
+
+                offset += len(molecule._atoms)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
