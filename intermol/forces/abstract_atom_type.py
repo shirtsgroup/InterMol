@@ -6,13 +6,13 @@ class AbstractAtomType(object):
 
         Args:
             atomtype (str): The type of the atom
-            bondtype (str): The type of the bond the atom is involved in
+            bondingtype (str): The type of the bond the atom is involved in
             atomic_number (int): The atomic number of the atom
             mass (float): The mass of the atom in 'amu'
             charge (float): The charge of the atom in 'elementary charge units'
             ptype (str): The free energy state of the type
 
-        >>> __init__(atomtype='H0', bondtype='H0', atomic_number=1, mass=1.0080, charge=0.2329, ptype='A')
+        >>> __init__(atomtype='H0', bondingtype='H0', atomic_number=1, mass=1.0080, charge=0.2329, ptype='A')
         """
 
         self.atomtype = atomtype

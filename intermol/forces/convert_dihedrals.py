@@ -86,7 +86,7 @@ def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
     else:
         sign = 1
     for k, coeff in fcs.items():  # only one of these should be nonzero
-        if coeff._value != 0.0 and k not in ['fc0','phi']:
+        if coeff._value != 0.0 and k not in ['fc0', 'phi']:
             p = dict()
             if convention == '180':
                 p['phi'] = halfangle-fcs['phi']

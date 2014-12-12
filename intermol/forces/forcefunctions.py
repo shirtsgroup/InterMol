@@ -2,7 +2,6 @@ import simtk.unit as units
 
 import forcedata
 
-
 """
 functions for manipulating the data to extract keywords and unit-ed parameter lists from forces, 
 
@@ -12,9 +11,9 @@ force_class    -        HarmonicBond        - class, XType, also adds atoms
 force          - (instance of HarmonicBond) - an instance of HarmonicBond
 """
 
+
 def specify(program_units, unitset, dumself=None, shouldEval=True):
-    """
-    Takes the dict of units, and a set of dimensions and replaces the dimensions with the appropriate units.
+    """Takes the dict of units, and a set of dimensions and replaces the dimensions with the appropriate units.
     """
     specified_unitset = []
     for unit in unitset:
@@ -30,12 +29,9 @@ def specify(program_units, unitset, dumself=None, shouldEval=True):
             specified_unitset.append(rejoined_unit)
     return specified_unitset
 
-# create a paramlist specific for a given program.
 
 def build_paramlist(program):
-    """
-
-    """
+    """Create a paramlist specific for a given program. """
     change_list = eval('forcedata.' + program + '_paramlist')
     tmp_paramlist = forcedata.master_paramlist.copy()
     tmp_paramlist.update(change_list)
@@ -57,14 +53,11 @@ def capifyname(forcename):
 
 
 def build_unitvars(program, paramlist, dumself=None):
-
     """
-    takes a string program name (one of the supported programs), and a 'self' object
+    Takes a string program name (one of the supported programs), and a 'self' object
     it looks like the keyword is not being used, but it is used in the line eval(unit). 
     The test name 'dumself' needs to match what is in the force data arrays. Currently only used for lammps.
-
     """
-
     unitvars = dict()
     unitdefs = forcedata.ProgramUnitSets[program]
     for name, uset in forcedata.master_unitlist.iteritems():
@@ -81,7 +74,8 @@ def build_unitvars(program, paramlist, dumself=None):
             unitset = tmp_unitset    
 
         if name in forcedata.ProgramUnitLists:
-            unitset = forcedata.ProgramUnitLists[name]  # in case the units need to be defined differently.
+            # In case the units need to be defined differently.
+            unitset = forcedata.ProgramUnitLists[name]
         unitvars[capifyname(name)] = unitset
         typename = name  + '_type'
         unitvars[typename] = unitset
@@ -89,13 +83,17 @@ def build_unitvars(program, paramlist, dumself=None):
     return unitvars
 
 
-# Creat a function that returns the paramters of a function type.
-# First, we need make some additions to the parameter list dictionary,
-# which we do once when the forcedata script is imported.  Useful to
-# put the forces here as well.  We won't make this a function for now
-# since it's needed in this module.
 def get_parameter_list_from_force(force, paramlist):
-    name = force.__class__.__name__ # we passed in an instance
+    """Create a function that returns the paramters of a function type.
+
+    First, we need make some additions to the parameter list dictionary,
+    which we do once when the forcedata script is imported.  Useful to
+    put the forces here as well.  We won't make this a function for now
+    since it's needed in this module.
+    """
+
+    # We passed in an instance
+    name = force.__class__.__name__
     pvars = []
     for param in paramlist[name]:
         paramstring = 'force.' + param
@@ -104,11 +102,9 @@ def get_parameter_list_from_force(force, paramlist):
 
 
 def get_parameter_list_from_kwds(force, kwds, paramlist):
-    """
-
-
-    """
-    name = force.__class__.__name__ # we passed in an instance, not a class
+    """ """
+    # We passed in an instance, not a class
+    name = force.__class__.__name__
     ordered = []
     for p in paramlist[name]:
         ordered.append(kwds[p])
@@ -116,10 +112,7 @@ def get_parameter_list_from_kwds(force, kwds, paramlist):
 
 
 def get_parameter_kwds_from_force(force, forceparams, paramlist):
-    """
-
-
-    """
+    """ """
     kwds = dict()
     force_params = forceparams(force)
     for i, p in enumerate(paramlist[force.__class__.__name__]):
@@ -127,16 +120,16 @@ def get_parameter_kwds_from_force(force, forceparams, paramlist):
     return kwds
 
 
-def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset = 0):
-    """ create a keyword dictionary given an array of information from a file format
+def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0):
+    """Create a keyword dictionary given an array of information from a file format
 
-        requires the master set of units, the master set of parameter
-        lists, an object (either a force_class or force_type), the
-        list of information to be converted into a keyword, and an offset.
+    requires the master set of units, the master set of parameter
+    lists, an object (either a force_class or force_type), the
+    list of information to be converted into a keyword, and an offset.
 
-        offset: how far over from the first entry we translate
+    Args:
+        offset (int): how far over from the first entry we translate
     """
-    
     kwds = dict()
     typename = force_type.__name__
     u = unitvars[typename]
@@ -147,21 +140,19 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset = 
 
 
 def optparamkeylookup(force_type):
-    """
-    given a force_type object, determines the key associated with the optional parameters 
+    """Given a force_type object, determines the key associated with the optional parameters
     """
     name = force_type.__name__.lower()
     for key, params in forcedata.AbstractOptParams.iteritems():
         if key in name:
-           return key
+            return key
 
 
 def optforceparams(force_type, forcetype_object=None):
-    """
-    a function that returns the dictionary of optional paramters of an
-    abstract force type.  If no object is given, we fill with blanks.
-    """
+    """Return the dictionary of optional paramters of an abstract force type.
 
+    If no object is given, we fill with blanks.
+    """
     pvars = dict()
     for i, param in enumerate(forcedata.AbstractOptParams[force_type]):
         if forcetype_object:
@@ -172,9 +163,8 @@ def optforceparams(force_type, forcetype_object=None):
 
 
 def optparamlookup(force_type_object, object_default=False):
-    """
-    a wrapper for optforceparams that takes a force_type object and returns
-    the optional parameter dictionary
+    """A wrapper for optforceparams that takes a force_type object and returns
+    the optional parameter dictionary.
     """
     force_type = optparamkeylookup(force_type_object)
     if object_default:
@@ -184,9 +174,7 @@ def optparamlookup(force_type_object, object_default=False):
 
 
 def create_kwd_dict(unitvars, paramlist, force_type_object, values, optvalues=None):
-    """
-
-    """
+    """ """
     name = force_type_object.__name__
     unitlist = unitvars[name]
     kwdlist =  paramlist[name]
@@ -198,5 +186,4 @@ def create_kwd_dict(unitvars, paramlist, force_type_object, values, optvalues=No
     if optvalues:
        optkwddict.update(optvalues)
        kwd.update(optkwddict)
-
     return kwd

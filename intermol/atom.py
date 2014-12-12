@@ -2,7 +2,7 @@ class Atom(object):
     """  """
     __slots__ = ['index', 'name', 'residue_index', 'residue_name',
                  '_position', '_velocity', '_force',
-                 '_atomtype', 'bondtype', 'atomic_number', 'cgnr', '_mass',
+                 '_atomtype', 'bondingtype', 'atomic_number', 'cgnr', '_mass',
                  '_charge', 'ptype', '_sigma', '_epsilon']
 
     def __init__(self, index, name=None, residue_index=-1, residue_name=None):
@@ -24,7 +24,7 @@ class Atom(object):
         self._force = list()
 
         self._atomtype = dict()
-        self.bondtype = None
+        self.bondingtype = None
         self.atomic_number = None
         self.cgnr = None
         self._mass = dict()

@@ -27,6 +27,7 @@
   CT     CT     OH     HO      9     60 100 4
   HC     CT     CT     OH      9     0 100 4
   HC     CT     OH     HO      9     180 100 1
+  HC     CT     OH     HO      9     0 100 2
   HC     CT     CT     HC      9     180 100 3
 	
 [ moleculetype ]

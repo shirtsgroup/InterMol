@@ -1,6 +1,3 @@
-from orderedset import OrderedSet
-
-
 class Molecule(object):
     """An abstract molecule object. """
 
@@ -13,7 +10,7 @@ class Molecule(object):
         if not name:
             name = "MOL"
         self.name = name
-        self._atoms = OrderedSet()
+        self._atoms = list()
 
     def add_atom(self, atom):
         """Add an atom
@@ -21,7 +18,7 @@ class Molecule(object):
         Args:
             atom (Atom): the atom to add into the molecule
         """
-        self._atoms.add(atom)
+        self._atoms.append(atom)
 
     @property
     def atoms(self):
