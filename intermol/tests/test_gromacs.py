@@ -69,12 +69,13 @@ def gromacs(flags, test_type='unit'):
 
         try:
             diff = convert.main(flags)
-            for engine, result in diff.iteritems():
-                results[engine][name] = result
         except Exception as e:
             testing_logger.exception(e)
-            for engine, result in diff.iteritems():
+            for engine in ENGINES:
                 results[engine][name] = e
+        else:
+            for engine, result in diff.iteritems():
+                results[engine][name] = result
         remove_handler(h1, h2)
 
     summarize_results('gromacs', results, basedir)
