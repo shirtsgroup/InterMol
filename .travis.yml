@@ -1,0 +1,33 @@
+language: python
+
+python:
+  - "2.7"
+
+virtualenv:
+  system_site_packages: true
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install cmake wget
+  - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.0.4.tar.gz
+  - tar xfz gromacs-5.0.4.tar.gz
+  - cd gromacs-5.0.4
+  - mkdir build
+  - cd build
+  - cmake .. -DGMX_BUILD_OWN_FFTW=ON
+  - make
+  - sudo make install
+  - source /usr/local/gromacs/bin/GMXRC
+
+install:
+  - pip install coverage
+  - pip install coveralls
+  - pip install pytest
+  - pip install -r requirements.txt --use-mirrors
+  - pip install .
+
+script:
+  - coverage run --rcfile=.coveragerc --source=mbuild setup.py test
+
+after_success:
+  - coveralls

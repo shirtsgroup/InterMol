@@ -173,6 +173,22 @@ def summarize_results(input_type, results, outdir):
         print(out.read())
 
 
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
 # def initialize_logger(verbose=1):
 #     # Adds a StreamHandler to convert.py loggers so that.
 #     # Their messages will be printed to console during conversion.
@@ -189,7 +205,8 @@ def summarize_results(input_type, results, outdir):
 
 
 def main():
-    args = parse_args()
+    args = vars(parse_args())
+
 
 if __name__ == '__main__':
     main()

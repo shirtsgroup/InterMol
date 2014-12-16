@@ -8,6 +8,7 @@ import subprocess
 import simtk.unit as units
 
 import intermol.tests
+from intermol.tests.testing_tools import which
 from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 
 
@@ -59,9 +60,14 @@ def gromacs_energies(top=None, gro=None, mdp=None,
     stdout = os.path.join(directory, 'gromacs_stdout.txt')
     stderr = os.path.join(directory, 'gromacs_stderr.txt')
 
-    grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
-    mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
-    genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
+    if which('gmx'):
+        grompp_bin = os.path.join(gropath, 'gmx grompp' + grosuff)
+        mdrun_bin = os.path.join(gropath, 'gmx mdrun' + grosuff)
+        genergy_bin = os.path.join(gropath, 'gmx energy' + grosuff)
+    else:
+        grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
+        mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
+        genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
 
     # grompp'n it up
     cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
