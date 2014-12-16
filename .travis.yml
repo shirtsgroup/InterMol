@@ -8,7 +8,7 @@ virtualenv:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install cmake wget
+  - sudo apt-get install cmake=2.8.8 wget
   - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.0.4.tar.gz
   - tar xfz gromacs-5.0.4.tar.gz
   - cd gromacs-5.0.4
