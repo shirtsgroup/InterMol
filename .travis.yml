@@ -19,7 +19,7 @@ before_install:
   - make -j 2
   - sudo make install
   - source /usr/local/gromacs/bin/GMXRC
-  - cd ..
+  - cd ../..
 
 install:
   - pip install coverage
