@@ -36,7 +36,8 @@ def gromacs(flags, test_type='unit'):
     per_file_results = {k: None for k in names}
     results = {engine: per_file_results for engine in ENGINES}
 
-    basedir = '{0}_test_outputs/from_gromacs'.format(test_type)
+    unit_test_outputs = '{0}_test_outputs/from_gromacs'.format(test_type)
+    basedir = os.path.join(os.path.dirname(__file__), unit_test_outputs)
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
 
@@ -94,7 +95,7 @@ def test_gromacs_unit():
 
     testing_logger.info('Running unit tests')
 
-    output_dir = 'unit_test_outputs'
+    output_dir = os.path.join(os.path.dirname(__file__), 'unit_test_outputs')
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 

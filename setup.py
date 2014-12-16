@@ -58,7 +58,7 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Software Development :: Libraries :: Python Modules'
         ],
-    test_suite='tests',
+    test_suite='intermol.tests',
     cmdclass={
       'tests': PyTest,
     },
