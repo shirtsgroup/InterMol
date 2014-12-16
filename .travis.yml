@@ -29,7 +29,7 @@ install:
   - pip install .
 
 script:
-  - coverage run --rcfile=.coveragerc --source=intermol setup.py test
+  - coverage run --rcfile=.coveragerc --source=intermol setup.py tests
 
 after_success:
   - coveralls
