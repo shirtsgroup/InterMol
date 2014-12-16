@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 import os
 import pdb
+import math
 
 import simtk.unit as units
 from intermol.atom import Atom
@@ -249,6 +250,7 @@ class GromacsParser(object):
 
             # Translate the dihedrals back to write them out.
             if isinstance(dihedral, TrigDihedral):
+
                 # TODO: Exceptions for cases where tmpparams and paramlist don't
                 # get assigned below.
                 if dihedral.improper:
@@ -319,6 +321,7 @@ class GromacsParser(object):
             self.bonds = []
             self.angles = []
             self.dihedrals = []
+            self.settles = None
             self.exclusions = []
             self.pairs = []
             self.cmaps = []
@@ -478,26 +481,20 @@ class GromacsParser(object):
 
             if self.current_molecule_type.pair_forces:
                 self.write_pairs(top)
-
-            # If settles, no bonds
             if self.current_molecule_type.bond_forces and not self.current_molecule_type.settles:
                 self.write_bonds(top)
-            # If settles, no angles
             if self.current_molecule_type.angle_forces and not self.current_molecule_type.settles:
                 self.write_angles(top)
-
             if self.current_molecule_type.dihedral_forces:
                 self.write_dihedrals(top)
 
             # if moleculeType.virtualForceSet:
             #     lines += self.write_virtuals(moleculeType.virtualForceSet)
             #
-            # if moleculeType.settles:
-            #     lines += self.write_settles(moleculeType.settles)
-            #
-            # if moleculeType.exclusions:
-            #     # [ exclusions ]
-            #     lines += self.write_exclusions(moleculeType.exclusions)
+            if self.current_molecule_type.settles:
+                self.write_settles(top)
+            if self.current_molecule_type.exclusions:
+                self.write_exclusions(top)
 
     def write_system(self, top):
         top.write('[ system ]\n')
@@ -560,13 +557,13 @@ class GromacsParser(object):
                 pair_params = self.get_parameter_list_from_force(pair)
                 # Don't want to write over actual array.
                 param_units = list(self.unitvars[pair.__class__.__name__])
-                if p_type[0] == '2':
+                if p_type[0] == '2' and pair.scaleQQ:
                     # We have a scaleQQ as well, which has no units.
                     pair_params.insert(0, pair.scaleQQ)
                     param_units.insert(0, units.dimensionless)
                 for i, param in enumerate(pair_params):
-                    top.write("{0:18.8e}".format(
-                            param.value_in_unit(param_units[i])))
+                        top.write("{0:18.8e}".format(
+                                param.value_in_unit(param_units[i])))
                 top.write('\n')
             else:
                 logger.warn("Found unsupported pair type {0}".format(
@@ -620,10 +617,6 @@ class GromacsParser(object):
 
             kwds = self.get_parameter_kwds_from_force(dihedral)
             d_type, paramlist = self.canonical_dihedral(kwds, dihedral, direction='from')
-            print d_type
-            if d_type == '1':
-                pdb.set_trace()
-
             converted_dihedral = self.gromacs_dihedrals[d_type](*atoms, **paramlist[0])
 
             top.write("{0:6d}".format(int(d_type)))
@@ -633,19 +626,24 @@ class GromacsParser(object):
             for param, param_unit in zip(paramlist, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
-            # for p in paramlist:
-            #     # For "convenience", we convert back into a new dihedral with
-            #     # the new parameter dictionary.
-            #     datoms = [dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4]
-            #     pdb.set_trace()
-            #     converted_dihedral = self.gromacs_dihedrals[d_type](*datoms, **p)
-            #
-            #     # Now write this new dihedral
-            #     dihedral_params = self.get_parameter_list_from_force(converted_dihedral)
-            #     param_units = self.unitvars[dihedral.__class__.__name__]
-            #     for i, param in enumerate(dihedral_params):
-            #         top.write('{0:18.8e}'.format(param.value_in_unit(param_units[i])))
-            #     top.write('\n')
+        top.write('\n')
+
+    def write_settles(self, top):
+        top.write('[ settles ]\n')
+        top.write('; i  funct   dOH  dHH\n')
+        settles = self.current_molecule_type.settles
+        s_type = 1
+        top.write('{0:6d} {1:6d} {2:18.8f} {3:18.8f}\n'.format(
+                settles.atom1,
+                s_type,
+                settles.dOH.value_in_unit(units.nanometers),
+                settles.dHH.value_in_unit(units.nanometers)))
+        top.write('\n')
+
+    def write_exclusions(self, top):
+        top.write('[ exclusions ]\n')
+        for index1, index2 in self.current_molecule_type.exclusions:
+            top.write('{0:6d} {1:6d}\n'.format(index1, index2))
         top.write('\n')
 
     # =========== System creation =========== #
@@ -667,6 +665,10 @@ class GromacsParser(object):
             self.create_angle(angle)
         for dihedral in top_moltype.dihedrals:
             self.create_dihedral(dihedral)
+        if top_moltype.settles:
+            self.create_settle(top_moltype.settles)
+        for exclusion in top_moltype.exclusions:
+            self.create_exclusion(exclusion)
 
     def create_molecule(self, top_moltype, mol_name):
         molecule = Molecule(mol_name)
@@ -683,7 +685,10 @@ class GromacsParser(object):
         atom_name = temp_atom[4]
         cgnr = int(temp_atom[5])
         charge = float(temp_atom[6]) * units.elementary_charge
-        mass = float(temp_atom[7]) * units.amu
+        if len(temp_atom) in [8, 11]:
+            mass = float(temp_atom[7]) * units.amu
+        else:
+            mass = -1 * units.amu
 
         atom = Atom(index, atom_name, res_id, res_name)
         atom.cgnr = cgnr
@@ -714,7 +719,7 @@ class GromacsParser(object):
                 else:
                     logger.warn("Suspicious bondingtype parameter found for atom "
                                 "{0}. Visually inspect before using.".format(atom))
-            if not atom.mass.get(state):
+            if atom.mass.get(state)._value < 0:
                 if intermol_atomtype.mass._value >= 0:
                     atom.mass = (state, intermol_atomtype.mass)
                 else:
@@ -830,6 +835,32 @@ class GromacsParser(object):
             logger.warn("Undefined pair formatting.")
         else:
             self.current_molecule_type.pair_forces.add(new_pair)
+
+    def create_settle(self, settle):
+        new_settle = Settles(int(settle[0]),
+                            float(settle[2]) * units.nanometers,
+                            float(settle[3]) * units.nanometers)
+        self.current_molecule_type.settles = new_settle
+
+        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
+        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+        angle = 2.0 * math.asin(0.5 * float(settle[3]) / float(settle[2])) * units.radians
+        dOH = float(settle[2]) * units.nanometers
+
+        new_bond = HarmonicBond(1, 2, None, None, dOH, waterbondrefk, c=True)
+        self.current_molecule_type.bond_forces.add(new_bond)
+
+        new_bond = HarmonicBond(1, 3, None, None, dOH, waterbondrefk, c=True)
+        self.current_molecule_type.bond_forces.add(new_bond)
+
+        new_angle = HarmonicAngle(3, 1, 2, None, None, None, angle, wateranglerefk, c=True)
+        self.current_molecule_type.angle_forces.add(new_angle)
+
+    def create_exclusion(self, exclusion):
+        first = exclusion[0]
+        for index in exclusion:
+            if first < index:
+                self.current_molecule_type.exclusions.add((int(first), int(index)))
 
     def create_angle(self, angle):
         n_atoms = 3
@@ -1063,6 +1094,8 @@ class GromacsParser(object):
                 self.process_angle(line)
             elif self.current_directive == 'dihedrals':
                 self.process_dihedral(line)
+            elif self.current_directive == 'settles':
+                self.process_settle(line)
             elif self.current_directive == 'exclusions':
                 self.process_exclusion(line)
             elif self.current_directive == 'pairs':
@@ -1079,7 +1112,7 @@ class GromacsParser(object):
                 self.process_dihedraltype(line)
             elif self.current_directive == 'implicit_genborn_params':
                 self.process_implicittype(line)
-            elif self.current_directive == 'pairtypes':
+            elif self.current_directive == 'pairtypes':# and not self.system.genpairs:
                 self.process_pairtype(line)
             elif self.current_directive == 'cmaptypes':
                 self.process_cmaptype(line)
@@ -1149,6 +1182,15 @@ class GromacsParser(object):
         if len(fields) < 5:
             self.too_few_fields(line)
         self.current_molecule_type.dihedrals.append(fields)
+
+    def process_settle(self, line):
+        """Process a line in the [ settles ] category."""
+        if self.current_molecule_type is None:
+            self.directive_before_moleculetype()
+        fields = line.split()
+        if len(fields) < 4:
+            self.too_few_fields(line)
+        self.current_molecule_type.settles = fields
 
     def process_exclusion(self, line):
         """Process a line in the [ exclusions ] category."""
@@ -1318,21 +1360,21 @@ class GromacsParser(object):
                     PairFunc = LjCPairType
                 elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                     PairFunc = LjSigepsPairType
+            offset = 3
         elif numeric_pairtype == '2':
             if self.system.combination_rule == "Multiply-C6C12":
                 PairFunc = LjqCPairType
             elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                 PairFunc = LjqSigepsPairType
-                # Try to get this out ...
-                kwds['scaleQQ'] = float(fields[3]) * units.dimensionless
+            offset = 4
         else:
             logger.warn("Could not find pair type for line: {0}".format(line))
 
         if PairFunc:
             pairvars = [fields[0], fields[1]]
+            kwds = create_kwds_from_entries(self.unitvars, self.paramlist,
+                    fields, PairFunc, offset=offset)
             # kludge because of placement of scaleQQ . . .
-            kwds = create_kwds_from_entries(
-                    fields, int(numeric_pairtype) + 1, PairFunc)
             if numeric_pairtype == '2':
                 # try to get this out ...
                 kwds['scaleQQ'] = float(fields[3]) * units.dimensionless

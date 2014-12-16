@@ -23,7 +23,7 @@ with open('requirements.txt') as reqs:
     requirements_lines = [line.strip() for line in reqs]
 reqs = list(filter(None, requirements_lines))
 
-readme = open('README.rst').read()
+readme = open('README.md').read()
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')

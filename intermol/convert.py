@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import pdb
 import sys
 import warnings
 
@@ -10,6 +11,21 @@ from intermol.gromacs import gromacs_driver
 import intermol.tests
 
 logger = logging.getLogger('InterMolLog')
+
+## Specifies lowest severity log messages to handle.
+logger.setLevel(logging.DEBUG)
+h = logging.StreamHandler()
+
+h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
+f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
+                      "%Y-%m-%d %H:%M:%S")
+h.setFormatter(f)
+logger.addHandler(h)
+
+# Redirect warnings module messages to logging system.
+logging.captureWarnings(True)
+warning_logger = logging.getLogger('py.warnings')
+warning_logger.addHandler(h)
 
 
 def parse_args(args):
@@ -67,41 +83,49 @@ def parse_args(args):
 
 
 def main(args=None):
-    args = parse_args(args)
+    logger.info('Beginning InterMol conversion')
 
-    if args.verbose:
+    if not args:
+        args = vars(parse_args(args))
+
+    if args.get('verbose'):
         h.setLevel(logging.DEBUG)
     # Print warnings.
     warnings.simplefilter("always")
-    if not args.force:
+    if not args.get('force'):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
 
     # --------------- PROCESS INPUTS ----------------- #
-    if args.gro_in:
-        prefix = args.gro_in[0][args.gro_in[0].rfind('/') + 1:-4]
-        # find the top file since order of inputs is not enforced
-        top_in = [x for x in args.gro_in if x.endswith('.top')]
+    if args.get('gro_in'):
+        gropath = args.get('gropath')
+        gromacs_files = args['gro_in']
+
+        prefix = os.path.splitext(os.path.basename(gromacs_files[0]))[0]
+        # Find the top file since order of inputs is not enforced.
+        top_in = [x for x in gromacs_files if x.endswith('.top')]
         assert(len(top_in) == 1)
-        top_in = top_in[0]  # Now just string instead of list.
+        top_in = top_in[0]
+
         # Find the gro file since order of inputs is not enforced.
-        gro_in = [x for x in args.gro_in if x.endswith('.gro')]
+        gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = gro_in[0]
-        system = gromacs_driver.read_file(top_in, gro_in, args.gropath)
+
+        system = gromacs_driver.read_file(top_in, gro_in, gropath)
     else:
         logger.error('No input file')
         sys.exit(1)
 
     # --------------- WRITE OUTPUTS ----------------- #
-    if not args.oname:  # Default is to append _converted to the input prefix
+    if not args.get('oname'):
         oname = '{0}_converted'.format(prefix)
     else:
-        oname = args.oname
-    oname = os.path.join(args.odir, oname)  # Prepend output directory to oname.
+        oname = args['oname']
+    oname = os.path.join(args['odir'], oname)  # Prepend output directory to oname.
 
     output_status = dict()
-    if args.gromacs:
+    if args.get('gromacs'):
         try:
             gromacs_driver.write_file(system,
                 '{0}.top'.format(oname), '{0}.gro'.format(oname))
@@ -111,21 +135,19 @@ def main(args=None):
             output_status['gromacs'] = e
 
     # --------------- ENERGY EVALUATION ----------------- #
-    if args.energy:
+    if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.dirname(intermol.tests.__file__)
 
         # Gromacs
         mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
-
-
         # Evaluate input energies.
-        if args.gro_in:
+        if args.get('gro_in'):
             input_type = 'gromacs'
             tests_path = os.path.dirname(intermol.tests.__file__)
             mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
-                    mdp_path, args.gropath, '')
+                    mdp_path, gropath, '')
         else:
             logger.warn('Code should have never made it here!')
 
@@ -133,12 +155,12 @@ def main(args=None):
         output_type = []
         e_outfile = []
         e_out = []
-        if args.gromacs and output_status['gromacs'] == 0:
+        if args.get('gromacs') and output_status['gromacs'] == 0:
             output_type.append('gromacs')
             try:
                 out, outfile = gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname),
-                    mdp_path, args.gropath, '')
+                        '{0}.top'.format(oname), '{0}.gro'.format(oname),
+                        mdp_path, gropath, '')
                 output_status['gromacs'] = get_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
@@ -151,12 +173,12 @@ def main(args=None):
         # Display energy comparison results.
         out = ['InterMol Conversion Energy Comparison Results','']
         out.append('{0} input energy file: {1}'.format(input_type, e_infile))
-        for type, file in zip(output_type, e_outfile):
-            out.append('{0} output energy file: {1}'.format(type, file))
+        for out_type, file in zip(output_type, e_outfile):
+            out.append('{0} output energy file: {1}'.format(out_type, file))
         out += summarize_energy_results(e_in, e_out, input_type, output_type)
         logger.info('\n'.join(out))
-    status = ['Converted' if x is 0 else x for x in output_status]
-    return status
+    logger.info('Finished!')
+    return output_status
 
 
 def get_diff(e_in, e_out):
@@ -184,16 +206,17 @@ def find_match(key, dictionary, unit):
 
 
 def summarize_energy_results(energy_input, energy_outputs, input_type, output_types):
-    """ creates a table comparing input and output energy groups
+    """Creates a table comparing input and output energy groups.
 
-    args:
-        energy_input  - dictionary of energy groups from input file
-        energy_output - list containing dictionary of energy groups or -1 for each output file
-        input_type    - input format string
-        output_types  - list containing output formats
+    Args:
+        energy_input (dict): energy groups from input file
+        energy_output(list): containing dictionary of energy groups or -1 for
+            each output file
+        input_type (str): input engine
+        output_types (list): containing output formats
 
-    returns:
-        out - list of strings which forms a summary table using "\n".join(out)
+    Returns:
+        out (list of strings): which forms a summary table using "\n".join(out)
     """
     out = []
     # remove failed evaluations (-1 in energy_outputs)
@@ -201,19 +224,22 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     failed = [output_types[i] for i in failed_i]
     output_types = [x for i, x in enumerate(output_types) if i not in failed_i]
     energy_outputs = [x for x in energy_outputs if x != -1]
+
     # find all distinct labels
     labels = set(energy_input.keys())
     for e_out in energy_outputs:
         for key, value in e_out.iteritems():
             labels.add(key)
+
     # set up energy comparison table
     labels = list(labels)
     unit = energy_input[energy_input.keys()[0]].unit
     energy_all = [energy_input] + energy_outputs
-    data = np.empty((len(labels),len(energy_all)))
+    data = np.empty((len(labels), len(energy_all)))
     for i in range(len(data)):
         for j in range(len(energy_all)):
-            data[i,j] = find_match(labels[i], energy_all[j], unit)
+            data[i, j] = find_match(labels[i], energy_all[j], unit)
+
     # TODO: sort table
     out.append('')
     out.append('Energy group summary')
@@ -242,22 +268,4 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
 
 
 if __name__ == '__main__':
-
-    # Specifies lowest severity log messages to handle.
-    logger.setLevel(logging.DEBUG)
-    h = logging.StreamHandler()
-
-    h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
-    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
-                          "%Y-%m-%d %H:%M:%S")
-    h.setFormatter(f)
-    logger.addHandler(h)
-
-    # Redirect warnings module messages to logging system.
-    logging.captureWarnings(True)
-    warning_logger = logging.getLogger('py.warnings')
-    warning_logger.addHandler(h)
-
-    logger.info('Beginning InterMol conversion')
     main()
-    logger.info('Finished!')

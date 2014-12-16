@@ -8,6 +8,8 @@ from abstract_dihedral_type import AbstractDihedralType
 from atom_c_type import AtomCType
 from atom_sigeps_type import AtomSigepsType
 
+from settles import Settles
+
 # what is below here really should be written automatically
 # nonbonded
 # don't think we use the functions, just the types?

@@ -114,6 +114,7 @@ def get_parameter_list_from_kwds(force, kwds, paramlist):
 def get_parameter_kwds_from_force(force, forceparams, paramlist):
     """ """
     kwds = dict()
+
     force_params = forceparams(force)
     for i, p in enumerate(paramlist[force.__class__.__name__]):
         kwds[p] = force_params[i]
@@ -133,6 +134,9 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0)
     kwds = dict()
     typename = force_type.__name__
     u = unitvars[typename]
+    # if typename == 'LjqSigepsPairType':
+    #     import pdb
+    #     pdb.set_trace()
     params = paramlist[typename]
     for i, p in enumerate(params):
         kwds[p] = float(entries[offset+i]) * u[i]

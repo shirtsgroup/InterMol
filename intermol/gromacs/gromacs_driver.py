@@ -34,13 +34,17 @@ def write_file(system, top_out, gro_out):
 
 
 def gromacs_energies(top=None, gro=None, mdp=None,
-                     gropath='', grosuff='', grompp_check=False):
+                     gropath=None, grosuff=None, grompp_check=False):
     """
     gropath = path to gromacs binaries
     grosuff = suffix of gromacs binaries, usually '' or '_d'
     """
     if not grompp_check:
         logger.info('Evaluating energy of {0}'.format(gro))
+    if not gropath:
+        gropath = ''
+    if not grosuff:
+        grosuff = ''
 
     directory, _ = os.path.split(top)
 
