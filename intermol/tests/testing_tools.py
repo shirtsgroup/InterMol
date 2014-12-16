@@ -19,7 +19,7 @@ warning_logger = logging.getLogger('py.warnings')
 testing_logger = logging.getLogger('testing')
 testing_logger.setLevel(logging.DEBUG)
 h = logging.StreamHandler()
-h.setLevel(logging.INFO) # ignores DEBUG level for now
+h.setLevel(logging.INFO)  # ignores DEBUG level for now
 f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
 h.setFormatter(f)
 testing_logger.addHandler(h)
@@ -110,7 +110,7 @@ def add_handler(dir):
         h2: logs all >=DEBUG-level messages to dir/DEBUG_LOG
             also includes function and line number for each message
     """
-    h1 = logging.FileHandler('{dir}/{info}'.format(dir=dir,info=INFO_LOG), mode='w')
+    h1 = logging.FileHandler('{dir}/{info}'.format(dir=dir, info=INFO_LOG), mode='w')
     f1 = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
                            "%Y-%m-%d %H:%M:%S")
     h1.setFormatter(f1)
@@ -118,7 +118,7 @@ def add_handler(dir):
     logger.addHandler(h1)
     warning_logger.addHandler(h1)
 
-    h2 = logging.FileHandler('{dir}/{debug}'.format(dir=dir,debug=DEBUG_LOG), mode='w')
+    h2 = logging.FileHandler('{dir}/{debug}'.format(dir=dir, debug=DEBUG_LOG), mode='w')
     f2 = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s",
                            "%Y-%m-%d %H:%M:%S")
     h2.setFormatter(f2)

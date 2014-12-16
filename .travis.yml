@@ -16,7 +16,7 @@ before_install:
   - mkdir build
   - cd build
   - cmake .. -DGMX_BUILD_OWN_FFTW=ON
-  - make
+  - make -j 2
   - sudo make install
   - source /usr/local/gromacs/bin/GMXRC
 
@@ -24,7 +24,7 @@ install:
   - pip install coverage
   - pip install coveralls
   - pip install pytest
-  - pip install -r requirements.txt --use-mirrors
+  - pip install -r requirements.txt
   - pip install .
 
 script:
