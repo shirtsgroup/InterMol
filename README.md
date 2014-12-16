@@ -1,6 +1,8 @@
 InterMol
 ========
 
+[![Linux Build Status](https://travis-ci.org/ctk3b/intermol.png?branch=develop)](https://travis-ci.org/ctk3b/intermol)
+
 Conversion tool for molecular simulations. 
 
 We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions. 
