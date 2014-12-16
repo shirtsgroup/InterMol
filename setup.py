@@ -16,7 +16,7 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         import pytest
-        errcode = pytest.main(['intermol'])
+        errcode = pytest.main(['intermol', '-s'])
         sys.exit(errcode)
 
 with open('requirements.txt') as reqs:

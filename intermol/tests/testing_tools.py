@@ -9,15 +9,14 @@ ENGINES = ['gromacs']
 INFO_LOG = 'info.log'
 DEBUG_LOG = 'debug.log'
 
-# # get reference to loggers used in convert.py
-# logger = logging.getLogger('InterMolLog')
-# logger.setLevel(logging.DEBUG)
-# logging.captureWarnings(True) # redirect warnings module messages to logging system
-# warning_logger = logging.getLogger('py.warnings')
-from intermol.convert import warning_logger, logger
+# Get reference to loggers used in convert.py.
+logger = logging.getLogger('InterMolLog')
+logger.setLevel(logging.DEBUG)
+logging.captureWarnings(True) # redirect warnings module messages to logging system
+warning_logger = logging.getLogger('py.warnings')
 
-# make a logger for OLDtest_all.py
-testing_logger = logging.getLogger('systems_test')
+# Make a logger for unit and system tests.
+testing_logger = logging.getLogger('testing')
 testing_logger.setLevel(logging.DEBUG)
 h = logging.StreamHandler()
 h.setLevel(logging.INFO) # ignores DEBUG level for now

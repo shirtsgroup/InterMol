@@ -1,13 +1,17 @@
 from glob import glob
 import os
-import pytest
 from pkg_resources import resource_filename
+
+import logging
+import numpy as np
+import pytest
 from six import string_types
 
 from intermol import convert
-from testing_tools import (logger, testing_logger, add_handler, remove_handler,
-                        summarize_results, ENGINES)
+from testing_tools import (add_handler, remove_handler, summarize_results,
+                           ENGINES)
 
+testing_logger = logging.getLogger('testing')
 
 def gromacs(flags, test_type='unit'):
     """
@@ -59,15 +63,15 @@ def gromacs(flags, test_type='unit'):
                 arg = '--{0} {1}'.format(k, v)
             cmd_line_equivalent.append(arg)
 
-        logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
-        logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
+        testing_logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
+        testing_logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
 
         try:
             diff = convert.main(flags)
             for engine, result in diff.iteritems():
                 results[engine][name] = result
         except Exception as e:
-            logger.exception(e)
+            testing_logger.exception(e)
             for engine, result in diff.iteritems():
                 results[engine][name] = e
         remove_handler(h1, h2)
@@ -76,7 +80,7 @@ def gromacs(flags, test_type='unit'):
     return results
 
 
-def gromacs_unit_tests():
+def test_gromacs_unit():
     """
 
     Args:
@@ -95,11 +99,15 @@ def gromacs_unit_tests():
         os.mkdir(output_dir)
 
     results = gromacs(flags, test_type='unit')
+    zeros = np.zeros(shape=(len(results['gromacs'])))
+    for engine, tests in results.iteritems():
+        tests = np.array(tests.values())
+        assert np.allclose(tests, zeros, atol=1e-4)
 
 
 if __name__ == "__main__":
     import pdb
-    gromacs_unit_tests()
+    test_gromacs_unit()
 
 
 

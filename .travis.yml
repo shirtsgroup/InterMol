@@ -7,8 +7,9 @@ virtualenv:
   system_site_packages: true
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install cmake=2.8.8 wget
+  - sudo add-apt-repository --yes ppa:kalakris/cmake
+  - sudo apt-get update -qq
+  - sudo apt-get install cmake wget
   - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.0.4.tar.gz
   - tar xfz gromacs-5.0.4.tar.gz
   - cd gromacs-5.0.4
