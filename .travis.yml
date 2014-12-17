@@ -10,9 +10,9 @@ before_install:
   - sudo add-apt-repository --yes ppa:kalakris/cmake
   - sudo apt-get update -qq
   - sudo apt-get install cmake wget
-  - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-5.0.4.tar.gz
-  - tar xfz gromacs-5.0.4.tar.gz
-  - cd gromacs-5.0.4
+  - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-4.6.7.tar.gz
+  - tar xfz gromacs-4.6.7.tar.gz
+  - cd gromacs-4.6.7
   - mkdir build
   - cd build
   - cmake .. -DGMX_BUILD_OWN_FFTW=ON

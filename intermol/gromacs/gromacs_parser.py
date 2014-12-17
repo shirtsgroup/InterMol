@@ -717,8 +717,7 @@ class GromacsParser(object):
                 if intermol_atomtype.bondtype:
                     atom.bondingtype = intermol_atomtype.bondtype
                 else:
-                    logger.warn("Suspicious bondingtype parameter found for atom "
-                                "{0}. Visually inspect before using.".format(atom))
+                    atom.bondingtype = atomtype
             if atom.mass.get(state)._value < 0:
                 if intermol_atomtype.mass._value >= 0:
                     atom.mass = (state, intermol_atomtype.mass)
@@ -745,7 +744,7 @@ class GromacsParser(object):
             bond[0] = btypes[0]
             bond[1] = btypes[1]
             bond = " ".join(bond)
-            bond_type = self.process_forcetype('bond', bond, n_atoms,
+            bond_type = self.process_forcetype(btypes, 'bond', bond, n_atoms,
                 self.gromacs_bond_types, self.canonical_bond)
             bond = bond.split()
 
@@ -877,7 +876,7 @@ class GromacsParser(object):
             angle[1] = btypes[1]
             angle[2] = btypes[2]
             angle = " ".join(angle)
-            angle_type = self.process_forcetype('angle', angle, n_atoms,
+            angle_type = self.process_forcetype(btypes, 'angle', angle, n_atoms,
                 self.gromacs_angle_types, self.canonical_angle)
             angle = angle.split()
 
@@ -979,7 +978,7 @@ class GromacsParser(object):
 
         if not forcetype:
             logger.debug("Lookup failed for atom bonding types'{0}' in {1}".format(
-                    bondingtypes, types_of_kind))
+                    bondingtypes, types_of_kind.keys()))
         return forcetype
 
     # =========== Pre-processing and forcetype creation =========== #
@@ -1152,7 +1151,7 @@ class GromacsParser(object):
         fields = line.split()
         if len(fields) < 5:
             self.too_few_fields(line)
-        if len(fields) not in [8, 11]:
+        if len(fields) not in [7, 8, 11]:
             self.invalid_line(line)
         self.current_molecule_type.atoms.append(fields)
 
@@ -1270,7 +1269,8 @@ class GromacsParser(object):
         if len(fields) < 5:
             self.too_few_fields(line)
 
-        bond_type = self.process_forcetype('bond', line, 2,
+        btypes = fields[:2]
+        bond_type = self.process_forcetype(btypes, 'bond', line, 2,
                 self.gromacs_bond_types, self.canonical_bond)
         self.bondtypes[tuple(fields[:2])] = bond_type
 
@@ -1279,14 +1279,15 @@ class GromacsParser(object):
         fields = line.split()
         if len(fields) < 6:
             self.too_few_fields(line)
-        angle_type = self.process_forcetype('angle', line, 3,
+        btypes = fields[:3]
+        angle_type = self.process_forcetype(btypes, 'angle', line, 3,
                 self.gromacs_angle_types, self.canonical_angle)
         self.angletypes[tuple(fields[:3])] = angle_type
 
     def process_dihedraltype(self, line):
         """Process a line in the [ dihedraltypes ] category."""
         fields = line.split()
-        if len(fields) < 7:
+        if len(fields) < 5:
             self.too_few_fields(line)
 
         # Some gromacs parameters don't include sufficient numbers of types.
@@ -1296,11 +1297,12 @@ class GromacsParser(object):
 
         # Check whether they are using 2 or 4 atom types
         if fields[2].isdigit():
+            btypes = ['X', fields[0], fields[1], 'X']
             n_atoms_specified = 2
         elif fields[4].isdigit():
+            btypes = fields[:4]
             n_atoms_specified = 4
-
-        dihedral_type = self.process_forcetype('dihedral', line, n_atoms_specified,
+        dihedral_type = self.process_forcetype(btypes, 'dihedral', line, n_atoms_specified,
                 self.gromacs_dihedral_types, self.canonical_dihedral)
 
         # Still need a bit more information
@@ -1315,24 +1317,23 @@ class GromacsParser(object):
         else:
             self.dihedraltypes[key] = [dihedral_type]
 
-    def process_forcetype(self, forcename, line, n_atoms, gromacs_force_types,
+    def process_forcetype(self, bondingtypes, forcename, line, n_atoms, gromacs_force_types,
                            canonical_force):
         """ """
         fields = line.split()
 
         numeric_forcetype = fields[n_atoms]
         gromacs_force_type = gromacs_force_types[numeric_forcetype]
-        bondingtypes = fields[0:n_atoms]  # the bonding types
-
         kwds = create_kwds_from_entries(self.unitvars, self.paramlist, fields,
                                         gromacs_force_type, offset=n_atoms+1)
         CanonicalForceType, kwds = canonical_force(
             kwds, gromacs_force_type, direction='into')
+
         force_type = CanonicalForceType(*bondingtypes, **kwds)
 
         if not force_type:
             logger.warn("{0} is not a supported {1} type".format(fields[2], forcename))
-            return None
+            return
         else:
             return force_type
 

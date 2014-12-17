@@ -107,9 +107,34 @@ def test_gromacs_unit():
         assert np.allclose(tests, zeros, atol=1e-4)
 
 
+def test_gromacs_stress():
+    """
+
+    Args:
+        gromacs:
+    Returns:
+
+    """
+    flags = {'stress': True,
+             'energy': True,
+             'gromacs': True}
+
+    testing_logger.info('Running stress tests')
+
+    output_dir = os.path.join(os.path.dirname(__file__), 'stress_test_outputs')
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
+    results = gromacs(flags, test_type='stress')
+    zeros = np.zeros(shape=(len(results['gromacs'])))
+    for engine, tests in results.iteritems():
+        tests = np.array(tests.values())
+        assert np.allclose(tests, zeros, atol=1e-4)
+
 if __name__ == "__main__":
     import pdb
-    test_gromacs_unit()
+    #test_gromacs_unit()
+    test_gromacs_stress()
 
 
 
