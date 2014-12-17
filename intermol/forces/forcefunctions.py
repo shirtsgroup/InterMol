@@ -134,9 +134,6 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0)
     kwds = dict()
     typename = force_type.__name__
     u = unitvars[typename]
-    # if typename == 'LjqSigepsPairType':
-    #     import pdb
-    #     pdb.set_trace()
     params = paramlist[typename]
     for i, p in enumerate(params):
         kwds[p] = float(entries[offset+i]) * u[i]

@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import pdb
 import sys
 import warnings
 
@@ -10,22 +9,23 @@ import numpy as np
 from intermol.gromacs import gromacs_driver
 import intermol.tests
 
+
+# Make a global logging object.
 logger = logging.getLogger('InterMolLog')
+if __name__ == "__main__":
+    # Specifies lowest severity log messages to handle.
+    logger.setLevel(logging.DEBUG)
+    h = logging.StreamHandler()
+    h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
+    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
+                          "%Y-%m-%d %H:%M:%S")
+    h.setFormatter(f)
+    logger.addHandler(h)
 
-## Specifies lowest severity log messages to handle.
-logger.setLevel(logging.DEBUG)
-h = logging.StreamHandler()
-
-h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
-f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
-                      "%Y-%m-%d %H:%M:%S")
-h.setFormatter(f)
-logger.addHandler(h)
-
-# Redirect warnings module messages to logging system.
-logging.captureWarnings(True)
-warning_logger = logging.getLogger('py.warnings')
-warning_logger.addHandler(h)
+    # Redirect warnings module messages to logging system.
+    logging.captureWarnings(True)
+    warning_logger = logging.getLogger('py.warnings')
+    warning_logger.addHandler(h)
 
 
 def parse_args(args):

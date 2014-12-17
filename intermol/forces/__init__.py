@@ -15,6 +15,7 @@ from settles import Settles
 # don't think we use the functions, just the types?
 from lj_c_nonbonded_type import LjCNonbondedType, LjCNonbonded
 from lj_sigeps_nonbonded_type import LjSigepsNonbondedType, LjSigepsNonbonded
+from buckingham_nonbonded_type import BuckinghamNonbondedType, BuckinghamNonbonded
 
 #pairs
 from lj_c_pair_type import LjCPairType, LjCPair 

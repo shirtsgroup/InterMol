@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import logging
 import os
-import pdb
 import math
 
 import simtk.unit as units
@@ -33,7 +32,8 @@ def load_gromacs(top_file, gro_file, include_dir=None, defines=None):
     Returns:
         system:
     """
-    parser = GromacsParser(top_file, gro_file, include_dir=None, defines=None)
+    parser = GromacsParser(top_file, gro_file,
+                           include_dir=include_dir, defines=defines)
     return parser.read()
 
 
@@ -56,12 +56,13 @@ def default_gromacs_include_dir():
     """Find the location where gromacs #include files are referenced from, by
     searching for (1) gromacs environment variables, (2) just using the default
     gromacs install location, /usr/local/gromacs/share/gromacs/top. """
+    if 'GMXLIB' in os.environ:
+        return os.environ['GMXLIB']
     if 'GMXDATA' in os.environ:
         return os.path.join(os.environ['GMXDATA'], 'top')
     if 'GMXBIN' in os.environ:
         return os.path.abspath(os.path.join(
             os.environ['GMXBIN'], '..', 'share', 'gromacs', 'top'))
-
     return '/usr/local/gromacs/share/gromacs/top'
 
 
@@ -340,14 +341,14 @@ class GromacsParser(object):
             system = System()
         self.system = system
 
-        if not include_dir is None:
+        if include_dir is None:
             include_dir = default_gromacs_include_dir()
         self.include_dirs = (os.path.dirname(top_file), include_dir)
         # Most of the gromacs water itp files for different forcefields,
         # unless the preprocessor #define FLEXIBLE is given, don't define
         # bonds between the water hydrogen and oxygens, but only give the
         # constraint distances and exclusions.
-        self.defines = {'FLEXIBLE': True}
+        self.defines = dict()
         if defines is not None:
             self.defines.update(defines)
 
@@ -680,8 +681,10 @@ class GromacsParser(object):
     def create_atom(self, temp_atom):
         index = self.n_atoms_added + 1
         atomtype = temp_atom[1]
-        res_id = int(temp_atom[2])
-        res_name = temp_atom[3]
+        #res_id = int(temp_atom[2])
+        res_id = self.gro.residue_ids[self.n_atoms_added]
+        #res_name = temp_atom[3]
+        res_name = self.gro.residue_names[self.n_atoms_added]
         atom_name = temp_atom[4]
         cgnr = int(temp_atom[5])
         charge = float(temp_atom[6]) * units.elementary_charge
@@ -1236,7 +1239,10 @@ class GromacsParser(object):
                 fields.insert(1, None)
 
         atomtype = fields[0]
-        bondingtype = fields[1]
+        if fields[1] == None:
+            bondingtype = atomtype
+        else:
+            bondingtype = fields[1]
         if fields[2]:
             atomic_number = fields[2]
         else:
@@ -1390,7 +1396,6 @@ class GromacsParser(object):
             self.too_few_fields(line)
         self.cmaptypes[tuple(fields[:5])] = fields
 
-
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):
         e = ValueError('Too few fields in [ {0} ] line: {1}'.format(
@@ -1407,17 +1412,4 @@ class GromacsParser(object):
             self.current_directive))
         logger.exception(e)
 
-if __name__ == "__main__":
-    import pdb
-    import intermol.tests
-
-    tests_path = os.path.dirname(intermol.tests.__file__)
-    top_file = os.path.join(tests_path, 'gromacs/unit_tests/dihedral9/dihedral9.top')
-    gro_file = os.path.join(tests_path, 'gromacs/unit_tests/dihedral9/dihedral9.gro')
-    gmx_system = load_gromacs(top_file, gro_file)
-
-    print(gmx_system.n_atoms)
-    top_file = 'converted_dihedral9.top'
-    gro_file = 'converted_dihedral9.gro'
-    write_gromacs(top_file, gro_file, gmx_system)
 

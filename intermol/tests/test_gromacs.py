@@ -4,14 +4,23 @@ from pkg_resources import resource_filename
 
 import logging
 import numpy as np
-import pytest
 from six import string_types
+import sys
 
 from intermol import convert
 from testing_tools import (add_handler, remove_handler, summarize_results,
                            ENGINES)
 
+logger = logging.getLogger('InterMolLog')
 testing_logger = logging.getLogger('testing')
+if not testing_logger.handlers:
+    testing_logger.setLevel(logging.DEBUG)
+    h = logging.StreamHandler()
+    h.setLevel(logging.INFO)  # ignores DEBUG level for now
+    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+    h.setFormatter(f)
+    testing_logger.addHandler(h)
+
 
 def gromacs(flags, test_type='unit'):
     """
@@ -42,6 +51,7 @@ def gromacs(flags, test_type='unit'):
         os.mkdir(basedir)
 
     for gro, top, name in zip(gro_files, top_files, names):
+        testing_logger.info('Converting {0}'.format(name))
         odir = '{0}/{1}'.format(basedir, name)
         if not os.path.isdir(odir):
             os.mkdir(odir)
@@ -64,13 +74,13 @@ def gromacs(flags, test_type='unit'):
                 arg = '--{0} {1}'.format(k, v)
             cmd_line_equivalent.append(arg)
 
-        testing_logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
-        testing_logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
+        logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
+        logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
 
         try:
             diff = convert.main(flags)
         except Exception as e:
-            testing_logger.exception(e)
+            logger.exception(e)
             for engine in ENGINES:
                 results[engine][name] = e
         else:
@@ -107,35 +117,46 @@ def test_gromacs_unit():
         assert np.allclose(tests, zeros, atol=1e-4)
 
 
-# def test_gromacs_stress():
-#     """
-#
-#     Args:
-#         gromacs:
-#     Returns:
-#
-#     """
-#     flags = {'stress': True,
-#              'energy': True,
-#              'gromacs': True}
-#
-#     testing_logger.info('Running stress tests')
-#
-#     output_dir = os.path.join(os.path.dirname(__file__), 'stress_test_outputs')
-#     if not os.path.isdir(output_dir):
-#         os.mkdir(output_dir)
-#
-#     results = gromacs(flags, test_type='stress')
-#     zeros = np.zeros(shape=(len(results['gromacs'])))
-#     for engine, tests in results.iteritems():
-#         tests = np.array(tests.values())
-#         assert np.allclose(tests, zeros, atol=1e-4)
+def test_gromacs_stress():
+    """
+
+    Args:
+        gromacs:
+    Returns:
+
+    """
+    flags = {'stress': True,
+             'energy': True,
+             'gromacs': True}
+
+    testing_logger.info('Running stress tests')
+
+    output_dir = os.path.join(os.path.dirname(__file__), 'stress_test_outputs')
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
+    results = gromacs(flags, test_type='stress')
+    zeros = np.zeros(shape=(len(results['gromacs'])))
+    for engine, tests in results.iteritems():
+        tests = np.array(tests.values())
+        assert np.allclose(tests, zeros, atol=1e-4)
 
 if __name__ == "__main__":
-    import pdb
-    #test_gromacs_unit()
-    #test_gromacs_stress()
-    pass
+    import argparse
+    parser = argparse.ArgumentParser(description='Run the gromacs tests.')
+
+    type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
+            default='unit', help="The type of tests to run: 'unit', 'stress' or 'all'.")
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    args = vars(parser.parse_args())
+    if args['type'] in ['unit', 'all']:
+        test_gromacs_unit()
+    if args['type'] in ['stress', 'all']:
+        test_gromacs_stress()
 
 
 
