@@ -31,5 +31,5 @@ install:
 script:
   - coverage run --rcfile=.coveragerc --source=intermol setup.py tests
 
-after_success:
+after_script:
   - coveralls
