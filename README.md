@@ -1,8 +1,8 @@
 InterMol
 ========
 
-[![Linux Build Status](https://travis-ci.org/ctk3b/intermol.png?branch=develop)](https://travis-ci.org/ctk3b/intermol)
-[![Coverage Status](https://coveralls.io/repos/ctk3b/intermol/badge.png?branch=develop)](https://coveralls.io/r/ctk3b/intermol)
+[![Linux Build Status](https://travis-ci.org/ctk3b/intermol.png?branch=feature/lammps)](https://travis-ci.org/ctk3b/intermol)
+[![Coverage Status](https://coveralls.io/repos/ctk3b/intermol/badge.png?branch=feature/lammps)](https://coveralls.io/r/ctk3b/intermol)
 
 Conversion tool for molecular simulations. 
 
