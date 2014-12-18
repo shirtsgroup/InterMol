@@ -7,11 +7,7 @@ import simtk.unit as units
 from intermol.atom import Atom
 
 from intermol.forces import *
-from intermol.forces.forcefunctions import (create_kwds_from_entries,
-                                            build_paramlist, build_unitvars,
-                                            get_parameter_list_from_force,
-                                            optforceparams,
-                                            get_parameter_kwds_from_force)
+import intermol.forces.forcefunctions as ff
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
@@ -304,15 +300,19 @@ class GromacsParser(object):
                 logger.warn("No forcetype defined for: {0}".format(entries))
         return kwds
 
+    paramlist = ff.build_paramlist('gromacs')
+    unitvars = ff.build_unitvars('gromacs', paramlist)
+
+    def create_kwds_from_entries(self, entries, force_class, offset=0):
+        return ff.create_kwds_from_entries(self.unitvars, self.paramlist,
+                                           entries, force_class, offset=offset)
+
     def get_parameter_list_from_force(self, force):
-        return get_parameter_list_from_force(force, self.paramlist)
+        return ff.get_parameter_list_from_force(force, self.paramlist)
 
     def get_parameter_kwds_from_force(self, force):
-        return get_parameter_kwds_from_force(force,
-                self.get_parameter_list_from_force, self.paramlist)
-
-    paramlist = build_paramlist('gromacs')
-    unitvars = build_unitvars('gromacs', paramlist)
+        return ff.get_parameter_kwds_from_force(
+                force, self.get_parameter_list_from_force, self.paramlist)
 
     class TopMoleculeType(object):
         """Inner class to store information about a molecule type."""
@@ -817,7 +817,7 @@ class GromacsParser(object):
                 pairvars.extend([float(pair[4]) * u[0], float(pair[5]) * u[1],
                                  float(pair[6]) * u[2], float(pair[7]) * u[3]])
                 # Generate a default filled dictionary, then fill in the pair.
-                optpairvars = optforceparams('pair')
+                optpairvars = ff.optforceparams('pair')
                 optpairvars['scaleQQ'] = float(pair[3]) * units.dimensionless
             elif n_entries == 3:
                 if not pairtype:
@@ -1330,8 +1330,7 @@ class GromacsParser(object):
 
         numeric_forcetype = fields[n_atoms]
         gromacs_force_type = gromacs_force_types[numeric_forcetype]
-        kwds = create_kwds_from_entries(self.unitvars, self.paramlist, fields,
-                                        gromacs_force_type, offset=n_atoms+1)
+        kwds = self.create_kwds_from_entries(fields, gromacs_force_type, offset=n_atoms+1)
         CanonicalForceType, kwds = canonical_force(
             kwds, gromacs_force_type, direction='into')
 
@@ -1379,8 +1378,7 @@ class GromacsParser(object):
 
         if PairFunc:
             pairvars = [fields[0], fields[1]]
-            kwds = create_kwds_from_entries(self.unitvars, self.paramlist,
-                    fields, PairFunc, offset=offset)
+            kwds = self.create_kwds_from_entries(fields, PairFunc, offset=offset)
             # kludge because of placement of scaleQQ . . .
             if numeric_pairtype == '2':
                 # try to get this out ...

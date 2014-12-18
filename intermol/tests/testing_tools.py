@@ -25,21 +25,6 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def add_flags(args, flags):
-    if args.energy:
-        flags.append('-e')
-    if args.despath:
-        flags.append('-dp')
-        flags.append(args.despath)
-    if args.gropath:
-        flags.append('-gp')
-        flags.append(args.gropath)
-    if args.lmppath:
-        flags.append('-lp')
-        flags.append(args.lmppath)
-    return flags
-
-
 def add_handler(directory):
     """Adds two FileHandlers to the global logger object.
 
