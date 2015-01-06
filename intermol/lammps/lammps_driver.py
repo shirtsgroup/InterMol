@@ -7,16 +7,16 @@ from intermol.lammps.lammps_parser import load_lammps, write_lammps
 
 logger = logging.getLogger('InterMolLog')
 
-def read_file(data_file, in_file):
+def read_file(in_file):
     logger.error('Not implemented yet!')
     #logger.info('Reading LAMMPS files {0}'.format(infile))
     #system = load_lammps(data_file, in_file)
     #logger.info('...loaded.')
 
 
-def write_file(data_file, in_file, system):
-    logger.info("Writing LAMMPS files '{0}' and '{1}'".format(data_file, in_file))
-    write_lammps(data_file, in_file, system)
+def write_file(in_file, system, unit_set='real'):
+    logger.info("Writing LAMMPS file '{0}'".format(in_file))
+    write_lammps(in_file, system, unit_set)
     logger.info('...done.')
 
 

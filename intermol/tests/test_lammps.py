@@ -22,7 +22,7 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def gromacs(flags, test_type='unit'):
+def lammps(flags, test_type='unit'):
     """
 
     Args:
@@ -31,7 +31,7 @@ def gromacs(flags, test_type='unit'):
 
     """
     resource_dir = resource_filename('intermol',
-                                     'tests/gromacs/{0}_tests'.format(test_type))
+                                     'tests/lammps/{0}_tests'.format(test_type))
 
     gro_files = sorted(glob(os.path.join(resource_dir, '*/*.gro')))
     gro_files = [x for x in gro_files if not x.endswith('out.gro')]
@@ -39,13 +39,13 @@ def gromacs(flags, test_type='unit'):
     names = [os.path.splitext(os.path.basename(gro))[0] for gro in gro_files]
 
     # The results of all conversions are stored in nested dictionaries:
-    # results = {'gromacs': {'bond1: result, 'bond2: results...},
+    # results = {'lammps': {'bond1: result, 'bond2: results...},
     #            'lammps': {'bond1: result, 'bond2: results...},
     #            ...}
     per_file_results = {k: None for k in names}
     results = {engine: per_file_results for engine in ENGINES}
 
-    unit_test_outputs = '{0}_test_outputs/from_gromacs'.format(test_type)
+    unit_test_outputs = '{0}_test_outputs/from_lammps'.format(test_type)
     basedir = os.path.join(os.path.dirname(__file__), unit_test_outputs)
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
@@ -88,21 +88,21 @@ def gromacs(flags, test_type='unit'):
                 results[engine][name] = result
         remove_handler(h1, h2)
 
-    summarize_results('gromacs', results, basedir)
+    summarize_results('lammps', results, basedir)
     return results
 
 
-def test_gromacs_unit():
+def test_lammps_unit():
     """
 
     Args:
-        gromacs:
+        lammps:
     Returns:
 
     """
     flags = {'unit': True,
              'energy': True,
-             'gromacs': True}
+             'lammps': True}
 
     testing_logger.info('Running unit tests')
 
@@ -110,24 +110,24 @@ def test_gromacs_unit():
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
-    results = gromacs(flags, test_type='unit')
-    zeros = np.zeros(shape=(len(results['gromacs'])))
+    results = lammps(flags, test_type='unit')
+    zeros = np.zeros(shape=(len(results['lammps'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
         assert np.allclose(tests, zeros, atol=1e-4)
 
 
-def test_gromacs_stress():
+def test_lammps_stress():
     """
 
     Args:
-        gromacs:
+        lammps:
     Returns:
 
     """
     flags = {'stress': True,
              'energy': True,
-             'gromacs': True}
+             'lammps': True}
 
     testing_logger.info('Running stress tests')
 
@@ -135,15 +135,15 @@ def test_gromacs_stress():
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
-    results = gromacs(flags, test_type='stress')
-    zeros = np.zeros(shape=(len(results['gromacs'])))
+    results = lammps(flags, test_type='stress')
+    zeros = np.zeros(shape=(len(results['lammps'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
         assert np.allclose(tests, zeros, atol=1e-4)
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Run the GROMACS tests.')
+    parser = argparse.ArgumentParser(description='Run the LAMMPS tests.')
 
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
             default='unit', help="The type of tests to run: 'unit', 'stress' or 'all'.")
@@ -154,9 +154,9 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
     if args['type'] in ['unit', 'all']:
-        test_gromacs_unit()
+        test_lammps_unit()
     if args['type'] in ['stress', 'all']:
-        test_gromacs_stress()
+        test_lammps_stress()
 
 
 

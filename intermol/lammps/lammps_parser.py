@@ -18,33 +18,31 @@ from intermol.system import System
 logger = logging.getLogger('InterMolLog')
 
 
-def load_lammps(data_file, in_file):
-    """Load a set of LAMMPS input files into a `System`.
+def load_lammps(in_file):
+    """Load a LAMMPS input file into a `System`.
 
     Args:
-        data_file:
         in_file:
         include_dir:
         defines:
     Returns:
         system:
     """
-    parser = LammpsParser(data_file, in_file)
+    parser = LammpsParser(in_file)
     return parser.read()
 
 
-def write_lammps(data_file, in_file, system):
-    """Load a set of LAMMPS input files into a `System`.
+def write_lammps(in_file, system, unit_set='real'):
+    """Load a LAMMPS input file into a `System`.
 
     Args:
-        data_file:
         in_file:
         include_dir:
         defines:
     Returns:
         system:
     """
-    parser = LammpsParser(data_file, in_file, system)
+    parser = LammpsParser(in_file, system, unit_set)
     return parser.write()
 
 
@@ -151,19 +149,18 @@ class LammpsParser(object):
         if direction == 'into':
             converted_dihedral = dihedral  # Default
             if dihedral == ProperPeriodicDihedral:  # Proper dihedral
-                convertfunc = ConvertDihedralFromProperToTrig
+                convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedral
             elif dihedral == ImproperHarmonicDihedral:
-                convertfunc = ConvertNone
+                convertfunc = convert_nothing
             elif dihedral == RbDihedral:
-                convertfunc = ConvertDihedralFromRbToTrig
+                convertfunc = convert_dihedral_from_RB_to_trig
                 converted_dihedral = TrigDihedral
             elif dihedral == FourierDihedralType:
-                convertfunc = ConvertDihedralFromFourierToTrig
+                convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
                 # Now actually convert the dihedral.
             params = convertfunc(params)
-
             return converted_dihedral, params
 
         else:  # writing out
@@ -173,17 +170,16 @@ class LammpsParser(object):
                 typename = self.lookup_lammps_impropers[dihedral]
 
             if dihedral == TrigDihedral:
-                paramlist = ConvertDihedralFromTrigToProper(params)
+                paramlist = convert_dihedral_from_trig_to_proper(params)
                 if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                    tmpparams = ConvertDihedralFromTrigToRb(params)
+                    tmpparams = convert_dihedral_from_trig_to_RB(params)
                     if tmpparams['C6']._value == 0 and tmpparams['C5']._value == 0:
                         if params['phi'].value_in_unit(
                                 units.degrees) == 180:  # stupid convention?
                             params['phi']._value = 0
                         else:
                             params['phi']._value = 180
-                        tmpparams = ConvertDihedralFromTrigToRb(
-                            params)  # redo to manage convention
+                        tmpparams = convert_dihedral_from_trig_to_RB(params)
                         typename = 'multi/harmonic'
                         # is a rb dihedral done analyzing
                         paramlist = [tmpparams]
@@ -192,7 +188,7 @@ class LammpsParser(object):
                         # if C6 and C5 is not zero, then we have to print it out as multiple harmonic
                 if typename in ['charmm', 'Trig']:
                     # print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
-                    paramlist = ConvertDihedralFromTrigToProper(params)
+                    paramlist = convert_dihedral_from_trig_to_proper(params)
                     typename = 'charmm'
                     for p in paramlist:
                         p['weight'] = 0.0 * units.dimensionless  # for now, might get from Sys?
@@ -214,10 +210,14 @@ class LammpsParser(object):
         return ff.get_parameter_kwds_from_force(
                 force, self.get_parameter_list_from_force, self.paramlist)
 
-    def __init__(self):
+    def __init__(self, in_file, system=None):
         """
         """
-        self.box_vector = np.zeros(shape=(3, 3), dtype=float)
+        self.in_file = in_file
+        if not system:
+            system = System()
+        self.system = system
+        self.data_file = None
 
     def set_units(self, unit_set):
         """Set what unit set to use."""
@@ -271,7 +271,7 @@ class LammpsParser(object):
             self.MASS = units.dimensionless
             self.CHARGE = units.dimensionless
             logger.warn("Using unit type lj: All values are dimensionless. "
-                        "This is untested and will likely faile. "
+                        "This is untested and will likely fail. "
                         "See LAMMPS doc for more.")
         elif unit_set == 'electron':
             self.DIST = units.bohr
@@ -290,26 +290,25 @@ class LammpsParser(object):
         self.paramlist = ff.build_paramlist('lammps')
         self.unitvars = ff.build_unitvars('lammps', self.paramlist, dumself=self)
 
-
-    def read_system(self, input_file):
+    def read(self):
         """Reads a LAMMPS input file and a data file specified within.
 
         Args:
             input_file (str): Name of LAMMPS input file to read in.
         """
-        self.read_input(input_file)
+        self.read_input(self.in_file)
         if self.data_file:
             self.read_data(self.data_file)
         else:
             raise Exception("No data file found in input script")
 
-    def read_input(self, input_file):
+    def read_input(self):
         """Reads a LAMMPS input file.
 
         Args:
             input_file (str): Name of LAMMPS input file to read in.
         """
-        self.basepath = os.path.dirname(os.path.realpath(input_file))
+        self.input_dir = os.path.dirname(os.path.realpath(self.in_file))
         parsable_keywords = {
             'units': self.parse_units,
             'atom_style': self.parse_atom_style,
@@ -342,7 +341,7 @@ class LammpsParser(object):
         keyword_defaults = {x.split()[0]: x for x in defaults}
         keyword_check = {x: False for x in keyword_defaults.keys()}
 
-        with open(input_file, 'r') as input_lines:
+        with open(self.in_file, 'r') as input_lines:
             for line in input_lines:
                 if line.strip():
                     keyword = line.split()[0]
@@ -521,7 +520,7 @@ class LammpsParser(object):
     def parse_read_data(self, line):
         """ """
         if len(line) == 2:
-            self.data_file = os.path.join(self.basepath, line[1])
+            self.data_file = os.path.join(self.input_dir, line[1])
         else:
             warnings.warn("Unsupported read_data arguments in input file.")
 
@@ -773,10 +772,10 @@ class LammpsParser(object):
 
         count = 1
         ilist = list()
-        ilist.append('\n%ss\n\n' % (force_name))
+        ilist.append('\n{0:s}s\n\n' % (force_name))
 
         coeffs = list()
-        coeffs.append('\n%s Coeffs\n\n' % (force_name))
+        coeffs.append('\n{0:s}s Coeffs\n\n' % (force_name))
 
         style_list = set()
 
@@ -885,7 +884,7 @@ class LammpsParser(object):
             warnings.warn(
                 "Virtuals not currently supported: will need to be implemeneted from shake and rigid")
 
-    def write(self, data_file, unit_set='real', verbose=False):
+    def write(self, data_file, unit_set='real'):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
@@ -906,18 +905,18 @@ class LammpsParser(object):
         vel_list = list()
         vel_list.append('\nVelocities\n\n')
 
-        # dicts for type information
+        # Dicts for type information.
         atom_type_dict = dict()  # str_type:int_type
         a_type_i = 1  # counter for atom types
 
-        # read all atom specific and FF information
-        for mol_type in System._sys._molecules.itervalues():
+        # Read all atom specific and FF information.
+        for mol_type in self.system.molecule_types.itervalues():
             logger.debug(
                 "    Writing moleculetype {0}...".format(mol_type.name))
-            # atom index offsets from 1 for each molecule
 
+            # Atom index offsets from 1 for each molecule.
             offsets = [0]
-            for molecule in mol_type.moleculeSet:
+            for molecule in mol_type.molecules:
                 offsets.append(
                     len(molecule.atoms) + offsets[-1])  # increment the sum
             offsets.pop()  # we don't actually want to iterate over this one
