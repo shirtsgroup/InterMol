@@ -383,6 +383,7 @@ class GromacsParser(object):
         self.gro.read()
         self.system.box_vector = self.gro.box_vector
         self.system.n_atoms = self.gro.positions.shape[0]
+        self.system.n_molecules = self.molecules
 
         self.n_atoms_added = 0
         for mol_name, mol_count in self.molecules:
@@ -649,11 +650,15 @@ class GromacsParser(object):
 
     # =========== System creation =========== #
     def create_moleculetype(self, top_moltype, mol_name, mol_count):
-        # Create an intermol moleculetype.
-        moltype = MoleculeType(mol_name)
-        moltype.nrexcl = top_moltype.nrexcl
-        self.system.add_molecule_type(moltype)
-        self.current_molecule_type = moltype
+        # Check if the moleculetype already exists
+        if self.system.molecule_types.get(mol_name):
+            self.current_molecule_type = self.system.molecule_types[mol_name]
+        else:
+            # Create an intermol moleculetype.
+            moltype = MoleculeType(mol_name)
+            moltype.nrexcl = top_moltype.nrexcl
+            self.system.add_molecule_type(moltype)
+            self.current_molecule_type = moltype
 
         # Create all the intermol molecules of the current type.
         for n_mol in range(mol_count):
@@ -909,14 +914,13 @@ class GromacsParser(object):
 
         improper = numeric_dihedraltype in ['2', '4']
 
-        dihedral_type = [None]
+        dihedral_types = [None]
         if n_entries == n_atoms + 1:
-            for i in range(n_atoms):
-                btypes = [self.lookup_atom_bondingtype(int(x))
-                          for x in dihedral[:n_atoms]]
+            btypes = [self.lookup_atom_bondingtype(int(x))
+                      for x in dihedral[:n_atoms]]
 
             # Use the returned btypes that we get a match with!
-            dihedral_type = self.find_dihedraltype(btypes, improper=improper)
+            dihedral_types = self.find_dihedraltype(btypes, improper=improper)
             # Overwrite the actual dihedral if converted!
             # These all got converted.
             if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
@@ -929,7 +933,10 @@ class GromacsParser(object):
             dihedral += ['0.0'] * 3
             gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
 
-        for d_type in dihedral_type:
+        if not dihedral_types:
+            import pdb
+            pdb.set_trace()
+        for d_type in dihedral_types:
             kwds = self.choose_parameter_kwds_from_forces(
                     dihedral, n_atoms, d_type, gromacs_dihedral)
             canonical_dihedral, kwds = self.canonical_dihedral(
@@ -947,26 +954,32 @@ class GromacsParser(object):
         a1, a2, a3, a4 = bondingtypes
         # All possible ways to match a dihedraltype
         atom_orders = [[a1, a2, a3, a4],    # original order
-                       [a4, a3, a2, a1],    # flip it
                        [a1, a2, a3, 'X'],   # single wildcard 1
-                       ['X', a3, a2, a1],   # flipped single wildcard 1
                        ['X', a2, a3, a4],   # single wildcard 2
-                       [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a2, a3, 'X'],  # double wildcard
-                       ['X', a3, a2, 'X'],  # flipped double wildcard
                        ['X', 'X', a3, a4],  # front end double wildcard
-                       [a4, a3, 'X', 'X'],  # flipped front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
                        ['X', 'X', a2, a1]   # rear end double wildcard
                        ]
 
+        # It's not a symmetric dihedral also check the reverses:
+        if not (a1 == a4 and a2 == a3):
+            atom_orders.append([a4, a3, a2, a1])    # flip it
+            atom_orders.append(['X', a3, a2, a1])   # flipped single wildcard 1
+            atom_orders.append([a4, a3, a2, 'X'])   # flipped single wildcard 2
+            atom_orders.append(['X', a3, a2, 'X'])  # flipped double wildcard
+            atom_orders.append([a4, a3, 'X', 'X'])  # flipped front end double wildcard
+
+        dihedral_types = list()
         for a1, a2, a3, a4 in atom_orders:
             key = tuple([a1, a2, a3, a4, improper])
             dihedral_type = self.dihedraltypes.get(key)
             if dihedral_type:
-                return dihedral_type
+                dihedral_types.extend(dihedral_type)
+        if not dihedral_types:
+            logger.warn("Lookup failed for dihedral: {0}".format(bondingtypes))
         else:
-            logger.debug("Lookup failed for dihedral: {0}".format(key))
+            return dihedral_types
 
     def lookup_atom_bondingtype(self, index):
         return self.current_molecule.atoms[index - 1].bondingtype
@@ -1305,7 +1318,7 @@ class GromacsParser(object):
         if fields[2].isdigit():
             btypes = ['X', fields[0], fields[1], 'X']
             n_atoms_specified = 2
-        elif fields[4].isdigit():
+        elif len(fields[4]) == 1 and fields[4].isdigit():
             btypes = fields[:4]
             n_atoms_specified = 4
         dihedral_type = self.process_forcetype(btypes, 'dihedral', line, n_atoms_specified,
@@ -1315,7 +1328,7 @@ class GromacsParser(object):
         numeric_dihedraltype = fields[n_atoms_specified]
         dihedral_type.improper = numeric_dihedraltype in ['2', '4']
 
-        key = tuple([fields[0], fields[1], fields[2], fields[3],
+        key = tuple([btypes[0], btypes[1], btypes[2], btypes[3],
                      dihedral_type.improper])
         if key in self.dihedraltypes:
             # There are multiple dihedrals defined for these atom types.
