@@ -100,6 +100,7 @@ def test_gromacs_unit():
     Returns:
 
     """
+    unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
              'gromacs': True}
@@ -114,7 +115,14 @@ def test_gromacs_unit():
     zeros = np.zeros(shape=(len(results['gromacs'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
-        assert np.allclose(tests, zeros, atol=1e-4)
+        try:
+            passed = np.allclose(tests, zeros, atol=unit_test_tolerance)
+        except:
+            raise ValueError('Found non-numeric result. This probably means an'
+                             'error occured somewhere in the conversion.')
+        assert passed, 'Unit tests do not match within {0:.1e} kJ/mol.'.format(
+                unit_test_tolerance)
+        print('All unit tests match within {0:.1e} kJ/mol.'.format(unit_test_tolerance))
 
 
 def test_gromacs_stress():
@@ -125,6 +133,7 @@ def test_gromacs_stress():
     Returns:
 
     """
+    stress_test_tolerance = 1e-4
     flags = {'stress': True,
              'energy': True,
              'gromacs': True}
@@ -139,7 +148,14 @@ def test_gromacs_stress():
     zeros = np.zeros(shape=(len(results['gromacs'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
-        assert np.allclose(tests, zeros, atol=1e-4)
+        try:
+            passed = np.allclose(tests, zeros, atol=stress_test_tolerance)
+        except:
+            raise ValueError('Found non-numeric result. This probably means an'
+                             'error occured somewhere in the conversion.')
+        assert passed, 'Stress tests do not match within {0:.1e} kJ/mol.'.format(
+                stress_test_tolerance)
+        print('All stress tests match within {0:.1e} kJ/mol.'.format(stress_test_tolerance))
 
 if __name__ == "__main__":
     import argparse

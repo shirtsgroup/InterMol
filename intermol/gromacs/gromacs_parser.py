@@ -737,7 +737,7 @@ class GromacsParser(object):
         n_atoms = 2
         numeric_bondtype = bond[n_atoms]
         atoms = [int(n) for n in bond[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x[0]))
+        btypes = tuple([self.lookup_atom_bondingtype(int(x))
                         for x in bond[:n_atoms]])
 
         # Get forcefield parameters.
@@ -867,7 +867,7 @@ class GromacsParser(object):
     def create_angle(self, angle):
         n_atoms = 3
         atoms = [int(n) for n in angle[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x[0]))
+        btypes = tuple([self.lookup_atom_bondingtype(int(x))
                         for x in angle[:n_atoms]])
         numeric_angletype = angle[n_atoms]
 
@@ -912,7 +912,7 @@ class GromacsParser(object):
         dihedral_type = [None]
         if n_entries == n_atoms + 1:
             for i in range(n_atoms):
-                btypes = [self.lookup_atom_bondingtype(int(x[0]))
+                btypes = [self.lookup_atom_bondingtype(int(x))
                           for x in dihedral[:n_atoms]]
 
             # Use the returned btypes that we get a match with!
