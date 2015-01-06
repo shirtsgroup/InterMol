@@ -286,10 +286,10 @@ class GromacsParser(object):
         u = self.unitvars[typename]
         params = self.paramlist[typename]
         kwds = dict()
-        if n_entries > n_atoms + 1:
+        if n_entries > n_atoms + 2:
             for i, p in enumerate(params):
                 kwds[p] = float(entries[n_atoms + 1 + i]) * u[i]
-        elif n_entries == n_atoms+1:
+        elif n_entries in [n_atoms + 1 or n_atoms + 2]:
             # Check to see if the force is defined exists
             if isinstance(force_type, gromacs_force_type):
                 force_type_params = self.get_parameter_list_from_force(force_type)
@@ -376,6 +376,7 @@ class GromacsParser(object):
         # Parse the top_file into a set of plain text, intermediate
         # TopMoleculeType objects.
         self.process_file(self.top_file)
+        self.process_defines()
 
         # Open the corresponding gro file and push all the information to the
         # InterMol system.
@@ -927,15 +928,24 @@ class GromacsParser(object):
                 gromacs_dihedral = TrigDihedral
             else:
                 gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
+        elif n_entries == n_atoms + 2:
+            # This case handles special dihedral given via a #define.
+            # TODO: check if n_entries == 6 is a sufficient condition.
+            dihedral_types = [self.dihedraltypes.get(dihedral[-1])]
+            if dihedral_types[0] is None:
+                logger.exception("Failed to lookup '{0}'. This likely means it was "
+                            "not read in correctly.".format(dihedral[-1]))
+                return
+            if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
+                gromacs_dihedral = TrigDihedral
+            else:
+                gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
         else:
             # Some gromacs parameters don't include sufficient entries for all
             # types, so add some zeros. A bit of a kludge...
             dihedral += ['0.0'] * 3
             gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
 
-        if not dihedral_types:
-            import pdb
-            pdb.set_trace()
         for d_type in dihedral_types:
             kwds = self.choose_parameter_kwds_from_forces(
                     dihedral, n_atoms, d_type, gromacs_dihedral)
@@ -1131,6 +1141,19 @@ class GromacsParser(object):
                 self.process_pairtype(line)
             elif self.current_directive == 'cmaptypes':
                 self.process_cmaptype(line)
+
+    def process_defines(self):
+        """Post-processing for type entries made via defines. """
+        for key, params in self.defines.iteritems():
+            if key.startswith('dih_'):
+                btypes = key.split('_')[-4:]
+                line = '{bondingtypes} 3 {parameters}'.format(
+                        bondingtypes=' '.join(btypes),
+                        parameters=params)
+                dihedral_type = self.process_forcetype(
+                        btypes, 'dihedral', line, 4,
+                        self.gromacs_dihedral_types, self.canonical_dihedral)
+                self.dihedraltypes[key] = dihedral_type
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
