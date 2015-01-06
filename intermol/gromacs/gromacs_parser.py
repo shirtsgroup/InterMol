@@ -376,7 +376,6 @@ class GromacsParser(object):
         # Parse the top_file into a set of plain text, intermediate
         # TopMoleculeType objects.
         self.process_file(self.top_file)
-        self.process_defines()
 
         # Open the corresponding gro file and push all the information to the
         # InterMol system.
@@ -930,16 +929,10 @@ class GromacsParser(object):
                 gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
         elif n_entries == n_atoms + 2:
             # This case handles special dihedral given via a #define.
-            # TODO: check if n_entries == 6 is a sufficient condition.
-            dihedral_types = [self.dihedraltypes.get(dihedral[-1])]
-            if dihedral_types[0] is None:
-                logger.exception("Failed to lookup '{0}'. This likely means it was "
-                            "not read in correctly.".format(dihedral[-1]))
-                return
-            if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
-                gromacs_dihedral = TrigDihedral
-            else:
-                gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
+            if self.defines.get(dihedral[-1]):
+                params = self.defines[dihedral[-1]].split()
+                dihedral = dihedral[:-1] + params
+            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
         else:
             # Some gromacs parameters don't include sufficient entries for all
             # types, so add some zeros. A bit of a kludge...
@@ -1141,19 +1134,6 @@ class GromacsParser(object):
                 self.process_pairtype(line)
             elif self.current_directive == 'cmaptypes':
                 self.process_cmaptype(line)
-
-    def process_defines(self):
-        """Post-processing for type entries made via defines. """
-        for key, params in self.defines.iteritems():
-            if key.startswith('dih_'):
-                btypes = key.split('_')[-4:]
-                line = '{bondingtypes} 3 {parameters}'.format(
-                        bondingtypes=' '.join(btypes),
-                        parameters=params)
-                dihedral_type = self.process_forcetype(
-                        btypes, 'dihedral', line, 4,
-                        self.gromacs_dihedral_types, self.canonical_dihedral)
-                self.dihedraltypes[key] = dihedral_type
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
