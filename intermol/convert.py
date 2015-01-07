@@ -12,6 +12,8 @@ import intermol.tests
 
 
 # Make a global logging object.
+from intermol.tests.testing_tools import which
+
 logger = logging.getLogger('InterMolLog')
 if __name__ == "__main__":
     # Specifies lowest severity log messages to handle.
@@ -85,7 +87,6 @@ def parse_args(args):
 
 def main(args=None):
     logger.info('Beginning InterMol conversion')
-
     if not args:
         args = vars(parse_args(args))
 
@@ -97,9 +98,18 @@ def main(args=None):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
 
+    gropath = args.get('gropath')
+    if not gropath:
+        gropath = ''
+    lmppath = args.get('lmppath')
+    if not lmppath:
+        if which('lmp_mpi'):
+            lmppath = 'lmp_mpi'
+        elif which('lmp_openmpi'):
+            lmppath = 'lmp_openmpi'
+
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
-        gropath = args.get('gropath')
         gromacs_files = args['gro_in']
 
         prefix = os.path.splitext(os.path.basename(gromacs_files[0]))[0]
@@ -130,6 +140,7 @@ def main(args=None):
     oname = os.path.join(args['odir'], oname)  # Prepend output directory to oname.
 
     output_status = dict()
+    # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
             gromacs_driver.write_file(system,
@@ -142,7 +153,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file(system, '{0}.input'.format(oname))
+            lammps_driver.write_file('{0}.input'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -191,7 +202,7 @@ def main(args=None):
             output_type.append('lammps')
             try:
                 out, outfile = lammps_driver.lammps_energies(
-                        '{0}.input'.format(oname), mdp_path, gropath, '')
+                        '{0}.input'.format(oname), lmppath)
             except Exception as e:
                 output_status['lammps'] = e
                 logger.exception(e)
@@ -289,7 +300,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     out.append('')
     # get differences in potential energy
     i = labels.index('Potential')
-    diff = data[i,1::] - data[i,0]
+    diff = data[i, 1::] - data[i, 0]
     for d, otype in zip(diff, output_types):
         out.append('difference in potential energy from %s=>%s conversion: %18.8f'
                     % (input_type, otype, d))
