@@ -58,11 +58,18 @@ def gromacs_energies(top=None, gro=None, mdp=None,
     stdout = os.path.join(directory, 'gromacs_stdout.txt')
     stderr = os.path.join(directory, 'gromacs_stderr.txt')
 
-    if which('gmx'):
-        grompp_bin = os.path.join(gropath, 'gmx grompp' + grosuff)
-        mdrun_bin = os.path.join(gropath, 'gmx mdrun' + grosuff)
-        genergy_bin = os.path.join(gropath, 'gmx energy' + grosuff)
-    else:
+    # if which('gmx'):
+    #     grompp_bin = os.path.join(gropath, 'gmx grompp' + grosuff)
+    #     mdrun_bin = os.path.join(gropath, 'gmx mdrun' + grosuff)
+    #     genergy_bin = os.path.join(gropath, 'gmx energy' + grosuff)
+    # else:
+    if which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
+        logger.debug("Using double precision binaries for 4.x")
+        grompp_bin = os.path.join(gropath, 'grompp_d' + grosuff)
+        mdrun_bin = os.path.join(gropath, 'mdrun_d' + grosuff)
+        genergy_bin = os.path.join(gropath, 'g_energy_d' + grosuff)
+    elif which('grompp') and which('mdrun') and which('g_energy'):
+        logger.debug("Using single precision binaries for 4.x")
         grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
         mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
         genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)

@@ -286,10 +286,10 @@ class GromacsParser(object):
         u = self.unitvars[typename]
         params = self.paramlist[typename]
         kwds = dict()
-        if n_entries > n_atoms + 1:
+        if n_entries > n_atoms + 2:
             for i, p in enumerate(params):
                 kwds[p] = float(entries[n_atoms + 1 + i]) * u[i]
-        elif n_entries == n_atoms+1:
+        elif n_entries in [n_atoms + 1 or n_atoms + 2]:
             # Check to see if the force is defined exists
             if isinstance(force_type, gromacs_force_type):
                 force_type_params = self.get_parameter_list_from_force(force_type)
@@ -372,6 +372,7 @@ class GromacsParser(object):
         self.implicittypes = dict()
         self.pairtypes = dict()
         self.cmaptypes = dict()
+        self.nonbonded_types = dict()
 
         # Parse the top_file into a set of plain text, intermediate
         # TopMoleculeType objects.
@@ -383,6 +384,7 @@ class GromacsParser(object):
         self.gro.read()
         self.system.box_vector = self.gro.box_vector
         self.system.n_atoms = self.gro.positions.shape[0]
+        self.system.n_molecules = self.molecules
 
         self.n_atoms_added = 0
         for mol_name, mol_count in self.molecules:
@@ -455,15 +457,17 @@ class GromacsParser(object):
 
     def write_nonbonded_types(self, top):
         top.write('[ nonbond_params ]\n')
+        top.write('i    j    func    sigma     epsilon\n')
         for nbtype in sorted(self.system.nonbonded_types.itervalues(), key=lambda x: (x.atom1, x.atom2)):
+            # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
                     nbtype.atom1, nbtype.atom2, nbtype.type))
             if self.system.combination_rule == 'Multiply-C6C12':
-                top.write('{3:18.8e} {4:18.8e}\n'.format(
-                    nbtype.sigma.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
-                    nbtype.epsilon.value_in_unit(units.kilojoules_per_mole * units.nanometers**(12))))
+                top.write('{0:18.8e} {1:18.8e}\n'.format(
+                    nbtype.C6.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
+                    nbtype.C12.value_in_unit(units.kilojoules_per_mole * units.nanometers**(12))))
             elif self.system.combination_rule in ['Lorentz-Berthelot', 'Multiply-Sigeps']:
-                top.write('{3:18.8e} {4:18.8e}\n'.format(
+                top.write('{0:18.8e} {1:18.8e}\n'.format(
                     nbtype.sigma.value_in_unit(units.nanometers),
                     nbtype.epsilon.value_in_unit(units.kilojoules_per_mole)))
         top.write('\n')
@@ -649,11 +653,15 @@ class GromacsParser(object):
 
     # =========== System creation =========== #
     def create_moleculetype(self, top_moltype, mol_name, mol_count):
-        # Create an intermol moleculetype.
-        moltype = MoleculeType(mol_name)
-        moltype.nrexcl = top_moltype.nrexcl
-        self.system.add_molecule_type(moltype)
-        self.current_molecule_type = moltype
+        # Check if the moleculetype already exists
+        if self.system.molecule_types.get(mol_name):
+            self.current_molecule_type = self.system.molecule_types[mol_name]
+        else:
+            # Create an intermol moleculetype.
+            moltype = MoleculeType(mol_name)
+            moltype.nrexcl = top_moltype.nrexcl
+            self.system.add_molecule_type(moltype)
+            self.current_molecule_type = moltype
 
         # Create all the intermol molecules of the current type.
         for n_mol in range(mol_count):
@@ -737,7 +745,7 @@ class GromacsParser(object):
         n_atoms = 2
         numeric_bondtype = bond[n_atoms]
         atoms = [int(n) for n in bond[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x[0]))
+        btypes = tuple([self.lookup_atom_bondingtype(int(x))
                         for x in bond[:n_atoms]])
 
         # Get forcefield parameters.
@@ -867,7 +875,7 @@ class GromacsParser(object):
     def create_angle(self, angle):
         n_atoms = 3
         atoms = [int(n) for n in angle[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x[0]))
+        btypes = tuple([self.lookup_atom_bondingtype(int(x))
                         for x in angle[:n_atoms]])
         numeric_angletype = angle[n_atoms]
 
@@ -909,27 +917,32 @@ class GromacsParser(object):
 
         improper = numeric_dihedraltype in ['2', '4']
 
-        dihedral_type = [None]
+        dihedral_types = [None]
         if n_entries == n_atoms + 1:
-            for i in range(n_atoms):
-                btypes = [self.lookup_atom_bondingtype(int(x[0]))
-                          for x in dihedral[:n_atoms]]
+            btypes = [self.lookup_atom_bondingtype(int(x))
+                      for x in dihedral[:n_atoms]]
 
             # Use the returned btypes that we get a match with!
-            dihedral_type = self.find_dihedraltype(btypes, improper=improper)
+            dihedral_types = self.find_dihedraltype(btypes, improper=improper)
             # Overwrite the actual dihedral if converted!
             # These all got converted.
             if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
                 gromacs_dihedral = TrigDihedral
             else:
                 gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
+        elif n_entries == n_atoms + 2:
+            # This case handles special dihedral given via a #define.
+            if self.defines.get(dihedral[-1]):
+                params = self.defines[dihedral[-1]].split()
+                dihedral = dihedral[:-1] + params
+            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
         else:
             # Some gromacs parameters don't include sufficient entries for all
             # types, so add some zeros. A bit of a kludge...
             dihedral += ['0.0'] * 3
             gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
 
-        for d_type in dihedral_type:
+        for d_type in dihedral_types:
             kwds = self.choose_parameter_kwds_from_forces(
                     dihedral, n_atoms, d_type, gromacs_dihedral)
             canonical_dihedral, kwds = self.canonical_dihedral(
@@ -947,26 +960,32 @@ class GromacsParser(object):
         a1, a2, a3, a4 = bondingtypes
         # All possible ways to match a dihedraltype
         atom_orders = [[a1, a2, a3, a4],    # original order
-                       [a4, a3, a2, a1],    # flip it
                        [a1, a2, a3, 'X'],   # single wildcard 1
-                       ['X', a3, a2, a1],   # flipped single wildcard 1
                        ['X', a2, a3, a4],   # single wildcard 2
-                       [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a2, a3, 'X'],  # double wildcard
-                       ['X', a3, a2, 'X'],  # flipped double wildcard
                        ['X', 'X', a3, a4],  # front end double wildcard
-                       [a4, a3, 'X', 'X'],  # flipped front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
                        ['X', 'X', a2, a1]   # rear end double wildcard
                        ]
 
+        # It's not a symmetric dihedral also check the reverses:
+        if not (a1 == a4 and a2 == a3):
+            atom_orders.append([a4, a3, a2, a1])    # flip it
+            atom_orders.append(['X', a3, a2, a1])   # flipped single wildcard 1
+            atom_orders.append([a4, a3, a2, 'X'])   # flipped single wildcard 2
+            atom_orders.append(['X', a3, a2, 'X'])  # flipped double wildcard
+            atom_orders.append([a4, a3, 'X', 'X'])  # flipped front end double wildcard
+
+        dihedral_types = list()
         for a1, a2, a3, a4 in atom_orders:
             key = tuple([a1, a2, a3, a4, improper])
             dihedral_type = self.dihedraltypes.get(key)
             if dihedral_type:
-                return dihedral_type
+                dihedral_types.extend(dihedral_type)
+        if not dihedral_types:
+            logger.warn("Lookup failed for dihedral: {0}".format(bondingtypes))
         else:
-            logger.debug("Lookup failed for dihedral: {0}".format(key))
+            return dihedral_types
 
     def lookup_atom_bondingtype(self, index):
         return self.current_molecule.atoms[index - 1].bondingtype
@@ -1118,6 +1137,8 @@ class GromacsParser(object):
                 self.process_pairtype(line)
             elif self.current_directive == 'cmaptypes':
                 self.process_cmaptype(line)
+            elif self.current_directive == 'nonbond_params':
+                self.process_nonbond_params(line)
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
@@ -1305,7 +1326,7 @@ class GromacsParser(object):
         if fields[2].isdigit():
             btypes = ['X', fields[0], fields[1], 'X']
             n_atoms_specified = 2
-        elif fields[4].isdigit():
+        elif len(fields[4]) == 1 and fields[4].isdigit():
             btypes = fields[:4]
             n_atoms_specified = 4
         dihedral_type = self.process_forcetype(btypes, 'dihedral', line, n_atoms_specified,
@@ -1315,7 +1336,7 @@ class GromacsParser(object):
         numeric_dihedraltype = fields[n_atoms_specified]
         dihedral_type.improper = numeric_dihedraltype in ['2', '4']
 
-        key = tuple([fields[0], fields[1], fields[2], fields[3],
+        key = tuple([btypes[0], btypes[1], btypes[2], btypes[3],
                      dihedral_type.improper])
         if key in self.dihedraltypes:
             # There are multiple dihedrals defined for these atom types.
@@ -1357,20 +1378,21 @@ class GromacsParser(object):
 
         pair_type = None
         PairFunc = None
+        combination_rule = self.system.combination_rule
         kwds = dict()
         numeric_pairtype = fields[2]
         if numeric_pairtype == '1':
             # LJ/Coul. 1-4 (Type 1)
             if len(fields) == 5:
-                if self.system.combination_rule == "Multiply-C6C12":
+                if combination_rule == "Multiply-C6C12":
                     PairFunc = LjCPairType
-                elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
+                elif combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                     PairFunc = LjSigepsPairType
             offset = 3
         elif numeric_pairtype == '2':
-            if self.system.combination_rule == "Multiply-C6C12":
+            if combination_rule == "Multiply-C6C12":
                 PairFunc = LjqCPairType
-            elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
+            elif combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                 PairFunc = LjqSigepsPairType
             offset = 4
         else:
@@ -1379,7 +1401,7 @@ class GromacsParser(object):
         if PairFunc:
             pairvars = [fields[0], fields[1]]
             kwds = self.create_kwds_from_entries(fields, PairFunc, offset=offset)
-            # kludge because of placement of scaleQQ . . .
+            # kludge because of placement of scaleQQ...
             if numeric_pairtype == '2':
                 # try to get this out ...
                 kwds['scaleQQ'] = float(fields[3]) * units.dimensionless
@@ -1393,6 +1415,32 @@ class GromacsParser(object):
         if len(fields) < 8 or len(fields) < 8+int(fields[6])*int(fields[7]):
             self.too_few_fields(line)
         self.cmaptypes[tuple(fields[:5])] = fields
+
+    def process_nonbond_params(self, line):
+        """Process a line in the [ nonbond_param ] category."""
+        fields = line.split()
+        natoms = 2
+        nonbonded_type = None
+        NonbondedFunc = None
+        combination_rule = self.system.combination_rule
+
+        if fields[2] == '1':
+            if combination_rule == 'Multiply-C6C12':
+                NonbondedFunc = LjCNonbondedType
+            elif combination_rule in ['Lorentz-Berthelot', 'Multiply-Sigeps']:
+                NonbondedFunc = LjSigepsNonbondedType
+        elif fields[2] == '2':
+            if combination_rule == 'Buckingham':
+                NonbondedFunc = BuckinghamNonbondedType
+        else:
+            logger.warn("Could not find nonbonded type for line: {0}".format(line))
+
+        nonbonded_vars = [fields[0], fields[1]]
+        kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)
+        nonbonded_type = NonbondedFunc(*nonbonded_vars, **kwds)
+        # TODO: figure out what to do with the gromacs numeric type
+        nonbonded_type.type = int(fields[2])
+        self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):
