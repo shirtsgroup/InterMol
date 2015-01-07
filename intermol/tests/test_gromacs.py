@@ -157,6 +157,7 @@ def test_gromacs_stress():
                 stress_test_tolerance)
         print('All stress tests match within {0:.1e} kJ/mol.'.format(stress_test_tolerance))
 
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Run the gromacs tests.')

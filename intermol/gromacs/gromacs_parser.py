@@ -372,6 +372,7 @@ class GromacsParser(object):
         self.implicittypes = dict()
         self.pairtypes = dict()
         self.cmaptypes = dict()
+        self.nonbonded_types = dict()
 
         # Parse the top_file into a set of plain text, intermediate
         # TopMoleculeType objects.
@@ -456,15 +457,17 @@ class GromacsParser(object):
 
     def write_nonbonded_types(self, top):
         top.write('[ nonbond_params ]\n')
+        top.write('i    j    func    sigma     epsilon\n')
         for nbtype in sorted(self.system.nonbonded_types.itervalues(), key=lambda x: (x.atom1, x.atom2)):
+            # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
                     nbtype.atom1, nbtype.atom2, nbtype.type))
             if self.system.combination_rule == 'Multiply-C6C12':
-                top.write('{3:18.8e} {4:18.8e}\n'.format(
-                    nbtype.sigma.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
-                    nbtype.epsilon.value_in_unit(units.kilojoules_per_mole * units.nanometers**(12))))
+                top.write('{0:18.8e} {1:18.8e}\n'.format(
+                    nbtype.C6.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
+                    nbtype.C12.value_in_unit(units.kilojoules_per_mole * units.nanometers**(12))))
             elif self.system.combination_rule in ['Lorentz-Berthelot', 'Multiply-Sigeps']:
-                top.write('{3:18.8e} {4:18.8e}\n'.format(
+                top.write('{0:18.8e} {1:18.8e}\n'.format(
                     nbtype.sigma.value_in_unit(units.nanometers),
                     nbtype.epsilon.value_in_unit(units.kilojoules_per_mole)))
         top.write('\n')
@@ -1134,6 +1137,8 @@ class GromacsParser(object):
                 self.process_pairtype(line)
             elif self.current_directive == 'cmaptypes':
                 self.process_cmaptype(line)
+            elif self.current_directive == 'nonbond_params':
+                self.process_nonbond_params(line)
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
@@ -1373,20 +1378,21 @@ class GromacsParser(object):
 
         pair_type = None
         PairFunc = None
+        combination_rule = self.system.combination_rule
         kwds = dict()
         numeric_pairtype = fields[2]
         if numeric_pairtype == '1':
             # LJ/Coul. 1-4 (Type 1)
             if len(fields) == 5:
-                if self.system.combination_rule == "Multiply-C6C12":
+                if combination_rule == "Multiply-C6C12":
                     PairFunc = LjCPairType
-                elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
+                elif combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                     PairFunc = LjSigepsPairType
             offset = 3
         elif numeric_pairtype == '2':
-            if self.system.combination_rule == "Multiply-C6C12":
+            if combination_rule == "Multiply-C6C12":
                 PairFunc = LjqCPairType
-            elif self.system.combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
+            elif combination_rule in ['Multiply-Sigeps', 'Lorentz-Berthelot']:
                 PairFunc = LjqSigepsPairType
             offset = 4
         else:
@@ -1395,7 +1401,7 @@ class GromacsParser(object):
         if PairFunc:
             pairvars = [fields[0], fields[1]]
             kwds = self.create_kwds_from_entries(fields, PairFunc, offset=offset)
-            # kludge because of placement of scaleQQ . . .
+            # kludge because of placement of scaleQQ...
             if numeric_pairtype == '2':
                 # try to get this out ...
                 kwds['scaleQQ'] = float(fields[3]) * units.dimensionless
@@ -1409,6 +1415,32 @@ class GromacsParser(object):
         if len(fields) < 8 or len(fields) < 8+int(fields[6])*int(fields[7]):
             self.too_few_fields(line)
         self.cmaptypes[tuple(fields[:5])] = fields
+
+    def process_nonbond_params(self, line):
+        """Process a line in the [ nonbond_param ] category."""
+        fields = line.split()
+        natoms = 2
+        nonbonded_type = None
+        NonbondedFunc = None
+        combination_rule = self.system.combination_rule
+
+        if fields[2] == '1':
+            if combination_rule == 'Multiply-C6C12':
+                NonbondedFunc = LjCNonbondedType
+            elif combination_rule in ['Lorentz-Berthelot', 'Multiply-Sigeps']:
+                NonbondedFunc = LjSigepsNonbondedType
+        elif fields[2] == '2':
+            if combination_rule == 'Buckingham':
+                NonbondedFunc = BuckinghamNonbondedType
+        else:
+            logger.warn("Could not find nonbonded type for line: {0}".format(line))
+
+        nonbonded_vars = [fields[0], fields[1]]
+        kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)
+        nonbonded_type = NonbondedFunc(*nonbonded_vars, **kwds)
+        # TODO: figure out what to do with the gromacs numeric type
+        nonbonded_type.type = int(fields[2])
+        self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):
