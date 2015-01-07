@@ -210,7 +210,7 @@ class LammpsParser(object):
         return ff.get_parameter_kwds_from_force(
                 force, self.get_parameter_list_from_force, self.paramlist)
 
-    def __init__(self, in_file, system=None):
+    def __init__(self, in_file, system=None, unit_set='real'):
         """
         """
         self.in_file = in_file
@@ -377,8 +377,8 @@ class LammpsParser(object):
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
             self.current_mol = Molecule(self.molecule_name)
-            System._sys.add_molecule(self.current_mol)
-            self.current_mol_type = System._sys._molecules[self.molecule_name]
+            self.system.add_molecule(self.current_mol)
+            self.current_mol_type = self.system._molecules[self.molecule_name]
             self.current_mol_type.nrexcl = 3  # TODO: automate determination!
 
             for line in data_lines:
@@ -446,7 +446,7 @@ class LammpsParser(object):
             warnings.warn("Hybrid pair styles not yet implemented.")
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
-            System._sys.nonbonded_function = 1
+            self.system.nonbonded_function = 1
 
     def parse_kspace_style(self, line):
         """
@@ -461,9 +461,9 @@ class LammpsParser(object):
         """
         if line[1] == 'mix':
             if line[2] == 'geometric':
-                System._sys.combination_rule = 'Multiply-Sigeps'
+                self.system.combination_rule = 'Multiply-Sigeps'
             elif line[2] == 'arithmetic':
-                System._sys.combination_rule = 'Lorentz-Berthelot'
+                self.system.combination_rule = 'Lorentz-Berthelot'
             else:
                 warnings.warn(
                     "Unsupported pair_modify mix argument in input file!")
@@ -495,7 +495,7 @@ class LammpsParser(object):
         self.dihedral_style = self.parse_bonded_style(line)
         # TODO: correctly determine gen-pairs state
         if self.dihedral_style == 'opls':
-            System._sys.genpairs = 'yes'
+            self.system.genpairs = 'yes'
 
     def parse_improper_style(self, line):
         """ """
@@ -504,16 +504,16 @@ class LammpsParser(object):
     def parse_special_bonds(self, line):
         """ """
         if 'lj/coul' in line:
-            System._sys.lj_correction = float(line[line.index('lj/coul') + 3])
-            System._sys.coulomb_correction = float(
+            self.system.lj_correction = float(line[line.index('lj/coul') + 3])
+            self.system.coulomb_correction = float(
                 line[line.index('lj/coul') + 3])
         elif 'lj' in line and 'coul' in line:
-            System._sys.lj_correction = float(line[line.index('lj') + 3])
-            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
+            self.system.lj_correction = float(line[line.index('lj') + 3])
+            self.system.coulomb_correction = float(line[line.index('coul') + 3])
         elif 'lj' in line:
-            System._sys.lj_correction = float(line[line.index('lj') + 3])
+            self.system.lj_correction = float(line[line.index('lj') + 3])
         elif 'coul' in line:
-            System._sys.coulomb_correction = float(line[line.index('coul') + 3])
+            self.system.coulomb_correction = float(line[line.index('coul') + 3])
         else:
             warnings.warn("Unsupported special_bonds in input file.")
 
@@ -537,7 +537,7 @@ class LammpsParser(object):
             self.box_vector[dim, dim] = box_length
         else:
             raise ValueError("Negative box length specified in data file.")
-        System._sys.box_vector = self.box_vector * self.DIST
+        self.system.box_vector = self.box_vector * self.DIST
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -559,7 +559,7 @@ class LammpsParser(object):
             fields = [float(field) for field in line.split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
-                if System._sys.nonbonded_function == 1:
+                if self.system.nonbonded_function == 1:
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
@@ -660,10 +660,10 @@ class LammpsParser(object):
                     # TODO: store image flags?
                     pass
                 new_atom_type = None
-                if System._sys.combination_rule == "Multiply-C6C12":
+                if self.system.combination_rule == "Multiply-C6C12":
                     warnings.warn(
                         "Combination rule 'Multiply-C6C12' not yet implemented")
-                elif System._sys.combination_rule in ['Multiply-Sigeps',
+                elif self.system.combination_rule in ['Multiply-Sigeps',
                                                       'Lorentz-Berthelot']:
                     new_atom_type = AtomSigepsType(
                         fields[2],  # atomtype
@@ -675,7 +675,7 @@ class LammpsParser(object):
                         self.nb_types[int(fields[2])][1],  # sigma
                         self.nb_types[int(fields[2])][0])  # epsilon
 
-                System._sys._atomtypes.add(new_atom_type)
+                self.system._atomtypes.add(new_atom_type)
 
                 atom = Atom(int(fields[0]),  # index
                             fields[2],  # name
@@ -695,7 +695,7 @@ class LammpsParser(object):
                 for ab_state, atom_type in enumerate(atom.atomtype):
                     # Searching for a matching atom_type
                     temp = AbstractAtomType(atom.atomtype[ab_state])
-                    atom_type = System._sys._atomtypes.get(temp)
+                    atom_type = self.system._atomtypes.get(temp)
                     if atom_type:
                         atom.sigma = (ab_state, atom_type.sigma)
                         atom.epsilon = (ab_state, atom_type.epsilon)
@@ -763,26 +763,24 @@ class LammpsParser(object):
             warnings.warn("No interaction type %s defined!" % (forceclass))
 
     def write_forces(self, molecule, offset, force_name, lookup_lammps_force,
-                     lammps_force_types, canonical_force, forceSet):
+                     lammps_force_types, canonical_force, forces):
         """The general force writing function.
 
         Currently supports bonds, angles, dihedrals, impropers.
         """
-        logger.debug("        Writing %ss..." % (force_name))
-
+        logger.debug("        Writing {0:s}s...".format(force_name))
         count = 1
         ilist = list()
-        ilist.append('\n{0:s}s\n\n' % (force_name))
-
+        ilist.append('\n{0:s}s\n\n'.format(force_name))
         coeffs = list()
-        coeffs.append('\n{0:s}s Coeffs\n\n' % (force_name))
+        coeffs.append('\n{0:s} Coeffs\n\n'.format(force_name))
 
         style_list = set()
 
         type_dict = dict()  # typeObject:int_type
         type_i = 1  # counter for bond types
 
-        for force in forceSet.itervalues():
+        for force in forces:
             atoms = self.get_force_atoms(force, force_name)  # Atoms in force.
             #atomtypes = map(lambda atom: molecule.atoms[atom - 1].bondtype, atoms)
             atomtypes = [molecule.atoms[atom - 1] for atom in atoms]
@@ -847,50 +845,51 @@ class LammpsParser(object):
         return self.write_forces(molecule, offset, "Bond",
                                  self.lookup_lammps_bonds,
                                  self.lammps_bond_types,
-                                 self.canonical_bond, mol_type.bondForceSet)
+                                 self.canonical_bond, mol_type.bond_forces)
 
     def write_angles(self, mol_type, molecule, offset):
         return self.write_forces(molecule, offset, "Angle",
                                  self.lookup_lammps_angles,
                                  self.lammps_angle_types,
-                                 self.canonical_angle, mol_type.angleForceSet)
+                                 self.canonical_angle, mol_type.angle_forces)
 
     def write_dihedrals(self, mol_type, molecule, offset):
         """Separate dihedrals from impropers. """
-        dihedralForceSet = HashMap()
-        for force in mol_type.dihedralForceSet.itervalues():
+        dihedral_forces = dict()
+        for force in mol_type.dihedral_forces:
             if not force.improper:
-                dihedralForceSet.add(force)
+                dihedral_forces[force] = force
 
         return self.write_forces(molecule, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
-                                 self.canonical_dihedral, dihedralForceSet)
+                                 self.canonical_dihedral, dihedral_forces)
 
     def write_impropers(self, mol_type, molecule, offset):
         """Separate dihedrals from impropers. """
-        improperForceSet = HashMap()
-        for force in mol_type.dihedralForceSet.itervalues():
+        improper_forces = dict()
+        for force in mol_type.dihedral_forces:
             if force.improper:
-                improperForceSet.add(force)
+                improper_forces[force] = force
 
         return self.write_forces(molecule, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,
-                                 self.canonical_dihedral, improperForceSet)
+                                 self.canonical_dihedral, improper_forces)
 
     def write_virtuals(self, mol_type, molecule, offset):
-        if len(mol_type.virtualForceSet) > 0:
+        if len(mol_type.virtual_forces) > 0:
             warnings.warn(
                 "Virtuals not currently supported: will need to be implemeneted from shake and rigid")
 
-    def write(self, data_file, unit_set='real'):
+    def write(self, unit_set='real'):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
             data_file (str): Name of LAMMPS data file to write to.
             unit_set (str): LAMMPS unit set for output file.
         """
+        self.data_file = os.path.splitext(self.in_file)[0] + '.lmp'
         self.set_units(unit_set)
         # Containers for lines which are ultimately written to output files.
         mass_list = list()
@@ -910,38 +909,37 @@ class LammpsParser(object):
         a_type_i = 1  # counter for atom types
 
         # Read all atom specific and FF information.
-        for mol_type in self.system.molecule_types.itervalues():
+        for mol_name, mol_type in self.system.molecule_types.iteritems():
             logger.debug(
-                "    Writing moleculetype {0}...".format(mol_type.name))
+                "    Writing moleculetype {0}...".format(mol_name))
 
             # Atom index offsets from 1 for each molecule.
             offsets = [0]
             for molecule in mol_type.molecules:
-                offsets.append(
-                    len(molecule.atoms) + offsets[-1])  # increment the sum
-            offsets.pop()  # we don't actually want to iterate over this one
+                offsets.append(len(molecule.atoms) + offsets[-1])
+            offsets.pop()  # We don't actually want to iterate over the last one
 
-            molecule = mol_type.moleculeSet[0]
+            # OrderedSet isn't indexable so get the first molecule by iterating.
+            molecule = next(iter(mol_type.molecules))
             atoms = molecule.atoms
             for offset in offsets:
-                bond_styles, bond_coeffs, bond_list = self.write_bonds(mol_type,
-                                                                       molecule,
-                                                                       offset)
+                bond_styles, bond_coeffs, bond_list = self.write_bonds(
+                        mol_type, molecule, offset)
                 angle_styles, angle_coeffs, angle_list = self.write_angles(
-                    mol_type, molecule, offset)
+                        mol_type, molecule, offset)
                 dihedral_styles, dihedral_coeffs, dihedral_list = self.write_dihedrals(
-                    mol_type, molecule, offset)
+                        mol_type, molecule, offset)
                 improper_styles, improper_coeffs, improper_list = self.write_impropers(
-                    mol_type, molecule, offset)
-                self.write_virtuals(mol_type, molecule,
-                                    offset)  # only issues warning now
+                        mol_type, molecule, offset)
+                # Only issues warning now
+                self.write_virtuals(mol_type, molecule, offset)
 
             # atom specific information
             x_min = y_min = z_min = np.inf
             logger.debug("    Writing atoms...")
             cumulative_atoms = 0
             atom_charges = False
-            for molecule in mol_type.moleculeSet:
+            for molecule in mol_type.molecules:
                 for atom in molecule.atoms:
                     # type, mass and pair coeffs
                     if atom.atomtype[0] not in atom_type_dict:
@@ -967,7 +965,7 @@ class LammpsParser(object):
 
                     # atom
                     atom_list.append(
-                        '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
+                        '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
                             atom.index + cumulative_atoms,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
@@ -992,9 +990,9 @@ class LammpsParser(object):
                 cumulative_atoms += len(molecule.atoms)
 
                 # Write the actual data file.
-        with open(data_file, 'w') as f:
+        with open(self.data_file, 'w') as f:
             # front matter
-            f.write(System._sys.name + '\n')
+            f.write(self.system.name + '\n')
             f.write('\n')
 
             n_atoms = len(atom_list) - 1
@@ -1029,17 +1027,14 @@ class LammpsParser(object):
 
             # shifting of box dimensions
             f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
-                x_min,
-                x_min + System._sys.box_vector[0][0].in_units_of(
-                    self.DIST)._value))
+                    x_min, x_min + self.system.box_vector[0][0].value_in_units(
+                            self.DIST)))
             f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
-                y_min,
-                y_min + System._sys.box_vector[1][1].in_units_of(
-                    self.DIST)._value))
+                    y_min, y_min + self.system.box_vector[1][1].value_in_units(
+                            self.DIST)))
             f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
-                z_min,
-                z_min + System._sys.box_vector[2][2].in_units_of(
-                    self.DIST)._value))
+                    z_min, z_min + self.system.box_vector[2][2].value_in_units(
+                            self.DIST)))
 
             # masses
             for mass in mass_list:
@@ -1067,9 +1062,7 @@ class LammpsParser(object):
                         f.write(force)
 
         # Write the corresponding input file.
-        basename = os.path.splitext(data_file)[0]
-        input_filename = '{0}.input'.format(basename)
-        with open(input_filename, 'w') as f:
+        with open(self.in_file, 'w') as f:
             f.write('units {0}\n'.format(unit_set))
             f.write('atom_style full\n')  # TODO
             f.write('\n')
@@ -1080,22 +1073,21 @@ class LammpsParser(object):
 
             # non-bonded
             if atom_charges:
-                #f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
-                f.write(
-                    'pair_style lj/cut/coul/long 9.999 9.999\n')  # TODO: match mdp
-                f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
+                f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
+                #f.write('pair_style lj/cut/coul/long 9.999 9.999\n')
+                f.write('kspace_style pppm 1.0e-8\n')  # TODO: match mdp
+                #f.write('kspace_style ewald 1.0e-6\n')
             else:
-                #f.write('pair_style lj/cut/coul/cut 15.0 15.0\n')  # TODO: match mdp
-                f.write(
-                    'pair_style lj/cut/coul/cut 9.999 9.999\n')  # TODO: match mdp
+                f.write('pair_style lj/cut/coul/cut 15.0 15.0\n')  # TODO: match mdp
+                #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
                 f.write('kspace_style none\n')  # if there are no charges
-            if System._sys.combination_rule == 'Lorentz-Berthelot':
+
+            if self.system.combination_rule == 'Lorentz-Berthelot':
                 f.write('pair_modify mix arithmetic\n')
-            elif System._sys.combination_rule == 'Multiply-Sigeps':
+            elif self.system.combination_rule == 'Multiply-Sigeps':
                 f.write('pair_modify mix geometric\n')
             else:
-                warnings.warn(
-                    "Unsupported pair combination rule on writing input file!")
+                logger.warn("Unsupported pair combination rule on writing input file!")
             f.write('\n')
 
             # bonded
@@ -1113,16 +1105,12 @@ class LammpsParser(object):
                     " ".join(improper_styles)))
 
             f.write('special_bonds lj {0} {1} {2} coul {3} {4} {5}\n'.format(
-                0.0,
-                0.0,
-                System._sys.lj_correction,
-                0.0,
-                0.0,
-                System._sys.coulomb_correction))
+                0.0, 0.0, self.system.lj_correction,
+                0.0, 0.0, self.system.coulomb_correction))
             f.write('\n')
 
             # read data
-            f.write('read_data {0}\n'.format(os.path.basename(data_file)))
+            f.write('read_data {0}\n'.format(os.path.basename(self.data_file)))
             f.write('\n')
 
             # output energies
