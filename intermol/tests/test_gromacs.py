@@ -168,6 +168,8 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
+    # TODO: Rewrite assertions or testing calls so that you can run 'all' but
+    #       still have working py.test.
     args = vars(parser.parse_args())
     if args['type'] in ['unit', 'all']:
         test_gromacs_unit()
