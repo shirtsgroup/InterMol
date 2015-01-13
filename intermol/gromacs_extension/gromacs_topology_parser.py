@@ -1413,7 +1413,7 @@ class GromacsTopologyParser(object):
                 count += 1
             lines.append('\n')
 
-            if moleculeType.bondForceSet:
+            if moleculeType.bondForceSet and not moleculeType.settles:
                 # [ bonds ]
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
@@ -1476,7 +1476,7 @@ class GromacsTopologyParser(object):
                         raise Exception("WriteError: found unsupported pair type")
                 lines.append('\n')
 
-            if moleculeType.angleForceSet:
+            if moleculeType.angleForceSet and not moleculeType.settles:
                 # [ angles ]
                 lines.append('[ angles ]\n')
                 lines.append(';   ai     aj     ak    funct   theta         cth\n')

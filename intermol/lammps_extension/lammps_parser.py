@@ -673,9 +673,28 @@ class LammpsParser(object):
         angle_i = 1
         dihedral_i = 1
         improper_i = 1
+        shake_bond_types = set()
+        shake_angle_types = set()
         x_min = y_min = z_min = np.inf
         for mol_type in System._sys._molecules.itervalues():
             logger.debug("    Writing moleculetype {0}...".format(mol_type.name))
+
+            # Settles (for rigid water in GROMACS)
+            # We'll convert these to SHAKE constraints in the input script.
+            if mol_type.settles:
+                for bond in mol_type.bondForceSet.itervalues():
+                    shake_bond_types.add(BondType(
+                            mol_type.moleculeSet[0]._atoms[bond.atom1 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[bond.atom2 - 1].bondtype,
+                            bond.length,
+                            bond.k))
+                for angle in mol_type.angleForceSet.itervalues():
+                    shake_angle_types.add(AngleType(
+                            mol_type.moleculeSet[0]._atoms[angle.atom1 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[angle.atom2 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[angle.atom3 - 1].bondtype,
+                            angle.theta,
+                            angle.k))
 
 #            molecule = mol_type.moleculeSet[0]
 #            atoms = molecule._atoms
@@ -685,7 +704,7 @@ class LammpsParser(object):
 
                 # bonds
                 logger.debug("        Writing bonds...")
-                for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
+                for bond in mol_type.bondForceSet.itervalues():
                     atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[bond.atom2 - 1].bondtype
 
@@ -732,7 +751,7 @@ class LammpsParser(object):
 
                 # angles
                 logger.debug("        Writing angles...")
-                for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
+                for angle in mol_type.angleForceSet.itervalues():
                     atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[angle.atom2 - 1].bondtype
                     atomtype3 = molecule._atoms[angle.atom3 - 1].bondtype
@@ -797,7 +816,7 @@ class LammpsParser(object):
                 # dihedrals
                 logger.debug("        Writing dihedrals...")
 
-                for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
+                for dihedral in mol_type.dihedralForceSet.itervalues():
                     atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[dihedral.atom2 - 1].bondtype
                     atomtype3 = molecule._atoms[dihedral.atom3 - 1].bondtype
@@ -962,7 +981,7 @@ class LammpsParser(object):
                                     % (a_type_i,
                                        atom._mass[0].in_units_of(self.MASS)._value,
                                        atom.bondtype))
-                        pair_coeff_list.append('{0:d} {1:8.4f} {2:8.4f} # {3:s}\n'.format(
+                        pair_coeff_list.append('{0:d} {1:10.6f} {2:10.6f} # {3:s}\n'.format(
                                        a_type_i,
                                        atom._epsilon[0].in_units_of(self.ENERGY)._value,
                                        atom._sigma[0].in_units_of(self.DIST)._value,
@@ -1099,9 +1118,15 @@ class LammpsParser(object):
             f.write('\n')
 
             # non-bonded
-            f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
-            f.write('pair_modify mix geometric\n')  # TODO: match defaults
-            f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
+            f.write('pair_style lj/cut/coul/long 10.0 10.0\n')  # TODO: match mdp
+            if System._sys.combination_rule == 3:
+                f.write('pair_modify mix geometric\n')
+            elif System._sys.combination_rule == 2:
+                f.write('pair_modify mix arithmetic\n')
+            else:
+                logger.warn("Unsupported combination rule: {0}".format(
+                        System._sys.combination_rule))
+            f.write('kspace_style ewald 1.0e-5\n')  # TODO: match mdp
             f.write('\n')
 
             # bonded
@@ -1145,5 +1170,16 @@ class LammpsParser(object):
 
             f.write('thermo_style custom {0}\n'.format(energy_terms))
             f.write('\n')
+
+            # SHAKE constraints
+            if len(shake_bond_types) > 0:
+                f.write('fix fSHAKE all shake 1.0e-4 20 10 b')
+                for btype in shake_bond_types:
+                    f.write(' {0}'.format(bond_type_dict[btype]))
+                if len(shake_angle_types) > 0:
+                    f.write(' a')
+                    for atype in shake_angle_types:
+                        f.write(' {0}'.format(angle_type_dict[atype]))
+                f.write('\n')
 
             f.write('run 0\n')
