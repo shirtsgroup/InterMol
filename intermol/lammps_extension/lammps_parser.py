@@ -104,6 +104,7 @@ class LammpsParser(object):
 
             for line in data_lines:
                 if line.strip():
+                    line = line.partition('#')[0] # Remove trailing comment
                     # catch all box dimensions
                     if (('xlo' in line) and
                          ('xhi' in line)):
@@ -130,7 +131,7 @@ class LammpsParser(object):
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
                 if line.strip():
-                    keyword = line.strip()
+                    keyword = line.partition('#')[0].strip()
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
 
@@ -285,7 +286,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
@@ -295,7 +296,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = [float(field) for field in line.partition('#')[0].split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
                 if System._sys.nonbonded_function == 1:
@@ -313,7 +314,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             if len(self.bond_style) == 1:
                 if 'harmonic' in self.bond_style:
                     self.bond_types[int(fields[0])] = [
@@ -352,7 +353,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             if len(self.angle_style) == 1:
                 if 'harmonic' in self.angle_style:
                     self.angle_types[int(fields[0])] = [
@@ -379,7 +380,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             if len(self.dihedral_style) == 1:
                 if 'opls' in self.dihedral_style:
                     self.dihedral_types[int(fields[0])] = [
@@ -410,7 +411,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             if len(self.improper_style) == 1:
                 if 'harmonic' in self.improper_style:
                     self.improper_types[int(fields[0])] = [
@@ -436,7 +437,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             if len(fields) in [7, 10]:
                 if len(fields) == 10:
@@ -488,7 +489,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_bond_force = None
             coeff_num = int(fields[1])
@@ -515,7 +516,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_angle_force = None
             coeff_num = int(fields[1])
@@ -534,7 +535,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
             coeff_num = int(fields[1])
@@ -555,7 +556,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
             coeff_num = int(fields[1])
