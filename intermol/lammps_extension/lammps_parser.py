@@ -408,6 +408,14 @@ class LammpsParser(object):
                     float(coeffs[1]) * self.ENERGY,
                     float(coeffs[2]) * self.ENERGY,
                     float(coeffs[3]) * self.ENERGY]
+            elif style == 'multi/harmonic':
+                self.dihedral_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.ENERGY,
+                    float(coeffs[2]) * self.ENERGY,
+                    float(coeffs[3]) * self.ENERGY,
+                    float(coeffs[4]) * self.ENERGY]
             else:
                 logger.warn("Unsupported dihedral style: {0}".format(style))
 
@@ -544,16 +552,27 @@ class LammpsParser(object):
             fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
-            coeff_num = int(fields[1])
-            # OPLS
+            coeff_num = fields[1]
+
             if  self.dihedral_types[coeff_num][0] == 'opls':
-                cs = [self.dihedral_types[fields[1]][1],
-                      self.dihedral_types[fields[1]][2],
-                      self.dihedral_types[fields[1]][3],
-                      self.dihedral_types[fields[1]][4]]
-                new_dihed_force = FourierDihedral(
-                        fields[2], fields[3], fields[4], fields[5],
-                        cs[0], cs[1], cs[2], cs[3])
+                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
+                    self.dihedral_types[coeff_num][1],
+                    self.dihedral_types[coeff_num][2],
+                    self.dihedral_types[coeff_num][3],
+                    self.dihedral_types[coeff_num][4])
+            elif self.dihedral_types[coeff_num][0] == 'multi/harmonic':
+                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
+                    self.dihedral_types[coeff_num][1],
+                    -self.dihedral_types[coeff_num][2],
+                    self.dihedral_types[coeff_num][3],
+                    -self.dihedral_types[coeff_num][4],
+                    self.dihedral_types[coeff_num][5],
+                    0 * self.ENERGY,
+                    0 * self.ENERGY)
+
+            new_dihed_force = DihedralTrigDihedral(
+                fields[2], fields[3], fields[4], fields[5],
+                0 * self.DEGREE, fc0, fc1, fc2, fc3, fc4, fc5, fc6)
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def parse_impropers(self, data_lines):

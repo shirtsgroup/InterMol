@@ -28,7 +28,7 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     """
     logger.info('Evaluating energy of {0}'.format(input_file))
 
-    directory, input_file = os.path.split(input_file)
+    directory, input_file = os.path.split(os.path.abspath(input_file))
 
     # mdrunin'
     saved_path = os.getcwd()
