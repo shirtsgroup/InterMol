@@ -58,6 +58,7 @@ class LammpsParser(object):
                 'improper_style': self.parse_improper_style,
                 'special_bonds': self.parse_special_bonds,
                 'read_data': self.parse_read_data}
+                'fix': self.parse_fix}
 
         with open(input_file, 'r') as input_lines:
             for line in input_lines:
@@ -282,6 +283,44 @@ class LammpsParser(object):
         else:
             logger.warn("Unsupported read_data arguments in input file.")
 
+    def parse_fix(self, line):
+        """ """
+        if len(line) > 3 and line[3] == 'shake':
+            parse_fix_shake(line)
+
+    def parse_fix_shake(self, line):
+        """ """
+        if line[2] != 'all':
+            logger.warn("Unsupported group-ID in fix shake command")
+            return            
+        if 'mol' in line:
+            logger.warn("Unsupported keyword 'mol' in fix shake command")
+            return
+        
+        if not self.shake_bond_types_i:
+            self.shake_bond_types_i = set()
+        if not self.shake_angle_types_i:
+            self.shake_angle_types_i = set()
+        if not self.shake_masses:
+            self.shake_masses = set()
+
+        line = line[7:]
+        for field in line:
+            if field == 't':
+                logger.warn("SHAKE 't' (atom type) constraints not yet supported: fix shake ignored.")
+                return
+            elif field == 'b':
+                container = self.shake_bond_types_i
+                str2num = int
+            elif field == 'a':
+                container = self.shake_angle_types_i
+                str2num = int
+            elif field == 'm':
+                container = self.shake_masses
+                str2num = float
+            else:
+                container.add(str2num(field))
+            
     def parse_box(self, line, dim):
         """Read box information from data file.
 
