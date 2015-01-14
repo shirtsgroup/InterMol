@@ -84,10 +84,20 @@ class LammpsParser(object):
             self.molecule_name = next(data_lines).strip()
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
+            # Clarification: Currently reading in the entire topology
+            # (even if the molecular graph is disconnected) as a single
+            # molecule. Unfortunately, this approach eliminates some of the
+            # conveniences built into GROMACS analysis tools.
+            # TODO: Read in multiple molecules and distinguish molecule type
+            # based on the simple (though not robust) approach used in
+            # topotools (topogromacs.tcl).
             self.current_mol = Molecule(self.molecule_name)
             System._sys.add_molecule(self.current_mol)
             self.current_mol_type = System._sys._molecules[self.molecule_name]
+
             self.current_mol_type.nrexcl = 3  # TODO: automate determination
+            # Note: In LAMMPS nrexcl is typically controlled globally via the
+            # special_bonds command.
 
             for line in data_lines:
                 if line.strip():
@@ -108,7 +118,7 @@ class LammpsParser(object):
                         if keyword in parsable_keywords:
                             parsable_keywords[keyword](data_lines)
 
-        # Read atoms, velocities and connectivity information from data file.
+        # Read atoms and connectivity information from data file.
         parsable_keywords = {'Atoms': self.parse_atoms,
                 'Bonds': self.parse_bonds,
                 'Angles': self.parse_angles,
@@ -142,12 +152,14 @@ class LammpsParser(object):
 
     def parse_atom_style(self, line):
         """
-        Note:
-            Assuming 'full' as default for everything else.
         """
-        self.atom_style = line[1]
         if len(line) > 2:
             logger.warn("Unsupported atom_style in input file.")
+        self.atom_style = line[1]
+
+        # Currently only support atom_style 'full'
+        if self.atom_style != 'full':
+            raise Exception("Unsupported atom_style in input file: {0}".format(self.atom_style))        
 
     def parse_dimension(self, line):
         """ """
@@ -196,9 +208,11 @@ class LammpsParser(object):
     def parse_bond_style(self, line):
         """ """
         self.bond_style = set()
+        self.hybrid_bond_style = False
         if len(line) == 2:
             self.bond_style.add(line[1])
-        elif line[1] == 'hybrid':
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_bond_style = True
             for style in line[2:]:
                 self.bond_style.add(style)
         else:
@@ -207,9 +221,11 @@ class LammpsParser(object):
     def parse_angle_style(self, line):
         """ """
         self.angle_style = []
+        self.hybrid_angle_style = False
         if len(line) == 2:
             self.angle_style.append(line[1])
-        elif line[1] == 'hybrid':
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_angle_style = True
             for style in line[2:]:
                 self.angle_style.append(style)
         else:
@@ -218,13 +234,14 @@ class LammpsParser(object):
     def parse_dihedral_style(self, line):
         """ """
         self.dihedral_style = []
+        self.hybrid_dihedral_style = False
         if len(line) == 2:
             self.dihedral_style.append(line[1])
             # TODO: correctly determine gen-pairs state
             if self.dihedral_style == 'opls':
                 System._sys.genpairs = 'yes'
-        elif line[1] == 'hybrid':
-            self.dihedral_style = []
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_dihedral_style = True
             for style in line[2:]:
                 self.dihedral_style.append(style)
         else:
@@ -233,10 +250,11 @@ class LammpsParser(object):
     def parse_improper_style(self, line):
         """ """
         self.improper_style = []
+        self.hybrid_improper_style = False
         if len(line) == 2:
             self.improper_style.append(line[1])
-        elif line[1] == 'hybrid':
-            self.improper_style = []
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_improper_style = True
             for style in line[2:]:
                 self.improper_style.append(style)
         else:
@@ -315,36 +333,29 @@ class LammpsParser(object):
             if not line.strip():
                 break  # found another blank line
             fields = line.partition('#')[0].split()
-            if len(self.bond_style) == 1:
-                if 'harmonic' in self.bond_style:
-                    self.bond_types[int(fields[0])] = [
-                            'harmonic',
-                            2 * float(fields[1]) * self.ENERGY / (self.DIST*self.DIST),
-                            float(fields[2]) * self.DIST]
-                elif 'morse' in self.bond_style:
-                    self.bond_types[int(fields[0])] = [
-                            'morse',
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.DIST**(-1),
-                            float(fields[3]) * self.DIST]
-            elif len(self.bond_style) > 1:
+            if self.hybrid_bond_style:
                 style = fields[1]
                 if style not in self.bond_style:
                     raise Exception("Bond type found in Bond Coeffs that "
                             "was not specified in bond_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.bond_types[int(fields[0])] = [
-                            style,
-                            2 * float(fields[2]) * self.ENERGY / (self.DIST*self.DIST),
-                            float(fields[3]) * self.DIST]
-                elif style == 'morse':
-                    self.bond_types[int(fields[0])] = [
-                            style,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.DIST**(-1),
-                            float(fields[4]) * self.DIST]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'bond_style'.")
+                style = self.bond_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.bond_types[int(fields[0])] = [
+                    style,
+                    2 * float(coeffs[0]) * self.ENERGY / (self.DIST*self.DIST),
+                    float(coeffs[1]) * self.DIST]
+            elif style == 'morse':
+                self.bond_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.DIST**(-1),
+                    float(coeffs[2]) * self.DIST]
+            else:
+                logger.warn("Unsupported bond style: {0}".format(style))
 
     def parse_angle_coeffs(self, data_lines):
         """Read angle coefficients from data file."""
@@ -354,24 +365,23 @@ class LammpsParser(object):
             if not line.strip():
                 break  # found another blank line
             fields = line.partition('#')[0].split()
-            if len(self.angle_style) == 1:
-                if 'harmonic' in self.angle_style:
-                    self.angle_types[int(fields[0])] = [
-                            'harmonic',
-                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
-            elif len(self.angle_style) > 1:
+            if self.hybrid_angle_style:
                 style = fields[1]
                 if style not in self.angle_style:
                     raise Exception("Angle type found in Angle Coeffs that "
                             "was not specified in angle_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.angle_types[int(fields[0])] = [
-                            style,
-                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'angle_style'.")
+                style = self.angle_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.angle_types[int(fields[0])] = [
+                    style,
+                    2 * float(coeffs[0]) * self.ENERGY / self.RAD**2,
+                    float(coeffs[1]) * self.DEGREE]
+            else:
+                logger.warn("Unsupported angle style: {0}".format(style))
 
     def parse_dihedral_coeffs(self, data_lines):
         """Read dihedral coefficients from data file."""
@@ -381,28 +391,25 @@ class LammpsParser(object):
             if not line.strip():
                 break  # found another blank line
             fields = line.partition('#')[0].split()
-            if len(self.dihedral_style) == 1:
-                if 'opls' in self.dihedral_style:
-                    self.dihedral_types[int(fields[0])] = [
-                            'opls',
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.ENERGY,
-                            float(fields[4]) * self.ENERGY]
-            elif len(self.dihedral_style) > 1:
+            if self.hybrid_dihedral_style:
                 style = fields[1]
                 if style not in self.dihedral_style:
                     raise Exception("Dihedral type found in Dihedral Coeffs that "
                             "was not specified in dihedral_style: {0}".format(style))
-                if style == 'opls':
-                    self.dihedral_types[int(fields[0])] = [
-                            style,
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.ENERGY,
-                            float(fields[4]) * self.ENERGY]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'dihedral_style'.")
+                style = self.dihedral_style[0]
+                coeffs = fields[1:]
+
+            if style == 'opls':
+                self.dihedral_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.ENERGY,
+                    float(coeffs[2]) * self.ENERGY,
+                    float(coeffs[3]) * self.ENERGY]
+            else:
+                logger.warn("Unsupported dihedral style: {0}".format(style))
 
     def parse_improper_coeffs(self, data_lines):
         """Read improper coefficients from data file."""
@@ -412,24 +419,23 @@ class LammpsParser(object):
             if not line.strip():
                 break  # found another blank line
             fields = line.partition('#')[0].split()
-            if len(self.improper_style) == 1:
-                if 'harmonic' in self.improper_style:
-                    self.improper_types[int(fields[0])] = [
-                            'harmonic',
-                            float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
-            elif len(self.improper_style) > 1:
+            if self.hybrid_improper_style:
                 style = fields[1]
                 if style not in self.improper_style:
                     raise Exception("Improper type found in Improper Coeffs that "
                             "was not specified in improper_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.improper_types[int(fields[0])] = [
-                            style,
-                            float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'improper_style'.")
+                style = self.improper_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.improper_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY / self.RAD**2,
+                    float(coeffs[1]) * self.DEGREE]
+            else:
+                logger.warn("Unsupported improper style: {0}".format(style))
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
