@@ -66,19 +66,6 @@ class LammpsParser(object):
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](line.split())
 
-        self.RAD = units.radians
-        self.DEGREE = units.degrees
-        if self.unit_set == 'real':
-            self.DIST = units.angstroms
-            self.VEL = units.angstroms / units.femtosecond
-            self.ENERGY = units.kilocalorie / units.mole
-            self.MASS = units.grams / units.mole
-            self.CHARGE = units.elementary_charge
-            self.MOLE = units.mole
-        else:
-            raise Exception("Unsupported unit set specified in input file: "
-                    "{0}".format(self.unit_set))
-
     def read_data(self, data_file):
         """Reads a LAMMPS data file.
 
@@ -139,6 +126,19 @@ class LammpsParser(object):
         """ """
         assert(len(line) == 2), "Invalid units specified in input file."
         self.unit_set = line[1]
+
+        self.RAD = units.radians
+        self.DEGREE = units.degrees
+        if self.unit_set == 'real':
+            self.DIST = units.angstroms
+            self.VEL = units.angstroms / units.femtosecond
+            self.ENERGY = units.kilocalorie / units.mole
+            self.MASS = units.grams / units.mole
+            self.CHARGE = units.elementary_charge
+            self.MOLE = units.mole
+        else:
+            raise Exception("Unsupported unit set specified in input file: "
+                    "{0}".format(self.unit_set))
 
     def parse_atom_style(self, line):
         """
