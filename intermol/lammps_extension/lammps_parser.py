@@ -207,14 +207,14 @@ class LammpsParser(object):
 
     def parse_bond_style(self, line):
         """ """
-        self.bond_style = set()
+        self.bond_style = []
         self.hybrid_bond_style = False
         if len(line) == 2:
-            self.bond_style.add(line[1])
+            self.bond_style.append(line[1])
         elif len(line) > 2 and line[1] == 'hybrid':
             self.hybrid_bond_style = True
             for style in line[2:]:
-                self.bond_style.add(style)
+                self.bond_style.append(style)
         else:
             raise ValueError("Invalid bond_style in input file!")
 
