@@ -82,20 +82,24 @@ def writeStructure(filename):
     """
     lines = list()
     n = 0
+    res_offset = 0
+    res_offset_next = 0
     for moleculetype in System._sys._molecules.values():
         for molecule in moleculetype.moleculeSet:
             for atom in molecule._atoms:
-                if atom.name.isdigit():
-                    atom.name = "LMP_" + atom.name
+#                if atom.name.isdigit():
+#                    atom.name = "LMP_" + atom.name
                 n += 1
-                lines.append('%5d%-4s%6s%5d%13.8f%13.8f%13.8f%13.8f%13.8f%13.8f\n'
-                             % (atom.residue_index, atom.residue_name, atom.name, n,
+                lines.append('%5d%-5s%5s%5d%13.8f%13.8f%13.8f%13.8f%13.8f%13.8f\n'
+                             % (atom.residue_index + res_offset, atom.residue_name, atom.name, n,
                                 atom._position[0].in_units_of(units.nanometers)._value,
                                 atom._position[1].in_units_of(units.nanometers)._value,
                                 atom._position[2].in_units_of(units.nanometers)._value,
                                 atom._velocity[0].in_units_of(units.nanometers / units.picoseconds)._value,
                                 atom._velocity[1].in_units_of(units.nanometers / units.picoseconds)._value,
                                 atom._velocity[2].in_units_of(units.nanometers / units.picoseconds)._value))
+                res_offset_next = res_offset + atom.residue_index
+            res_offset = res_offset_next
     # print the box vector
     # check for rectangular; should be symmetric, so we don't have to check 6 values
     if (System._sys.box_vector[1, 0]._value == 0 and

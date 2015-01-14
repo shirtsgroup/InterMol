@@ -7,6 +7,7 @@ import os
 import pdb
 import logging
 import numpy as np
+from collections import OrderedDict
 
 import intermol.unit as units
 from intermol.atom import Atom
@@ -57,7 +58,7 @@ class LammpsParser(object):
                 'dihedral_style': self.parse_dihedral_style,
                 'improper_style': self.parse_improper_style,
                 'special_bonds': self.parse_special_bonds,
-                'read_data': self.parse_read_data}
+                'read_data': self.parse_read_data,
                 'fix': self.parse_fix}
 
         with open(input_file, 'r') as input_lines:
@@ -82,24 +83,6 @@ class LammpsParser(object):
                 'Improper Coeffs': self.parse_improper_coeffs}
 
         with open(data_file, 'r') as data_lines:
-            self.molecule_name = next(data_lines).strip()
-            # Currently only reading a single molecule/moleculeType
-            # per LAMMPS file.
-            # Clarification: Currently reading in the entire topology
-            # (even if the molecular graph is disconnected) as a single
-            # molecule. Unfortunately, this approach eliminates some of the
-            # conveniences built into GROMACS analysis tools.
-            # TODO: Read in multiple molecules and distinguish molecule type
-            # based on the simple (though not robust) approach used in
-            # topotools (topogromacs.tcl).
-            self.current_mol = Molecule(self.molecule_name)
-            System._sys.add_molecule(self.current_mol)
-            self.current_mol_type = System._sys._molecules[self.molecule_name]
-
-            self.current_mol_type.nrexcl = 3  # TODO: automate determination
-            # Note: In LAMMPS nrexcl is typically controlled globally via the
-            # special_bonds command.
-
             for line in data_lines:
                 if line.strip():
                     line = line.partition('#')[0] # Remove trailing comment
@@ -286,7 +269,7 @@ class LammpsParser(object):
     def parse_fix(self, line):
         """ """
         if len(line) > 3 and line[3] == 'shake':
-            parse_fix_shake(line)
+            self.parse_fix_shake(line)
 
     def parse_fix_shake(self, line):
         """ """
@@ -297,12 +280,9 @@ class LammpsParser(object):
             logger.warn("Unsupported keyword 'mol' in fix shake command")
             return
         
-        if not self.shake_bond_types_i:
-            self.shake_bond_types_i = set()
-        if not self.shake_angle_types_i:
-            self.shake_angle_types_i = set()
-        if not self.shake_masses:
-            self.shake_masses = set()
+        self.shake_bond_types_i = set()
+        self.shake_angle_types_i = set()
+        self.shake_masses = set()
 
         line = line[7:]
         for field in line:
@@ -486,6 +466,7 @@ class LammpsParser(object):
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
+        molecules = dict()
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -497,26 +478,27 @@ class LammpsParser(object):
                     # TODO: store image flags?
                     pass
                 new_atom_type = None
+                bondtype = atomtype = 'lmp_{:03d}'.format(int(fields[2]))
                 if System._sys.combination_rule == 1:
                     logger.warn("Combination rule '1' not yet implemented")
                 elif System._sys.combination_rule in [2, 3]:
-                    new_atom_type = AtomCR23Type(fields[2],    # atomtype
-                            fields[2],                         # bondtype
-                            -1,                                # atomic_number
-                            self.mass_dict[int(fields[2])],    # mass
-                            float(fields[3]) * self.CHARGE,    # charge
-                            'A',                               # ptype
-                            self.nb_types[int(fields[2])][1],  # sigma
-                            self.nb_types[int(fields[2])][0])  # epsilon
+                    new_atom_type = AtomCR23Type(atomtype, bondtype,
+                        -1,                               # atomic_number
+                        self.mass_dict[int(fields[2])],
+                        float(fields[3]) * self.CHARGE,
+                        'A',                              # ptype
+                        self.nb_types[int(fields[2])][1], # sigma
+                        self.nb_types[int(fields[2])][0]) # epsilon
 
                 System._sys._atomtypes.add(new_atom_type)
 
-                atom = Atom(int(fields[0]),  # index
-                        fields[2],           # name
-                        int(fields[1]),      # residue_index (molNum)
-                        fields[1])           # residue_name (molNum)
-                atom.setAtomType(0, fields[2])  # atomNum for LAMMPS
-                atom.cgnr = 0  # TODO: look into alternatives
+                atom = Atom(int(fields[0]), 
+                            'X' + fields[2],       # atom name
+                            1)               # residue index (within molecule)
+                atom.setAtomType(0, atomtype)
+                atom.cgnr = 1
+                # TODO: Set cg nr 'automatically' in gromacs_topology_parser.
+                # See, e.g., topogromacs.tcl in VMD topotools.
                 atom.setCharge(0, float(fields[3]) * self.CHARGE)
                 atom.setMass(0, self.mass_dict[int(fields[2])])
                 atom.setPosition(float(fields[4]) * self.DIST,
@@ -534,7 +516,36 @@ class LammpsParser(object):
                     else:
                         logger.warn("Corresponding AtomType was not found. "
                                 "Insert missing values yourself.")
-            self.current_mol.addAtom(atom)
+
+                if int(fields[1]) not in molecules:
+                    molecules[int(fields[1])] = Molecule()
+                molecules[int(fields[1])].addAtom(atom)
+
+        # Add molecules to system
+        atomtype_list_old = []
+        moleculetype_i = 0
+        mol_name = None
+        self.nr = dict() # atom index => index within moleculetype (i.e. nr)
+        self.mol_type = dict() # atom index => MoleculeType 
+        for molecule in [molecules[i] for i in sorted(molecules.keys())]:
+            molecule.getAtoms().list.sort()
+
+            atomtype_list = [atom.getAtomType(0) for atom in molecule.getAtoms()]
+            if atomtype_list != atomtype_list_old: # new moleculetype
+                moleculetype_i += 1
+                mol_name = 'molecule{:02d}'.format(moleculetype_i)
+                atomtype_list_old = atomtype_list
+
+            molecule.name = mol_name
+            System._sys.add_molecule(molecule)
+
+            # TODO: Move this elsewhere and determine nrexcl from special_bonds
+            System._sys._molecules[molecule.name].nrexcl = 3
+
+            for i, atom in enumerate(molecule.getAtoms(), start=1):
+                self.nr[atom.index] = i
+                self.mol_type[atom.index] = System._sys._molecules[molecule.name]
+                atom.residue_name = 'R{:02d}'.format(moleculetype_i)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file."""
@@ -546,21 +557,24 @@ class LammpsParser(object):
 
             new_bond_force = None
             coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            
             # Bond
             if self.bond_types[coeff_num][0] == 'harmonic':
                 r = self.bond_types[coeff_num][2]
                 k = self.bond_types[coeff_num][1]
-                new_bond_force = Bond(
-                        fields[2], fields[3],
-                        r, k)
+                new_bond_force = Bond(ai, aj, r, k)
             # Morse
             elif self.bond_types[coeff_num][0] == 'morse':
                 r = self.bond_types[coeff_num][3]
                 D = self.bond_types[coeff_num][1]
                 beta = self.bond_types[coeff_num][2]
-                new_bond_force = MorseBond(
-                        fields[2], fields[3],
-                        r, D, beta)
+                new_bond_force = MorseBond(ai, aj, r, D, beta)
+            
+            self.current_mol_type = self.mol_type[fields[2]]
+            if (self.mol_type[fields[3]] is not self.current_mol_type):
+                raise Exception("Attempted to define bond between atoms {0:d}, {1:d} across different molecules.".format(fields[2], fields[3]))
             self.current_mol_type.bondForceSet.add(new_bond_force)
 
     def parse_angles(self, data_lines):
@@ -573,13 +587,20 @@ class LammpsParser(object):
 
             new_angle_force = None
             coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+
             # Angle
             if self.angle_types[coeff_num][0] == 'harmonic':
                 theta = self.angle_types[coeff_num][2]
                 k = self.angle_types[coeff_num][1]
-                new_angle_force = Angle(
-                        fields[2], fields[3], fields[4],
-                        theta, k)
+                new_angle_force = Angle(ai, aj, ak, theta, k)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type)):
+                raise Exception("Attempted to define angle between atoms {0:d}, {1:d}, {2:d} across different molecules.".format(fields[2], fields[3], fields[4]))
             self.current_mol_type.angleForceSet.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
@@ -592,6 +613,10 @@ class LammpsParser(object):
 
             new_dihed_force = None
             coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+            al = self.nr[fields[5]]
 
             if  self.dihedral_types[coeff_num][0] == 'opls':
                 fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
@@ -610,8 +635,14 @@ class LammpsParser(object):
                     0 * self.ENERGY)
 
             new_dihed_force = DihedralTrigDihedral(
-                fields[2], fields[3], fields[4], fields[5],
+                ai, aj, ak, al,
                 0 * self.DEGREE, fc0, fc1, fc2, fc3, fc4, fc5, fc6)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type) or 
+                (self.mol_type[fields[5]] is not self.current_mol_type)):
+                raise Exception("Attempted to define dihedral between atoms {0:d}, {1:d}, {2:d}, {3:d} across different molecules.".format(fields[2], fields[3], fields[4], fields[5]))
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def parse_impropers(self, data_lines):
@@ -624,12 +655,21 @@ class LammpsParser(object):
 
             new_dihed_force = None
             coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+            al = self.nr[fields[5]]
+
             if  self.improper_types[coeff_num][0] == 'harmonic':
                 k = self.improper_types[coeff_num][1]
                 xi = self.improper_types[coeff_num][2]
-                new_dihed_force = ImproperHarmonicDihedral(
-                        fields[2], fields[3], fields[4], fields[5],
-                        xi, k)
+                new_dihed_force = ImproperHarmonicDihedral(ai, aj, ak, al, xi, k)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type) or 
+                (self.mol_type[fields[5]] is not self.current_mol_type)):
+                raise Exception("Attempted to define improper dihedral between atoms {0:d}, {1:d}, {2:d}, {3:d} across different molecules.".format(fields[2], fields[3], fields[4], fields[5]))
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real', verbose=False):

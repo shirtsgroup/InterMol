@@ -1321,10 +1321,10 @@ class GromacsTopologyParser(object):
         lines.append(';type, bondtype, atomic_number, mass, charge, ptype, sigma, epsilon\n')
         atomtypelist = sorted(System._sys._atomtypes.itervalues(), key=lambda x: x.atomtype)
         for atomtype in atomtypelist:
-            if atomtype.atomtype.isdigit():
-                atomtype.atomtype = "LMP_" + atomtype.atomtype
-            if atomtype.bondtype.isdigit():
-                atomtype.bondtype = "LMP_" + atomtype.bondtype
+#            if atomtype.atomtype.isdigit():
+#                atomtype.atomtype = "LMP_" + atomtype.atomtype
+#            if atomtype.bondtype.isdigit():
+#                atomtype.bondtype = "LMP_" + atomtype.bondtype
             if System._sys.combination_rule == 1:
                 lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                         % (atomtype.atomtype,
@@ -1382,10 +1382,10 @@ class GromacsTopologyParser(object):
             molecule = moleculeType.moleculeSet[0]
             count = 1
             for atom in molecule._atoms:
-                if atom.name.isdigit():
-                    atom.name = "LMP_" + atom.name
-                if atom._atomtype[0].isdigit():
-                    atom._atomtype[0] = "LMP_" + atom._atomtype[0]
+#                if atom.name.isdigit():
+#                    atom.name = "LMP_" + atom.name
+#                if atom._atomtype[0].isdigit():
+#                    atom._atomtype[0] = "LMP_" + atom._atomtype[0]
 
                 try:
                     lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
