@@ -545,7 +545,7 @@ class LammpsParser(object):
             fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_bond_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
             # Bond
             if self.bond_types[coeff_num][0] == 'harmonic':
                 r = self.bond_types[coeff_num][2]
@@ -572,11 +572,11 @@ class LammpsParser(object):
             fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_angle_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
             # Angle
             if self.angle_types[coeff_num][0] == 'harmonic':
-                theta = self.angle_types[int(fields[1])][2]
-                k = self.angle_types[int(fields[1])][1]
+                theta = self.angle_types[coeff_num][2]
+                k = self.angle_types[coeff_num][1]
                 new_angle_force = Angle(
                         fields[2], fields[3], fields[4],
                         theta, k)
@@ -623,10 +623,10 @@ class LammpsParser(object):
             fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
             if  self.improper_types[coeff_num][0] == 'harmonic':
-                k = self.improper_types[fields[1]][1]
-                xi = self.improper_types[fields[1]][2]
+                k = self.improper_types[coeff_num][1]
+                xi = self.improper_types[coeff_num][2]
                 new_dihed_force = ImproperHarmonicDihedral(
                         fields[2], fields[3], fields[4], fields[5],
                         xi, k)
