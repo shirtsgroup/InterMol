@@ -86,6 +86,11 @@ class LammpsParser(object):
             for line in data_lines:
                 if line.strip():
                     line = line.partition('#')[0] # Remove trailing comment
+
+                    fields = line.split()
+                    if len(fields) == 2 and fields[1] == 'atoms':
+                        self.natoms = int(fields[0])
+
                     # catch all box dimensions
                     if (('xlo' in line) and
                          ('xhi' in line)):
@@ -115,6 +120,55 @@ class LammpsParser(object):
                     keyword = line.partition('#')[0].strip()
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
+
+        # SETTLE constraints (for now limited to rigid 3-point light water)
+        for mol_type in System._sys._molecules.itervalues():
+            if (len(mol_type.angleForceSet) == 1 and 
+                len(mol_type.bondForceSet) == 2):
+                mol_mass = units.sum([a._mass[0] for a in mol_type.moleculeSet[0].getAtoms()])
+                if np.round(mol_mass.in_units_of(units.amu)._value) != 18.0:
+                    continue
+
+                is_rigid_water = True
+                for angle in mol_type.angleForceSet.itervalues():
+                    if isinstance(angle, Angle) and angle.c:
+                        thetaHOH = angle.theta
+                    else:
+                        is_rigid_water = False
+                for bond in mol_type.bondForceSet.itervalues():
+                    if isinstance(bond, Bond) and bond.c:
+                        dOH = bond.length
+                    else:
+                        is_rigid_water = False
+                
+                if is_rigid_water:
+                    dHH = units.sqrt(2 * dOH**2 * (1 - units.cos(thetaHOH)))
+                    for i, atom in enumerate(mol_type.moleculeSet[0]._atoms, start=1):
+                        if atom._mass[0].in_units_of(units.amu)._value > 15:
+                            iOW = i
+                            break
+                    mol_type.settles = Settles(iOW, dOH, dHH)
+                    mol_type.nrexcl = 1
+                    mol_type.exclusions.add(Exclusions([2, 3]))
+                    mol_type.exclusions.add(Exclusions([1, 3]))
+                    mol_type.exclusions.add(Exclusions([1, 2]))
+        
+        # Indentify 1-3 and 1-4 neighbors
+        onethree = [[] for i in range(self.natoms + 1)]
+        onefour  = [[] for i in range(self.natoms + 1)]
+        for i in range(1, self.natoms):
+            # 1-3 neighbors
+            for j in self.onetwo[i]:
+                for k in self.onetwo[j]:
+                    if not ((k == i) or (k in self.onetwo[i])):
+                        onethree[i].append(k)
+            
+            # 1-4 neighbors
+            for j in onethree[i]:
+                for k in self.onetwo[j]:
+                    if not ((k == i) or (k in self.onetwo[i]) or (k in onethree[i])):
+                        onefour[i].append(k)
+                                    
 
     def parse_units(self, line):
         """ """
@@ -493,8 +547,8 @@ class LammpsParser(object):
                 System._sys._atomtypes.add(new_atom_type)
 
                 atom = Atom(int(fields[0]), 
-                            'X' + fields[2],       # atom name
-                            1)               # residue index (within molecule)
+                            '',             # atom name (set below)
+                            1)              # residue index
                 atom.setAtomType(0, atomtype)
                 atom.cgnr = 1
                 # TODO: Set cg nr 'automatically' in gromacs_topology_parser.
@@ -533,7 +587,7 @@ class LammpsParser(object):
             atomtype_list = [atom.getAtomType(0) for atom in molecule.getAtoms()]
             if atomtype_list != atomtype_list_old: # new moleculetype
                 moleculetype_i += 1
-                mol_name = 'molecule{:02d}'.format(moleculetype_i)
+                mol_name = 'moleculetype{:02d}'.format(moleculetype_i)
                 atomtype_list_old = atomtype_list
 
             molecule.name = mol_name
@@ -546,9 +600,11 @@ class LammpsParser(object):
                 self.nr[atom.index] = i
                 self.mol_type[atom.index] = System._sys._molecules[molecule.name]
                 atom.residue_name = 'R{:02d}'.format(moleculetype_i)
+                atom.name = 'X{:d}'.format(i)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file."""
+        self.onetwo = [[] for i in range(self.natoms + 1)] # 1-2 neighbors
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -559,12 +615,16 @@ class LammpsParser(object):
             coeff_num = fields[1]
             ai = self.nr[fields[2]]
             aj = self.nr[fields[3]]
-            
+            if coeff_num in self.shake_bond_types_i:
+                constrained = True
+            else:
+                constrained = False
+
             # Bond
             if self.bond_types[coeff_num][0] == 'harmonic':
                 r = self.bond_types[coeff_num][2]
                 k = self.bond_types[coeff_num][1]
-                new_bond_force = Bond(ai, aj, r, k)
+                new_bond_force = Bond(ai, aj, r, k, c=constrained)
             # Morse
             elif self.bond_types[coeff_num][0] == 'morse':
                 r = self.bond_types[coeff_num][3]
@@ -576,6 +636,10 @@ class LammpsParser(object):
             if (self.mol_type[fields[3]] is not self.current_mol_type):
                 raise Exception("Attempted to define bond between atoms {0:d}, {1:d} across different molecules.".format(fields[2], fields[3]))
             self.current_mol_type.bondForceSet.add(new_bond_force)
+
+            # Keep track of 1st neighbors
+            self.onetwo[fields[2]].append(fields[3])
+            self.onetwo[fields[3]].append(fields[2])
 
     def parse_angles(self, data_lines):
         """Read angles from data file."""
@@ -590,12 +654,16 @@ class LammpsParser(object):
             ai = self.nr[fields[2]]
             aj = self.nr[fields[3]]
             ak = self.nr[fields[4]]
+            if coeff_num in self.shake_angle_types_i:
+                constrained = True
+            else:
+                constrained = False            
 
             # Angle
             if self.angle_types[coeff_num][0] == 'harmonic':
                 theta = self.angle_types[coeff_num][2]
                 k = self.angle_types[coeff_num][1]
-                new_angle_force = Angle(ai, aj, ak, theta, k)
+                new_angle_force = Angle(ai, aj, ak, theta, k, c=constrained)
 
             self.current_mol_type = self.mol_type[fields[2]]
             if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
