@@ -34,9 +34,10 @@ def readStructure(filename):
             molecule = molecules[n]
             for atom in molecule._atoms:
                 if lines[i]:
-                    atom.residue_index = int(lines[i][0:5])
-                    atom.residue_name = lines[i][5:10].strip()
-                    atom.name = lines[i][10:15].strip()
+# NOTE: These should already be defined (see gromacs_topology_parser)
+#                    atom.residue_index = int(lines[i][0:5])
+#                    atom.residue_name = lines[i][5:10].strip()
+#                    atom.name = lines[i][10:15].strip()
                     variables = (lines[i][20:]).split()
                     position = np.zeros([3], float) * units.nanometers
                     velocity = np.zeros([3], float) * units.nanometers / units.picoseconds
