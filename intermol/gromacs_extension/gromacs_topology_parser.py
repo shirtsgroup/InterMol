@@ -1641,11 +1641,13 @@ class GromacsTopologyParser(object):
             if moleculeType.exclusions:
                 # [ exclusions ]
                 lines.append('[ exclusions ]\n')
-                exclusionlist = sorted(moleculeType.exclusions.itervalues(), key=lambda x: (x.exclusions[0], x.exclusions[1]))
+                exclusionlist = sorted(moleculeType.exclusions.itervalues(), key=lambda x: x.exclusions[0])
                 for exclusion in exclusionlist:
-                    lines.append('%6s%6s\n'
-                                 % (exclusion.exclusions[0],
-                                    exclusion.exclusions[1]))
+                    lines.append('%-6d' % exclusion.exclusions[0])
+                    for i in range(1, len(exclusion.exclusions)):
+                        lines.append(' %-6d' % exclusion.exclusions[i]),
+                    lines.append('\n')
+
         # [ system ]
         lines.append('[ system ]\n')
         lines.append('%s\n' % (System._sys._name))
