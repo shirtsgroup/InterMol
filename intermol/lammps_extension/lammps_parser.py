@@ -149,9 +149,9 @@ class LammpsParser(object):
                             break
                     mol_type.settles = Settles(iOW, dOH, dHH)
                     mol_type.nrexcl = 1
-                    mol_type.exclusions.add(Exclusions([2, 3]))
-                    mol_type.exclusions.add(Exclusions([1, 3]))
-                    mol_type.exclusions.add(Exclusions([1, 2]))
+                    mol_type.exclusions.add(Exclusions([1, 2, 3]))
+                    mol_type.exclusions.add(Exclusions([2, 1, 3]))
+                    mol_type.exclusions.add(Exclusions([3, 1, 2]))
         
         # Indentify 1-3 and 1-4 neighbors
         onethree = [[] for i in range(self.natoms + 1)]
@@ -169,6 +169,14 @@ class LammpsParser(object):
                     if not ((k == i) or (k in self.onetwo[i]) or (k in onethree[i])):
                         onefour[i].append(k)
                                     
+        # Generate 1-4 pairs for each moleculetype
+        for mol_type in System._sys._molecules.itervalues():
+            molecule = mol_type.moleculeSet[0]
+            for atom in molecule.getAtoms():
+                ai = self.nr[atom.index]
+                for j in onefour[atom.index]:
+                    aj = self.nr[j]
+                    mol_type.pairForceSet.add(AbstractPair(ai, aj, "Both"))
 
     def parse_units(self, line):
         """ """
@@ -600,7 +608,7 @@ class LammpsParser(object):
                 self.nr[atom.index] = i
                 self.mol_type[atom.index] = System._sys._molecules[molecule.name]
                 atom.residue_name = 'R{:02d}'.format(moleculetype_i)
-                atom.name = 'X{:d}'.format(i)
+                atom.name = 'A{:d}'.format(i)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file."""
@@ -1299,7 +1307,7 @@ class LammpsParser(object):
             else:
                 logger.warn("Unsupported combination rule: {0}".format(
                         System._sys.combination_rule))
-            f.write('kspace_style ewald 1.0e-5\n')  # TODO: match mdp
+            f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
             f.write('\n')
 
             # bonded
