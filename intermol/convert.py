@@ -103,10 +103,11 @@ def main(args=None):
         gropath = ''
     lmppath = args.get('lmppath')
     if not lmppath:
-        if which('lmp_mpi'):
-            lmppath = 'lmp_mpi'
-        elif which('lmp_openmpi'):
-            lmppath = 'lmp_openmpi'
+        for exe in ['lmp_mpi', 'lmp_openmpi']:
+            if which(exe):
+                lmppath = exe
+        else:
+            logger.exception('Found no LAMMPS executable.')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -225,7 +226,7 @@ def main(args=None):
 
 
 def get_diff(e_in, e_out):
-    """returns difference in potential energy
+    """Returns difference in potential energy.
 
     arguments:
         e_in  - dictionary of energy groups from input file
@@ -234,16 +235,16 @@ def get_diff(e_in, e_out):
     returns:
         potential energy difference in units of the input
     """
-    type = 'Potential' # getting difference in potential energy
+    type = 'Potential'
     input = e_in[type]
     diff = e_out[type].in_units_of(input.unit) - input
     return diff._value
 
 
 def find_match(key, dictionary, unit):
-    """helper function for summarize_energy_results() """
+    """Helper function for `summarize_energy_results`. """
     if key in dictionary:
-        return dictionary[key].in_units_of(unit)._value
+        return dictionary[key].value_in_unit(unit)
     else:
         return np.nan
 
@@ -295,7 +296,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         line = '%20s ' % labels[i]
         line += '%18.8f ' % data[i][0]
         for j in range(1,len(data[i])):
-            line += '%18.8f %18.8f' % (data[i][j],data[i][j]-data[i][0])
+            line += '%18.8f %18.8f' % (data[i][j], data[i][j]-data[i][0])
         out.append(line)
     out.append('')
     # get differences in potential energy

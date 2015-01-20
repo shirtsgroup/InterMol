@@ -174,8 +174,8 @@ class LammpsParser(object):
                 if params['phi'].value_in_unit(units.degrees) in [0, 180]:
                     tmpparams = convert_dihedral_from_trig_to_RB(params)
                     if tmpparams['C6']._value == 0 and tmpparams['C5']._value == 0:
-                        if params['phi'].value_in_unit(
-                                units.degrees) == 180:  # stupid convention?
+                        # Stupid convention?
+                        if params['phi'].value_in_unit(units.degrees) == 180:
                             params['phi']._value = 0
                         else:
                             params['phi']._value = 180
@@ -220,7 +220,7 @@ class LammpsParser(object):
         self.data_file = None
 
     def set_units(self, unit_set):
-        """Set what unit set to use."""
+        """Set what unit set to use. """
 
         self.RAD = units.radians
         self.DEGREE = units.degrees
@@ -762,33 +762,45 @@ class LammpsParser(object):
         else:
             warnings.warn("No interaction type %s defined!" % (forceclass))
 
-    def write_forces(self, molecule, offset, force_name, lookup_lammps_force,
-                     lammps_force_types, canonical_force, forces):
+    def get_force_bondingtypes(self, force, forceclass):
+        """Return the atoms involved in a force. """
+        if forceclass in ['Bond', 'Pair']:
+            return [force.bondingtype1, force.bondingtype2]
+        elif forceclass in ['Angle']:
+            return [force.bondingtype1, force.bondingtype2, force.bondingtype3]
+        elif forceclass in ['Dihedral', 'Improper']:
+            return [force.bondingtype1, force.bondingtype2, force.bondingtype3,
+                    force.bondingtype4]
+        else:
+            warnings.warn("No interaction type %s defined!" % (forceclass))
+
+    def write_forces(self, forces, offset, force_name,
+                     lookup_lammps_force, lammps_force_types, canonical_force):
         """The general force writing function.
 
         Currently supports bonds, angles, dihedrals, impropers.
         """
         logger.debug("        Writing {0:s}s...".format(force_name))
-        count = 1
-        ilist = list()
-        ilist.append('\n{0:s}s\n\n'.format(force_name))
-        coeffs = list()
-        coeffs.append('\n{0:s} Coeffs\n\n'.format(force_name))
 
-        style_list = set()
+        force_list = self.force_dict[force_name]
+        force_count = len(force_list) + 1
 
-        type_dict = dict()  # typeObject:int_type
-        type_i = 1  # counter for bond types
+        coeff_name = '{0} Coeffs'.format(force_name)
+        coeff_list = self.force_dict[coeff_name]
+
+        numeric_coeff = self.numeric_coeff[coeff_name]
+        type_count = len(numeric_coeff) + 1
+
+        style_set = self.style_dict[force_name]
 
         for force in forces:
-            atoms = self.get_force_atoms(force, force_name)  # Atoms in force.
-            #atomtypes = map(lambda atom: molecule.atoms[atom - 1].bondtype, atoms)
-            atomtypes = [molecule.atoms[atom - 1] for atom in atoms]
+            atom_indices = self.get_force_atoms(force, force_name)
+            atom_bondingtypes = self.get_force_bondingtypes(force, force_name)
             try:
                 lookup_lammps_force[force.__class__]
             except KeyError:
-                warnings.warn("Found unimplemented %s type %s for LAMMPS!" % (
-                    force_name, force.__class__.__name__))
+                logger.warn("Found unimplemented {0} type {1} for LAMMPS!".format(
+                            force_name, force.__class__.__name__))
 
             # Get the parameters of the force.
             kwds = self.get_parameter_kwds_from_force(force)
@@ -797,18 +809,18 @@ class LammpsParser(object):
             style, kwdslist = canonical_force(kwds, force.__class__,
                                               direction='from')
             force_type = lammps_force_types[style]
+            style_set.add(style)
 
             # A single force can produce multiple forces.
             for kwds in kwdslist:
-                temp_force_type = force_type(*atomtypes, **kwds)
-                # Keep track of which types we've seen so far.
+                temp_force_type = force_type(*atom_bondingtypes, **kwds)
 
-                if temp_force_type not in type_dict:
-                    # New type found. Write out the force coefficients.
-
+                # New type found. Write out the force coefficients.
+                if temp_force_type not in numeric_coeff:
                     # Get the numerical type for this interaction.
-                    type_dict[temp_force_type] = type_i
-                    line = ('{0:d} {1}').format(type_i, style)
+                    numeric_coeff[temp_force_type] = type_count
+                    line = '{0:d} {1}'.format(type_count, style)
+                    type_count += 1
 
                     # Generate the list of parameters for this force in the
                     # order they appear in the file format.
@@ -823,64 +835,59 @@ class LammpsParser(object):
                         else:
                             line += "%18.8e" % (p.value_in_unit(u[i]))
                     line += '\n'
-                    coeffs.append(line)
-                    type_i += 1
+                    coeff_list.append(line)
 
-                # Write out which forces correspond to which coefficents: "Bonds or Angles"
-                # Print the interaction number.
-                line = '{0:-6d} {1:6d}'.format(count, type_dict[temp_force_type])
-                for atom in atoms:
+                # Write out the force entry.
+                line = '{0:-6d} {1:6d}'.format(force_count, numeric_coeff[temp_force_type])
+                for atom in atom_indices:
                     line += '{0:6d}'.format(atom + offset)
                 line += '\n'
-                ilist.append(line)
-                style_list.add(style)
-                count += 1
+                force_list.append(line)
+                force_count += 1
 
-        if len(style_list) > 1:
-            logger.warn("More than one %s style found!" % (force_name))
+        if len(style_set) > 1:
+            logger.warn("More than one {0} style found!".format(force_name))
 
-        return style_list, coeffs, ilist
-
-    def write_bonds(self, mol_type, molecule, offset):
-        return self.write_forces(molecule, offset, "Bond",
+    def write_bonds(self, mol_type, offset):
+        return self.write_forces(mol_type.bond_forces, offset, "Bond",
                                  self.lookup_lammps_bonds,
                                  self.lammps_bond_types,
-                                 self.canonical_bond, mol_type.bond_forces)
+                                 self.canonical_bond)
 
-    def write_angles(self, mol_type, molecule, offset):
-        return self.write_forces(molecule, offset, "Angle",
+    def write_angles(self, mol_type, offset):
+        return self.write_forces(mol_type.angle_forces, offset, "Angle",
                                  self.lookup_lammps_angles,
                                  self.lammps_angle_types,
-                                 self.canonical_angle, mol_type.angle_forces)
+                                 self.canonical_angle)
 
-    def write_dihedrals(self, mol_type, molecule, offset):
+    def write_dihedrals(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         dihedral_forces = dict()
         for force in mol_type.dihedral_forces:
             if not force.improper:
                 dihedral_forces[force] = force
 
-        return self.write_forces(molecule, offset, "Dihedral",
+        return self.write_forces(dihedral_forces, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
-                                 self.canonical_dihedral, dihedral_forces)
+                                 self.canonical_dihedral)
 
-    def write_impropers(self, mol_type, molecule, offset):
+    def write_impropers(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         improper_forces = dict()
         for force in mol_type.dihedral_forces:
             if force.improper:
                 improper_forces[force] = force
 
-        return self.write_forces(molecule, offset, "Improper",
+        return self.write_forces(improper_forces, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,
-                                 self.canonical_dihedral, improper_forces)
+                                 self.canonical_dihedral)
 
-    def write_virtuals(self, mol_type, molecule, offset):
+    def write_virtuals(self, mol_type, offset):
         if len(mol_type.virtual_forces) > 0:
-            warnings.warn(
-                "Virtuals not currently supported: will need to be implemeneted from shake and rigid")
+            warnings.warn("Virtuals not currently supported: will need to be "
+                          "implemeneted from shake and rigid")
 
     def write(self, unit_set='real'):
         """Writes a LAMMPS data and corresponding input file.
@@ -891,6 +898,7 @@ class LammpsParser(object):
         """
         self.data_file = os.path.splitext(self.in_file)[0] + '.lmp'
         self.set_units(unit_set)
+
         # Containers for lines which are ultimately written to output files.
         mass_list = list()
         mass_list.append('\nMasses\n\n')
@@ -908,54 +916,71 @@ class LammpsParser(object):
         atom_type_dict = dict()  # str_type:int_type
         a_type_i = 1  # counter for atom types
 
+        # Dicts to store the final outputs.
+        self.force_dict = {'Bond': ['\nBonds\n\n'],
+                           'Bond Coeffs': ['\nBond Coeffs\n\n'],
+                           'Angle': ['\nAngles\n\n'],
+                           'Angle Coeffs': ['\nAngle Coeffs\n\n'],
+                           'Dihedral': ['\nDihedrals\n\n'],
+                           'Dihedral Coeffs': ['\nDihedral Coeffs\n\n'],
+                           'Improper': ['\nImpropers\n\n'],
+                           'Improper Coeffs': ['\nImproper Coeffs\n\n']
+                           }
+
+        # Dicts to store the numeric values for each type (force:int).
+        self.numeric_coeff = {'Bond Coeffs': {},
+                              'Angle Coeffs': {},
+                              'Dihedral Coeffs': {},
+                              'Improper Coeffs': {}
+                              }
+
+        self.style_dict = {'Bond': set(),
+                           'Angle': set(),
+                           'Dihedral': set(),
+                           'Improper': set()
+                           }
+
         # Read all atom specific and FF information.
         for mol_name, mol_type in self.system.molecule_types.iteritems():
             logger.debug(
                 "    Writing moleculetype {0}...".format(mol_name))
 
-            # Atom index offsets from 1 for each molecule.
-            offsets = [0]
-            for molecule in mol_type.molecules:
-                offsets.append(len(molecule.atoms) + offsets[-1])
-            offsets.pop()  # We don't actually want to iterate over the last one
-
             # OrderedSet isn't indexable so get the first molecule by iterating.
             molecule = next(iter(mol_type.molecules))
-            atoms = molecule.atoms
-            for offset in offsets:
-                bond_styles, bond_coeffs, bond_list = self.write_bonds(
-                        mol_type, molecule, offset)
-                angle_styles, angle_coeffs, angle_list = self.write_angles(
-                        mol_type, molecule, offset)
-                dihedral_styles, dihedral_coeffs, dihedral_list = self.write_dihedrals(
-                        mol_type, molecule, offset)
-                improper_styles, improper_coeffs, improper_list = self.write_impropers(
-                        mol_type, molecule, offset)
-                # Only issues warning now
-                self.write_virtuals(mol_type, molecule, offset)
+            atoms_per_molecule = len(molecule.atoms)
 
-            # atom specific information
+            for i, molecule in enumerate(mol_type.molecules):
+                # Atom index offsets from 1 for each molecule.
+                offset = i * atoms_per_molecule
+                self.write_bonds(mol_type, offset)
+                self.write_angles(mol_type, offset)
+                self.write_dihedrals(mol_type, offset)
+                self.write_impropers(mol_type, offset)
+                # Only issues warning now.
+                self.write_virtuals(mol_type, offset)
+
+            # Atom specific information.
             x_min = y_min = z_min = np.inf
             logger.debug("    Writing atoms...")
             cumulative_atoms = 0
             atom_charges = False
             for molecule in mol_type.molecules:
                 for atom in molecule.atoms:
-                    # type, mass and pair coeffs
+                    # Type, mass and pair coeffs.
                     if atom.atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom.atomtype[0]] = a_type_i
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
-                            a_type_i, atom._mass[0].in_units_of(self.MASS)._value))
+                            a_type_i, atom._mass[0].value_in_unit(self.MASS)))
                         pair_coeffs.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
                             a_type_i,
-                            atom.epsilon[0].in_units_of(self.ENERGY)._value,
-                            atom.sigma[0].in_units_of(self.DIST)._value))
+                            atom.epsilon[0].value_in_unit(self.ENERGY),
+                            atom.sigma[0].value_in_unit(self.DIST)))
                         a_type_i += 1
 
-                    # box minima
-                    x_coord = atom._position[0].in_units_of(self.DIST)._value
-                    y_coord = atom._position[1].in_units_of(self.DIST)._value
-                    z_coord = atom._position[2].in_units_of(self.DIST)._value
+                    # Box minima.
+                    x_coord = atom._position[0].value_in_unit(self.DIST)
+                    y_coord = atom._position[1].value_in_unit(self.DIST)
+                    z_coord = atom._position[2].value_in_unit(self.DIST)
                     if x_coord < x_min:
                         x_min = x_coord
                     if y_coord < y_min:
@@ -969,7 +994,7 @@ class LammpsParser(object):
                             atom.index + cumulative_atoms,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
-                            atom._charge[0].in_units_of(self.CHARGE)._value,
+                            atom._charge[0].value_in_unit(self.CHARGE),
                             x_coord,
                             y_coord,
                             z_coord))
@@ -980,18 +1005,34 @@ class LammpsParser(object):
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index + cumulative_atoms,
-                                atom._velocity[0].in_units_of(self.VEL)._value,
-                                atom._velocity[1].in_units_of(self.VEL)._value,
-                                atom._velocity[2].in_units_of(self.VEL)._value))
+                                atom._velocity[0].value_in_unit(self.VEL),
+                                atom._velocity[1].value_in_unit(self.VEL),
+                                atom._velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index + cumulative_atoms, 0, 0, 0))
                 cumulative_atoms += len(molecule.atoms)
 
-                # Write the actual data file.
+
+        bond_list = self.force_dict['Bond']
+        angle_list = self.force_dict['Angle']
+        dihedral_list = self.force_dict['Dihedral']
+        improper_list = self.force_dict['Improper']
+
+        bond_coeffs = self.force_dict['Bond Coeffs']
+        angle_coeffs = self.force_dict['Angle Coeffs']
+        dihedral_coeffs = self.force_dict['Dihedral Coeffs']
+        improper_coeffs = self.force_dict['Improper Coeffs']
+
+        bond_styles = self.style_dict['Bond']
+        angle_styles = self.style_dict['Angle']
+        dihedral_styles = self.style_dict['Dihedral']
+        improper_styles = self.style_dict['Improper']
+
+        # Write the actual data file.
         with open(self.data_file, 'w') as f:
-            # front matter
+            # Front matter.
             f.write(self.system.name + '\n')
             f.write('\n')
 
@@ -1025,36 +1066,35 @@ class LammpsParser(object):
                 f.write('{0} improper types\n'.format(n_improper_types))
             f.write('\n')
 
-            # shifting of box dimensions
+            # Shifting of box dimensions.
             f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
-                    x_min, x_min + self.system.box_vector[0][0].value_in_units(
+                    x_min, x_min + self.system.box_vector[0][0].value_in_unit(
                             self.DIST)))
             f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
-                    y_min, y_min + self.system.box_vector[1][1].value_in_units(
+                    y_min, y_min + self.system.box_vector[1][1].value_in_unit(
                             self.DIST)))
             f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
-                    z_min, z_min + self.system.box_vector[2][2].value_in_units(
+                    z_min, z_min + self.system.box_vector[2][2].value_in_unit(
                             self.DIST)))
 
-            # masses
             for mass in mass_list:
                 f.write(mass)
 
-            # print forcefield coefficients
-            coeffs = [pair_coeffs, bond_coeffs, angle_coeffs, dihedral_coeffs,
-                      improper_coeffs]
-            for coeff in coeffs:
-                if len(coeff) > 1:
-                    for c in coeff:
-                        f.write(c)
+            # Forcefield coefficients.
+            coeff_types = [pair_coeffs, bond_coeffs, angle_coeffs,
+                           dihedral_coeffs, improper_coeffs]
+            for coefficients in coeff_types:
+                if len(coefficients) > 1:
+                    for coeff in coefficients:
+                        f.write(coeff)
 
-            # atoms and velocities
+            # Atoms and velocities.
             for atom in atom_list:
                 f.write(atom)
             for vel in vel_list:
                 f.write(vel)
 
-            # print force list
+            # Forces.
             force_lists = [bond_list, angle_list, dihedral_list, improper_list]
             for force_list in force_lists:
                 if len(force_list) > 1:
@@ -1109,11 +1149,11 @@ class LammpsParser(object):
                 0.0, 0.0, self.system.coulomb_correction))
             f.write('\n')
 
-            # read data
+            # Specify the path to the corresponding data file that we just wrote.
             f.write('read_data {0}\n'.format(os.path.basename(self.data_file)))
             f.write('\n')
 
-            # output energies
+            # Specify the output energies that we are interested in.
             energy_terms = " ".join(['ebond',
                                      'eangle',
                                      'edihed',
