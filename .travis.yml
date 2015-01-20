@@ -3,9 +3,6 @@ language: python
 python:
   - "2.7"
 
-env:
-  - MPI=mpich3
-
 virtualenv:
   system_site_packages: true
 
@@ -28,9 +25,9 @@ before_install:
   - wget http://lammps.sandia.gov/tars/lammps-9Dec14.tar.gz
   - tar xfz lammps-9Dec14.tar.gz
   - cd lammps-9Dec14/src
-  - make mpi -j 2
+  - make serial -j 2
   - mkdir $HOME/bin
-  - mv lmp_mpi $HOME/bin
+  - mv lmp_serial $HOME/bin
   - export PATH=$PATH:$HOME/bin
   - cd ../..
 

@@ -181,11 +181,12 @@ class LammpsParser(object):
                             params['phi']._value = 180
                         tmpparams = convert_dihedral_from_trig_to_RB(params)
                         typename = 'multi/harmonic'
-                        # is a rb dihedral done analyzing
+                        # It's a RB dihedral.
                         paramlist = [tmpparams]
                     else:
+                        # If C6 and C5 are not zero, print it out as multiple
+                        # harmonics (charmm).
                         typename = 'charmm'
-                        # if C6 and C5 is not zero, then we have to print it out as multiple harmonic
                 if typename in ['charmm', 'Trig']:
                     # print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
                     paramlist = convert_dihedral_from_trig_to_proper(params)
