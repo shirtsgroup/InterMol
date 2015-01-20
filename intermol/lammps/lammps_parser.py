@@ -188,11 +188,12 @@ class LammpsParser(object):
                         # harmonics (charmm).
                         typename = 'charmm'
                 if typename in ['charmm', 'Trig']:
-                    # print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
+                    # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                     typename = 'charmm'
                     for p in paramlist:
-                        p['weight'] = 0.0 * units.dimensionless  # for now, might get from Sys?
+                        # For now, might get from Sys?
+                        p['weight'] = 0.0 * units.dimensionless
 
             elif dihedral == ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
@@ -863,11 +864,8 @@ class LammpsParser(object):
 
     def write_dihedrals(self, mol_type, offset):
         """Separate dihedrals from impropers. """
-        dihedral_forces = dict()
-        for force in mol_type.dihedral_forces:
-            if not force.improper:
-                dihedral_forces[force] = force
-
+        dihedral_forces = {force for force in mol_type.dihedral_forces
+                           if not force.improper}
         return self.write_forces(dihedral_forces, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
@@ -875,11 +873,8 @@ class LammpsParser(object):
 
     def write_impropers(self, mol_type, offset):
         """Separate dihedrals from impropers. """
-        improper_forces = dict()
-        for force in mol_type.dihedral_forces:
-            if force.improper:
-                improper_forces[force] = force
-
+        improper_forces = {force for force in mol_type.dihedral_forces
+                           if force.improper}
         return self.write_forces(improper_forces, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,

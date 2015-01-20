@@ -178,13 +178,15 @@ class GromacsParser(object):
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """
 
-        We can fit everything into two types of dihedrals - dihedral_trig, and
-        improper harmonic dihedral trig is of the form fc0 + sum_i=1^6 fci
-        (cos(nx-phi) proper dihedrals can be stored easily in this form, since
-        they have only 1 n improper dihedrals can as well (flag as improper) RB
-        can be stored as well, assuming phi = 0 or 180 Fourier can also be
-        stored.  a full dihedral trig can be decomposied in to multiple proper
-        dihedrals.
+        We can fit everything into two types of dihedrals - dihedral_trig and
+        improper harmonic. Dihedral trig is of the form:
+
+            fc0 + sum_i=1^6 fci (cos(nx-phi)
+
+        Proper dihedrals can be stored easily in this form, since they have only
+        1 n improper dihedrals can as well (flag as improper). RB can be stored
+        as well, assuming phi = 0 or 180. Fourier can also be stored.  A full
+        dihedral trig can be decomposied in to multiple proper dihedrals.
 
         Will need to handle multiple dihedrals little differently in that we
         will need to add multiple 9 dihedrals together into a single

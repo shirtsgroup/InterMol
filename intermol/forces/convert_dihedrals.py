@@ -188,13 +188,10 @@ def convert_dihedral_from_trig_to_RB(fcs):
     c['C5'] = 16.0*fc5
     c['C6'] = 32.0*fc6
 
-    # We need to multiply by -1 on odd powers to switch between sign
-    # conventions. 
-
+    # Multiply by -1 on odd powers to switch between sign conventions.
     c['C1'] *= -1
     c['C3'] *= -1
     c['C5'] *= -1
-
     return c
 
 
@@ -211,17 +208,18 @@ def convert_dihedral_from_RB_to_trig(c):
     else:
         c6 = 0*c0.unit
 
-    # see above for conversion; simply inverting the matrix.  Need to handle sign for 180
-
+    # See above for conversion; simply inverting the matrix.
+    # Need to handle sign for 180.
     fcs = dict()
-    fcs['phi'] =  0 * units.degrees # sign?  units?  Is there a way to get out of this?
-    fcs['fc0'] =  1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
-    fcs['fc1'] =  1.0*c1 + 0.75*c3 + 0.6250*c5
-    fcs['fc2'] =  0.5*c2 + 0.5*c4 + 0.46875*c6
-    fcs['fc3'] =  0.25*c3 + 0.3125*c5
-    fcs['fc4'] =  0.125*c4 + 0.1875*c6 
-    fcs['fc5'] =  0.0625*c5
-    fcs['fc6'] =  0.03125*c6
+    # sign?  units?  Is there a way to get out of this?
+    fcs['phi'] = 0 * units.degrees
+    fcs['fc0'] = 1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
+    fcs['fc1'] = 1.0*c1 + 0.75*c3 + 0.6250*c5
+    fcs['fc2'] = 0.5*c2 + 0.5*c4 + 0.46875*c6
+    fcs['fc3'] = 0.25*c3 + 0.3125*c5
+    fcs['fc4'] = 0.125*c4 + 0.1875*c6
+    fcs['fc5'] = 0.0625*c5
+    fcs['fc6'] = 0.03125*c6
 
     # Multiplying by -1 on odd powers to switch between sign conventions
     fcs['fc1'] *= -1
