@@ -387,10 +387,10 @@ desmond_paramlist['proper_periodic_dihedral'] = ['phi', 'k', 'multiplicity']
 
 doclist['rb_dihedral'] = 'stub documentation\n'
 master_paramlist['rb_dihedral'] = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6']
-gromacs_paramlist['rb_dihedral'] = ['C0', 'C1', 'C2', 'C3', 'C4',
-                                    'C5']  # gromacs has one less
-lammps_paramlist['rb_dihedral'] = ['C0', 'C1', 'C2', 'C3',
-                                   'C4']  # lammps has two less, called multi/harmonic
+# Gromacs has one less.
+gromacs_paramlist['rb_dihedral'] = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5']
+# Lammps has two less, called multi/harmonic.
+lammps_paramlist['rb_dihedral'] = ['C0', 'C1', 'C2', 'C3', 'C4']
 
 master_unitlist['rb_dihedral'] = ['energy',
                                   'energy',

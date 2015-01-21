@@ -1,19 +1,16 @@
-from intermol.decorators import *
+import simtk.unit as units
+
+from intermol.decorators import accepts_compatible_units
+from abstract_type import AbstractType
 
 
-class Settles(object):
-
+class Settles(AbstractType):
     @accepts_compatible_units(None, units.nanometers, units.nanometers)
     def __init__(self, atom1, dOH, dHH):
         """
         """
+        super(Settles, self).__init__()
         if atom1:
             self.atom1 = atom1
         self.dOH = dOH
         self.dHH = dHH
-
-    def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__,
-                        ", ".join(["{0}={1}".format(x, getattr(self, x, "Undefined"))
-                        for x in dir(self) if not(x.endswith("__") or
-                                                  hasattr(getattr(self, x, "Undefined"), '__call__'))]))

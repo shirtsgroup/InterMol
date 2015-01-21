@@ -1,10 +1,8 @@
-import os
 from forcedata import *
 from forcefunctions import *
 
-"""
-To add another bonded force interacton, add to forcedata.py
- in one of the existing categories:
+"""To add another bonded force interacton, add to forcedata.py in one of the
+existing categories:
 
 1. add it to the appropriate forcelist
 2  define the parameters
@@ -55,46 +53,37 @@ force_types/four_fdn_virtual_type.py
 
 all_unitlist = dict()
 for name, uset in forcedata.master_unitlist.iteritems():
-    # shouldn't really matter which unitset we use for writing the function types, as they 
-    # are just for testing functional compatibility
+    # Shouldn't really matter which unitset we use for writing the function
+    # types, as they are just for testing functional compatibility.
     unitset = specify(forcedata.ProgramUnitSets['gromacs'], uset, None, False)  
     all_unitlist[name] = unitset
 
-# loop over the force lists
 print "Generating the following files"
-
 for forcelist in forcelists:
-
-    # define the things that are different for each force type
+    # Define the things that are different for each force type.
     if forcelist is nonbondedlist:
         ftype = "nonbonded"
         natoms = 2
-
     if forcelist is pairlist:
         ftype = "pair"
         natoms = 2
-
     if forcelist is bondlist:
         ftype = "bond"
         natoms = 2
-
     elif forcelist is anglelist:
         ftype = "angle"
         natoms = 3
-
     elif forcelist is dihedrallist:
         ftype = "dihedral"
         natoms = 4
-
     elif forcelist is virtualsitelist:
         ftype = "virtual"
-        # natoms will be set inside the loop
 
     abstractparams = AbstractOptParams[ftype]
     abstractdefaults = AbstractOptParamsDefaults[ftype]
 
-    # construct the abstract params, abstract params default, and abstract slots string
-    # for printing from the lists
+    # Construct the abstract params, abstract params default, and abstract slots
+    # string for printing from the lists.
     absParamStr = ''
     absParamStrDefaults = ''
     absParamStrSelf = ''
@@ -110,13 +99,9 @@ for forcelist in forcelists:
             absParamStrSelf += ', '
             absSlots += ', '
 
-    # loop over the individual members of the force list
-
     for force in forcelist:
-
-        # these depend on the number of atoms but for virtual sites, the number of atoms
-        # is inside, so we put this inside
-
+        # These depend on the number of atoms but for virtual sites, the number
+        # of atoms is inside, so we put this inside.
         if forcelist == virtualsitelist:
             if 'two' in force:
                 natoms = 3
@@ -125,9 +110,9 @@ for forcelist in forcelists:
             if 'four' in force:
                 natoms = 5
             if 'n_' in force:
-                break   # we don't support these yet
+                break   # We don't support these yet.
 
-        # The abstract type module
+        # The abstract type module.
         if forcelist == virtualsitelist:
             abstract_type_file = 'abstract_%d_' % (natoms-1) + ftype + '_type'
         else:
@@ -137,136 +122,112 @@ for forcelist in forcelists:
         abstract_type = capifyname(abstract_type_file)
 
         bondingtypes = ''
-        optbondingtypes = ''   # for when bonding types are optional, in the force definition
+        # For when bonding types are optional, in the force definition.
+        optbondingtypes = ''
         atoms = ''
         for i in range(natoms):
             si = str(i+1)
             bondingtypes += 'bondingtype' + si + ', '
-            optbondingtypes += 'bondingtype' + si + ' = None, '
+            optbondingtypes += 'bondingtype' + si + '=None, '
             atoms += 'atom' + si + ', '
 
-        # name of the force
         forcename = force + '_' + ftype
-
-        # actual name of the file for the module
         filename = forcename + '_type.py'
 
-        # open the file up
-        f = open(filename,'w')
+        with open(filename, 'w') as f:
+            # Imports
+            f.write('import simtk.unit as units\n\n')
+            f.write('from intermol.decorators import accepts_compatible_units\n')
+            f.write('from {0} import {1}\n\n\n'.format(abstract_type_file, abstract_type))
 
-        # imports
-        f.write('from intermol.decorators import *\n')
-        f.write('from ' + abstract_type_file + ' import *\n\n')
+            # Name of the class in camelCase.
+            capname = capifyname(forcename)
 
-        # name of the class in camelCase
-        capname = capifyname(forcename)
+            # Name of the class type in camelCase.
+            capnametype = capname + 'Type'
 
-        # name of the class type in camelCase
-        capnametype = capname + 'Type'
+            # Define the class type.
+            f.write('class ' + capnametype + '(' + abstract_type + '):\n')
 
-        # define the class type
-        f.write('class ' + capnametype + '(' + abstract_type + '):\n')
+            # List the slots for the type .
+            f.write('    __slots__ = [')
+            for param in forcedata.master_paramlist[forcename]:
+                f.write('\'{0}\', '.format(param))
+            f.write('{0}]\n\n'.format(absSlots))
 
-        # list the slots for the type -- depends on parameters and abstract class parameters
-        f.write('    __slots__ = [')
-        for param in forcedata.master_paramlist[forcename]:
-            f.write('\'' + param + '\', ')
-        f.write(absSlots + ']\n\n')
+            # Now write the accepts_compatible_units section.  Depends on the
+            # num of atoms, number of parameters, and abstract class pameters.
+            spaces = ' ' * 30
+            f.write('    @accepts_compatible_units(')
+            # Units for atoms (None)
+            for i in range(natoms):
+                f.write('None, ')
+            f.write('\n')
+            # Write out the explicit units.
+            for i, p in enumerate(forcedata.master_paramlist[forcename]):
+                f.write('{0}{1}={2},\n'.format(
+                        spaces, p, all_unitlist[forcename][i]))
+            # Write none the number of times of the abstract default parameters.
+            for p in abstractparams:
+                f.write('{0}{1}=None'.format(spaces, p))
+                if p == abstractparams[-1]:
+                    f.write(')\n\n')
+                else:
+                    f.write(',\n')
 
-        # now write the accepts_compatible_units section.  Depends on the num of atoms,
-        # number of parameters, and abstract class pameters
+            # Now write the init of the force type.
+            f.write('    def __init__(self, {0}\n'.format(bondingtypes))
+            n_params = len(forcedata.master_paramlist[forcename])
+            spaces = ' ' * 16
+            for i, param in enumerate(forcedata.master_paramlist[forcename]):
+                f.write('{0}{1}=0.0 * {2}'.format(
+                        spaces, param, all_unitlist[forcename][i]))
+                if i == n_params:
+                    f.write(')\n\n')
+                else:
+                    f.write(',\n')
+            f.write('{0}{1}):\n'.format(spaces, absParamStrDefaults))
 
-        spaces = ' ' * 30
-        f.write('    @accepts_compatible_units(None,\n')
-        # units for atoms (None)
-        for i in range(natoms-1):
-            f.write(spaces + 'None,\n')
-        # write out the explicit units
-        for i, p in enumerate(forcedata.master_paramlist[forcename]):
-            f.write(spaces + p + ' = ' + all_unitlist[forcename][i] + ',\n')
-        # write none the number of times of the abstract default parameters
-        for p in abstractparams:
-            f.write(spaces + p + ' = None')
-            if p == abstractparams[-1]:
-                f.write(')\n\n')
-            else:
-                f.write(',\n')
+            # Initialize the abstract type of this force.
+            spaces = ' ' * 8
+            f.write('{0}{1}.__init__(self, {2}'.format(
+                    spaces, abstract_type, bondingtypes))
+            f.write(absParamStr + ')\n')
 
-        # now write the init of the force type
-        f.write('    def __init__(self, ' + bondingtypes)
-        for i, param in enumerate(forcedata.master_paramlist[forcename]):
-            f.write(param + ' = 0.0 * ' + all_unitlist[forcename][i] + ', ')
-        f.write(absParamStrDefaults + '):\n')
+            # Initialize the specific parameters for this force
+            for param in forcedata.master_paramlist[forcename]:
+                f.write('{0}self.{1} = {1}\n'.format(spaces, param))
+            f.write('\n')
 
-        # initialize the abstract type of this force
-        spaces = ' ' * 8
-        f.write(spaces + abstract_type + '.__init__(self, ' + bondingtypes)
-        f.write(absParamStr + ')\n')
+            # Write the class for the force.
+            f.write('class {0}({1}):\n'.format(capname, capnametype))
+            # Include the docstring here.
+            f.write('    """\n')
+            f.write('    ' + doclist[forcename])
+            f.write('    """\n')
 
-        #initialize the specific parameters for this force
-        for param in forcedata.master_paramlist[forcename]:
-            f.write(spaces + 'self.' + param + ' = ' + param + '\n')
-        f.write('\n')
+            # Define the init for the class.
+            f.write('    def __init__(self, {0}{1}\n'.format(
+                    atoms, optbondingtypes))
+            n_params = len(forcedata.master_paramlist[forcename])
+            spaces = ' ' * 16
+            for i, param in enumerate(forcedata.master_paramlist[forcename]):
+                f.write('{0}{1}=0.0 * {2}'.format(spaces, param, all_unitlist[forcename][i]))
+                if i == n_params:
+                    f.write(')\n\n')
+                else:
+                    f.write(',\n')
+            f.write('{0}{1}):\n'.format(spaces, absParamStrDefaults))
 
-        # write the class for the force
-        f.write('class ' + capname + '(' + capnametype + '):\n')
-        # include the docstring here
-        f.write('    """\n')
-        f.write('    ' + doclist[forcename])
-        f.write('    """\n')
+            # Init the atoms.
+            for atom_index in range(1, natoms+1):
+                f.write('        self.atom{0} = atom{0}\n'.format(atom_index))
 
-        # define the init for the class
-        f.write('    def __init__(self, '+ atoms + optbondingtypes)
-        for i, param in enumerate(forcedata.master_paramlist[forcename]):
-            f.write(param + ' = 0.0 * ' + all_unitlist[forcename][i] + ', '),
-        f.write(absParamStrDefaults + '):\n')
+            # Init the type of this force.
+            f.write('        {0}.__init__(self, {1}'.format(capnametype, bondingtypes))
+            for param in forcedata.master_paramlist[forcename]:
+                f.write('{0}={0}, '.format(param))
+            f.write(absParamStrSelf + ')\n\n')
 
-        # init the atoms
-        for i in range(natoms):
-            iatom = str(i+1)
-            f.write('        self.atom' + iatom + ' = atom' + iatom + '\n')
-
-        # init the type of this force
-        f.write('        ' + capnametype + '.__init__(self, ' + bondingtypes)
-        for param in forcedata.master_paramlist[forcename]:
-            f.write(param + ' = ' + param + ', ')
-        f.write(absParamStrSelf + ')\n\n')
-
-        # define equality for the class
-        # f.write('    def __eq__(self, ' + ftype + '):\n')
-        #
-        # #Check whether atoms are equal to each other
-        # f.write('\n        equality = (\n')
-        # for i in range(natoms):
-        #     f.write('            self.atom%d == ' % (i+1) + ftype + '.atom%d' % (i+1))
-        #     if i==natoms-1:
-        #         f.write('\n            ) or (\n')
-        #     else:
-        #         f.write(' and\n')
-
-        # this might be bad for virtuals - not symmetric.  Leave for now.  Can't have matching virtuals, as a
-        # virtual can't appear in a virtual list.
-        # for i in range(natoms):
-        #     f.write('            self.atom%d == ' % (i+1) + ftype + '.atom%d' % (natoms-i))
-        #     if i==natoms-1:
-        #         f.write(')\n\n')
-        #     else:
-        #         f.write(' and\n')
-        # if ftype == 'nonbonded':
-        #     f.write('        equality = equality and self.type == nonbonded.type\n')
-        # f.write('        return equality\n')
-        # f.write('\n')
-
-        # define the hash
-        # f.write('    def __hash__(self):\n')
-        # f.write('        return hash(tuple([')
-        # for i in range(natoms):
-        #     f.write('self.atom' + str(i+1))
-        #     if (i == natoms-1):
-        #         f.write(']))\n\n')
-        #     else:
-        #         f.write(', ')
-
-        f.close()
-        # print the filename so we know which files should not be edited directly.
-        print filename
+            # Print which files should not be edited directly.
+            print filename
