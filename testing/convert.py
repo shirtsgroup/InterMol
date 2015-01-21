@@ -152,8 +152,7 @@ def main(args=None):
                     'inputs/Gromacs/grompp.mdp', args.gropath, '')
         elif args.lmp_in:
             input_type = 'Lammps'
-            # TODO: fix this when --lmp_in gets changed to read input files
-            temp = args.lmp_in[0].split('.')[0] + '.input'
+            temp = args.lmp_in[0]
             e_in, e_infile = lammps_driver.lammps_energies(temp, args.lmppath)
         else:
             logger.warn('Something weird went wrong! Code should have never made it here.')
