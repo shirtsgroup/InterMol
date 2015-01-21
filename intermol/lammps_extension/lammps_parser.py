@@ -61,6 +61,7 @@ class LammpsParser(object):
                 'read_data': self.parse_read_data,
                 'fix': self.parse_fix}
 
+        self.shake = False # SHAKE constraints?
         with open(input_file, 'r') as input_lines:
             for line in input_lines:
                 if line.strip():
@@ -283,9 +284,6 @@ class LammpsParser(object):
         self.hybrid_dihedral_style = False
         if len(line) == 2:
             self.dihedral_style.append(line[1])
-            # TODO: correctly determine gen-pairs state
-            if self.dihedral_style == 'opls':
-                System._sys.genpairs = 'yes'
         elif len(line) > 2 and line[1] == 'hybrid':
             self.hybrid_dihedral_style = True
             for style in line[2:]:
@@ -308,7 +306,10 @@ class LammpsParser(object):
 
     def parse_special_bonds(self, line):
         """ """
-        if 'lj/coul' in line:
+        if line[1] == 'amber':
+            System._sys.lj_correction = 0.5
+            System._sys.coulomb_correction = 5.0 / 6.0
+        elif 'lj/coul' in line:
             System._sys.lj_correction = float(line[line.index('lj/coul') + 3])
             System._sys.coulomb_correction = float(line[line.index('lj/coul') + 3])
         elif 'lj' in line and 'coul' in line:
@@ -362,6 +363,7 @@ class LammpsParser(object):
                 str2num = float
             else:
                 container.add(str2num(field))
+        self.shake = True
             
     def parse_box(self, line, dim):
         """Read box information from data file.
@@ -497,6 +499,13 @@ class LammpsParser(object):
                     float(coeffs[2]) * self.ENERGY,
                     float(coeffs[3]) * self.ENERGY,
                     float(coeffs[4]) * self.ENERGY]
+            elif style == 'fourier':
+                self.dihedral_types[int(fields[0])] = [style, int(coeffs[0])]
+                for i in range(int(coeffs[0])):
+                    self.dihedral_types[int(fields[0])] += [
+                        float(coeffs[i*3+1]) * self.ENERGY,
+                        int(  coeffs[i*3+2]),
+                        float(coeffs[i*3+3]) * self.DEGREE]
             else:
                 logger.warn("Unsupported dihedral style: {0}".format(style))
 
@@ -523,12 +532,18 @@ class LammpsParser(object):
                     style,
                     float(coeffs[0]) * self.ENERGY / self.RAD**2,
                     float(coeffs[1]) * self.DEGREE]
+            if style == 'cvff': # E = K * (1 + d*cos(n*phi))
+                self.improper_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY, # K
+                    int(coeffs[1]),                 # d 
+                    int(coeffs[2])]                 # n
             else:
                 logger.warn("Unsupported improper style: {0}".format(style))
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
-        molecules = dict()
+        molecules = OrderedDict()
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
@@ -547,7 +562,7 @@ class LammpsParser(object):
                     new_atom_type = AtomCR23Type(atomtype, bondtype,
                         -1,                               # atomic_number
                         self.mass_dict[int(fields[2])],
-                        float(fields[3]) * self.CHARGE,
+                        0 * self.CHARGE,                  # charge (0 for atomtype)
                         'A',                              # ptype
                         self.nb_types[int(fields[2])][1], # sigma
                         self.nb_types[int(fields[2])][0]) # epsilon
@@ -589,7 +604,7 @@ class LammpsParser(object):
         mol_name = None
         self.nr = dict() # atom index => index within moleculetype (i.e. nr)
         self.mol_type = dict() # atom index => MoleculeType 
-        for molecule in [molecules[i] for i in sorted(molecules.keys())]:
+        for molecule in molecules.values():
             molecule.getAtoms().list.sort()
 
             atomtype_list = [atom.getAtomType(0) for atom in molecule.getAtoms()]
@@ -608,7 +623,7 @@ class LammpsParser(object):
                 self.nr[atom.index] = i
                 self.mol_type[atom.index] = System._sys._molecules[molecule.name]
                 atom.residue_name = 'R{:02d}'.format(moleculetype_i)
-                atom.name = 'A{:d}'.format(i)
+                atom.name = 'A{:x}'.format(i)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file."""
@@ -623,7 +638,7 @@ class LammpsParser(object):
             coeff_num = fields[1]
             ai = self.nr[fields[2]]
             aj = self.nr[fields[3]]
-            if coeff_num in self.shake_bond_types_i:
+            if self.shake and coeff_num in self.shake_bond_types_i:
                 constrained = True
             else:
                 constrained = False
@@ -662,7 +677,7 @@ class LammpsParser(object):
             ai = self.nr[fields[2]]
             aj = self.nr[fields[3]]
             ak = self.nr[fields[4]]
-            if coeff_num in self.shake_angle_types_i:
+            if self.shake and coeff_num in self.shake_angle_types_i:
                 constrained = True
             else:
                 constrained = False            
@@ -695,13 +710,16 @@ class LammpsParser(object):
             al = self.nr[fields[5]]
 
             if  self.dihedral_types[coeff_num][0] == 'opls':
-                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromFourierToDihedralTrig(
+                fc = ConvertDihedralFromFourierToDihedralTrig(
                     self.dihedral_types[coeff_num][1],
                     self.dihedral_types[coeff_num][2],
                     self.dihedral_types[coeff_num][3],
                     self.dihedral_types[coeff_num][4])
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    0 * self.DEGREE, *fc)
             elif self.dihedral_types[coeff_num][0] == 'multi/harmonic':
-                fc0, fc1, fc2, fc3, fc4, fc5, fc6 = ConvertDihedralFromRBToDihedralTrig(
+                fc = ConvertDihedralFromRBToDihedralTrig(
                     self.dihedral_types[coeff_num][1],
                     -self.dihedral_types[coeff_num][2],
                     self.dihedral_types[coeff_num][3],
@@ -709,10 +727,26 @@ class LammpsParser(object):
                     self.dihedral_types[coeff_num][5],
                     0 * self.ENERGY,
                     0 * self.ENERGY)
-
-            new_dihed_force = DihedralTrigDihedral(
-                ai, aj, ak, al,
-                0 * self.DEGREE, fc0, fc1, fc2, fc3, fc4, fc5, fc6)
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    0 * self.DEGREE, *fc)
+            elif self.dihedral_types[coeff_num][0] == 'fourier':
+                fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                    self.dihedral_types[coeff_num][2], # K1
+                    self.dihedral_types[coeff_num][3]) # n1
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    self.dihedral_types[coeff_num][4], # d1 (phase)
+                    *fc)
+                for i in range(1, self.dihedral_types[coeff_num][1]):
+                    fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                        self.dihedral_types[coeff_num][3*i+2], # K[i+1]
+                        self.dihedral_types[coeff_num][3*i+3]) # n[i+1]
+                    addterms = DihedralTrigDihedral(
+                        0, 0, 0, 0,
+                        self.dihedral_types[coeff_num][3*i+4], # d[i+1]
+                        *fc)
+                    new_dihed_force.sum_parameters(addterms)
 
             self.current_mol_type = self.mol_type[fields[2]]
             if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
@@ -740,6 +774,21 @@ class LammpsParser(object):
                 k = self.improper_types[coeff_num][1]
                 xi = self.improper_types[coeff_num][2]
                 new_dihed_force = ImproperHarmonicDihedral(ai, aj, ak, al, xi, k)
+            elif  self.improper_types[coeff_num][0] == 'cvff':
+                k = self.improper_types[coeff_num][1]
+                d = self.improper_types[coeff_num][2]
+                if d == 1:
+                    phi = 0. * self.DEGREE
+                elif d == -1:
+                    phi = 180. * self.DEGREE
+                else:
+                    raise ValueError('Invalid coefficient d in cvff improper type {0:d}'.format(coeff_num))
+                multiplicity = self.improper_types[coeff_num][3]
+                fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                    k, multiplicity)
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    phi, *fc, improper=True)
 
             self.current_mol_type = self.mol_type[fields[2]]
             if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
