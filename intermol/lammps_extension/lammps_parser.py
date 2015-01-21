@@ -7,6 +7,7 @@ import os
 import pdb
 import logging
 import numpy as np
+from collections import OrderedDict
 
 import intermol.unit as units
 from intermol.atom import Atom
@@ -57,27 +58,16 @@ class LammpsParser(object):
                 'dihedral_style': self.parse_dihedral_style,
                 'improper_style': self.parse_improper_style,
                 'special_bonds': self.parse_special_bonds,
-                'read_data': self.parse_read_data}
+                'read_data': self.parse_read_data,
+                'fix': self.parse_fix}
 
+        self.shake = False # SHAKE constraints?
         with open(input_file, 'r') as input_lines:
             for line in input_lines:
                 if line.strip():
                     keyword = line.split()[0]
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](line.split())
-
-        self.RAD = units.radians
-        self.DEGREE = units.degrees
-        if self.unit_set == 'real':
-            self.DIST = units.angstroms
-            self.VEL = units.angstroms / units.femtosecond
-            self.ENERGY = units.kilocalorie / units.mole
-            self.MASS = units.grams / units.mole
-            self.CHARGE = units.elementary_charge
-            self.MOLE = units.mole
-        else:
-            raise Exception("Unsupported unit set specified in input file: "
-                    "{0}".format(self.unit_set))
 
     def read_data(self, data_file):
         """Reads a LAMMPS data file.
@@ -94,16 +84,14 @@ class LammpsParser(object):
                 'Improper Coeffs': self.parse_improper_coeffs}
 
         with open(data_file, 'r') as data_lines:
-            self.molecule_name = next(data_lines).strip()
-            # Currently only reading a single molecule/moleculeType
-            # per LAMMPS file.
-            self.current_mol = Molecule(self.molecule_name)
-            System._sys.add_molecule(self.current_mol)
-            self.current_mol_type = System._sys._molecules[self.molecule_name]
-            self.current_mol_type.nrexcl = 3  # TODO: automate determination
-
             for line in data_lines:
                 if line.strip():
+                    line = line.partition('#')[0] # Remove trailing comment
+
+                    fields = line.split()
+                    if len(fields) == 2 and fields[1] == 'atoms':
+                        self.natoms = int(fields[0])
+
                     # catch all box dimensions
                     if (('xlo' in line) and
                          ('xhi' in line)):
@@ -120,7 +108,7 @@ class LammpsParser(object):
                         if keyword in parsable_keywords:
                             parsable_keywords[keyword](data_lines)
 
-        # Read atoms, velocities and connectivity information from data file.
+        # Read atoms and connectivity information from data file.
         parsable_keywords = {'Atoms': self.parse_atoms,
                 'Bonds': self.parse_bonds,
                 'Angles': self.parse_angles,
@@ -130,23 +118,95 @@ class LammpsParser(object):
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
                 if line.strip():
-                    keyword = line.strip()
+                    keyword = line.partition('#')[0].strip()
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
+
+        # SETTLE constraints (for now limited to rigid 3-point light water)
+        for mol_type in System._sys._molecules.itervalues():
+            if (len(mol_type.angleForceSet) == 1 and 
+                len(mol_type.bondForceSet) == 2):
+                mol_mass = units.sum([a._mass[0] for a in mol_type.moleculeSet[0].getAtoms()])
+                if np.round(mol_mass.in_units_of(units.amu)._value) != 18.0:
+                    continue
+
+                is_rigid_water = True
+                for angle in mol_type.angleForceSet.itervalues():
+                    if isinstance(angle, Angle) and angle.c:
+                        thetaHOH = angle.theta
+                    else:
+                        is_rigid_water = False
+                for bond in mol_type.bondForceSet.itervalues():
+                    if isinstance(bond, Bond) and bond.c:
+                        dOH = bond.length
+                    else:
+                        is_rigid_water = False
+                
+                if is_rigid_water:
+                    dHH = units.sqrt(2 * dOH**2 * (1 - units.cos(thetaHOH)))
+                    for i, atom in enumerate(mol_type.moleculeSet[0]._atoms, start=1):
+                        if atom._mass[0].in_units_of(units.amu)._value > 15:
+                            iOW = i
+                            break
+                    mol_type.settles = Settles(iOW, dOH, dHH)
+                    mol_type.nrexcl = 1
+                    mol_type.exclusions.add(Exclusions([1, 2, 3]))
+                    mol_type.exclusions.add(Exclusions([2, 1, 3]))
+                    mol_type.exclusions.add(Exclusions([3, 1, 2]))
+        
+        # Indentify 1-3 and 1-4 neighbors
+        onethree = [[] for i in range(self.natoms + 1)]
+        onefour  = [[] for i in range(self.natoms + 1)]
+        for i in range(1, self.natoms):
+            # 1-3 neighbors
+            for j in self.onetwo[i]:
+                for k in self.onetwo[j]:
+                    if not ((k == i) or (k in self.onetwo[i])):
+                        onethree[i].append(k)
+            
+            # 1-4 neighbors
+            for j in onethree[i]:
+                for k in self.onetwo[j]:
+                    if not ((k == i) or (k in self.onetwo[i]) or (k in onethree[i])):
+                        onefour[i].append(k)
+                                    
+        # Generate 1-4 pairs for each moleculetype
+        for mol_type in System._sys._molecules.itervalues():
+            molecule = mol_type.moleculeSet[0]
+            for atom in molecule.getAtoms():
+                ai = self.nr[atom.index]
+                for j in onefour[atom.index]:
+                    aj = self.nr[j]
+                    mol_type.pairForceSet.add(AbstractPair(ai, aj, "Both"))
 
     def parse_units(self, line):
         """ """
         assert(len(line) == 2), "Invalid units specified in input file."
         self.unit_set = line[1]
 
+        self.RAD = units.radians
+        self.DEGREE = units.degrees
+        if self.unit_set == 'real':
+            self.DIST = units.angstroms
+            self.VEL = units.angstroms / units.femtosecond
+            self.ENERGY = units.kilocalorie / units.mole
+            self.MASS = units.grams / units.mole
+            self.CHARGE = units.elementary_charge
+            self.MOLE = units.mole
+        else:
+            raise Exception("Unsupported unit set specified in input file: "
+                    "{0}".format(self.unit_set))
+
     def parse_atom_style(self, line):
         """
-        Note:
-            Assuming 'full' as default for everything else.
         """
-        self.atom_style = line[1]
         if len(line) > 2:
             logger.warn("Unsupported atom_style in input file.")
+        self.atom_style = line[1]
+
+        # Currently only support atom_style 'full'
+        if self.atom_style != 'full':
+            raise Exception("Unsupported atom_style in input file: {0}".format(self.atom_style))        
 
     def parse_dimension(self, line):
         """ """
@@ -194,21 +254,25 @@ class LammpsParser(object):
 
     def parse_bond_style(self, line):
         """ """
-        self.bond_style = set()
+        self.bond_style = []
+        self.hybrid_bond_style = False
         if len(line) == 2:
-            self.bond_style.add(line[1])
-        elif line[1] == 'hybrid':
+            self.bond_style.append(line[1])
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_bond_style = True
             for style in line[2:]:
-                self.bond_style.add(style)
+                self.bond_style.append(style)
         else:
             raise ValueError("Invalid bond_style in input file!")
 
     def parse_angle_style(self, line):
         """ """
         self.angle_style = []
+        self.hybrid_angle_style = False
         if len(line) == 2:
             self.angle_style.append(line[1])
-        elif line[1] == 'hybrid':
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_angle_style = True
             for style in line[2:]:
                 self.angle_style.append(style)
         else:
@@ -217,13 +281,11 @@ class LammpsParser(object):
     def parse_dihedral_style(self, line):
         """ """
         self.dihedral_style = []
+        self.hybrid_dihedral_style = False
         if len(line) == 2:
             self.dihedral_style.append(line[1])
-            # TODO: correctly determine gen-pairs state
-            if self.dihedral_style == 'opls':
-                System._sys.genpairs = 'yes'
-        elif line[1] == 'hybrid':
-            self.dihedral_style = []
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_dihedral_style = True
             for style in line[2:]:
                 self.dihedral_style.append(style)
         else:
@@ -232,10 +294,11 @@ class LammpsParser(object):
     def parse_improper_style(self, line):
         """ """
         self.improper_style = []
+        self.hybrid_improper_style = False
         if len(line) == 2:
             self.improper_style.append(line[1])
-        elif line[1] == 'hybrid':
-            self.improper_style = []
+        elif len(line) > 2 and line[1] == 'hybrid':
+            self.hybrid_improper_style = True
             for style in line[2:]:
                 self.improper_style.append(style)
         else:
@@ -243,7 +306,10 @@ class LammpsParser(object):
 
     def parse_special_bonds(self, line):
         """ """
-        if 'lj/coul' in line:
+        if line[1] == 'amber':
+            System._sys.lj_correction = 0.5
+            System._sys.coulomb_correction = 5.0 / 6.0
+        elif 'lj/coul' in line:
             System._sys.lj_correction = float(line[line.index('lj/coul') + 3])
             System._sys.coulomb_correction = float(line[line.index('lj/coul') + 3])
         elif 'lj' in line and 'coul' in line:
@@ -263,6 +329,42 @@ class LammpsParser(object):
         else:
             logger.warn("Unsupported read_data arguments in input file.")
 
+    def parse_fix(self, line):
+        """ """
+        if len(line) > 3 and line[3] == 'shake':
+            self.parse_fix_shake(line)
+
+    def parse_fix_shake(self, line):
+        """ """
+        if line[2] != 'all':
+            logger.warn("Unsupported group-ID in fix shake command")
+            return            
+        if 'mol' in line:
+            logger.warn("Unsupported keyword 'mol' in fix shake command")
+            return
+        
+        self.shake_bond_types_i = set()
+        self.shake_angle_types_i = set()
+        self.shake_masses = set()
+
+        line = line[7:]
+        for field in line:
+            if field == 't':
+                logger.warn("SHAKE 't' (atom type) constraints not yet supported: fix shake ignored.")
+                return
+            elif field == 'b':
+                container = self.shake_bond_types_i
+                str2num = int
+            elif field == 'a':
+                container = self.shake_angle_types_i
+                str2num = int
+            elif field == 'm':
+                container = self.shake_masses
+                str2num = float
+            else:
+                container.add(str2num(field))
+        self.shake = True
+            
     def parse_box(self, line, dim):
         """Read box information from data file.
 
@@ -285,7 +387,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
@@ -295,7 +397,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = [float(field) for field in line.partition('#')[0].split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
                 if System._sys.nonbonded_function == 1:
@@ -313,37 +415,30 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
-            if len(self.bond_style) == 1:
-                if 'harmonic' in self.bond_style:
-                    self.bond_types[int(fields[0])] = [
-                            'harmonic',
-                            2 * float(fields[1]) * self.ENERGY / (self.DIST*self.DIST),
-                            float(fields[2]) * self.DIST]
-                elif 'morse' in self.bond_style:
-                    self.bond_types[int(fields[0])] = [
-                            'morse',
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.DIST**(-1),
-                            float(fields[3]) * self.DIST]
-            elif len(self.bond_style) > 1:
+            fields = line.partition('#')[0].split()
+            if self.hybrid_bond_style:
                 style = fields[1]
                 if style not in self.bond_style:
                     raise Exception("Bond type found in Bond Coeffs that "
                             "was not specified in bond_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.bond_types[int(fields[0])] = [
-                            style,
-                            2 * float(fields[2]) * self.ENERGY / (self.DIST*self.DIST),
-                            float(fields[3]) * self.DIST]
-                elif style == 'morse':
-                    self.bond_types[int(fields[0])] = [
-                            style,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.DIST**(-1),
-                            float(fields[4]) * self.DIST]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'bond_style'.")
+                style = self.bond_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.bond_types[int(fields[0])] = [
+                    style,
+                    2 * float(coeffs[0]) * self.ENERGY / (self.DIST*self.DIST),
+                    float(coeffs[1]) * self.DIST]
+            elif style == 'morse':
+                self.bond_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.DIST**(-1),
+                    float(coeffs[2]) * self.DIST]
+            else:
+                logger.warn("Unsupported bond style: {0}".format(style))
 
     def parse_angle_coeffs(self, data_lines):
         """Read angle coefficients from data file."""
@@ -352,25 +447,24 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
-            if len(self.angle_style) == 1:
-                if 'harmonic' in self.angle_style:
-                    self.angle_types[int(fields[0])] = [
-                            'harmonic',
-                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
-            elif len(self.angle_style) > 1:
+            fields = line.partition('#')[0].split()
+            if self.hybrid_angle_style:
                 style = fields[1]
                 if style not in self.angle_style:
                     raise Exception("Angle type found in Angle Coeffs that "
                             "was not specified in angle_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.angle_types[int(fields[0])] = [
-                            style,
-                            2 * float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'angle_style'.")
+                style = self.angle_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.angle_types[int(fields[0])] = [
+                    style,
+                    2 * float(coeffs[0]) * self.ENERGY / self.RAD**2,
+                    float(coeffs[1]) * self.DEGREE]
+            else:
+                logger.warn("Unsupported angle style: {0}".format(style))
 
     def parse_dihedral_coeffs(self, data_lines):
         """Read dihedral coefficients from data file."""
@@ -379,29 +473,41 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
-            if len(self.dihedral_style) == 1:
-                if 'opls' in self.dihedral_style:
-                    self.dihedral_types[int(fields[0])] = [
-                            'opls',
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.ENERGY,
-                            float(fields[4]) * self.ENERGY]
-            elif len(self.dihedral_style) > 1:
+            fields = line.partition('#')[0].split()
+            if self.hybrid_dihedral_style:
                 style = fields[1]
                 if style not in self.dihedral_style:
                     raise Exception("Dihedral type found in Dihedral Coeffs that "
                             "was not specified in dihedral_style: {0}".format(style))
-                if style == 'opls':
-                    self.dihedral_types[int(fields[0])] = [
-                            style,
-                            float(fields[1]) * self.ENERGY,
-                            float(fields[2]) * self.ENERGY,
-                            float(fields[3]) * self.ENERGY,
-                            float(fields[4]) * self.ENERGY]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'dihedral_style'.")
+                style = self.dihedral_style[0]
+                coeffs = fields[1:]
+
+            if style == 'opls':
+                self.dihedral_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.ENERGY,
+                    float(coeffs[2]) * self.ENERGY,
+                    float(coeffs[3]) * self.ENERGY]
+            elif style == 'multi/harmonic':
+                self.dihedral_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY,
+                    float(coeffs[1]) * self.ENERGY,
+                    float(coeffs[2]) * self.ENERGY,
+                    float(coeffs[3]) * self.ENERGY,
+                    float(coeffs[4]) * self.ENERGY]
+            elif style == 'fourier':
+                self.dihedral_types[int(fields[0])] = [style, int(coeffs[0])]
+                for i in range(int(coeffs[0])):
+                    self.dihedral_types[int(fields[0])] += [
+                        float(coeffs[i*3+1]) * self.ENERGY,
+                        int(  coeffs[i*3+2]),
+                        float(coeffs[i*3+3]) * self.DEGREE]
+            else:
+                logger.warn("Unsupported dihedral style: {0}".format(style))
 
     def parse_improper_coeffs(self, data_lines):
         """Read improper coefficients from data file."""
@@ -410,59 +516,66 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
-            if len(self.improper_style) == 1:
-                if 'harmonic' in self.improper_style:
-                    self.improper_types[int(fields[0])] = [
-                            'harmonic',
-                            float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
-            elif len(self.improper_style) > 1:
+            fields = line.partition('#')[0].split()
+            if self.hybrid_improper_style:
                 style = fields[1]
                 if style not in self.improper_style:
                     raise Exception("Improper type found in Improper Coeffs that "
                             "was not specified in improper_style: {0}".format(style))
-                if style == 'harmonic':
-                    self.improper_types[int(fields[0])] = [
-                            style,
-                            float(fields[1]) * self.ENERGY / self.RAD**2,
-                            float(fields[2]) * self.DEGREE]
+                coeffs = fields[2:]
             else:
-                raise ValueError("No entries found in 'improper_style'.")
+                style = self.improper_style[0]
+                coeffs = fields[1:]
+
+            if style == 'harmonic':
+                self.improper_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY / self.RAD**2,
+                    float(coeffs[1]) * self.DEGREE]
+            if style == 'cvff': # E = K * (1 + d*cos(n*phi))
+                self.improper_types[int(fields[0])] = [
+                    style,
+                    float(coeffs[0]) * self.ENERGY, # K
+                    int(coeffs[1]),                 # d 
+                    int(coeffs[2])]                 # n
+            else:
+                logger.warn("Unsupported improper style: {0}".format(style))
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
+        molecules = OrderedDict()
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             if len(fields) in [7, 10]:
                 if len(fields) == 10:
                     # TODO: store image flags?
                     pass
                 new_atom_type = None
+                bondtype = atomtype = 'lmp_{:03d}'.format(int(fields[2]))
                 if System._sys.combination_rule == 1:
                     logger.warn("Combination rule '1' not yet implemented")
                 elif System._sys.combination_rule in [2, 3]:
-                    new_atom_type = AtomCR23Type(fields[2],    # atomtype
-                            fields[2],                         # bondtype
-                            -1,                                # atomic_number
-                            self.mass_dict[int(fields[2])],    # mass
-                            float(fields[3]) * self.CHARGE,    # charge
-                            'A',                               # ptype
-                            self.nb_types[int(fields[2])][1],  # sigma
-                            self.nb_types[int(fields[2])][0])  # epsilon
+                    new_atom_type = AtomCR23Type(atomtype, bondtype,
+                        -1,                               # atomic_number
+                        self.mass_dict[int(fields[2])],
+                        0 * self.CHARGE,                  # charge (0 for atomtype)
+                        'A',                              # ptype
+                        self.nb_types[int(fields[2])][1], # sigma
+                        self.nb_types[int(fields[2])][0]) # epsilon
 
                 System._sys._atomtypes.add(new_atom_type)
 
-                atom = Atom(int(fields[0]),  # index
-                        fields[2],           # name
-                        int(fields[1]),      # residue_index (molNum)
-                        fields[1])           # residue_name (molNum)
-                atom.setAtomType(0, fields[2])  # atomNum for LAMMPS
-                atom.cgnr = 0  # TODO: look into alternatives
+                atom = Atom(int(fields[0]), 
+                            '',             # atom name (set below)
+                            1)              # residue index
+                atom.setAtomType(0, atomtype)
+                atom.cgnr = 1
+                # TODO: Set cg nr 'automatically' in gromacs_topology_parser.
+                # See, e.g., topogromacs.tcl in VMD topotools.
                 atom.setCharge(0, float(fields[3]) * self.CHARGE)
                 atom.setMass(0, self.mass_dict[int(fields[2])])
                 atom.setPosition(float(fields[4]) * self.DIST,
@@ -480,34 +593,76 @@ class LammpsParser(object):
                     else:
                         logger.warn("Corresponding AtomType was not found. "
                                 "Insert missing values yourself.")
-            self.current_mol.addAtom(atom)
+
+                if int(fields[1]) not in molecules:
+                    molecules[int(fields[1])] = Molecule()
+                molecules[int(fields[1])].addAtom(atom)
+
+        # Add molecules to system
+        atomtype_list_old = []
+        moleculetype_i = 0
+        mol_name = None
+        self.nr = dict() # atom index => index within moleculetype (i.e. nr)
+        self.mol_type = dict() # atom index => MoleculeType 
+        for molecule in molecules.values():
+            molecule.getAtoms().list.sort()
+
+            atomtype_list = [atom.getAtomType(0) for atom in molecule.getAtoms()]
+            if atomtype_list != atomtype_list_old: # new moleculetype
+                moleculetype_i += 1
+                mol_name = 'moleculetype{:02d}'.format(moleculetype_i)
+                atomtype_list_old = atomtype_list
+
+            molecule.name = mol_name
+            System._sys.add_molecule(molecule)
+
+            # TODO: Move this elsewhere and determine nrexcl from special_bonds
+            System._sys._molecules[molecule.name].nrexcl = 3
+
+            for i, atom in enumerate(molecule.getAtoms(), start=1):
+                self.nr[atom.index] = i
+                self.mol_type[atom.index] = System._sys._molecules[molecule.name]
+                atom.residue_name = 'R{:02d}'.format(moleculetype_i)
+                atom.name = 'A{:x}'.format(i)
 
     def parse_bonds(self, data_lines):
         """Read bonds from data file."""
+        self.onetwo = [[] for i in range(self.natoms + 1)] # 1-2 neighbors
         next(data_lines)  # toss out blank line
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_bond_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            if self.shake and coeff_num in self.shake_bond_types_i:
+                constrained = True
+            else:
+                constrained = False
+
             # Bond
             if self.bond_types[coeff_num][0] == 'harmonic':
                 r = self.bond_types[coeff_num][2]
                 k = self.bond_types[coeff_num][1]
-                new_bond_force = Bond(
-                        fields[2], fields[3],
-                        r, k)
+                new_bond_force = Bond(ai, aj, r, k, c=constrained)
             # Morse
             elif self.bond_types[coeff_num][0] == 'morse':
                 r = self.bond_types[coeff_num][3]
                 D = self.bond_types[coeff_num][1]
                 beta = self.bond_types[coeff_num][2]
-                new_bond_force = MorseBond(
-                        fields[2], fields[3],
-                        r, D, beta)
+                new_bond_force = MorseBond(ai, aj, r, D, beta)
+            
+            self.current_mol_type = self.mol_type[fields[2]]
+            if (self.mol_type[fields[3]] is not self.current_mol_type):
+                raise Exception("Attempted to define bond between atoms {0:d}, {1:d} across different molecules.".format(fields[2], fields[3]))
             self.current_mol_type.bondForceSet.add(new_bond_force)
+
+            # Keep track of 1st neighbors
+            self.onetwo[fields[2]].append(fields[3])
+            self.onetwo[fields[3]].append(fields[2])
 
     def parse_angles(self, data_lines):
         """Read angles from data file."""
@@ -515,17 +670,28 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_angle_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+            if self.shake and coeff_num in self.shake_angle_types_i:
+                constrained = True
+            else:
+                constrained = False            
+
             # Angle
             if self.angle_types[coeff_num][0] == 'harmonic':
-                theta = self.angle_types[int(fields[1])][2]
-                k = self.angle_types[int(fields[1])][1]
-                new_angle_force = Angle(
-                        fields[2], fields[3], fields[4],
-                        theta, k)
+                theta = self.angle_types[coeff_num][2]
+                k = self.angle_types[coeff_num][1]
+                new_angle_force = Angle(ai, aj, ak, theta, k, c=constrained)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type)):
+                raise Exception("Attempted to define angle between atoms {0:d}, {1:d}, {2:d} across different molecules.".format(fields[2], fields[3], fields[4]))
             self.current_mol_type.angleForceSet.add(new_angle_force)
 
     def parse_dihedrals(self, data_lines):
@@ -534,19 +700,59 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
-            coeff_num = int(fields[1])
-            # OPLS
+            coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+            al = self.nr[fields[5]]
+
             if  self.dihedral_types[coeff_num][0] == 'opls':
-                cs = [self.dihedral_types[fields[1]][1],
-                      self.dihedral_types[fields[1]][2],
-                      self.dihedral_types[fields[1]][3],
-                      self.dihedral_types[fields[1]][4]]
-                new_dihed_force = FourierDihedral(
-                        fields[2], fields[3], fields[4], fields[5],
-                        cs[0], cs[1], cs[2], cs[3])
+                fc = ConvertDihedralFromFourierToDihedralTrig(
+                    self.dihedral_types[coeff_num][1],
+                    self.dihedral_types[coeff_num][2],
+                    self.dihedral_types[coeff_num][3],
+                    self.dihedral_types[coeff_num][4])
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    0 * self.DEGREE, *fc)
+            elif self.dihedral_types[coeff_num][0] == 'multi/harmonic':
+                fc = ConvertDihedralFromRBToDihedralTrig(
+                    self.dihedral_types[coeff_num][1],
+                    -self.dihedral_types[coeff_num][2],
+                    self.dihedral_types[coeff_num][3],
+                    -self.dihedral_types[coeff_num][4],
+                    self.dihedral_types[coeff_num][5],
+                    0 * self.ENERGY,
+                    0 * self.ENERGY)
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    0 * self.DEGREE, *fc)
+            elif self.dihedral_types[coeff_num][0] == 'fourier':
+                fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                    self.dihedral_types[coeff_num][2], # K1
+                    self.dihedral_types[coeff_num][3]) # n1
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    self.dihedral_types[coeff_num][4], # d1 (phase)
+                    *fc)
+                for i in range(1, self.dihedral_types[coeff_num][1]):
+                    fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                        self.dihedral_types[coeff_num][3*i+2], # K[i+1]
+                        self.dihedral_types[coeff_num][3*i+3]) # n[i+1]
+                    addterms = DihedralTrigDihedral(
+                        0, 0, 0, 0,
+                        self.dihedral_types[coeff_num][3*i+4], # d[i+1]
+                        *fc)
+                    new_dihed_force.sum_parameters(addterms)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type) or 
+                (self.mol_type[fields[5]] is not self.current_mol_type)):
+                raise Exception("Attempted to define dihedral between atoms {0:d}, {1:d}, {2:d}, {3:d} across different molecules.".format(fields[2], fields[3], fields[4], fields[5]))
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def parse_impropers(self, data_lines):
@@ -555,16 +761,40 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_dihed_force = None
-            coeff_num = int(fields[1])
+            coeff_num = fields[1]
+            ai = self.nr[fields[2]]
+            aj = self.nr[fields[3]]
+            ak = self.nr[fields[4]]
+            al = self.nr[fields[5]]
+
             if  self.improper_types[coeff_num][0] == 'harmonic':
-                k = self.improper_types[fields[1]][1]
-                xi = self.improper_types[fields[1]][2]
-                new_dihed_force = ImproperHarmonicDihedral(
-                        fields[2], fields[3], fields[4], fields[5],
-                        xi, k)
+                k = self.improper_types[coeff_num][1]
+                xi = self.improper_types[coeff_num][2]
+                new_dihed_force = ImproperHarmonicDihedral(ai, aj, ak, al, xi, k)
+            elif  self.improper_types[coeff_num][0] == 'cvff':
+                k = self.improper_types[coeff_num][1]
+                d = self.improper_types[coeff_num][2]
+                if d == 1:
+                    phi = 0. * self.DEGREE
+                elif d == -1:
+                    phi = 180. * self.DEGREE
+                else:
+                    raise ValueError('Invalid coefficient d in cvff improper type {0:d}'.format(coeff_num))
+                multiplicity = self.improper_types[coeff_num][3]
+                fc = ConvertDihedralFromProperDihedralToDihedralTrig(
+                    k, multiplicity)
+                new_dihed_force = DihedralTrigDihedral(
+                    ai, aj, ak, al,
+                    phi, *fc, improper=True)
+
+            self.current_mol_type = self.mol_type[fields[2]]
+            if ((self.mol_type[fields[3]] is not self.current_mol_type) or 
+                (self.mol_type[fields[4]] is not self.current_mol_type) or 
+                (self.mol_type[fields[5]] is not self.current_mol_type)):
+                raise Exception("Attempted to define improper dihedral between atoms {0:d}, {1:d}, {2:d}, {3:d} across different molecules.".format(fields[2], fields[3], fields[4], fields[5]))
             self.current_mol_type.dihedralForceSet.add(new_dihed_force)
 
     def write(self, data_file, unit_set='real', verbose=False):
@@ -668,18 +898,43 @@ class LammpsParser(object):
         imp_type_i = 1
 
         # read all atom specific and FF information
+        offset = 0
+        bond_i = 1
+        angle_i = 1
+        dihedral_i = 1
+        improper_i = 1
+        shake_bond_types = set()
+        shake_angle_types = set()
+        x_min = y_min = z_min = np.inf
         for mol_type in System._sys._molecules.itervalues():
             logger.debug("    Writing moleculetype {0}...".format(mol_type.name))
-            # atom index offsets from 1 for each molecule
-            offsets = list()
-            for molecule in mol_type.moleculeSet:
-                offsets.append(molecule._atoms[0].index - 1)
 
-            molecule = mol_type.moleculeSet[0]
-            atoms = molecule._atoms
-            for i, offset in enumerate(offsets):
+            # Settles (for rigid water in GROMACS)
+            # We'll convert these to SHAKE constraints in the input script.
+            if mol_type.settles:
+                for bond in mol_type.bondForceSet.itervalues():
+                    shake_bond_types.add(BondType(
+                            mol_type.moleculeSet[0]._atoms[bond.atom1 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[bond.atom2 - 1].bondtype,
+                            bond.length,
+                            bond.k))
+                for angle in mol_type.angleForceSet.itervalues():
+                    shake_angle_types.add(AngleType(
+                            mol_type.moleculeSet[0]._atoms[angle.atom1 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[angle.atom2 - 1].bondtype,
+                            mol_type.moleculeSet[0]._atoms[angle.atom3 - 1].bondtype,
+                            angle.theta,
+                            angle.k))
+
+#            molecule = mol_type.moleculeSet[0]
+#            atoms = molecule._atoms
+
+#            for i, offset in enumerate(offsets):
+            for molecule in mol_type.moleculeSet:
+
+                # bonds
                 logger.debug("        Writing bonds...")
-                for j, bond in enumerate(mol_type.bondForceSet.itervalues()):
+                for bond in mol_type.bondForceSet.itervalues():
                     atomtype1 = molecule._atoms[bond.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[bond.atom2 - 1].bondtype
 
@@ -690,11 +945,12 @@ class LammpsParser(object):
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in bond_type_dict:
                             bond_type_dict[temp] = b_type_i
-                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                            bond_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} # {4:2s}-{5:2s}\n'.format(
                                     b_type_i,
                                     style,
                                     0.5 * bond.k.in_units_of(self.ENERGY / (self.DIST*self.DIST))._value,
-                                    bond.length.in_units_of(self.DIST)._value))
+                                    bond.length.in_units_of(self.DIST)._value,
+                                    atomtype1, atomtype2))
                             b_type_i += 1
                     elif isinstance(bond, MorseBond):
                         style = 'morse'
@@ -714,17 +970,18 @@ class LammpsParser(object):
                         continue
 
                     bond_list.append('{0:-6d} {1:6d} {2:6d} {3:6d}\n'.format(
-                            i + j + 1,
+                            bond_i,
                             bond_type_dict[temp],
                             bond.atom1 + offset,
                             bond.atom2 + offset))
+                    bond_i += 1
                     bond_style.add(style)
                 if len(bond_style) > 1:
                     logger.warn("More than one bond style found!")
 
-                # angle types
+                # angles
                 logger.debug("        Writing angles...")
-                for j, angle in enumerate(mol_type.angleForceSet.itervalues()):
+                for angle in mol_type.angleForceSet.itervalues():
                     atomtype1 = molecule._atoms[angle.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[angle.atom2 - 1].bondtype
                     atomtype3 = molecule._atoms[angle.atom3 - 1].bondtype
@@ -736,11 +993,12 @@ class LammpsParser(object):
                         # NOTE: k includes the factor of 0.5 for harmonic in LAMMPS
                         if temp not in angle_type_dict:
                             angle_type_dict[temp] = ang_type_i
-                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f}\n'.format(
+                            angle_coeffs.append('{0:d} {1} {2:18.8f} {3:18.8f} # {4:2s}-{5:2s}-{6:2s}\n'.format(
                                     ang_type_i,
                                     style,
                                     0.5 * angle.k.in_units_of(self.ENERGY / self.RAD**2)._value,
-                                    angle.theta.in_units_of(self.DEGREE)._value))
+                                    angle.theta.in_units_of(self.DEGREE)._value,
+                                    atomtype1, atomtype2, atomtype3))
                             ang_type_i += 1
                     elif isinstance(angle, UreyBradleyAngle):
                         style = 'charmm'
@@ -775,12 +1033,12 @@ class LammpsParser(object):
                         continue
 
                     angle_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d}\n'.format(
-                            i + j + 1,
+                            angle_i,
                             angle_type_dict[temp],
                             angle.atom1 + offset,
                             angle.atom2 + offset,
                             angle.atom3 + offset))
-
+                    angle_i += 1
                     angle_style.add(style)
                 if len(angle_style) > 1:
                     logger.warn("More than one angle style found!")
@@ -788,7 +1046,7 @@ class LammpsParser(object):
                 # dihedrals
                 logger.debug("        Writing dihedrals...")
 
-                for j, dihedral in enumerate(mol_type.dihedralForceSet.itervalues()):
+                for dihedral in mol_type.dihedralForceSet.itervalues():
                     atomtype1 = molecule._atoms[dihedral.atom1 - 1].bondtype
                     atomtype2 = molecule._atoms[dihedral.atom2 - 1].bondtype
                     atomtype3 = molecule._atoms[dihedral.atom3 - 1].bondtype
@@ -823,12 +1081,13 @@ class LammpsParser(object):
                                                 0.0))
                                         dih_type_i += 1
                                     dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                            i + j + 1,
+                                            dihedral_i,
                                             dihedral_type_dict[temp],
                                             dihedral.atom1 + offset,
                                             dihedral.atom2 + offset,
                                             dihedral.atom3 + offset,
                                             dihedral.atom4 + offset))
+                                    dihedral_i += 1
                                     dihedral_style.add(style)
 
                         else:
@@ -869,12 +1128,13 @@ class LammpsParser(object):
                                             rb_coeffs[4].in_units_of(self.ENERGY)._value))
                                     dih_type_i += 1
                                 dihedral_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                        i + j + 1,
+                                        dihedral_i,
                                         dihedral_type_dict[temp],
                                         dihedral.atom1 + offset,
                                         dihedral.atom2 + offset,
                                         dihedral.atom3 + offset,
                                         dihedral.atom4 + offset))
+                                dihedral_i += 1
                                 dihedral_style.add(style)
 
                             # If the 6th and/or 7th coefficients are non-zero, we decompose
@@ -923,12 +1183,13 @@ class LammpsParser(object):
                                     dihedral.xi.in_units_of(self.DEGREE)._value))
                             imp_type_i += 1
                         improper_list.append('{0:-6d} {1:6d} {2:6d} {3:6d} {4:6d} {5:6d}\n'.format(
-                                i + j + 1,
+                                improper_i,
                                 improper_type_dict[temp],
                                 dihedral.atom1 + offset,
                                 dihedral.atom2 + offset,
                                 dihedral.atom3 + offset,
                                 dihedral.atom4 + offset))
+                        improper_i += 1
                         improper_style.add(style)
                     else:
                         raise Exception("InterMol expects all internally stored"
@@ -939,21 +1200,22 @@ class LammpsParser(object):
                 if len(improper_style) > 1:
                     logger.warn("More than one improper style found!")
 
-            # atom specific information
-            x_min = y_min = z_min = np.inf
-            logger.debug("    Writing atoms...")
-            for molecule in mol_type.moleculeSet:
+                # atom specific information
+                logger.debug("    Writing atoms...")
+
                 for atom in molecule._atoms:
                     # type, mass and pair coeffs
                     if atom._atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom._atomtype[0]] = a_type_i
-                        mass_list.append('%d %8.4f\n'
+                        mass_list.append('%d %8.4f # %s\n'
                                     % (a_type_i,
-                                       atom._mass[0].in_units_of(self.MASS)._value))
-                        pair_coeff_list.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
+                                       atom._mass[0].in_units_of(self.MASS)._value,
+                                       atom.bondtype))
+                        pair_coeff_list.append('{0:d} {1:10.6f} {2:10.6f} # {3:s}\n'.format(
                                        a_type_i,
                                        atom._epsilon[0].in_units_of(self.ENERGY)._value,
-                                       atom._sigma[0].in_units_of(self.DIST)._value))
+                                       atom._sigma[0].in_units_of(self.DIST)._value,
+                                       atom.bondtype))
                         a_type_i += 1
 
                     # box minima
@@ -969,7 +1231,7 @@ class LammpsParser(object):
 
                     # atom
                     atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:8.5f} {5:8.5f} {6:8.5f}\n'.format(
-                            atom.index,
+                            atom.index + offset,
                             atom.residue_index,
                             atom_type_dict[atom._atomtype[0]],
                             atom._charge[0].in_units_of(self.CHARGE)._value,
@@ -978,10 +1240,12 @@ class LammpsParser(object):
                             z_coord))
                     # velocity
                     vel_list.append('{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                            atom.index,
+                            atom.index + offset,
                             atom._velocity[0].in_units_of(self.VEL)._value,
                             atom._velocity[1].in_units_of(self.VEL)._value,
                             atom._velocity[2].in_units_of(self.VEL)._value))
+
+                offset += len(molecule._atoms)
 
         # Write the actual data file.
         with open(data_file, 'w') as f:
@@ -1084,8 +1348,14 @@ class LammpsParser(object):
             f.write('\n')
 
             # non-bonded
-            f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
-            f.write('pair_modify mix geometric\n')  # TODO: match defaults
+            f.write('pair_style lj/cut/coul/long 10.0 10.0\n')  # TODO: match mdp
+            if System._sys.combination_rule == 3:
+                f.write('pair_modify mix geometric\n')
+            elif System._sys.combination_rule == 2:
+                f.write('pair_modify mix arithmetic\n')
+            else:
+                logger.warn("Unsupported combination rule: {0}".format(
+                        System._sys.combination_rule))
             f.write('kspace_style pppm 1.0e-5\n')  # TODO: match mdp
             f.write('\n')
 
@@ -1130,5 +1400,16 @@ class LammpsParser(object):
 
             f.write('thermo_style custom {0}\n'.format(energy_terms))
             f.write('\n')
+
+            # SHAKE constraints
+            if len(shake_bond_types) > 0:
+                f.write('fix fSHAKE all shake 1.0e-4 20 10 b')
+                for btype in shake_bond_types:
+                    f.write(' {0}'.format(bond_type_dict[btype]))
+                if len(shake_angle_types) > 0:
+                    f.write(' a')
+                    for atype in shake_angle_types:
+                        f.write(' {0}'.format(angle_type_dict[atype]))
+                f.write('\n')
 
             f.write('run 0\n')

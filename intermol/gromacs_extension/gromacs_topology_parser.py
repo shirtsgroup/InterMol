@@ -1036,8 +1036,13 @@ class GromacsTopologyParser(object):
                         # we need to add a constrainted bonded forces as well between the atoms in these molecules.
                         # we assume the gromacs default of 1. O, 2. H, 3. H
                         # reference bond strength is 900 kj/mol, but doesn't really matter since constrainted.
-                        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
-                        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+                        #waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
+                        #wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+                        
+                        # From oplsaa.ff/tip3p.itp - JPT
+                        waterbondrefk = 502416.0 * units.kilojoules_per_mole * units.nanometers**(-2)
+                        wateranglerefk = 628.02 * units.kilojoules_per_mole * units.radians**(-2)
+
                         angle = 2.0 * math.asin(0.5 * float(split[3]) / float(split[2])) * units.radians
                         dOH = float(split[2]) * units.nanometers
 
@@ -1303,7 +1308,7 @@ class GromacsTopologyParser(object):
         # [ defaults ]
         lines.append('[ defaults ]\n')
         lines.append('; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n')
-        lines.append('%d%16d%18s%20.4f%8.4f\n'
+        lines.append('%d%16d%18s%20.4g%8.4g\n'
                 % (System._sys.nonbonded_function,
                    System._sys.combination_rule,
                    System._sys.genpairs,
@@ -1316,10 +1321,10 @@ class GromacsTopologyParser(object):
         lines.append(';type, bondtype, atomic_number, mass, charge, ptype, sigma, epsilon\n')
         atomtypelist = sorted(System._sys._atomtypes.itervalues(), key=lambda x: x.atomtype)
         for atomtype in atomtypelist:
-            if atomtype.atomtype.isdigit():
-                atomtype.atomtype = "LMP_" + atomtype.atomtype
-            if atomtype.bondtype.isdigit():
-                atomtype.bondtype = "LMP_" + atomtype.bondtype
+#            if atomtype.atomtype.isdigit():
+#                atomtype.atomtype = "LMP_" + atomtype.atomtype
+#            if atomtype.bondtype.isdigit():
+#                atomtype.bondtype = "LMP_" + atomtype.bondtype
             if System._sys.combination_rule == 1:
                 lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
                         % (atomtype.atomtype,
@@ -1331,7 +1336,7 @@ class GromacsTopologyParser(object):
                            atomtype.sigma.in_units_of(units.kilojoules_per_mole * units.nanometers**(6))._value,
                            atomtype.epsilon.in_units_of(units.kilojoules_per_mole * units.nanometers**(12))._value))
             elif System._sys.combination_rule in (2, 3):
-                lines.append('%-11s%5s%6d%18.8f%18.8f%5s%18.8e%18.8e\n'
+                lines.append('%-10s %-10s %4d %12.6f %9.3f %5s %16.6e %16.6e\n'
                         % (atomtype.atomtype,
                            atomtype.bondtype,
                            int(atomtype.atomic_number),
@@ -1377,13 +1382,13 @@ class GromacsTopologyParser(object):
             molecule = moleculeType.moleculeSet[0]
             count = 1
             for atom in molecule._atoms:
-                if atom.name.isdigit():
-                    atom.name = "LMP_" + atom.name
-                if atom._atomtype[0].isdigit():
-                    atom._atomtype[0] = "LMP_" + atom._atomtype[0]
+#                if atom.name.isdigit():
+#                    atom.name = "LMP_" + atom.name
+#                if atom._atomtype[0].isdigit():
+#                    atom._atomtype[0] = "LMP_" + atom._atomtype[0]
 
                 try:
-                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f%18s%18.8f%18.8f\n'
+                    lines.append('%6d %10s %6d %8s %8s %6d %12.6f %12.6f %10s %12.6f %12.6f\n'
                             % (count,
                                atom._atomtype[0],
                                atom.residue_index,
@@ -1396,7 +1401,7 @@ class GromacsTopologyParser(object):
                                atom._charge[1].in_units_of(units.elementary_charge)._value,
                                atom._mass[1].in_units_of(units.atomic_mass_unit)._value))
                 except:
-                    lines.append('%6d%18s%6d%8s%8s%6d%18.8f%18.8f\n'
+                    lines.append('%6d %10s %6d %8s %8s %6d %12.6f %12.6f\n'
                                  % (count,
                                     atom._atomtype[0],
                                     atom.residue_index,
@@ -1408,7 +1413,7 @@ class GromacsTopologyParser(object):
                 count += 1
             lines.append('\n')
 
-            if moleculeType.bondForceSet:
+            if moleculeType.bondForceSet and not moleculeType.settles:
                 # [ bonds ]
                 lines.append('[ bonds ]\n')
                 lines.append(';   ai     aj funct  r               k\n')
@@ -1416,7 +1421,7 @@ class GromacsTopologyParser(object):
                 for bond in bondlist:
                     if isinstance(bond, Bond):
                         b_type = 1
-                        lines.append('%6d%7d%4d%18.8e%18.8e\n'
+                        lines.append('%6d %6d %3d %12.6f %16.6e\n'
                                 % (bond.atom1,
                                    bond.atom2,
                                    b_type,
@@ -1462,7 +1467,7 @@ class GromacsTopologyParser(object):
 
                     if isinstance(pair, AbstractPair):
                         p_type = 1
-                        lines.append('%6d%7d%4d\n'
+                        lines.append('%6d %6d %3d\n'
                                 % (pair.atom1,
                                    pair.atom2,
                                    p_type))
@@ -1471,17 +1476,17 @@ class GromacsTopologyParser(object):
                         raise Exception("WriteError: found unsupported pair type")
                 lines.append('\n')
 
-            if moleculeType.angleForceSet:
+            if moleculeType.angleForceSet and not moleculeType.settles:
                 # [ angles ]
                 lines.append('[ angles ]\n')
                 lines.append(';   ai     aj     ak    funct   theta         cth\n')
 
                 anglelist = sorted(moleculeType.angleForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3))
                 for angle in anglelist:
-                    atomindex = "%6d%7d%7d" % (angle.atom1,angle.atom2,angle.atom3)
+                    atomindex = "%6d %6d %6d" % (angle.atom1,angle.atom2,angle.atom3)
                     if isinstance(angle, Angle):
                         a_type = 1
-                        lines.append('%s%4d%18.8e%18.8e\n'
+                        lines.append('%s %3d %12.3f %12.6f\n'
                                 % (atomindex,
                                    a_type,
                                    angle.theta.in_units_of(units.degrees)._value,
@@ -1544,7 +1549,7 @@ class GromacsTopologyParser(object):
                         key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
                 for dihedral in dihedrallist:
                     # this atom index will be the same for all of types.
-                    atomindex = "%7d%7d%7d%7d" % (dihedral.atom1, dihedral.atom2,
+                    atomindex = "%6d %6d %6d %6d" % (dihedral.atom1, dihedral.atom2,
                             dihedral.atom3, dihedral.atom4)
                     if isinstance(dihedral, DihedralTrigDihedral):
                         # convienience array
@@ -1559,7 +1564,7 @@ class GromacsTopologyParser(object):
                                     else:
                                         raise ValueError("Found more than one nonzero "
                                                 "coefficient in improper trigonal dihedral!")
-                                    lines.append('%s%4d%18.8f%18.8f%6d\n'
+                                    lines.append('%s %3d %7.1f %17.6f %5d\n'
                                                  % (atomindex, 4,
                                                     dihedral.phi.in_units_of(units.degrees)._value,
                                                     coeff.in_units_of(units.kilojoules_per_mole)._value,
@@ -1573,7 +1578,7 @@ class GromacsTopologyParser(object):
                             if (dihedral.phi in [0*units.degrees, 180*units.degrees] and
                                     rb_coeffs[6]._value == 0):
                                 d_type = 3
-                                lines.append('%s%4d%18.8f%18.8f%18.8f%18.8f%18.8f%18.8f\n'
+                                lines.append('%s %3d %12.6f %12.6f %12.6f %12.6f %12.6f %12.6f\n'
                                              % (atomindex,
                                                 d_type,
                                                 rb_coeffs[0].in_units_of(units.kilojoules_per_mole)._value,
@@ -1636,11 +1641,13 @@ class GromacsTopologyParser(object):
             if moleculeType.exclusions:
                 # [ exclusions ]
                 lines.append('[ exclusions ]\n')
-                exclusionlist = sorted(moleculeType.exclusions.itervalues(), key=lambda x: (x.exclusions[0], x.exclusions[1]))
+                exclusionlist = sorted(moleculeType.exclusions.itervalues(), key=lambda x: x.exclusions[0])
                 for exclusion in exclusionlist:
-                    lines.append('%6s%6s\n'
-                                 % (exclusion.exclusions[0],
-                                    exclusion.exclusions[1]))
+                    lines.append('%-6d' % exclusion.exclusions[0])
+                    for i in range(1, len(exclusion.exclusions)):
+                        lines.append(' %-6d' % exclusion.exclusions[i]),
+                    lines.append('\n')
+
         # [ system ]
         lines.append('[ system ]\n')
         lines.append('%s\n' % (System._sys._name))

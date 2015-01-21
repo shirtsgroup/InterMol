@@ -28,7 +28,7 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     """
     logger.info('Evaluating energy of {0}'.format(input_file))
 
-    directory, input_file = os.path.split(input_file)
+    directory, input_file = os.path.split(os.path.abspath(input_file))
 
     # mdrunin'
     saved_path = os.getcwd()
@@ -57,12 +57,12 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     data = [value * units.kilocalories_per_mole for value in data]
 
     # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
+    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper Dih.', 'Non-bonded',
             'Dispersive', 'Electrostatic', 'Coul. recip.', 'Disper. corr.',
             'Potential']
     e_out = dict(zip(types, data))
 
     # groupings
     e_out['Electrostatic'] += e_out['Coul. recip.']
-    e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
+    e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper Dih.']
     return e_out, '%s/lammps_stdout.txt' % directory
