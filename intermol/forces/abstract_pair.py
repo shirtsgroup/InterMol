@@ -7,7 +7,7 @@ class AbstractPair(object):
         self.pairtype = pairtype
 
     def __eq__(self, object):
-        if ((self.atom1 == object.atom1 and self.object2 == object.atom2) or (self.atom1 == object.atom2 and self.atom2 == object.atom1)):
+        if ((self.atom1 == object.atom1 and self.atom2 == object.atom2) or (self.atom1 == object.atom2 and self.atom2 == object.atom1)):
             return True
         else:
             return False
