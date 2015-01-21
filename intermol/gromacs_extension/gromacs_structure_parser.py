@@ -91,7 +91,7 @@ def writeStructure(filename):
 #                if atom.name.isdigit():
 #                    atom.name = "LMP_" + atom.name
                 n += 1
-                lines.append('%5d%-5s%5s%5d%13.8f%13.8f%13.8f%13.8f%13.8f%13.8f\n'
+                lines.append('%5d%-5s%5s%5d%12.6f%12.6f%12.6f%12.6f%12.6f%12.6f\n'
                              % (atom.residue_index + res_offset, atom.residue_name, atom.name, n,
                                 atom._position[0].in_units_of(units.nanometers)._value,
                                 atom._position[1].in_units_of(units.nanometers)._value,
