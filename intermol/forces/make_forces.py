@@ -90,8 +90,8 @@ for forcelist in forcelists:
     absSlots = ''
     for i, p in enumerate(abstractparams):
         absParamStr += p
-        absParamStrDefaults += (p + ' = ' + abstractdefaults[i])
-        absParamStrSelf += (p + ' = ' + p)
+        absParamStrDefaults += (p + '=' + abstractdefaults[i])
+        absParamStrSelf += (p + '=' + p)
         absSlots += '\'' + p + '\''
         if p != abstractparams[-1]:
             absParamStr += ', '
@@ -171,14 +171,14 @@ for forcelist in forcelists:
             for p in abstractparams:
                 f.write('{0}{1}=None'.format(spaces, p))
                 if p == abstractparams[-1]:
-                    f.write(')\n\n')
+                    f.write(')\n')
                 else:
                     f.write(',\n')
 
             # Now write the init of the force type.
             f.write('    def __init__(self, {0}\n'.format(bondingtypes))
             n_params = len(forcedata.master_paramlist[forcename])
-            spaces = ' ' * 16
+            spaces = ' ' * 17
             for i, param in enumerate(forcedata.master_paramlist[forcename]):
                 f.write('{0}{1}=0.0 * {2}'.format(
                         spaces, param, all_unitlist[forcename][i]))
@@ -197,7 +197,7 @@ for forcelist in forcelists:
             # Initialize the specific parameters for this force
             for param in forcedata.master_paramlist[forcename]:
                 f.write('{0}self.{1} = {1}\n'.format(spaces, param))
-            f.write('\n')
+            f.write('\n\n')
 
             # Write the class for the force.
             f.write('class {0}({1}):\n'.format(capname, capnametype))
@@ -209,8 +209,7 @@ for forcelist in forcelists:
             # Define the init for the class.
             f.write('    def __init__(self, {0}{1}\n'.format(
                     atoms, optbondingtypes))
-            n_params = len(forcedata.master_paramlist[forcename])
-            spaces = ' ' * 16
+            spaces = ' ' * 17
             for i, param in enumerate(forcedata.master_paramlist[forcename]):
                 f.write('{0}{1}=0.0 * {2}'.format(spaces, param, all_unitlist[forcename][i]))
                 if i == n_params:
@@ -224,10 +223,11 @@ for forcelist in forcelists:
                 f.write('        self.atom{0} = atom{0}\n'.format(atom_index))
 
             # Init the type of this force.
-            f.write('        {0}.__init__(self, {1}'.format(capnametype, bondingtypes))
-            for param in forcedata.master_paramlist[forcename]:
-                f.write('{0}={0}, '.format(param))
-            f.write(absParamStrSelf + ')\n\n')
+            f.write('        {0}.__init__(self, {1}\n'.format(capnametype, bondingtypes))
+            spaces = ' ' * 16
+            for i, param in enumerate(forcedata.master_paramlist[forcename]):
+                f.write('{0}{1}={1},\n'.format(spaces, param))
+            f.write('{0}{1})'.format(spaces, absParamStrSelf))
 
             # Print which files should not be edited directly.
             print filename
