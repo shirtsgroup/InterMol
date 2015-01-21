@@ -295,7 +295,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     for i in range(len(data)):
         line = '%20s ' % labels[i]
         line += '%18.8f ' % data[i][0]
-        for j in range(1,len(data[i])):
+        for j in range(1, len(data[i])):
             line += '%18.8f %18.8f' % (data[i][j], data[i][j]-data[i][0])
         out.append(line)
     out.append('')

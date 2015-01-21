@@ -966,17 +966,18 @@ class LammpsParser(object):
                     if atom.atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom.atomtype[0]] = a_type_i
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
-                            a_type_i, atom._mass[0].value_in_unit(self.MASS)))
+                                a_type_i,
+                                atom.mass[0].value_in_unit(self.MASS)))
                         pair_coeffs.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
-                            a_type_i,
-                            atom.epsilon[0].value_in_unit(self.ENERGY),
-                            atom.sigma[0].value_in_unit(self.DIST)))
+                                a_type_i,
+                                atom.epsilon[0].value_in_unit(self.ENERGY),
+                                atom.sigma[0].value_in_unit(self.DIST)))
                         a_type_i += 1
 
                     # Box minima.
-                    x_coord = atom._position[0].value_in_unit(self.DIST)
-                    y_coord = atom._position[1].value_in_unit(self.DIST)
-                    z_coord = atom._position[2].value_in_unit(self.DIST)
+                    x_coord = atom.position[0].value_in_unit(self.DIST)
+                    y_coord = atom.position[1].value_in_unit(self.DIST)
+                    z_coord = atom.position[2].value_in_unit(self.DIST)
                     if x_coord < x_min:
                         x_min = x_coord
                     if y_coord < y_min:
@@ -984,7 +985,6 @@ class LammpsParser(object):
                     if z_coord < z_min:
                         z_min = z_coord
 
-                    # atom
                     atom_list.append(
                         '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
                             atom.index + cumulative_atoms,
@@ -994,22 +994,20 @@ class LammpsParser(object):
                             x_coord,
                             y_coord,
                             z_coord))
-                    # velocity
-                    if atom._charge[0]._value != 0:
+                    if atom.charge[0]._value != 0:
                         atom_charges = True
-                    if atom._velocity:
+                    if atom.velocity:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index + cumulative_atoms,
-                                atom._velocity[0].value_in_unit(self.VEL),
-                                atom._velocity[1].value_in_unit(self.VEL),
-                                atom._velocity[2].value_in_unit(self.VEL)))
+                                atom.velocity[0].value_in_unit(self.VEL),
+                                atom.velocity[1].value_in_unit(self.VEL),
+                                atom.velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index + cumulative_atoms, 0, 0, 0))
                 cumulative_atoms += len(molecule.atoms)
-
 
         bond_list = self.force_dict['Bond']
         angle_list = self.force_dict['Angle']
