@@ -7,7 +7,6 @@ import warnings
 import numpy as np
 
 from intermol.gromacs import gromacs_driver
-from intermol.lammps import lammps_driver
 import intermol.tests
 
 
@@ -124,10 +123,6 @@ def main(args=None):
         gro_in = gro_in[0]
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
-    elif args.get('lmp_in'):
-        lammps_file = args['lmp_in']
-        prefix = os.path.splitext(os.path.basename(lammps_file))[0]
-        system = lammps_driver.read_file(in_file=lammps_file)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -150,15 +145,6 @@ def main(args=None):
             output_status['gromacs'] = e
         else:
             output_status['gromacs'] = 0
-
-    if args.get('lammps'):
-        try:
-            lammps_driver.write_file('{0}.input'.format(oname), system)
-        except Exception as e:
-            logger.exception(e)
-            output_status['lammps'] = e
-        else:
-            output_status['lammps'] = 0
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
@@ -195,21 +181,6 @@ def main(args=None):
                 e_outfile.append(-1)
             else:
                 output_status['gromacs'] = get_diff(e_in, out)
-                e_out.append(out)
-                e_outfile.append(outfile)
-
-        if args.get('lammps') and output_status['lammps'] == 0:
-            output_type.append('lammps')
-            try:
-                out, outfile = lammps_driver.lammps_energies(
-                        '{0}.input'.format(oname), lmppath)
-            except Exception as e:
-                output_status['lammps'] = e
-                logger.exception(e)
-                e_out.append(-1)
-                e_outfile.append(-1)
-            else:
-                output_status['lammps'] = get_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
 

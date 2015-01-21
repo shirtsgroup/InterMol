@@ -14,14 +14,14 @@ def convert_dihedral_from_proper_to_trig(p):
     multiplicity = p['multiplicity']
     zu = 0*k.unit
     fcs = {
-        'phi' : p['phi'],
-        'fc0' : k,
-        'fc1' : zu,
-        'fc2' : zu,
-        'fc3' : zu,
-        'fc4' : zu,
-        'fc5' : zu,
-        'fc6' : zu
+        'phi': p['phi'],
+        'fc0': k,
+        'fc1': zu,
+        'fc2': zu,
+        'fc3': zu,
+        'fc4': zu,
+        'fc5': zu,
+        'fc6': zu
         }
 
     k # which force constant is nonzero because of the multiplicity?
