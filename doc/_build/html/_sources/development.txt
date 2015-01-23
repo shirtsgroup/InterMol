@@ -17,17 +17,17 @@ To this end, we've started working with the `git flow branching model
 <http://nvie.com/posts/a-successful-git-branching-model/>`_. The basic things
 to know are:
 
-1. The master branch is strictly used for releases.
-2. The develop branch is where (!!!) development happens.
+1. The `master` branch is strictly used for releases.
+2. The `develop` branch is where (!!!) development happens.
 3. When we start working on a new engine, we create a feature branch. E.g.,
-   at the time of this writing, there are branches called feature/lammps and
-   feature/desmond. Once the overall structure in this branch is fairly
-   stable and has a good amounts of tests, we merge it into develop.
+   at the time of this writing, there are branches called `feature/lammps` and
+   `feature/desmond`. Once the overall structure in this branch is fairly
+   stable and has a good amounts of tests, we merge it into `develop`.
 
 So what do you, the interested developer, need to know?
 
-1. Don't make pull requests against master.
-2. Choose either develop or the appropriate feature branch to pull against.
+1. Don't make pull requests against `master`.
+2. Choose either `develop` or the appropriate `feature/*` branch to pull against.
 
 For more reading and a neat tool to help with branching see:
 

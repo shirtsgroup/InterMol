@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>intermol.lammps.lammps_parser module &mdash; InterMol 0.4.3beta documentation</title>
+  <title>intermol.lammps.lammps_parser module &mdash; InterMol 0.2a1 documentation</title>
   
 
   
@@ -28,7 +28,7 @@
   
 
   
-    <link rel="top" title="InterMol 0.4.3beta documentation" href="../index.html"/>
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../index.html"/>
         <link rel="up" title="intermol.lammps package" href="intermol.lammps.html"/>
         <link rel="next" title="intermol.atom module" href="intermol.atom.html"/>
         <link rel="prev" title="intermol.lammps.lammps_driver module" href="intermol.lammps.lammps_driver.html"/> 
@@ -232,22 +232,22 @@
 
 <dl class="attribute">
 <dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_angles">
-<tt class="descname">lookup_lammps_angles</tt><em class="property"> = {&lt;class 'intermol.forces.cosine_angle_type.CosineAngle'&gt;: 'cosine', &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;: 'harmonic', &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;: 'charmm'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_angles" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">lookup_lammps_angles</tt><em class="property"> = {&lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;: 'charmm', &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;: 'harmonic', &lt;class 'intermol.forces.cosine_angle_type.CosineAngle'&gt;: 'cosine'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_angles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_bonds">
-<tt class="descname">lookup_lammps_bonds</tt><em class="property"> = {&lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;: 'harmonic', &lt;class 'intermol.forces.nonlinear_bond_type.NonlinearBond'&gt;: 'nonlinear', &lt;class 'intermol.forces.fene_expandable_bond_type.FeneExpandableBond'&gt;: 'fene/expand', &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBond'&gt;: 'harmonic', &lt;class 'intermol.forces.quartic_breakable_bond_type.QuarticBreakableBond'&gt;: 'quartic', &lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;: 'morse', &lt;class 'intermol.forces.quartic_bond_type.QuarticBond'&gt;: 'class2'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_bonds" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">lookup_lammps_bonds</tt><em class="property"> = {&lt;class 'intermol.forces.fene_expandable_bond_type.FeneExpandableBond'&gt;: 'fene/expand', &lt;class 'intermol.forces.nonlinear_bond_type.NonlinearBond'&gt;: 'nonlinear', &lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;: 'morse', &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBond'&gt;: 'harmonic', &lt;class 'intermol.forces.quartic_breakable_bond_type.QuarticBreakableBond'&gt;: 'quartic', &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;: 'harmonic', &lt;class 'intermol.forces.quartic_bond_type.QuarticBond'&gt;: 'class2'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_bonds" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_dihedrals">
-<tt class="descname">lookup_lammps_dihedrals</tt><em class="property"> = {&lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;: 'opls', &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'Trig', &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;: 'charmm', &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;: 'multi/harmonic'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_dihedrals" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">lookup_lammps_dihedrals</tt><em class="property"> = {&lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;: 'opls', &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;: 'multi/harmonic', &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'Trig', &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;: 'charmm'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_dihedrals" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_impropers">
-<tt class="descname">lookup_lammps_impropers</tt><em class="property"> = {&lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'cvff', &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;: 'harmonic'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_impropers" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">lookup_lammps_impropers</tt><em class="property"> = {&lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;: 'harmonic', &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'cvff'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_impropers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -613,7 +613,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.4.3beta',
+            VERSION:'0.2a1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
