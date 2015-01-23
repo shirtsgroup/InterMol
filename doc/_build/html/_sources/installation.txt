@@ -15,7 +15,7 @@ Install from source
     $ cd InterMol
     $ python setup.py install
 
-Or if you plan on `contributing <development.rst>`_ something,::
+Or if you plan on `contributing <development.html>`__ something::
 
     $ python setup.py develop
 
