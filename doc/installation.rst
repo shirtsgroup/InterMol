@@ -22,6 +22,9 @@ To use InterMol, the following libraries and software will need to be installed.
     `NumPy <http://numpy.scipy.org/>`_ >= 1.6.0
         Numpy is the base package for numerical computing in python.
 
+    `simtk.unit <https://github.com/rmcgibbo/simtk.unit>`_ >= 0.1
+        Python unit classes for dimensional analysis and unit conversion.
+
 Testing your installation
 -------------------------
 
