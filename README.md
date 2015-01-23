@@ -1,12 +1,12 @@
-InterMol
-========
+InterMol: a conversion tool for molecular dynamics simulations
+==============================================================
 
+[![PyPI Status](https://badge.fury.io/py/intermol.png)](http://badge.fury.io/py/intermol)
 [![Linux Build Status](https://travis-ci.org/ctk3b/intermol.png?branch=develop)](https://travis-ci.org/ctk3b/intermol)
 [![Coverage Status](https://coveralls.io/repos/ctk3b/intermol/badge.png?branch=develop)](https://coveralls.io/r/ctk3b/intermol)
+[![Documentation Status](https://readthedocs.org/projects/intermol/badge/?version=develop)](http://intermol.readthedocs.org/en/develop/)
 
-Conversion tool for molecular simulations. 
-
-We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions. 
+We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions.
 
 To check out how it works, use the ````convert.py```` script found in the ````intermol```` directory:
 
@@ -60,4 +60,7 @@ mkdir test_output
 python convert.py --des_in validation/inputs/Desmond/UnitTest/frag_opls2001/frag_opls2001.cms --gromacs --odir test_output -e
 ````
 
-Note that the program may not give the same ASCII output; the goal is to produce the same energy output, and there are frequently multiple ways to express the same molecular potential energy function using differently formatted files.
+Note that the program may not give the same ASCII output; the goal is to
+produce the same energy output, and there are frequently multiple ways to
+express the same molecular potential energy function using differently
+formatted files.
