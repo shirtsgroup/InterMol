@@ -1,0 +1,7 @@
+intermol.version module
+=======================
+
+.. automodule:: intermol.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
