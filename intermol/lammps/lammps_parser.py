@@ -2,15 +2,14 @@ import os
 import logging
 import pdb
 import warnings
-import numpy as np
 import re
 
-
 import simtk.unit as units
-from intermol.atom import Atom
+import numpy as np
 
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
+from intermol.atom import Atom
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
@@ -47,7 +46,8 @@ def write_lammps(in_file, system, unit_set='real'):
 
 
 class LammpsParser(object):
-    """A class containing methods to read and write LAMMPS files."""
+    """A class containing methods to read and write LAMMPS files. """
+
     SCALE_INTO = 2.0
     SCALE_FROM = 0.5
 
@@ -990,7 +990,7 @@ class LammpsParser(object):
                             atom.index + cumulative_atoms,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
-                            atom._charge[0].value_in_unit(self.CHARGE),
+                            atom.charge[0].value_in_unit(self.CHARGE),
                             x_coord,
                             y_coord,
                             z_coord))
