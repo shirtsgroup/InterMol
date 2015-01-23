@@ -2,10 +2,22 @@
 Installation
 ============
 
-Install with pip
-----------------
+Install with pip (coming soon!)
+-------------------------------
+InterMol will be added to PyPI as soon as we get our first stable release up
+and running.
 
- $ pip install intermol
+Install from source
+-------------------
+::
+
+    $ git clone https://github.com/shirtsgroup/InterMol.git
+    $ cd InterMol
+    $ python setup.py install
+
+Or if you plan on `contributing <development.rst>`_ something,::
+
+    $ python setup.py develop
 
 Dependencies
 ------------
@@ -28,9 +40,9 @@ To use InterMol, the following libraries and software will need to be installed.
 Testing your installation
 -------------------------
 
-InterMol uses `py.test` for unit testing. To run them simply type run the
-following while in the base directory:
+InterMol uses `py.test <http://pytest.org/latest/>`_ for unit testing. To run them simply type run the
+following while in the base directory::
 
- $ py.test
+    $ py.test
 
 We need a LOT more tests so any help here is especially welcome!

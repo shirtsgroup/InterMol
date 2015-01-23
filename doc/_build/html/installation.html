@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="InterMol 0.2a1 documentation" href="index.html"/>
-        <link rel="next" title="Development" href="development.html"/>
+        <link rel="next" title="Contributing" href="development.html"/>
         <link rel="prev" title="InterMol: a conversion tool for molecular dynamics simulations" href="index.html"/> 
 
   
@@ -59,15 +59,17 @@
         
             <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#install-with-pip">Install with pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-source">Install from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-your-installation">Testing your installation</a></li>
 </ul>
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#code-style">Code Style</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#git-flow">Git Flow</a></li>
 </ul>
 </li>
@@ -125,10 +127,22 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="install-with-pip">
-<h2>Install with pip<a class="headerlink" href="#install-with-pip" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div>$ pip install intermol</div></blockquote>
+<div class="section" id="install-with-pip-coming-soon">
+<h2>Install with pip (coming soon!)<a class="headerlink" href="#install-with-pip-coming-soon" title="Permalink to this headline">¶</a></h2>
+<p>InterMol will be added to PyPI as soon as we get our first stable release up
+and running.</p>
+</div>
+<div class="section" id="install-from-source">
+<h2>Install from source<a class="headerlink" href="#install-from-source" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/shirtsgroup/InterMol.git
+$ cd InterMol
+$ python setup.py install
+</pre></div>
+</div>
+<p>Or if you plan on <a class="reference external" href="development.rst">contributing</a> something,:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py develop
+</pre></div>
+</div>
 </div>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
@@ -143,15 +157,18 @@ currently only set up to perform testing on Debian.</dd>
 for &gt;=2.6.</dd>
 <dt><a class="reference external" href="http://numpy.scipy.org/">NumPy</a> &gt;= 1.6.0</dt>
 <dd>Numpy is the base package for numerical computing in python.</dd>
+<dt><a class="reference external" href="https://github.com/rmcgibbo/simtk.unit">simtk.unit</a> &gt;= 0.1</dt>
+<dd>Python unit classes for dimensional analysis and unit conversion.</dd>
 </dl>
 </div></blockquote>
 </div>
 <div class="section" id="testing-your-installation">
 <h2>Testing your installation<a class="headerlink" href="#testing-your-installation" title="Permalink to this headline">¶</a></h2>
-<p>InterMol uses <cite>py.test</cite> for unit testing. To run them simply type run the
+<p>InterMol uses <a class="reference external" href="http://pytest.org/latest/">py.test</a> for unit testing. To run them simply type run the
 following while in the base directory:</p>
-<blockquote>
-<div>$ py.test</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre>$ py.test
+</pre></div>
+</div>
 <p>We need a LOT more tests so any help here is especially welcome!</p>
 </div>
 </div>
@@ -162,7 +179,7 @@ following while in the base directory:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="development.html" class="btn btn-neutral float-right" title="Development"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="development.html" class="btn btn-neutral float-right" title="Contributing"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="InterMol: a conversion tool for molecular dynamics simulations"><span class="fa fa-arrow-circle-left"></span> Previous</a>
