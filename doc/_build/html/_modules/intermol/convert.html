@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>intermol.convert &mdash; InterMol 0.2a1 documentation</title>
+  <title>intermol.convert &mdash; InterMol 0.4.3beta documentation</title>
   
 
   
@@ -28,7 +28,7 @@
   
 
   
-    <link rel="top" title="InterMol 0.2a1 documentation" href="../../index.html"/>
+    <link rel="top" title="InterMol 0.4.3beta documentation" href="../../index.html"/>
         <link rel="up" title="Module code" href="../index.html"/> 
 
   
@@ -132,7 +132,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">intermol.gromacs</span> <span class="kn">import</span> <span class="n">gromacs_driver</span>
-<span class="kn">from</span> <span class="nn">intermol.lammps</span> <span class="kn">import</span> <span class="n">lammps_driver</span>
 <span class="kn">import</span> <span class="nn">intermol.tests</span>
 
 
@@ -228,11 +227,10 @@
         <span class="n">gropath</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
     <span class="n">lmppath</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;lmppath&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">lmppath</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">exe</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;lmp_mpi&#39;</span><span class="p">,</span> <span class="s">&#39;lmp_openmpi&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">which</span><span class="p">(</span><span class="n">exe</span><span class="p">):</span>
-                <span class="n">lmppath</span> <span class="o">=</span> <span class="n">exe</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&#39;Found no LAMMPS executable.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">which</span><span class="p">(</span><span class="s">&#39;lmp_mpi&#39;</span><span class="p">):</span>
+            <span class="n">lmppath</span> <span class="o">=</span> <span class="s">&#39;lmp_mpi&#39;</span>
+        <span class="k">elif</span> <span class="n">which</span><span class="p">(</span><span class="s">&#39;lmp_openmpi&#39;</span><span class="p">):</span>
+            <span class="n">lmppath</span> <span class="o">=</span> <span class="s">&#39;lmp_openmpi&#39;</span>
 
     <span class="c"># --------------- PROCESS INPUTS ----------------- #</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;gro_in&#39;</span><span class="p">):</span>
@@ -250,10 +248,6 @@
         <span class="n">gro_in</span> <span class="o">=</span> <span class="n">gro_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">system</span> <span class="o">=</span> <span class="n">gromacs_driver</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">top_in</span><span class="p">,</span> <span class="n">gro_in</span><span class="p">,</span> <span class="n">gropath</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;lmp_in&#39;</span><span class="p">):</span>
-        <span class="n">lammps_file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;lmp_in&#39;</span><span class="p">]</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">lammps_file</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">system</span> <span class="o">=</span> <span class="n">lammps_driver</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">in_file</span><span class="o">=</span><span class="n">lammps_file</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;No input file&#39;</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -276,15 +270,6 @@
             <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;gromacs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;gromacs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;lammps&#39;</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">lammps_driver</span><span class="o">.</span><span class="n">write_file</span><span class="p">(</span><span class="s">&#39;{0}.input&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">oname</span><span class="p">),</span> <span class="n">system</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="c"># --------------- ENERGY EVALUATION ----------------- #</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;energy&#39;</span><span class="p">):</span>
@@ -324,21 +309,6 @@
                 <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
                 <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;lammps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">output_type</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;lammps&#39;</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">out</span><span class="p">,</span> <span class="n">outfile</span> <span class="o">=</span> <span class="n">lammps_driver</span><span class="o">.</span><span class="n">lammps_energies</span><span class="p">(</span>
-                        <span class="s">&#39;{0}.input&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">oname</span><span class="p">),</span> <span class="n">lmppath</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
-                <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-                <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
-
         <span class="c"># Display energy comparison results.</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;InterMol Conversion Energy Comparison Results&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">]</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;{0} input energy file: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">e_infile</span><span class="p">))</span>
@@ -351,7 +321,7 @@
 
 </div>
 <div class="viewcode-block" id="get_diff"><a class="viewcode-back" href="../../apidoc/intermol.convert.html#intermol.convert.get_diff">[docs]</a><span class="k">def</span> <span class="nf">get_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">e_out</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns difference in potential energy.</span>
+    <span class="sd">&quot;&quot;&quot;returns difference in potential energy</span>
 
 <span class="sd">    arguments:</span>
 <span class="sd">        e_in  - dictionary of energy groups from input file</span>
@@ -360,16 +330,16 @@
 <span class="sd">    returns:</span>
 <span class="sd">        potential energy difference in units of the input</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;Potential&#39;</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;Potential&#39;</span> <span class="c"># getting difference in potential energy</span>
     <span class="nb">input</span> <span class="o">=</span> <span class="n">e_in</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
     <span class="n">diff</span> <span class="o">=</span> <span class="n">e_out</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span><span class="o">.</span><span class="n">in_units_of</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span> <span class="o">-</span> <span class="nb">input</span>
     <span class="k">return</span> <span class="n">diff</span><span class="o">.</span><span class="n">_value</span>
 
 </div>
 <div class="viewcode-block" id="find_match"><a class="viewcode-back" href="../../apidoc/intermol.convert.html#intermol.convert.find_match">[docs]</a><span class="k">def</span> <span class="nf">find_match</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function for `summarize_energy_results`. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;helper function for summarize_energy_results() &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value_in_unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">in_units_of</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">_value</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
@@ -420,8 +390,8 @@
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
         <span class="n">line</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%20s</span><span class="s"> &#39;</span> <span class="o">%</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">line</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="si">%18.8f</span><span class="s"> &#39;</span> <span class="o">%</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
-            <span class="n">line</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="si">%18.8f</span><span class="s"> </span><span class="si">%18.8f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="si">%18.8f</span><span class="s"> </span><span class="si">%18.8f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
     <span class="c"># get differences in potential energy</span>
@@ -468,7 +438,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.2a1',
+            VERSION:'0.4.3beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

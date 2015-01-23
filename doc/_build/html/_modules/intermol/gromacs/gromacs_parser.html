@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>intermol.gromacs.gromacs_parser &mdash; InterMol 0.2a1 documentation</title>
+  <title>intermol.gromacs.gromacs_parser &mdash; InterMol 0.4.3beta documentation</title>
   
 
   
@@ -28,7 +28,7 @@
   
 
   
-    <link rel="top" title="InterMol 0.2a1 documentation" href="../../../index.html"/>
+    <link rel="top" title="InterMol 0.4.3beta documentation" href="../../../index.html"/>
         <link rel="up" title="Module code" href="../../index.html"/> 
 
   
@@ -303,15 +303,13 @@
 <div class="viewcode-block" id="GromacsParser.canonical_dihedral"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.canonical_dihedral">[docs]</a>    <span class="k">def</span> <span class="nf">canonical_dihedral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">dihedral</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s">&#39;into&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="sd">        We can fit everything into two types of dihedrals - dihedral_trig and</span>
-<span class="sd">        improper harmonic. Dihedral trig is of the form:</span>
-
-<span class="sd">            fc0 + sum_i=1^6 fci (cos(nx-phi)</span>
-
-<span class="sd">        Proper dihedrals can be stored easily in this form, since they have only</span>
-<span class="sd">        1 n improper dihedrals can as well (flag as improper). RB can be stored</span>
-<span class="sd">        as well, assuming phi = 0 or 180. Fourier can also be stored.  A full</span>
-<span class="sd">        dihedral trig can be decomposied in to multiple proper dihedrals.</span>
+<span class="sd">        We can fit everything into two types of dihedrals - dihedral_trig, and</span>
+<span class="sd">        improper harmonic dihedral trig is of the form fc0 + sum_i=1^6 fci</span>
+<span class="sd">        (cos(nx-phi) proper dihedrals can be stored easily in this form, since</span>
+<span class="sd">        they have only 1 n improper dihedrals can as well (flag as improper) RB</span>
+<span class="sd">        can be stored as well, assuming phi = 0 or 180 Fourier can also be</span>
+<span class="sd">        stored.  a full dihedral trig can be decomposied in to multiple proper</span>
+<span class="sd">        dihedrals.</span>
 
 <span class="sd">        Will need to handle multiple dihedrals little differently in that we</span>
 <span class="sd">        will need to add multiple 9 dihedrals together into a single</span>
@@ -1614,7 +1612,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'0.2a1',
+            VERSION:'0.4.3beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
