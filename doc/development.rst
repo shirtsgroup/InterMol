@@ -18,7 +18,7 @@ naming conventions (e.g. public methods should use ``lower_case_with_underscores
 instead of ``camelCase``).
 
 Two helpful tools for checking your code are ``flake8`` and ``pylint``. The latter
-is a lot pickier but generally, your code should pass most ``flake8`` tests.
+is a lot pickier but generally, your code should pass most ``flake8`` tests::
 
  $ pip install flake8 pylint
 
