@@ -4,11 +4,11 @@ InterMol: a conversion tool for molecular dynamics simulations
 .. image:: https://badge.fury.io/py/intermol.png
     :target: http://badge.fury.io/py/intermol
 
-.. image:: https://travis-ci.org/shirtsgroup/intermol.png?branch=develop
-        :target: https://travis-ci.org/shirtsgroup/intermol
+.. image:: https://travis-ci.org/shirtsgroup/InterMol.png?branch=develop
+        :target: https://travis-ci.org/shirtsgroup/InterMol
 
-.. image:: https://coveralls.io/repos/shirtsgroup/intermol/badge.png?branch=develop
-        :target: https://coveralls.io/r/shirtsgroup/intermol?branch=develop
+.. image:: https://coveralls.io/repos/shirtsgroup/InterMol/badge.png?branch=develop
+        :target: https://coveralls.io/r/shirtsgroup/InterMol?branch=develop
 
 .. image:: https://readthedocs.org/projects/intermol/badge/?version=develop
         :target: http://intermol.readthedocs.org/en/develop/
