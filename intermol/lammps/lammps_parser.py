@@ -652,7 +652,7 @@ class LammpsParser(object):
         self.improper_classes = dict()
         self.parse_force_coeffs(data_lines, "Improper",
                                 self.improper_classes, self.improper_style,
-                                self.lammps_impropers, self.canonical_improper)
+                                self.lammps_impropers, self.canonical_dihedral)
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
