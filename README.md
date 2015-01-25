@@ -2,8 +2,8 @@ InterMol: a conversion tool for molecular dynamics simulations
 ==============================================================
 
 [![PyPI Status](https://badge.fury.io/py/intermol.png)](http://badge.fury.io/py/intermol)
-[![Linux Build Status](https://travis-ci.org/shirtsgroup/intermol.png?branch=develop)](https://travis-ci.org/shirtsgroup/intermol)
-[![Coverage Status](https://coveralls.io/repos/shirtsgroup/intermol/badge.png?branch=develop)](https://coveralls.io/r/shirtsgroup/intermol)
+[![Linux Build Status](https://travis-ci.org/shirtsgroup/InterMol.png?branch=develop)](https://travis-ci.org/shirtsgroup/InterMol)
+[![Coverage Status](https://coveralls.io/repos/shirtsgroup/InterMol/badge.png?branch=develop)](https://coveralls.io/r/shirtsgroup/InterMol)
 [![Documentation Status](https://readthedocs.org/projects/intermol/badge/?version=develop)](http://intermol.readthedocs.org/en/develop/)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shirtsgroup/InterMol?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
