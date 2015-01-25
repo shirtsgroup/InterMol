@@ -379,10 +379,13 @@ class LammpsParser(object):
             self.molecule_name = next(data_lines).strip()
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
+            self.current_mol_type = MoleculeType(self.molecule_name)
+            self.current_mol_type.nrexcl = 3  # TODO: automate determination!
+            # NOTE: nrexcl is a global in lammps and should probably be 
+            # determined in parse_special_bonds
+            self.system.add_molecule_type(self.current_mol_type)
             self.current_mol = Molecule(self.molecule_name)
             self.system.add_molecule(self.current_mol)
-            self.current_mol_type = self.system._molecules[self.molecule_name]
-            self.current_mol_type.nrexcl = 3  # TODO: automate determination!
 
             for line in data_lines:
                 if line.strip():
