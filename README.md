@@ -5,6 +5,7 @@ InterMol: a conversion tool for molecular dynamics simulations
 [![Linux Build Status](https://travis-ci.org/shirtsgroup/intermol.png?branch=develop)](https://travis-ci.org/shirtsgroup/intermol)
 [![Coverage Status](https://coveralls.io/repos/shirtsgroup/intermol/badge.png?branch=develop)](https://coveralls.io/r/shirtsgroup/intermol)
 [![Documentation Status](https://readthedocs.org/projects/intermol/badge/?version=develop)](http://intermol.readthedocs.org/en/develop/)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shirtsgroup/InterMol?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions.
 

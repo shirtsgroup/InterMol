@@ -28,6 +28,30 @@ notify you of PEP8 violations as you code.
 .. note:: Some older chunks of the code do not yet adhere to PEP8. If you find
           something easily fixable, please do so!
 
+Running our tests
+-----------------
+
+InterMol uses `py.test <http://pytest.org/latest/>`_ for unit testing. To run
+them simply type run the following while in the base directory::
+
+    $ py.test
+
+We need a LOT more tests so any help here is especially welcome!
+
+To debug failing tests, you typically get a clearer output by running a subset of
+the tests, e.g.::
+
+    $ python test_gromacs.py --type unit
+
+which prints out log files to
+`intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log`. Re-running
+a single test is best done directly via the `convert.py` script, e.g.::
+
+    $ python convert.py --gro_in tests/gromacs/unit_tests/[system name]/[system name].{top,gro} --gromacs -e
+
+.. note:: If you have any ideas or suggestions for streamlining the testing process
+          please let us know by filing an issue or opening a pull request!
+
 Git Flow
 --------
 Because we are supporting multiple molecular dynamics engines that should all
