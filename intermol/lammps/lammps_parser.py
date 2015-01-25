@@ -389,6 +389,8 @@ class LammpsParser(object):
 
             for line in data_lines:
                 if line.strip():
+                    # Remove trailing comment
+                    line = line.partition('#')[0]
                     # Catch all box dimensions.
                     if ('xlo' in line) and ('xhi' in line):
                         self.parse_box(line.split(), 0)
@@ -413,7 +415,7 @@ class LammpsParser(object):
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
                 if line.strip():
-                    keyword = line.strip()
+                    keyword = line.partition('#')[0].strip()
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
 
@@ -540,10 +542,9 @@ class LammpsParser(object):
         fields = [float(field) for field in line[:2]]
         box_length = fields[1] - fields[0]
         if box_length > 0:
-            self.box_vector[dim, dim] = box_length
+            self.system.box_vector[dim, dim] = box_length * self.DIST
         else:
             raise ValueError("Negative box length specified in data file.")
-        self.system.box_vector = self.box_vector * self.DIST
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -552,7 +553,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
@@ -562,7 +563,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = [float(field) for field in line.partition('#')[0].split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
                 if self.system.nonbonded_function == 1:
@@ -582,7 +583,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             warn = False
             if len(force_style) == 1:
@@ -659,7 +660,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             if len(fields) in [7, 10]:
                 if len(fields) == 10:
@@ -719,7 +720,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break
-            fields = [field for field in line.split()]
+            fields = [field for field in line.partition('#')[0].split()]
             vel_dict[int(fields[0])] = fields[1:4]
         for atom in atoms:
             atom._velocity = [float(vel) * self.VEL for vel in
@@ -731,7 +732,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_force = None
             coeff_num = fields[1]
