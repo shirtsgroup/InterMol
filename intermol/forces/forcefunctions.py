@@ -141,7 +141,9 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0)
 
 
 def optparamkeylookup(force_type):
-    """Given a force_type object, determines the key associated with the optional parameters
+    """Given a force_type object, determine the key associated with the
+    optional parameters.
+
     """
     name = force_type.__name__.lower()
     for key, params in forcedata.AbstractOptParams.iteritems():

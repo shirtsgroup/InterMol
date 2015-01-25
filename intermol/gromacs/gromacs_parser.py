@@ -179,12 +179,14 @@ class GromacsParser(object):
         """
 
         We can fit everything into two types of dihedrals - dihedral_trig, and
-        improper harmonic dihedral trig is of the form fc0 + sum_i=1^6 fci
-        (cos(nx-phi) proper dihedrals can be stored easily in this form, since
-        they have only 1 n improper dihedrals can as well (flag as improper) RB
-        can be stored as well, assuming phi = 0 or 180 Fourier can also be
-        stored.  a full dihedral trig can be decomposied in to multiple proper
-        dihedrals.
+        improper harmonic. Dihedral trig is of the form
+
+            fc0 + sum_i=1^6 fci (cos(nx-phi)
+
+        Proper dihedrals can be stored easily in this form, since they have
+        only 1 n. Improper dihedrals can as well (flag as improper). RB can be
+        stored as well, assuming phi = 0 or 180. Fourier can also be stored. A
+        full dihedral trig can be decomposed into multiple proper dihedrals.
 
         Will need to handle multiple dihedrals little differently in that we
         will need to add multiple 9 dihedrals together into a single
@@ -279,7 +281,21 @@ class GromacsParser(object):
                 paramlist = [params]
             return d_type, paramlist
 
-    def choose_parameter_kwds_from_forces(self, entries, n_atoms, force_type, gromacs_force):
+    def choose_parameter_kwds_from_forces(self, entries, n_atoms, force_type,
+                                          gromacs_force):
+        """Extract a force's parameters into a keyword dictionary.
+
+        Args:
+            entries (str): The `split()` line being parsed.
+            n_atoms (int): The number of atoms in the force.
+            force_type: The type of the force.
+            gromacs_force: The
+        Returns:
+            kwds (dict): The force's parameters, e.g.
+                {'length': Quantity(value=0.13, unit=nanometers),
+                 'k': ...
+                }
+        """
         n_entries = len(entries)
         gromacs_force_type = gromacs_force.__base__  # what's the base class
         typename = gromacs_force_type.__name__
@@ -960,13 +976,13 @@ class GromacsParser(object):
         a1, a2, a3, a4 = bondingtypes
         # All possible ways to match a dihedraltype
         atom_orders = [[a1, a2, a3, a4],    # original order
+                       [a4, a3, a2, a1],    # flip it
                        [a1, a2, a3, 'X'],   # single wildcard 1
                        ['X', a2, a3, a4],   # single wildcard 2
                        ['X', a2, a3, 'X'],  # double wildcard
                        ['X', 'X', a3, a4],  # front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
                        ['X', 'X', a2, a1],  # rear end double wildcard
-                       [a4, a3, a2, a1],    # flip it
                        ['X', a3, a2, a1],   # flipped single wildcard 1
                        [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a3, a2, 'X'],  # flipped double wildcard
@@ -974,15 +990,49 @@ class GromacsParser(object):
                        ]
 
         dihedral_types = set()
-        for a1, a2, a3, a4 in atom_orders:
+        for i, atoms in enumerate(atom_orders):
+            a1, a2, a3, a4 = atoms
             key = tuple([a1, a2, a3, a4, improper])
             dihedral_type = self.dihedraltypes.get(key)
             if dihedral_type:
-                dihedral_types.update(dihedral_type)
+                for to_be_added in dihedral_type:
+                    for already_added in dihedral_types:
+                        if not self.types_are_unique(to_be_added, already_added):
+                            break
+                    else:  # The loop completed without breaking.
+                        dihedral_types.add(to_be_added)
+                break
         if not dihedral_types:
             logger.warn("Lookup failed for dihedral: {0}".format(bondingtypes))
         else:
             return list(dihedral_types)
+
+    @staticmethod
+    def types_are_unique(a, b):
+        """Check if two force types are unique.
+
+        Currently only tests TrigDihedralType and ImproperHarmonicDihedralType
+        because these are the only two forcetypes that we currently allow to
+        to have multiple values for the same set of 4 atom bondingtypes.
+        """
+        if (isinstance(a, TrigDihedralType) and
+                isinstance(b, TrigDihedralType)):
+            return not (a.fc0 == b.fc0 and
+                        a.fc1 == b.fc1 and
+                        a.fc2 == b.fc2 and
+                        a.fc3 == b.fc3 and
+                        a.fc4 == b.fc4 and
+                        a.fc5 == b.fc5 and
+                        a.fc6 == b.fc6 and
+                        a.improper == b.improper and
+                        a.phi == b.phi)
+        elif (isinstance(a, ImproperHarmonicDihedralType) and
+                isinstance(b, ImproperHarmonicDihedralType)):
+            return not (a.xi == b.xi and
+                        a.k == b.k and
+                        a.improper == b.improper)
+        else:
+            return True
 
     def lookup_atom_bondingtype(self, index):
         return self.current_molecule.atoms[index - 1].bondingtype
@@ -1326,8 +1376,13 @@ class GromacsParser(object):
         elif len(fields[4]) == 1 and fields[4].isdigit():
             btypes = fields[:4]
             n_atoms_specified = 4
-        dihedral_type = self.process_forcetype(btypes, 'dihedral', line, n_atoms_specified,
-                self.gromacs_dihedral_types, self.canonical_dihedral)
+        else:
+            # TODO: Come up with remaining cases (are there any?) and a proper
+            #       failure case.
+            logger.warn('Should never have gotten here.')
+        dihedral_type = self.process_forcetype(
+            btypes, 'dihedral', line, n_atoms_specified,
+            self.gromacs_dihedral_types, self.canonical_dihedral)
 
         # Still need a bit more information
         numeric_dihedraltype = fields[n_atoms_specified]
@@ -1335,14 +1390,17 @@ class GromacsParser(object):
 
         key = tuple([btypes[0], btypes[1], btypes[2], btypes[3],
                      dihedral_type.improper])
+
         if key in self.dihedraltypes:
             # There are multiple dihedrals defined for these atom types.
-            self.dihedraltypes[key].append(dihedral_type)
+            self.dihedraltypes[key].add(dihedral_type)
         else:
-            self.dihedraltypes[key] = [dihedral_type]
+            self.dihedraltypes[key] = {dihedral_type}
 
-    def process_forcetype(self, bondingtypes, forcename, line, n_atoms, gromacs_force_types,
-                           canonical_force):
+
+
+    def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
+                          gromacs_force_types, canonical_force):
         """ """
         fields = line.split()
 
