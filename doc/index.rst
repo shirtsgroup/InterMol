@@ -5,12 +5,12 @@ InterMol: a conversion tool for molecular dynamics simulations
         :target: http://badge.fury.io/py/intermol
         :alt: PyPI status
 
-.. image:: https://travis-ci.org/shirtsgroup/intermol.png?branch=develop
-        :target: https://travis-ci.org/shirtsgroup/intermol
+.. image:: https://travis-ci.org/shirtsgroup/InterMol.png?branch=develop
+        :target: https://travis-ci.org/shirtsgroup/InterMol
         :alt: Build Status
 
-.. image:: https://coveralls.io/repos/shirtsgroup/intermol/badge.png?branch=develop
-        :target: https://coveralls.io/r/shirtsgroup/intermol?branch=develop
+.. image:: https://coveralls.io/repos/shirtsgroup/InterMol/badge.png?branch=develop
+        :target: https://coveralls.io/r/shirtsgroup/InterMol?branch=develop
         :alt: Test Coverage
 
 .. image:: https://readthedocs.org/projects/intermol/badge/?version=develop
