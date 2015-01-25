@@ -7,6 +7,7 @@ import warnings
 import numpy as np
 
 from intermol.gromacs import gromacs_driver
+from intermol.lammps import lammps_driver
 import intermol.tests
 
 
@@ -102,10 +103,11 @@ def main(args=None):
         gropath = ''
     lmppath = args.get('lmppath')
     if not lmppath:
-        if which('lmp_mpi'):
-            lmppath = 'lmp_mpi'
-        elif which('lmp_openmpi'):
-            lmppath = 'lmp_openmpi'
+        for exe in ['lmp_mpi', 'lmp_openmpi']:
+            if which(exe):
+                lmppath = exe
+        else:
+            logger.exception('Found no LAMMPS executable.')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -123,6 +125,10 @@ def main(args=None):
         gro_in = gro_in[0]
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
+    elif args.get('lmp_in'):
+        lammps_file = args['lmp_in']
+        prefix = os.path.splitext(os.path.basename(lammps_file))[0]
+        system = lammps_driver.read_file(in_file=lammps_file)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -145,6 +151,15 @@ def main(args=None):
             output_status['gromacs'] = e
         else:
             output_status['gromacs'] = 0
+
+    if args.get('lammps'):
+        try:
+            lammps_driver.write_file('{0}.input'.format(oname), system)
+        except Exception as e:
+            logger.exception(e)
+            output_status['lammps'] = e
+        else:
+            output_status['lammps'] = 0
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
@@ -184,6 +199,21 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
+        if args.get('lammps') and output_status['lammps'] == 0:
+            output_type.append('lammps')
+            try:
+                out, outfile = lammps_driver.lammps_energies(
+                        '{0}.input'.format(oname), lmppath)
+            except Exception as e:
+                output_status['lammps'] = e
+                logger.exception(e)
+                e_out.append(-1)
+                e_outfile.append(-1)
+            else:
+                output_status['lammps'] = get_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
         # Display energy comparison results.
         out = ['InterMol Conversion Energy Comparison Results','']
         out.append('{0} input energy file: {1}'.format(input_type, e_infile))
@@ -196,7 +226,7 @@ def main(args=None):
 
 
 def get_diff(e_in, e_out):
-    """returns difference in potential energy
+    """Returns difference in potential energy.
 
     arguments:
         e_in  - dictionary of energy groups from input file
@@ -205,16 +235,16 @@ def get_diff(e_in, e_out):
     returns:
         potential energy difference in units of the input
     """
-    type = 'Potential' # getting difference in potential energy
+    type = 'Potential'
     input = e_in[type]
     diff = e_out[type].in_units_of(input.unit) - input
     return diff._value
 
 
 def find_match(key, dictionary, unit):
-    """helper function for summarize_energy_results() """
+    """Helper function for `summarize_energy_results`. """
     if key in dictionary:
-        return dictionary[key].in_units_of(unit)._value
+        return dictionary[key].value_in_unit(unit)
     else:
         return np.nan
 
@@ -265,8 +295,8 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     for i in range(len(data)):
         line = '%20s ' % labels[i]
         line += '%18.8f ' % data[i][0]
-        for j in range(1,len(data[i])):
-            line += '%18.8f %18.8f' % (data[i][j],data[i][j]-data[i][0])
+        for j in range(1, len(data[i])):
+            line += '%18.8f %18.8f' % (data[i][j], data[i][j]-data[i][0])
         out.append(line)
     out.append('')
     # get differences in potential energy
