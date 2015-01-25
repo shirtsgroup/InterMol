@@ -1,6 +1,8 @@
 InterMol
 ========
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shirtsgroup/InterMol?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Conversion tool for molecular simulations. 
 
 We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions. 
