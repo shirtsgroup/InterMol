@@ -295,14 +295,15 @@ class LammpsParser(object):
     def read(self):
         """Reads a LAMMPS input file and a data file specified within.
 
-        Args:
-            input_file (str): Name of LAMMPS input file to read in.
+        Returns:
+            system:
         """
-        self.read_input(self.in_file)
+        self.read_input()
         if self.data_file:
             self.read_data(self.data_file)
         else:
             raise Exception("No data file found in input script")
+        return self.system
 
     def read_input(self):
         """Reads a LAMMPS input file.
@@ -349,7 +350,7 @@ class LammpsParser(object):
                     keyword = line.split()[0]
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](line.split())
-            keyword_check[keyword] = True
+                        keyword_check[keyword] = True
 
         for key in keyword_check.keys():
             if not (keyword_check[key]):
