@@ -62,7 +62,6 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#testing-your-installation">Testing your installation</a></li>
 </ul>
 </li>
 </ul>
@@ -70,6 +69,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#bug-reports">Bug Reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-our-tests">Running our tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#git-flow">Git Flow</a></li>
 </ul>
 </li>
@@ -84,6 +84,11 @@
 <li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.forces.html">intermol.forces package</a><ul>
@@ -141,15 +146,41 @@ for python code. Please try to follow it when reasonable, in particular the
 naming conventions (e.g. public methods should use <tt class="docutils literal"><span class="pre">lower_case_with_underscores</span></tt>
 instead of <tt class="docutils literal"><span class="pre">camelCase</span></tt>).</p>
 <p>Two helpful tools for checking your code are <tt class="docutils literal"><span class="pre">flake8</span></tt> and <tt class="docutils literal"><span class="pre">pylint</span></tt>. The latter
-is a lot pickier but generally, your code should pass most <tt class="docutils literal"><span class="pre">flake8</span></tt> tests.</p>
-<blockquote>
-<div>$ pip install flake8 pylint</div></blockquote>
+is a lot pickier but generally, your code should pass most <tt class="docutils literal"><span class="pre">flake8</span></tt> tests:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install flake8 pylint
+</pre></div>
+</div>
 <p>Also some IDE&#8217;s like <a class="reference external" href="https://www.jetbrains.com/pycharm/">PyCharm</a> will
 notify you of PEP8 violations as you code.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Some older chunks of the code do not yet adhere to PEP8. If you find
 something easily fixable, please do so!</p>
+</div>
+</div>
+<div class="section" id="running-our-tests">
+<h2>Running our tests<a class="headerlink" href="#running-our-tests" title="Permalink to this headline">¶</a></h2>
+<p>InterMol uses <a class="reference external" href="http://pytest.org/latest/">py.test</a> for unit testing. To run
+them simply type run the following while in the base directory:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ py.test
+</pre></div>
+</div>
+<p>We need a LOT more tests so any help here is especially welcome!</p>
+<p>To debug failing tests, you typically get a clearer output by running a subset of
+the tests, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python test_gromacs.py --type unit
+</pre></div>
+</div>
+<p>which prints out log files to
+<cite>intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log</cite>. Re-running
+a single test is best done directly via the <cite>convert.py</cite> script, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python convert.py --gro_in tests/gromacs/unit_tests/[system name]/[system name].{top,gro} --gromacs -e
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you have any ideas or suggestions for streamlining the testing process
+please let us know by filing an issue or opening a pull request!</p>
 </div>
 </div>
 <div class="section" id="git-flow">

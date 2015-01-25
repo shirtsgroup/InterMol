@@ -37,12 +37,9 @@ To use InterMol, the following libraries and software will need to be installed.
     `simtk.unit <https://github.com/rmcgibbo/simtk.unit>`_ >= 0.1
         Python unit classes for dimensional analysis and unit conversion.
 
-Testing your installation
--------------------------
 
-InterMol uses `py.test <http://pytest.org/latest/>`_ for unit testing. To run them simply type run the
-following while in the base directory::
 
-    $ py.test
 
-We need a LOT more tests so any help here is especially welcome!
+
+
+

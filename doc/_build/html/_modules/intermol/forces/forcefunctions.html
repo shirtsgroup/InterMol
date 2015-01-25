@@ -61,7 +61,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#testing-your-installation">Testing your installation</a></li>
 </ul>
 </li>
 </ul>
@@ -69,6 +68,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../development.html">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#bug-reports">Bug Reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#running-our-tests">Running our tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#git-flow">Git Flow</a></li>
 </ul>
 </li>
@@ -83,6 +83,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
@@ -268,7 +273,9 @@
 
 </div>
 <div class="viewcode-block" id="optparamkeylookup"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.optparamkeylookup">[docs]</a><span class="k">def</span> <span class="nf">optparamkeylookup</span><span class="p">(</span><span class="n">force_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given a force_type object, determines the key associated with the optional parameters</span>
+    <span class="sd">&quot;&quot;&quot;Given a force_type object, determine the key associated with the</span>
+<span class="sd">    optional parameters.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">force_type</span><span class="o">.</span><span class="n">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">AbstractOptParams</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>

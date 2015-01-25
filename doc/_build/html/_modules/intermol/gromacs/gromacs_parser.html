@@ -61,7 +61,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#testing-your-installation">Testing your installation</a></li>
 </ul>
 </li>
 </ul>
@@ -69,6 +68,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../development.html">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#bug-reports">Bug Reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#running-our-tests">Running our tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development.html#git-flow">Git Flow</a></li>
 </ul>
 </li>
@@ -83,6 +83,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
@@ -306,12 +311,14 @@
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        We can fit everything into two types of dihedrals - dihedral_trig, and</span>
-<span class="sd">        improper harmonic dihedral trig is of the form fc0 + sum_i=1^6 fci</span>
-<span class="sd">        (cos(nx-phi) proper dihedrals can be stored easily in this form, since</span>
-<span class="sd">        they have only 1 n improper dihedrals can as well (flag as improper) RB</span>
-<span class="sd">        can be stored as well, assuming phi = 0 or 180 Fourier can also be</span>
-<span class="sd">        stored.  a full dihedral trig can be decomposied in to multiple proper</span>
-<span class="sd">        dihedrals.</span>
+<span class="sd">        improper harmonic. Dihedral trig is of the form</span>
+
+<span class="sd">            fc0 + sum_i=1^6 fci (cos(nx-phi)</span>
+
+<span class="sd">        Proper dihedrals can be stored easily in this form, since they have</span>
+<span class="sd">        only 1 n. Improper dihedrals can as well (flag as improper). RB can be</span>
+<span class="sd">        stored as well, assuming phi = 0 or 180. Fourier can also be stored. A</span>
+<span class="sd">        full dihedral trig can be decomposed into multiple proper dihedrals.</span>
 
 <span class="sd">        Will need to handle multiple dihedrals little differently in that we</span>
 <span class="sd">        will need to add multiple 9 dihedrals together into a single</span>
@@ -406,7 +413,21 @@
                 <span class="n">paramlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">params</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">d_type</span><span class="p">,</span> <span class="n">paramlist</span>
 </div>
-<div class="viewcode-block" id="GromacsParser.choose_parameter_kwds_from_forces"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.choose_parameter_kwds_from_forces">[docs]</a>    <span class="k">def</span> <span class="nf">choose_parameter_kwds_from_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">,</span> <span class="n">force_type</span><span class="p">,</span> <span class="n">gromacs_force</span><span class="p">):</span>
+<div class="viewcode-block" id="GromacsParser.choose_parameter_kwds_from_forces"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.choose_parameter_kwds_from_forces">[docs]</a>    <span class="k">def</span> <span class="nf">choose_parameter_kwds_from_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">,</span> <span class="n">force_type</span><span class="p">,</span>
+                                          <span class="n">gromacs_force</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract a force&#39;s parameters into a keyword dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entries (str): The `split()` line being parsed.</span>
+<span class="sd">            n_atoms (int): The number of atoms in the force.</span>
+<span class="sd">            force_type: The type of the force.</span>
+<span class="sd">            gromacs_force: The</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            kwds (dict): The force&#39;s parameters, e.g.</span>
+<span class="sd">                {&#39;length&#39;: Quantity(value=0.13, unit=nanometers),</span>
+<span class="sd">                 &#39;k&#39;: ...</span>
+<span class="sd">                }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_entries</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
         <span class="n">gromacs_force_type</span> <span class="o">=</span> <span class="n">gromacs_force</span><span class="o">.</span><span class="n">__base__</span>  <span class="c"># what&#39;s the base class</span>
         <span class="n">typename</span> <span class="o">=</span> <span class="n">gromacs_force_type</span><span class="o">.</span><span class="n">__name__</span>
@@ -1087,32 +1108,64 @@
         <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">bondingtypes</span>
         <span class="c"># All possible ways to match a dihedraltype</span>
         <span class="n">atom_orders</span> <span class="o">=</span> <span class="p">[[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span><span class="p">],</span>    <span class="c"># original order</span>
+                       <span class="p">[</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">],</span>    <span class="c"># flip it</span>
                        <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">],</span>   <span class="c"># single wildcard 1</span>
                        <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span><span class="p">],</span>   <span class="c"># single wildcard 2</span>
                        <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">],</span>  <span class="c"># double wildcard</span>
                        <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span><span class="p">],</span>  <span class="c"># front end double wildcard</span>
                        <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">],</span>  <span class="c"># rear end double wildcard</span>
-                       <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">]</span>   <span class="c"># rear end double wildcard</span>
+                       <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">],</span>  <span class="c"># rear end double wildcard</span>
+                       <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">],</span>   <span class="c"># flipped single wildcard 1</span>
+                       <span class="p">[</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">],</span>   <span class="c"># flipped single wildcard 2</span>
+                       <span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">],</span>  <span class="c"># flipped double wildcard</span>
+                       <span class="p">[</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">]</span>   <span class="c"># flipped front end double wildcard</span>
                        <span class="p">]</span>
 
-        <span class="c"># It&#39;s not a symmetric dihedral also check the reverses:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a1</span> <span class="o">==</span> <span class="n">a4</span> <span class="ow">and</span> <span class="n">a2</span> <span class="o">==</span> <span class="n">a3</span><span class="p">):</span>
-            <span class="n">atom_orders</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>    <span class="c"># flip it</span>
-            <span class="n">atom_orders</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a1</span><span class="p">])</span>   <span class="c"># flipped single wildcard 1</span>
-            <span class="n">atom_orders</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">])</span>   <span class="c"># flipped single wildcard 2</span>
-            <span class="n">atom_orders</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">])</span>  <span class="c"># flipped double wildcard</span>
-            <span class="n">atom_orders</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a4</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="s">&#39;X&#39;</span><span class="p">])</span>  <span class="c"># flipped front end double wildcard</span>
-
-        <span class="n">dihedral_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span> <span class="ow">in</span> <span class="n">atom_orders</span><span class="p">:</span>
+        <span class="n">dihedral_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atom_orders</span><span class="p">):</span>
+            <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">atoms</span>
             <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">a3</span><span class="p">,</span> <span class="n">a4</span><span class="p">,</span> <span class="n">improper</span><span class="p">])</span>
             <span class="n">dihedral_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dihedral_type</span><span class="p">:</span>
-                <span class="n">dihedral_types</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dihedral_type</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">to_be_added</span> <span class="ow">in</span> <span class="n">dihedral_type</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">already_added</span> <span class="ow">in</span> <span class="n">dihedral_types</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_parameters_are_unique</span><span class="p">(</span><span class="n">to_be_added</span><span class="p">,</span>
+                                                               <span class="n">already_added</span><span class="p">):</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>  <span class="c"># The loop completed without breaking.</span>
+                        <span class="n">dihedral_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">to_be_added</span><span class="p">)</span>
+                <span class="k">break</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dihedral_types</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Lookup failed for dihedral: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bondingtypes</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">dihedral_types</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">dihedral_types</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="GromacsParser.type_parameters_are_unique"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.type_parameters_are_unique">[docs]</a>    <span class="k">def</span> <span class="nf">type_parameters_are_unique</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if two force types are unique.</span>
+
+<span class="sd">        Currently only tests TrigDihedralType and ImproperHarmonicDihedralType</span>
+<span class="sd">        because these are the only two forcetypes that we currently allow to</span>
+<span class="sd">        to have multiple values for the same set of 4 atom bondingtypes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">TrigDihedralType</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">TrigDihedralType</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">fc0</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc0</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc1</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc1</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc2</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc2</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc3</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc3</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc4</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc4</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc5</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc5</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">fc6</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">fc6</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">improper</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">improper</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">phi</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ImproperHarmonicDihedralType</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ImproperHarmonicDihedralType</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">xi</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">xi</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">k</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">k</span> <span class="ow">and</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">improper</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">improper</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
 </div>
 <div class="viewcode-block" id="GromacsParser.lookup_atom_bondingtype"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.lookup_atom_bondingtype">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_atom_bondingtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_molecule</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">bondingtype</span>
@@ -1456,8 +1509,13 @@
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">fields</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
             <span class="n">btypes</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
             <span class="n">n_atoms_specified</span> <span class="o">=</span> <span class="mi">4</span>
-        <span class="n">dihedral_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_forcetype</span><span class="p">(</span><span class="n">btypes</span><span class="p">,</span> <span class="s">&#39;dihedral&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">n_atoms_specified</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gromacs_dihedral_types</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonical_dihedral</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># TODO: Come up with remaining cases (are there any?) and a proper</span>
+            <span class="c">#       failure case.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Should never have gotten here.&#39;</span><span class="p">)</span>
+        <span class="n">dihedral_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_forcetype</span><span class="p">(</span>
+            <span class="n">btypes</span><span class="p">,</span> <span class="s">&#39;dihedral&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">n_atoms_specified</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gromacs_dihedral_types</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonical_dihedral</span><span class="p">)</span>
 
         <span class="c"># Still need a bit more information</span>
         <span class="n">numeric_dihedraltype</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="n">n_atoms_specified</span><span class="p">]</span>
@@ -1465,14 +1523,17 @@
 
         <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">btypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">btypes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">btypes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">btypes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                      <span class="n">dihedral_type</span><span class="o">.</span><span class="n">improper</span><span class="p">])</span>
+
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="p">:</span>
             <span class="c"># There are multiple dihedrals defined for these atom types.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dihedral_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dihedral_type</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dihedral_type</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dihedraltypes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">dihedral_type</span><span class="p">}</span>
+
+
 </div>
-<div class="viewcode-block" id="GromacsParser.process_forcetype"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.process_forcetype">[docs]</a>    <span class="k">def</span> <span class="nf">process_forcetype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bondingtypes</span><span class="p">,</span> <span class="n">forcename</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">,</span> <span class="n">gromacs_force_types</span><span class="p">,</span>
-                           <span class="n">canonical_force</span><span class="p">):</span>
+<div class="viewcode-block" id="GromacsParser.process_forcetype"><a class="viewcode-back" href="../../../apidoc/intermol.gromacs.gromacs_parser.html#intermol.gromacs.gromacs_parser.GromacsParser.process_forcetype">[docs]</a>    <span class="k">def</span> <span class="nf">process_forcetype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bondingtypes</span><span class="p">,</span> <span class="n">forcename</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">,</span>
+                          <span class="n">gromacs_force_types</span><span class="p">,</span> <span class="n">canonical_force</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 

@@ -44,7 +44,7 @@ the tests, e.g.::
     $ python test_gromacs.py --type unit
 
 which prints out log files to
-`intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log`. Re-running
+``intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log``. Re-running
 a single test is best done directly via the `convert.py` script, e.g.::
 
     $ python convert.py --gro_in tests/gromacs/unit_tests/[system name]/[system name].{top,gro} --gromacs -e
