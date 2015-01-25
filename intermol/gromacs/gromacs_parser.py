@@ -997,7 +997,8 @@ class GromacsParser(object):
             if dihedral_type:
                 for to_be_added in dihedral_type:
                     for already_added in dihedral_types:
-                        if not self.types_are_unique(to_be_added, already_added):
+                        if not self.type_parameters_are_unique(to_be_added,
+                                                               already_added):
                             break
                     else:  # The loop completed without breaking.
                         dihedral_types.add(to_be_added)
@@ -1008,7 +1009,7 @@ class GromacsParser(object):
             return list(dihedral_types)
 
     @staticmethod
-    def types_are_unique(a, b):
+    def type_parameters_are_unique(a, b):
         """Check if two force types are unique.
 
         Currently only tests TrigDihedralType and ImproperHarmonicDihedralType
