@@ -1,0 +1,19 @@
+intermol.tests package
+======================
+
+Submodules
+----------
+
+.. toctree::
+
+   intermol.tests.test_gromacs
+   intermol.tests.test_lammps
+   intermol.tests.testing_tools
+
+Module contents
+---------------
+
+.. automodule:: intermol.tests
+    :members:
+    :undoc-members:
+    :show-inheritance:

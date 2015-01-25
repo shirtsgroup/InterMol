@@ -1,3 +1,4 @@
 simtk.units
 numpy
 six
+sphinxcontrib-napoleon

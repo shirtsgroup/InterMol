@@ -967,27 +967,24 @@ class GromacsParser(object):
                        ['X', a2, a3, 'X'],  # double wildcard
                        ['X', 'X', a3, a4],  # front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
-                       ['X', 'X', a2, a1]   # rear end double wildcard
+                       ['X', 'X', a2, a1],  # rear end double wildcard
+                       [a4, a3, a2, a1],    # flip it
+                       ['X', a3, a2, a1],   # flipped single wildcard 1
+                       [a4, a3, a2, 'X'],   # flipped single wildcard 2
+                       ['X', a3, a2, 'X'],  # flipped double wildcard
+                       [a4, a3, 'X', 'X']   # flipped front end double wildcard
                        ]
 
-        # It's not a symmetric dihedral also check the reverses:
-        if not (a1 == a4 and a2 == a3):
-            atom_orders.append([a4, a3, a2, a1])    # flip it
-            atom_orders.append(['X', a3, a2, a1])   # flipped single wildcard 1
-            atom_orders.append([a4, a3, a2, 'X'])   # flipped single wildcard 2
-            atom_orders.append(['X', a3, a2, 'X'])  # flipped double wildcard
-            atom_orders.append([a4, a3, 'X', 'X'])  # flipped front end double wildcard
-
-        dihedral_types = list()
+        dihedral_types = set()
         for a1, a2, a3, a4 in atom_orders:
             key = tuple([a1, a2, a3, a4, improper])
             dihedral_type = self.dihedraltypes.get(key)
             if dihedral_type:
-                dihedral_types.extend(dihedral_type)
+                dihedral_types.update(dihedral_type)
         if not dihedral_types:
             logger.warn("Lookup failed for dihedral: {0}".format(bondingtypes))
         else:
-            return dihedral_types
+            return list(dihedral_types)
 
     def lookup_atom_bondingtype(self, index):
         return self.current_molecule.atoms[index - 1].bondingtype
