@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 
 import numpy as np
+import simtk.unit as units
 
 logger = logging.getLogger('InterMolLog')
 
@@ -26,7 +27,7 @@ class System(object):
         self.lj_correction = 0
         self.coulomb_correction = 0
 
-        self._box_vector = np.zeros([3, 3])
+        self._box_vector = np.zeros([3, 3]) * units.nanometers
 
         self._n_atoms = None
         self._molecule_types = OrderedDict()
