@@ -783,9 +783,8 @@ class LammpsParser(object):
         Currently supports bonds, angles, dihedrals, impropers.
         """
         logger.debug("        Writing {0:s}s...".format(force_name))
-
         force_list = self.force_dict[force_name]
-        force_count = len(force_list) + 1
+        force_count = len(force_list)
 
         coeff_name = '{0} Coeffs'.format(force_name)
         coeff_list = self.force_dict[coeff_name]
