@@ -672,22 +672,24 @@ class LammpsParser(object):
                         "Combination rule 'Multiply-C6C12' not yet implemented")
                 elif self.system.combination_rule in ['Multiply-Sigeps',
                                                       'Lorentz-Berthelot']:
+                    atomtype = 'lmp_{:03d}'.format(int(fields[2]))
+                    bondtype = atomtype
                     new_atom_type = AtomSigepsType(
-                        fields[2],  # atomtype
-                        fields[2],  # bondtype
+                        atomtype,  # atomtype
+                        bondtype,  # bondtype
                         -1,  # atomic_number
                         self.mass_dict[int(fields[2])],  # mass
-                        float(fields[3]) * self.CHARGE,  # charge
+                        0 * self.CHARGE,  # charge (0 for atomtype)
                         'A',  # ptype
                         self.nb_types[int(fields[2])][1],  # sigma
                         self.nb_types[int(fields[2])][0])  # epsilon
 
-                self.system._atomtypes.add(new_atom_type)
+                self.system.add_atomtype(new_atom_type)
 
                 atom = Atom(int(fields[0]),  # index
-                            fields[2],  # name
-                            int(fields[1]),  # residue_index (molNum)
-                            fields[1])  # residue_name (molNum)
+                            'A{:x}'.format(int(fields[0])),  # name (A + idx in hex)
+                            1,  # residue_index (lammps doesn't track this)
+                            'R{:02d}'.format(1))  # residue_name (R + moltype num)
                 atom.atomtype = (0, fields[2])  # atomNum for LAMMPS
                 atom.atomic_number = 0  #TODO: this must be defined for Desmond output; can we get this from LAMMPS?
                 atom.cgnr = 0  # TODO: look into alternatives
@@ -696,22 +698,12 @@ class LammpsParser(object):
                 atom.position = [float(fields[4]) * self.DIST,
                                  float(fields[5]) * self.DIST,
                                  float(fields[6]) * self.DIST]
-
-                # Probably unneccessary since I don't think LAMMPS has anything
-                # in the data files akin to A/B states in GROMACS.
-                for ab_state, atom_type in enumerate(atom.atomtype):
-                    # Searching for a matching atom_type
-                    temp = AbstractAtomType(atom.atomtype[ab_state])
-                    atom_type = self.system._atomtypes.get(temp)
-                    if atom_type:
-                        atom.sigma = (ab_state, atom_type.sigma)
-                        atom.epsilon = (ab_state, atom_type.epsilon)
-                        atom.bondtype = atom_type.bondtype
-                    else:
-                        warnings.warn("Corresponding AtomType was not found. "
-                                      "Insert missing values yourself.")
-            self.current_mol.add_atom(atom)
-
+                atom.epsilon = (0, self.nb_types[int(fields[2])][0])
+                atom.sigma = (0, self.nb_types[int(fields[2])][1])
+                atom.bondingtype = bondtype
+                
+                self.current_mol.add_atom(atom)
+            
     def parse_velocities(self, data_lines):
         """ """
         next(data_lines)
