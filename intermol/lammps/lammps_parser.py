@@ -419,6 +419,37 @@ class LammpsParser(object):
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
 
+        # Indentify 1-2, 1-3, and 1-4 neighbors and create pair forces
+        for mol_type in self.system.molecule_types.itervalues():
+            molecule = list(mol_type.molecules)[0]
+            onetwo =   [set() for i in range(len(molecule.atoms) + 1)]
+            onethree = [set() for i in range(len(molecule.atoms) + 1)]
+            onefour =  [set() for i in range(len(molecule.atoms) + 1)]
+
+            # 1-2 neighbors
+            for bond in mol_type.bond_forces:
+                onetwo[bond.atom1].add(bond.atom2)
+                onetwo[bond.atom2].add(bond.atom1)
+
+            for ai in [atom.index for atom in molecule.atoms]:
+                # 1-3 neighbors
+                for aj in onetwo[ai]:
+                    for ak in onetwo[aj]:
+                        if not ((ak == ai) or (ak in onetwo[ai])):
+                            onethree[ai].add(ak)
+
+                # 1-4 neighbors
+                for aj in onethree[ai]:
+                    for ak in onetwo[aj]:
+                        if not ((ak == ai) or (ak in onetwo[ai]) or (ak in onethree[ai])):
+                            onefour[ai].add(ak)
+
+            # Generate 1-4 pairs (need to check nrexcl, lj/coulomb correction)
+            for ai in [atom.index for atom in molecule.atoms]:
+                for aj in onefour[ai]:
+                    if aj >= ai:
+                        mol_type.pair_forces.add(LjDefaultPair(ai, aj))
+
     def parse_units(self, line):
         """ """
         assert (len(line) == 2), "Invalid units specified in input file."
@@ -690,7 +721,7 @@ class LammpsParser(object):
                             'A{:x}'.format(int(fields[0])),  # name (A + idx in hex)
                             1,  # residue_index (lammps doesn't track this)
                             'R{:02d}'.format(1))  # residue_name (R + moltype num)
-                atom.atomtype = (0, fields[2])  # atomNum for LAMMPS
+                atom.atomtype = (0, atomtype) 
                 atom.atomic_number = 0  #TODO: this must be defined for Desmond output; can we get this from LAMMPS?
                 atom.cgnr = 0  # TODO: look into alternatives
                 atom.charge = (0, float(fields[3]) * self.CHARGE)
