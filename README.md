@@ -1,20 +1,22 @@
-InterMol
-========
+InterMol: a conversion tool for molecular dynamics simulations
+==============================================================
 
+[![PyPI Status](https://badge.fury.io/py/intermol.png)](http://badge.fury.io/py/intermol)
+[![Linux Build Status](https://travis-ci.org/shirtsgroup/InterMol.png?branch=develop)](https://travis-ci.org/shirtsgroup/InterMol)
+[![Coverage Status](https://coveralls.io/repos/shirtsgroup/InterMol/badge.png?branch=develop)](https://coveralls.io/r/shirtsgroup/InterMol)
+[![Documentation Status](https://readthedocs.org/projects/intermol/badge/?version=develop)](http://intermol.readthedocs.org/en/develop/)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shirtsgroup/InterMol?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Conversion tool for molecular simulations. 
+We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions.
 
-We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions. 
-
-To check out how it works, use the ````convert.py```` script found in the ````testing```` directory:
+To check out how it works, use the ````convert.py```` script found in the ````intermol```` directory:
 
 ````
 $ python convert.py -h
 usage: convert.py [-h] [--des_in file] [--gro_in file file] [--lmp_in file]
                   [--desmond] [--gromacs] [--lammps] [--odir directory]
                   [--oname prefix] [-e] [--efile EFILE] [-d path] [-g path]
-                  [-l path] [-f]
+                  [-l path] [-f] [-v]
 
 Perform a file conversion
 
@@ -25,8 +27,9 @@ Choose input conversion format:
   --des_in file         .cms file for conversion from DESMOND file format
   --gro_in file file    .gro and .top file for conversion from GROMACS file
                         format
-  --lmp_in file         .lmp file for conversion from LAMMPS file format
-                        (expects matching .input file)
+  --lmp_in file         input file for conversion from LAMMPS file format
+                        (expects data file in same directory and a read_data
+                        call)
 
 Choose output conversion format(s):
   --desmond             convert to DESMOND
@@ -47,15 +50,18 @@ Other optional arguments:
                         path for GROMACS binary, needed for energy evaluation
   -l path, --lmppath path
                         path for LAMMPS binary, needed for energy evaluation
-  -f, --force           ignore warnings 
+  -f, --force           ignore warnings
+  -v, --verbose         high verbosity, includes DEBUG level output
 ````
 
 For example, to convert from desmond to gromacs and evalutate the energy of the input and output files:
 
 ````
-# current working directory is Intermol/testing
 mkdir test_output
-python convert.py --des_in Inputs/Desmond/UnitTest/frag_opls2001/frag_opls2001.cms --gromacs --odir test_output -e
+python convert.py --des_in validation/inputs/Desmond/UnitTest/frag_opls2001/frag_opls2001.cms --gromacs --odir test_output -e
 ````
 
-Note that the program may not give the same ASCII output; the goal is to produce the same energy output, and there are frequently multiple ways to express the same molecular potential energy function using differently formatted files.
+Note that the program may not give the same ASCII output; the goal is to
+produce the same energy output, and there are frequently multiple ways to
+express the same molecular potential energy function using differently
+formatted files.
