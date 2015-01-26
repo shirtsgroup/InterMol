@@ -8,10 +8,10 @@ from intermol.lammps.lammps_parser import load_lammps, write_lammps
 logger = logging.getLogger('InterMolLog')
 
 def read_file(in_file):
-    logger.error('Not implemented yet!')
-    #logger.info('Reading LAMMPS files {0}'.format(infile))
-    #system = load_lammps(data_file, in_file)
-    #logger.info('...loaded.')
+    logger.info('Reading LAMMPS files {0}'.format(in_file))
+    system = load_lammps(in_file)
+    logger.info('...loaded.')
+    return system
 
 
 def write_file(in_file, system, unit_set='real'):
