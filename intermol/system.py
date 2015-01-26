@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import simtk.unit as units
 
-logger = logging.getLogger('InterMolLog')
+logger = logging.getLogger('InterMolLog')  # TODO: do we need the logger here?
 
 
 class System(object):
@@ -35,17 +35,11 @@ class System(object):
         self._nonbonded_types = dict()
 
     def add_molecule(self, molecule):
-        """Append a molecule into the System.
-        Args:
-            molecule (Molecule): The molecule object to be appended
-        """
+        """Add a molecule into the System. """
         self._molecule_types[molecule.name].add_molecule(molecule)
 
     def add_molecule_type(self, molecule_type):
-        """Append a molecule_type into the System.
-        Args:
-            molecule_type (MoleculeType): The MoleculeType object to be appended
-        """
+        """Add a molecule_type into the System. """
         self._molecule_types[molecule_type.name] = molecule_type
 
     def add_atomtype(self, atomtype):
