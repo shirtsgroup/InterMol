@@ -295,14 +295,15 @@ class LammpsParser(object):
     def read(self):
         """Reads a LAMMPS input file and a data file specified within.
 
-        Args:
-            input_file (str): Name of LAMMPS input file to read in.
+        Returns:
+            system:
         """
-        self.read_input(self.in_file)
+        self.read_input()
         if self.data_file:
             self.read_data(self.data_file)
         else:
             raise Exception("No data file found in input script")
+        return self.system
 
     def read_input(self):
         """Reads a LAMMPS input file.
@@ -349,7 +350,7 @@ class LammpsParser(object):
                     keyword = line.split()[0]
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](line.split())
-            keyword_check[keyword] = True
+                        keyword_check[keyword] = True
 
         for key in keyword_check.keys():
             if not (keyword_check[key]):
@@ -378,13 +379,18 @@ class LammpsParser(object):
             self.molecule_name = next(data_lines).strip()
             # Currently only reading a single molecule/moleculeType
             # per LAMMPS file.
+            self.current_mol_type = MoleculeType(self.molecule_name)
+            self.current_mol_type.nrexcl = 3  # TODO: automate determination!
+            # NOTE: nrexcl is a global in lammps and should probably be 
+            # determined in parse_special_bonds
+            self.system.add_molecule_type(self.current_mol_type)
             self.current_mol = Molecule(self.molecule_name)
             self.system.add_molecule(self.current_mol)
-            self.current_mol_type = self.system._molecules[self.molecule_name]
-            self.current_mol_type.nrexcl = 3  # TODO: automate determination!
 
             for line in data_lines:
                 if line.strip():
+                    # Remove trailing comment
+                    line = line.partition('#')[0]
                     # Catch all box dimensions.
                     if ('xlo' in line) and ('xhi' in line):
                         self.parse_box(line.split(), 0)
@@ -409,9 +415,40 @@ class LammpsParser(object):
         with open(data_file, 'r') as data_lines:
             for line in data_lines:
                 if line.strip():
-                    keyword = line.strip()
+                    keyword = line.partition('#')[0].strip()
                     if keyword in parsable_keywords:
                         parsable_keywords[keyword](data_lines)
+
+        # Indentify 1-2, 1-3, and 1-4 neighbors and create pair forces
+        for mol_type in self.system.molecule_types.itervalues():
+            molecule = list(mol_type.molecules)[0]
+            onetwo =   [set() for i in range(len(molecule.atoms) + 1)]
+            onethree = [set() for i in range(len(molecule.atoms) + 1)]
+            onefour =  [set() for i in range(len(molecule.atoms) + 1)]
+
+            # 1-2 neighbors
+            for bond in mol_type.bond_forces:
+                onetwo[bond.atom1].add(bond.atom2)
+                onetwo[bond.atom2].add(bond.atom1)
+
+            for ai in [atom.index for atom in molecule.atoms]:
+                # 1-3 neighbors
+                for aj in onetwo[ai]:
+                    for ak in onetwo[aj]:
+                        if not ((ak == ai) or (ak in onetwo[ai])):
+                            onethree[ai].add(ak)
+
+                # 1-4 neighbors
+                for aj in onethree[ai]:
+                    for ak in onetwo[aj]:
+                        if not ((ak == ai) or (ak in onetwo[ai]) or (ak in onethree[ai])):
+                            onefour[ai].add(ak)
+
+            # Generate 1-4 pairs (need to check nrexcl, lj/coulomb correction)
+            for ai in [atom.index for atom in molecule.atoms]:
+                for aj in onefour[ai]:
+                    if aj >= ai:
+                        mol_type.pair_forces.add(LjDefaultPair(ai, aj))
 
     def parse_units(self, line):
         """ """
@@ -536,10 +573,9 @@ class LammpsParser(object):
         fields = [float(field) for field in line[:2]]
         box_length = fields[1] - fields[0]
         if box_length > 0:
-            self.box_vector[dim, dim] = box_length
+            self.system.box_vector[dim, dim] = box_length * self.DIST
         else:
             raise ValueError("Negative box length specified in data file.")
-        self.system.box_vector = self.box_vector * self.DIST
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -548,7 +584,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
             self.mass_dict[int(fields[0])] = float(fields[1]) * self.MASS
 
     def parse_pair_coeffs(self, data_lines):
@@ -558,7 +594,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [float(field) for field in line.split()]
+            fields = [float(field) for field in line.partition('#')[0].split()]
             if len(self.pair_style) == 1:
                 # TODO: lookup of type of pairstyle to determine format
                 if self.system.nonbonded_function == 1:
@@ -578,7 +614,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             warn = False
             if len(force_style) == 1:
@@ -647,7 +683,7 @@ class LammpsParser(object):
         self.improper_classes = dict()
         self.parse_force_coeffs(data_lines, "Improper",
                                 self.improper_classes, self.improper_style,
-                                self.lammps_impropers, self.canonical_improper)
+                                self.lammps_impropers, self.canonical_dihedral)
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
@@ -655,7 +691,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = line.split()
+            fields = line.partition('#')[0].split()
 
             if len(fields) in [7, 10]:
                 if len(fields) == 10:
@@ -667,23 +703,25 @@ class LammpsParser(object):
                         "Combination rule 'Multiply-C6C12' not yet implemented")
                 elif self.system.combination_rule in ['Multiply-Sigeps',
                                                       'Lorentz-Berthelot']:
+                    atomtype = 'lmp_{:03d}'.format(int(fields[2]))
+                    bondtype = atomtype
                     new_atom_type = AtomSigepsType(
-                        fields[2],  # atomtype
-                        fields[2],  # bondtype
+                        atomtype,  # atomtype
+                        bondtype,  # bondtype
                         -1,  # atomic_number
                         self.mass_dict[int(fields[2])],  # mass
-                        float(fields[3]) * self.CHARGE,  # charge
+                        0 * self.CHARGE,  # charge (0 for atomtype)
                         'A',  # ptype
                         self.nb_types[int(fields[2])][1],  # sigma
                         self.nb_types[int(fields[2])][0])  # epsilon
 
-                self.system._atomtypes.add(new_atom_type)
+                self.system.add_atomtype(new_atom_type)
 
                 atom = Atom(int(fields[0]),  # index
-                            fields[2],  # name
-                            int(fields[1]),  # residue_index (molNum)
-                            fields[1])  # residue_name (molNum)
-                atom.atomtype = (0, fields[2])  # atomNum for LAMMPS
+                            'A{:x}'.format(int(fields[0])),  # name (A + idx in hex)
+                            1,  # residue_index (lammps doesn't track this)
+                            'R{:02d}'.format(1))  # residue_name (R + moltype num)
+                atom.atomtype = (0, atomtype) 
                 atom.atomic_number = 0  #TODO: this must be defined for Desmond output; can we get this from LAMMPS?
                 atom.cgnr = 0  # TODO: look into alternatives
                 atom.charge = (0, float(fields[3]) * self.CHARGE)
@@ -691,22 +729,12 @@ class LammpsParser(object):
                 atom.position = [float(fields[4]) * self.DIST,
                                  float(fields[5]) * self.DIST,
                                  float(fields[6]) * self.DIST]
-
-                # Probably unneccessary since I don't think LAMMPS has anything
-                # in the data files akin to A/B states in GROMACS.
-                for ab_state, atom_type in enumerate(atom.atomtype):
-                    # Searching for a matching atom_type
-                    temp = AbstractAtomType(atom.atomtype[ab_state])
-                    atom_type = self.system._atomtypes.get(temp)
-                    if atom_type:
-                        atom.sigma = (ab_state, atom_type.sigma)
-                        atom.epsilon = (ab_state, atom_type.epsilon)
-                        atom.bondtype = atom_type.bondtype
-                    else:
-                        warnings.warn("Corresponding AtomType was not found. "
-                                      "Insert missing values yourself.")
-            self.current_mol.add_atom(atom)
-
+                atom.epsilon = (0, self.nb_types[int(fields[2])][0])
+                atom.sigma = (0, self.nb_types[int(fields[2])][1])
+                atom.bondingtype = bondtype
+                
+                self.current_mol.add_atom(atom)
+            
     def parse_velocities(self, data_lines):
         """ """
         next(data_lines)
@@ -715,7 +743,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break
-            fields = [field for field in line.split()]
+            fields = [field for field in line.partition('#')[0].split()]
             vel_dict[int(fields[0])] = fields[1:4]
         for atom in atoms:
             atom._velocity = [float(vel) * self.VEL for vel in
@@ -727,7 +755,7 @@ class LammpsParser(object):
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
-            fields = [int(field) for field in line.split()]
+            fields = [int(field) for field in line.partition('#')[0].split()]
 
             new_force = None
             coeff_num = fields[1]
@@ -739,19 +767,19 @@ class LammpsParser(object):
 
     def parse_bonds(self, data_lines):
         self.parse_force(data_lines, self.bond_classes,
-                         self.current_mol_type.bondForceSet, n=2)
+                         self.current_mol_type.bond_forces, n=2)
 
     def parse_angles(self, data_lines):
         self.parse_force(data_lines, self.angle_classes,
-                         self.current_mol_type.angleForceSet, n=3)
+                         self.current_mol_type.angle_forces, n=3)
 
     def parse_dihedrals(self, data_lines):
         self.parse_force(data_lines, self.dihedral_classes,
-                         self.current_mol_type.dihedralForceSet, n=4)
+                         self.current_mol_type.dihedral_forces, n=4)
 
     def parse_impropers(self, data_lines):
         self.parse_force(data_lines, self.improper_classes,
-                         self.current_mol_type.dihedralForceSet, n=4)
+                         self.current_mol_type.dihedral_forces, n=4)
 
     def get_force_atoms(self, force, forceclass):
         """Return the atoms involved in a force. """

@@ -91,7 +91,7 @@ class GromacsGroParser(object):
                 if atom.name.isdigit():
                     # Kluge for atoms read in from a LAMMPS data file.
                     atom.name = "LMP_{0}".format(atom.name)
-                gro.write('{0:5d}{1:<4s}{2:6s}{3:5d}'.format(
+                gro.write('{0:5d}{1:<5s}{2:5s}{3:5d}'.format(
                         atom.residue_index, atom.residue_name, atom.name, n + 1))
                 for pos in atom.position:
                     gro.write('{0:17.12f}'.format(pos.value_in_unit(nanometers)))
