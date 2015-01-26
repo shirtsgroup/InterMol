@@ -736,19 +736,19 @@ class LammpsParser(object):
 
     def parse_bonds(self, data_lines):
         self.parse_force(data_lines, self.bond_classes,
-                         self.current_mol_type.bondForceSet, n=2)
+                         self.current_mol_type.bond_forces, n=2)
 
     def parse_angles(self, data_lines):
         self.parse_force(data_lines, self.angle_classes,
-                         self.current_mol_type.angleForceSet, n=3)
+                         self.current_mol_type.angle_forces, n=3)
 
     def parse_dihedrals(self, data_lines):
         self.parse_force(data_lines, self.dihedral_classes,
-                         self.current_mol_type.dihedralForceSet, n=4)
+                         self.current_mol_type.dihedral_forces, n=4)
 
     def parse_impropers(self, data_lines):
         self.parse_force(data_lines, self.improper_classes,
-                         self.current_mol_type.dihedralForceSet, n=4)
+                         self.current_mol_type.dihedral_forces, n=4)
 
     def get_force_atoms(self, force, forceclass):
         """Return the atoms involved in a force. """
