@@ -1,0 +1,15 @@
+#include "amber99sb-ildn.ff/forcefield.itp"
+#include "../itps/L14.itp"
+#include "../itps/FKBP.itp"
+#include "amber99sb-ildn.ff/tip3p.itp"
+#include "amber99sb-ildn.ff/ions.itp"
+
+[ system ] 
+L14 complex
+
+[ molecules ]
+; Compound        #mols
+FKBP               1
+L14                1        
+SOL             4646  
+CL                 4

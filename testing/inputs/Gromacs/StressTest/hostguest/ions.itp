@@ -1,0 +1,15 @@
+[ moleculetype ]
+; molname   nrexcl
+CL-     1
+
+[ atoms ]
+; id    at type     res nr  residu name at name  cg nr  charge   mass
+1   amber99_30    1   CL-     CL   1  -1   35.45300
+
+
+[ moleculetype ]
+; molname   nrexcl
+NA+     1                                                                                                                                                              
+[ atoms ]   
+; id    at type     res nr  residu name at name  cg nr  charge   mass                                                         
+1   amber99_31    1   NA+     NA   1  1   22.98977                                                                                                                     
