@@ -106,6 +106,7 @@ def main(args=None):
         for exe in ['lmp_mpi', 'lmp_openmpi']:
             if which(exe):
                 lmppath = exe
+                break
         else:
             logger.exception('Found no LAMMPS executable.')
 
@@ -176,6 +177,10 @@ def main(args=None):
             mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
+        if args.get('lmp_in'):
+            input_type = 'lammps'
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
+                                                           lmppath=lmppath)
         else:
             logger.warn('Code should have never made it here!')
 

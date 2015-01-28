@@ -7,6 +7,7 @@ from intermol.lammps.lammps_parser import load_lammps, write_lammps
 
 logger = logging.getLogger('InterMolLog')
 
+
 def read_file(in_file):
     logger.info('Reading LAMMPS files {0}'.format(in_file))
     system = load_lammps(in_file)

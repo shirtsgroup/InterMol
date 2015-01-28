@@ -23,25 +23,24 @@ if not testing_logger.handlers:
 
 
 def lammps(flags, test_type='unit'):
-    """
+    """Run all LAMMPS tests of a particular type.
 
     Args:
-        args:
+        flags (dict): Flags passed to `convert.py`.
+        test_type (str, optional): The test suite to run. Defaults to 'unit'.
     Returns:
+        results (dict of dicts): The results of all conversions.
+            {'gromacs': {'bond1: result, 'bond2: results...},
+            'lammps': {'bond1: result, 'bond2: results...},
+            ...}
 
     """
     resource_dir = resource_filename('intermol',
                                      'tests/lammps/{0}_tests'.format(test_type))
 
-    gro_files = sorted(glob(os.path.join(resource_dir, '*/*.gro')))
-    gro_files = [x for x in gro_files if not x.endswith('out.gro')]
-    top_files = sorted(glob(os.path.join(resource_dir, '*/*.top')))
-    names = [os.path.splitext(os.path.basename(gro))[0] for gro in gro_files]
+    input_files = sorted(glob(os.path.join(resource_dir, '*/*.input')))
+    names = [os.path.splitext(os.path.basename(inp))[0] for inp in input_files]
 
-    # The results of all conversions are stored in nested dictionaries:
-    # results = {'lammps': {'bond1: result, 'bond2: results...},
-    #            'lammps': {'bond1: result, 'bond2: results...},
-    #            ...}
     per_file_results = {k: None for k in names}
     results = {engine: per_file_results for engine in ENGINES}
 
@@ -50,32 +49,31 @@ def lammps(flags, test_type='unit'):
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
 
-    for gro, top, name in zip(gro_files, top_files, names):
+    for input_file, name in zip(input_files, names):
         testing_logger.info('Converting {0}'.format(name))
         odir = '{0}/{1}'.format(basedir, name)
         if not os.path.isdir(odir):
             os.mkdir(odir)
         h1, h2 = add_handler(odir)
 
-        flags['gro_in'] = [gro, top]
+        flags['lmp_in'] = input_file
         flags['odir'] = odir
 
         for engine in ENGINES:
             flags[engine] = True
 
         cmd_line_equivalent = []
-        for k, v in flags.iteritems():
-            if isinstance(v, list):
-                in_files = ' '.join(v)
-                arg = '--{0} {1}'.format(k, in_files)
-            elif not isinstance(v, string_types):
-                arg = '--{0}'.format(k)
+        for flag, flag_value in flags.iteritems():
+            if not isinstance(flag_value, string_types):
+                # E.g. {'lammps': True}
+                arg = '--{0}'.format(flag)
             else:
-                arg = '--{0} {1}'.format(k, v)
+                arg = '--{0} {1}'.format(flag, flag_value)
             cmd_line_equivalent.append(arg)
 
-        logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
-        logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
+        logger.info('Converting {0} with command:\n'.format(input_file))
+        logger.info('    python convert.py {0}'.format(
+            ' '.join(cmd_line_equivalent)))
 
         try:
             diff = convert.main(flags)
@@ -93,13 +91,7 @@ def lammps(flags, test_type='unit'):
 
 
 def test_lammps_unit():
-    """
-
-    Args:
-        lammps:
-    Returns:
-
-    """
+    """Run the LAMMPS unit tests. """
     unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
@@ -126,13 +118,7 @@ def test_lammps_unit():
 
 
 def test_lammps_stress():
-    """
-
-    Args:
-        lammps:
-    Returns:
-
-    """
+    """Run the LAMMPS stress tests. """
     stress_test_tolerance = 1e-4
     flags = {'stress': True,
              'energy': True,
@@ -151,7 +137,7 @@ def test_lammps_stress():
         try:
             passed = np.allclose(tests, zeros, atol=stress_test_tolerance)
         except:
-            raise ValueError('Found non-numeric result. This probably means an'
+            raise ValueError('Found non-numeric result. This probably means an '
                              'error occured somewhere in the conversion.')
         assert passed, 'Stress tests do not match within {0:.1e} kJ/mol.'.format(
                 stress_test_tolerance)

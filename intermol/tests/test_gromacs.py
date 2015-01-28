@@ -25,11 +25,16 @@ if not testing_logger.handlers:
 
 
 def gromacs(flags, test_type='unit'):
-    """
+    """Run all GROMACS tests of a particular type.
 
     Args:
-        args:
+        flags (dict): Flags passed to `convert.py`.
+        test_type (str, optional): The test suite to run. Defaults to 'unit'.
     Returns:
+        results (dict of dicts): The results of all conversions.
+            {'gromacs': {'bond1: result, 'bond2: results...},
+            'lammps': {'bond1: result, 'bond2: results...},
+            ...}
 
     """
     resource_dir = resource_filename('intermol',
@@ -66,18 +71,20 @@ def gromacs(flags, test_type='unit'):
             flags[engine] = True
 
         cmd_line_equivalent = []
-        for k, v in flags.iteritems():
-            if isinstance(v, list):
-                in_files = ' '.join(v)
-                arg = '--{0} {1}'.format(k, in_files)
-            elif not isinstance(v, string_types):
-                arg = '--{0}'.format(k)
+        for flag, flag_value in flags.iteritems():
+            if isinstance(flag_value, list):
+                in_files = ' '.join(flag_value)
+                arg = '--{0} {1}'.format(flag, in_files)
+            elif not isinstance(flag_value, string_types):
+                # E.g. {'gromacs': True}
+                arg = '--{0}'.format(flag)
             else:
-                arg = '--{0} {1}'.format(k, v)
+                arg = '--{0} {1}'.format(flag, flag_value)
             cmd_line_equivalent.append(arg)
 
         logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
-        logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
+        logger.info('    python convert.py {0}'.format(
+            ' '.join(cmd_line_equivalent)))
 
         diff = convert.main(flags)
         for engine, result in diff.iteritems():
@@ -89,13 +96,7 @@ def gromacs(flags, test_type='unit'):
 
 
 def test_gromacs_unit():
-    """
-
-    Args:
-        gromacs:
-    Returns:
-
-    """
+    """Run the LAMMPS stress tests. """
     unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
@@ -124,13 +125,7 @@ def test_gromacs_unit():
 
 
 def test_gromacs_stress():
-    """
-
-    Args:
-        gromacs:
-    Returns:
-
-    """
+    """Run the GROMACS stress tests. """
     stress_test_tolerance = 1e-4
     flags = {'stress': True,
              'energy': True,
@@ -149,7 +144,7 @@ def test_gromacs_stress():
         try:
             passed = np.allclose(tests, zeros, atol=stress_test_tolerance)
         except:
-            raise ValueError('Found non-numeric result. This probably means an'
+            raise ValueError('Found non-numeric result. This probably means an '
                              'error occured somewhere in the conversion.')
         assert passed, 'Stress tests do not match within {0:.1e} kJ/mol.'.format(
                 stress_test_tolerance)
