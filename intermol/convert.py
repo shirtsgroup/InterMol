@@ -191,7 +191,7 @@ def main(args=None):
                     mdp_path, gropath, '')
         elif args.get('lmp_in'):
             input_type = 'lammps'
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmppath)
         elif args.get('des_in'):
             input_type = 'desmond'
             e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
