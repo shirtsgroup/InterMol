@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.system &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>intermol.system</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for intermol.system</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;InterMolLog&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="System"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System">[docs]</a><span class="k">class</span> <span class="nc">System</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;  &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new System object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The name of the system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Untitled&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonbonded_function</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combination_rule</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genpairs</span> <span class="o">=</span> <span class="s">&#39;yes&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lj_correction</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coulomb_correction</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_box_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_atoms</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_molecule_types</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atomtypes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nonbonded_types</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+<div class="viewcode-block" id="System.add_molecule"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.add_molecule">[docs]</a>    <span class="k">def</span> <span class="nf">add_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append a molecule into the System.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            molecule (Molecule): The molecule object to be appended</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_molecule_types</span><span class="p">[</span><span class="n">molecule</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_molecule</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="System.add_molecule_type"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.add_molecule_type">[docs]</a>    <span class="k">def</span> <span class="nf">add_molecule_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append a molecule_type into the System.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            molecule_type (MoleculeType): The MoleculeType object to be appended</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_molecule_types</span><span class="p">[</span><span class="n">molecule_type</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_type</span>
+</div>
+<div class="viewcode-block" id="System.add_atomtype"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.add_atomtype">[docs]</a>    <span class="k">def</span> <span class="nf">add_atomtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atomtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atomtypes</span><span class="p">[</span><span class="n">atomtype</span><span class="o">.</span><span class="n">atomtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">atomtype</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="System.atomtypes"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.atomtypes">[docs]</a>    <span class="k">def</span> <span class="nf">atomtypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atomtypes</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="System.nonbonded_types"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.nonbonded_types">[docs]</a>    <span class="k">def</span> <span class="nf">nonbonded_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nonbonded_types</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="System.molecule_types"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.molecule_types">[docs]</a>    <span class="k">def</span> <span class="nf">molecule_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_molecule_types</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="System.atoms"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.atoms">[docs]</a>    <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">mol_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">molecule_types</span><span class="o">.</span><span class="n">itervalues</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mol_type</span><span class="o">.</span><span class="n">molecules</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">atom</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_atoms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_atoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_atoms</span>
+
+    <span class="nd">@n_atoms.setter</span>
+<div class="viewcode-block" id="System.n_atoms"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.n_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">n_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_atoms</span> <span class="o">=</span> <span class="n">n</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">box_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the box vector. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_box_vector</span>
+
+    <span class="nd">@box_vector.setter</span>
+<div class="viewcode-block" id="System.box_vector"><a class="viewcode-back" href="../../apidoc/intermol.system.html#intermol.system.System.box_vector">[docs]</a>    <span class="k">def</span> <span class="nf">box_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the box vector for the system.</span>
+
+<span class="sd">        Assumes the box vector is in the correct form:</span>
+<span class="sd">            [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Box vector with incorrect format: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_box_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;System &#39;{}&#39; &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;System{} &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

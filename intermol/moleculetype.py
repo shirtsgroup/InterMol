@@ -26,11 +26,7 @@ class MoleculeType(object):
         self.nrexcl = None
 
     def add_molecule(self, molecule):
-        """Add a molecule into the moleculetype container
-
-        Args:
-            molecule (Molecule): the molecule to append
-        """
+        """Add a molecule into the moleculetype. """
         self.molecules.add(molecule)
 
     def __repr__(self):

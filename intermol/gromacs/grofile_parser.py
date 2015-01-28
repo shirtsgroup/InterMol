@@ -47,7 +47,7 @@ class GromacsGroParser(object):
                     data = line[20:]
                     entries = []
                     spacing = 8
-                    for j in range(len(data), spacing):
+                    for j in range(0, len(data), spacing):
                         entry = data[j:j+spacing].strip()
                         if len(entry) > 0:
                             entries.append(entry)
@@ -91,10 +91,13 @@ class GromacsGroParser(object):
                 if atom.name.isdigit():
                     # Kluge for atoms read in from a LAMMPS data file.
                     atom.name = "LMP_{0}".format(atom.name)
-                gro.write('{0:5d}{1:<4s}{2:6s}{3:5d}'.format(
-                        atom.residue_index, atom.residue_name, atom.name, n))
+                gro.write('{0:5d}{1:<5s}{2:5s}{3:5d}'.format(
+                        atom.residue_index, atom.residue_name, atom.name, n + 1))
                 for pos in atom.position:
                     gro.write('{0:17.12f}'.format(pos.value_in_unit(nanometers)))
+                if len(atom.position) == 0:
+                    import pdb
+                    pdb.set_trace()
                 gro.write('\n')
 
             # Check for rectangular; should be symmetric, so we don't have to

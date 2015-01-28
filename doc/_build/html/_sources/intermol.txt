@@ -1,0 +1,34 @@
+intermol package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    intermol.forces
+    intermol.gromacs
+    intermol.lammps
+    intermol.tests
+
+Submodules
+----------
+
+.. toctree::
+
+   intermol.atom
+   intermol.convert
+   intermol.decorators
+   intermol.molecule
+   intermol.moleculetype
+   intermol.orderedset
+   intermol.system
+   intermol.version
+
+Module contents
+---------------
+
+.. automodule:: intermol
+    :members:
+    :undoc-members:
+    :show-inheritance:

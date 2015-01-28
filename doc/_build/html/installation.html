@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="index.html"/>
+        <link rel="next" title="Contributing" href="development.html"/>
+        <link rel="prev" title="InterMol: a conversion tool for molecular dynamics simulations" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="install-with-pip-coming-soon">
+<h2>Install with pip (coming soon!)<a class="headerlink" href="#install-with-pip-coming-soon" title="Permalink to this headline">¶</a></h2>
+<p>InterMol will be added to PyPI as soon as we get our first stable release up
+and running.</p>
+</div>
+<div class="section" id="install-from-source">
+<h2>Install from source<a class="headerlink" href="#install-from-source" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/shirtsgroup/InterMol.git
+$ cd InterMol
+$ python setup.py install
+</pre></div>
+</div>
+<p>Or if you plan on <a class="reference external" href="development.html">contributing</a> something:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py develop
+</pre></div>
+</div>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>To use InterMol, the following libraries and software will need to be installed.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Linux, Mac OS X or Windows operating system</dt>
+<dd>We develop mainly on 64-bit Mac and CentOS machines. TravisCI is
+currently only set up to perform testing on Debian.</dd>
+<dt><a class="reference external" href="http://python.org">Python</a> == 2.7</dt>
+<dd>Once our unit tests flesh out a bit more, we intend to add support
+for &gt;=2.6.</dd>
+<dt><a class="reference external" href="http://numpy.scipy.org/">NumPy</a> &gt;= 1.6.0</dt>
+<dd>Numpy is the base package for numerical computing in python.</dd>
+<dt><a class="reference external" href="https://github.com/rmcgibbo/simtk.unit">simtk.unit</a> &gt;= 0.1</dt>
+<dd>Python unit classes for dimensional analysis and unit conversion.</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="development.html" class="btn btn-neutral float-right" title="Contributing"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="InterMol: a conversion tool for molecular dynamics simulations"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

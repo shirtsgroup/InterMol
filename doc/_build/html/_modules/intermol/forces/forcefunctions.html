@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.forces.forcefunctions &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>intermol.forces.forcefunctions</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for intermol.forces.forcefunctions</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">simtk.unit</span> <span class="kn">as</span> <span class="nn">units</span>
+
+<span class="kn">import</span> <span class="nn">forcedata</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">functions for manipulating the data to extract keywords and unit-ed parameter lists from forces, </span>
+
+<span class="sd">name in code              example                           description </span>
+<span class="sd">force_type     -      HarmonicBondType      - class, contains atom types and parameters</span>
+<span class="sd">force_class    -        HarmonicBond        - class, XType, also adds atoms</span>
+<span class="sd">force          - (instance of HarmonicBond) - an instance of HarmonicBond</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="specify"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.specify">[docs]</a><span class="k">def</span> <span class="nf">specify</span><span class="p">(</span><span class="n">program_units</span><span class="p">,</span> <span class="n">unitset</span><span class="p">,</span> <span class="n">dumself</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">shouldEval</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes the dict of units, and a set of dimensions and replaces the dimensions with the appropriate units.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">specified_unitset</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">unitset</span><span class="p">:</span>
+        <span class="n">specified_unit</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">unit</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">program_units</span><span class="p">:</span>
+               <span class="n">chunk</span> <span class="o">=</span> <span class="n">program_units</span><span class="p">[</span><span class="n">chunk</span><span class="p">]</span>
+            <span class="n">specified_unit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">rejoined_unit</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">specified_unit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shouldEval</span><span class="p">:</span>
+            <span class="n">specified_unitset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">rejoined_unit</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">specified_unitset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rejoined_unit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">specified_unitset</span>
+
+</div>
+<div class="viewcode-block" id="build_paramlist"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.build_paramlist">[docs]</a><span class="k">def</span> <span class="nf">build_paramlist</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a paramlist specific for a given program. &quot;&quot;&quot;</span>
+    <span class="n">change_list</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s">&#39;forcedata.&#39;</span> <span class="o">+</span> <span class="n">program</span> <span class="o">+</span> <span class="s">&#39;_paramlist&#39;</span><span class="p">)</span>
+    <span class="n">tmp_paramlist</span> <span class="o">=</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">master_paramlist</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">tmp_paramlist</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">change_list</span><span class="p">)</span>
+
+    <span class="n">paramlist</span> <span class="o">=</span> <span class="n">tmp_paramlist</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c"># add type and underscore names</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">paramset</span> <span class="ow">in</span> <span class="n">tmp_paramlist</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">paramlist</span><span class="p">[</span><span class="n">capifyname</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">tmp_paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">paramlist</span><span class="p">[</span><span class="n">capifyname</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39;_type&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">tmp_paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">paramlist</span>
+
+</div>
+<div class="viewcode-block" id="capifyname"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.capifyname">[docs]</a><span class="k">def</span> <span class="nf">capifyname</span><span class="p">(</span><span class="n">forcename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return name of the class in camelCase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">forcename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span><span class="s">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="build_unitvars"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.build_unitvars">[docs]</a><span class="k">def</span> <span class="nf">build_unitvars</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">,</span> <span class="n">dumself</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a string program name (one of the supported programs), and a &#39;self&#39; object</span>
+<span class="sd">    it looks like the keyword is not being used, but it is used in the line eval(unit). </span>
+<span class="sd">    The test name &#39;dumself&#39; needs to match what is in the force data arrays. Currently only used for lammps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unitvars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">unitdefs</span> <span class="o">=</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">ProgramUnitSets</span><span class="p">[</span><span class="n">program</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">uset</span> <span class="ow">in</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">master_unitlist</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">unitset</span> <span class="o">=</span> <span class="n">specify</span><span class="p">(</span><span class="n">unitdefs</span><span class="p">,</span> <span class="n">uset</span><span class="p">,</span> <span class="n">dumself</span><span class="p">)</span>
+
+        <span class="c"># reorder the units if necessary according to the order in the given paramlist</span>
+        <span class="n">original_params</span> <span class="o">=</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">master_paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">program_params</span> <span class="o">=</span> <span class="n">paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">tmp_unitset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">original_params</span> <span class="o">!=</span> <span class="n">program_params</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">original_params</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">program_params</span><span class="p">:</span>
+                    <span class="n">tmp_unitset</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">program_params</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">op</span><span class="p">),</span><span class="n">unitset</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">unitset</span> <span class="o">=</span> <span class="n">tmp_unitset</span>    
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">ProgramUnitLists</span><span class="p">:</span>
+            <span class="c"># In case the units need to be defined differently.</span>
+            <span class="n">unitset</span> <span class="o">=</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">ProgramUnitLists</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">unitvars</span><span class="p">[</span><span class="n">capifyname</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">unitset</span>
+        <span class="n">typename</span> <span class="o">=</span> <span class="n">name</span>  <span class="o">+</span> <span class="s">&#39;_type&#39;</span>
+        <span class="n">unitvars</span><span class="p">[</span><span class="n">typename</span><span class="p">]</span> <span class="o">=</span> <span class="n">unitset</span>
+        <span class="n">unitvars</span><span class="p">[</span><span class="n">capifyname</span><span class="p">(</span><span class="n">typename</span><span class="p">)]</span> <span class="o">=</span> <span class="n">unitset</span>
+    <span class="k">return</span> <span class="n">unitvars</span>
+
+</div>
+<div class="viewcode-block" id="get_parameter_list_from_force"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.get_parameter_list_from_force">[docs]</a><span class="k">def</span> <span class="nf">get_parameter_list_from_force</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a function that returns the paramters of a function type.</span>
+
+<span class="sd">    First, we need make some additions to the parameter list dictionary,</span>
+<span class="sd">    which we do once when the forcedata script is imported.  Useful to</span>
+<span class="sd">    put the forces here as well.  We won&#39;t make this a function for now</span>
+<span class="sd">    since it&#39;s needed in this module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># We passed in an instance</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="n">pvars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+        <span class="n">paramstring</span> <span class="o">=</span> <span class="s">&#39;force.&#39;</span> <span class="o">+</span> <span class="n">param</span>
+        <span class="n">pvars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">paramstring</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pvars</span>
+
+</div>
+<div class="viewcode-block" id="get_parameter_list_from_kwds"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.get_parameter_list_from_kwds">[docs]</a><span class="k">def</span> <span class="nf">get_parameter_list_from_kwds</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">kwds</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+    <span class="c"># We passed in an instance, not a class</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+        <span class="n">ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kwds</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">ordered</span>
+
+</div>
+<div class="viewcode-block" id="get_parameter_kwds_from_force"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.get_parameter_kwds_from_force">[docs]</a><span class="k">def</span> <span class="nf">get_parameter_kwds_from_force</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">forceparams</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+    <span class="n">kwds</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="n">force_params</span> <span class="o">=</span> <span class="n">forceparams</span><span class="p">(</span><span class="n">force</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">paramlist</span><span class="p">[</span><span class="n">force</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">]):</span>
+        <span class="n">kwds</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">force_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">kwds</span>
+
+</div>
+<div class="viewcode-block" id="create_kwds_from_entries"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.create_kwds_from_entries">[docs]</a><span class="k">def</span> <span class="nf">create_kwds_from_entries</span><span class="p">(</span><span class="n">unitvars</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">,</span> <span class="n">entries</span><span class="p">,</span> <span class="n">force_type</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a keyword dictionary given an array of information from a file format</span>
+
+<span class="sd">    requires the master set of units, the master set of parameter</span>
+<span class="sd">    lists, an object (either a force_class or force_type), the</span>
+<span class="sd">    list of information to be converted into a keyword, and an offset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        offset (int): how far over from the first entry we translate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwds</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">typename</span> <span class="o">=</span> <span class="n">force_type</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">unitvars</span><span class="p">[</span><span class="n">typename</span><span class="p">]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">paramlist</span><span class="p">[</span><span class="n">typename</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">kwds</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="n">offset</span><span class="o">+</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">kwds</span>
+
+</div>
+<div class="viewcode-block" id="optparamkeylookup"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.optparamkeylookup">[docs]</a><span class="k">def</span> <span class="nf">optparamkeylookup</span><span class="p">(</span><span class="n">force_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a force_type object, determine the key associated with the</span>
+<span class="sd">    optional parameters.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">force_type</span><span class="o">.</span><span class="n">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">forcedata</span><span class="o">.</span><span class="n">AbstractOptParams</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">key</span>
+
+</div>
+<div class="viewcode-block" id="optforceparams"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.optforceparams">[docs]</a><span class="k">def</span> <span class="nf">optforceparams</span><span class="p">(</span><span class="n">force_type</span><span class="p">,</span> <span class="n">forcetype_object</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the dictionary of optional paramters of an abstract force type.</span>
+
+<span class="sd">    If no object is given, we fill with blanks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pvars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">forcedata</span><span class="o">.</span><span class="n">AbstractOptParams</span><span class="p">[</span><span class="n">force_type</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">forcetype_object</span><span class="p">:</span>
+            <span class="n">pvars</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">forcetype_object</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pvars</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">forcedata</span><span class="o">.</span><span class="n">AbstractOptParamsDefaults</span><span class="p">[</span><span class="n">force_type</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">pvars</span>
+
+</div>
+<div class="viewcode-block" id="optparamlookup"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.optparamlookup">[docs]</a><span class="k">def</span> <span class="nf">optparamlookup</span><span class="p">(</span><span class="n">force_type_object</span><span class="p">,</span> <span class="n">object_default</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A wrapper for optforceparams that takes a force_type object and returns</span>
+<span class="sd">    the optional parameter dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">force_type</span> <span class="o">=</span> <span class="n">optparamkeylookup</span><span class="p">(</span><span class="n">force_type_object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">object_default</span><span class="p">:</span>
+       <span class="k">return</span> <span class="n">optforceparams</span><span class="p">(</span><span class="n">force_type</span><span class="p">,</span> <span class="n">force_type_object</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+       <span class="k">return</span> <span class="n">optforceparams</span><span class="p">(</span><span class="n">force_type</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="create_kwd_dict"><a class="viewcode-back" href="../../../apidoc/intermol.forces.forcefunctions.html#intermol.forces.forcefunctions.create_kwd_dict">[docs]</a><span class="k">def</span> <span class="nf">create_kwd_dict</span><span class="p">(</span><span class="n">unitvars</span><span class="p">,</span> <span class="n">paramlist</span><span class="p">,</span> <span class="n">force_type_object</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">optvalues</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">force_type_object</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="n">unitlist</span> <span class="o">=</span> <span class="n">unitvars</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">kwdlist</span> <span class="o">=</span>  <span class="n">paramlist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">optkwddict</span> <span class="o">=</span> <span class="n">optparamlookup</span><span class="p">(</span><span class="n">force_type_object</span><span class="p">)</span>
+    
+    <span class="n">arglist</span> <span class="o">=</span> <span class="p">[</span><span class="n">unit</span><span class="o">*</span><span class="n">value</span> <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unitlist</span><span class="p">,</span> <span class="n">values</span><span class="p">)]</span>
+    <span class="n">kwd</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kwdlist</span><span class="p">,</span> <span class="n">arglist</span><span class="p">)}</span>
+
+    <span class="k">if</span> <span class="n">optvalues</span><span class="p">:</span>
+       <span class="n">optkwddict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">optvalues</span><span class="p">)</span>
+       <span class="n">kwd</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">optkwddict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kwd</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

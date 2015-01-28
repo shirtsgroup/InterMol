@@ -1,3 +1,5 @@
+from collections import OrderedDict
+from copy import copy
 from glob import glob
 import os
 from pkg_resources import resource_filename
@@ -23,11 +25,16 @@ if not testing_logger.handlers:
 
 
 def gromacs(flags, test_type='unit'):
-    """
+    """Run all GROMACS tests of a particular type.
 
     Args:
-        args:
+        flags (dict): Flags passed to `convert.py`.
+        test_type (str, optional): The test suite to run. Defaults to 'unit'.
     Returns:
+        results (dict of dicts): The results of all conversions.
+            {'gromacs': {'bond1: result, 'bond2: results...},
+            'lammps': {'bond1: result, 'bond2: results...},
+            ...}
 
     """
     resource_dir = resource_filename('intermol',
@@ -42,8 +49,8 @@ def gromacs(flags, test_type='unit'):
     # results = {'gromacs': {'bond1: result, 'bond2: results...},
     #            'lammps': {'bond1: result, 'bond2: results...},
     #            ...}
-    per_file_results = {k: None for k in names}
-    results = {engine: per_file_results for engine in ENGINES}
+    per_file_results = OrderedDict((k, None) for k in names)
+    results = {engine: copy(per_file_results) for engine in ENGINES}
 
     unit_test_outputs = '{0}_test_outputs/from_gromacs'.format(test_type)
     basedir = os.path.join(os.path.dirname(__file__), unit_test_outputs)
@@ -64,28 +71,24 @@ def gromacs(flags, test_type='unit'):
             flags[engine] = True
 
         cmd_line_equivalent = []
-        for k, v in flags.iteritems():
-            if isinstance(v, list):
-                in_files = ' '.join(v)
-                arg = '--{0} {1}'.format(k, in_files)
-            elif not isinstance(v, string_types):
-                arg = '--{0}'.format(k)
+        for flag, flag_value in flags.iteritems():
+            if isinstance(flag_value, list):
+                in_files = ' '.join(flag_value)
+                arg = '--{0} {1}'.format(flag, in_files)
+            elif not isinstance(flag_value, string_types):
+                # E.g. {'gromacs': True}
+                arg = '--{0}'.format(flag)
             else:
-                arg = '--{0} {1}'.format(k, v)
+                arg = '--{0} {1}'.format(flag, flag_value)
             cmd_line_equivalent.append(arg)
 
         logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
-        logger.info('    python convert.py {0}'.format(' '.join(cmd_line_equivalent)))
+        logger.info('    python convert.py {0}'.format(
+            ' '.join(cmd_line_equivalent)))
 
-        try:
-            diff = convert.main(flags)
-        except Exception as e:
-            logger.exception(e)
-            for engine in ENGINES:
-                results[engine][name] = e
-        else:
-            for engine, result in diff.iteritems():
-                results[engine][name] = result
+        diff = convert.main(flags)
+        for engine, result in diff.iteritems():
+            results[engine][name] = result
         remove_handler(h1, h2)
 
     summarize_results('gromacs', results, basedir)
@@ -93,13 +96,8 @@ def gromacs(flags, test_type='unit'):
 
 
 def test_gromacs_unit():
-    """
-
-    Args:
-        gromacs:
-    Returns:
-
-    """
+    """Run the LAMMPS stress tests. """
+    unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
              'gromacs': True}
@@ -114,17 +112,21 @@ def test_gromacs_unit():
     zeros = np.zeros(shape=(len(results['gromacs'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
-        assert np.allclose(tests, zeros, atol=1e-4)
+        try:
+            passed = np.allclose(tests, zeros, atol=unit_test_tolerance)
+        except:
+            raise ValueError('Found non-numeric result for GROMACS to {0}. This'
+                             ' probably means an error occured somewhere in the'
+                             ' conversion.'.format(engine.upper()))
+        assert passed, 'Unit tests do not match within {0:.1e} kJ/mol.'.format(
+                unit_test_tolerance)
+        print('All unit tests for GROMACS to {0} match within {1:.1e} kJ/mol.'.format(
+                engine.upper(), unit_test_tolerance))
 
 
 def test_gromacs_stress():
-    """
-
-    Args:
-        gromacs:
-    Returns:
-
-    """
+    """Run the GROMACS stress tests. """
+    stress_test_tolerance = 1e-4
     flags = {'stress': True,
              'energy': True,
              'gromacs': True}
@@ -139,11 +141,20 @@ def test_gromacs_stress():
     zeros = np.zeros(shape=(len(results['gromacs'])))
     for engine, tests in results.iteritems():
         tests = np.array(tests.values())
-        assert np.allclose(tests, zeros, atol=1e-4)
+        try:
+            passed = np.allclose(tests, zeros, atol=stress_test_tolerance)
+        except:
+            raise ValueError('Found non-numeric result. This probably means an '
+                             'error occured somewhere in the conversion.')
+        assert passed, 'Stress tests do not match within {0:.1e} kJ/mol.'.format(
+                stress_test_tolerance)
+        print('All unit tests for GROMACS to {1} match within {0:.1e} kJ/mol.'.format(
+                stress_test_tolerance, engine.upper()))
+
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Run the gromacs tests.')
+    parser = argparse.ArgumentParser(description='Run the GROMACS tests.')
 
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
             default='unit', help="The type of tests to run: 'unit', 'stress' or 'all'.")
@@ -152,6 +163,8 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
+    # TODO: Rewrite assertions or testing calls so that you can run 'all' but
+    #       still have working py.test.
     args = vars(parser.parse_args())
     if args['type'] in ['unit', 'all']:
         test_gromacs_unit()

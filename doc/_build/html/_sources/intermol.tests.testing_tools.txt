@@ -1,0 +1,7 @@
+intermol.tests.testing_tools module
+===================================
+
+.. automodule:: intermol.tests.testing_tools
+    :members:
+    :undoc-members:
+    :show-inheritance:

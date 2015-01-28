@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.forces.abstract_4_virtual_type module &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../index.html"/>
+        <link rel="up" title="intermol.forces package" href="intermol.forces.html"/>
+        <link rel="next" title="intermol.forces.abstract_angle_type module" href="intermol.forces.abstract_angle_type.html"/>
+        <link rel="prev" title="intermol.forces.abstract_3_virtual_type module" href="intermol.forces.abstract_3_virtual_type.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="intermol.html">intermol package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="intermol.forces.html">intermol.forces package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="intermol.forces.html">intermol.forces package</a> &raquo;</li>
+      
+    <li>intermol.forces.abstract_4_virtual_type module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/apidoc/intermol.forces.abstract_4_virtual_type.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="module-intermol.forces.abstract_4_virtual_type">
+<span id="intermol-forces-abstract-4-virtual-type-module"></span><h1>intermol.forces.abstract_4_virtual_type module<a class="headerlink" href="#module-intermol.forces.abstract_4_virtual_type" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="intermol.forces.abstract_4_virtual_type.Abstract4VirtualType">
+<em class="property">class </em><tt class="descclassname">intermol.forces.abstract_4_virtual_type.</tt><tt class="descname">Abstract4VirtualType</tt><big>(</big><em>bondingtype1</em>, <em>bondingtype2</em>, <em>bondingtype3</em>, <em>bondingtype4</em>, <em>bondingtype5</em><big>)</big><a class="reference internal" href="../_modules/intermol/forces/abstract_4_virtual_type.html#Abstract4VirtualType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.forces.abstract_4_virtual_type.Abstract4VirtualType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="intermol.forces.abstract_type.html#intermol.forces.abstract_type.AbstractType" title="intermol.forces.abstract_type.AbstractType"><tt class="xref py py-class docutils literal"><span class="pre">intermol.forces.abstract_type.AbstractType</span></tt></a></p>
+<dl class="attribute">
+<dt id="intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype1">
+<tt class="descname">bondingtype1</tt><a class="headerlink" href="#intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype2">
+<tt class="descname">bondingtype2</tt><a class="headerlink" href="#intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype3">
+<tt class="descname">bondingtype3</tt><a class="headerlink" href="#intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype4">
+<tt class="descname">bondingtype4</tt><a class="headerlink" href="#intermol.forces.abstract_4_virtual_type.Abstract4VirtualType.bondingtype4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="intermol.forces.abstract_angle_type.html" class="btn btn-neutral float-right" title="intermol.forces.abstract_angle_type module"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="intermol.forces.abstract_3_virtual_type.html" class="btn btn-neutral" title="intermol.forces.abstract_3_virtual_type module"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
