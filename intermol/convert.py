@@ -8,6 +8,7 @@ import numpy as np
 
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
+from intermol.desmond import desmond_driver
 import intermol.tests
 
 
@@ -41,8 +42,8 @@ def parse_args(args):
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
     group_in.add_argument('--lmp_in', nargs=1, metavar='file',
-            help='input file for conversion from LAMMPS file format (expects'
-                 ' data file in same directory and a read_data call)')
+            help='input file for conversion from LAMMPS file format (expects '
+                 'data file in same directory and a read_data call)')
 
     # Output arguments.
     group_out = parser.add_argument_group('Choose output conversion format(s)')
@@ -98,6 +99,7 @@ def main(args=None):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
 
+    # Grab the paths to the executables.
     gropath = args.get('gropath')
     if not gropath:
         gropath = ''
@@ -109,6 +111,7 @@ def main(args=None):
                 break
         else:
             logger.exception('Found no LAMMPS executable.')
+    despath = args.get('despath')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -130,6 +133,10 @@ def main(args=None):
         lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
         system = lammps_driver.read_file(in_file=lammps_file)
+    elif args.get('des_in'):
+        cms_file = args['des_in']
+        prefix = os.path.splitext(os.path.basename(cms_file))[0]
+        system = desmond_driver.read_file(cms_file=cms_file)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -145,14 +152,13 @@ def main(args=None):
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system,
-                '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gromacs_driver.write_file(system, '{0}.top'.format(oname),
+                                      '{0}.gro'.format(oname))
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
         else:
             output_status['gromacs'] = 0
-
     if args.get('lammps'):
         try:
             lammps_driver.write_file('{0}.input'.format(oname), system)
@@ -161,26 +167,36 @@ def main(args=None):
             output_status['lammps'] = e
         else:
             output_status['lammps'] = 0
+    if args.get('desmond'):
+        try:
+            desmond_driver.write_file('{0}.cms'.format(oname), system)
+        except Exception as e:
+            logger.exception(e)
+            output_status['desmond'] = e
+        else:
+            output_status['desmond'] = 0
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.dirname(intermol.tests.__file__)
 
-        # Required for all gromacs conversions.
         mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
+        cfg_path = os.path.join(tests_path, 'desmond', 'onepoint.cfg')
 
         # Evaluate input energies.
         if args.get('gro_in'):
             input_type = 'gromacs'
-            tests_path = os.path.dirname(intermol.tests.__file__)
-            mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
         if args.get('lmp_in'):
             input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
                                                            lmppath=lmppath)
+        if args.get('des_in'):
+            input_type = 'desmond'
+            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
+                                                             despath=despath)
         else:
             logger.warn('Code should have never made it here!')
 
@@ -219,12 +235,29 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
+        if args.get('desmond') and output_status['desmond'] == 0:
+            output_type.append('desmond')
+            try:
+                out, outfile = desmond_driver.desmond_energies(
+                        '{0}.input'.format(oname), cfg_path, lmppath)
+            except Exception as e:
+                output_status['desmond'] = e
+                logger.exception(e)
+                e_out.append(-1)
+                e_outfile.append(-1)
+            else:
+                output_status['desmond'] = get_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
         # Display energy comparison results.
-        out = ['InterMol Conversion Energy Comparison Results','']
-        out.append('{0} input energy file: {1}'.format(input_type, e_infile))
-        for out_type, file in zip(output_type, e_outfile):
-            out.append('{0} output energy file: {1}'.format(out_type, file))
-        out += summarize_energy_results(e_in, e_out, input_type, output_type)
+        out = ['InterMol Conversion Energy Comparison Results', '',
+               '{0} input energy file: {1}'.format(input_type, e_infile)]
+        for out_type, out_file in zip(output_type, e_outfile):
+            out.append('{0} output energy file: {1}'.format(out_type, out_file))
+
+        results = summarize_energy_results(e_in, e_out, input_type, output_type)
+        out.append(results)
         logger.info('\n'.join(out))
     logger.info('Finished!')
     return output_status
