@@ -15,20 +15,6 @@ import intermol.tests
 from intermol.tests.testing_tools import which
 
 logger = logging.getLogger('InterMolLog')
-if __name__ == "__main__":
-    # Specifies lowest severity log messages to handle.
-    logger.setLevel(logging.DEBUG)
-    h = logging.StreamHandler()
-    h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
-    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
-                          "%Y-%m-%d %H:%M:%S")
-    h.setFormatter(f)
-    logger.addHandler(h)
-
-    # Redirect warnings module messages to logging system.
-    logging.captureWarnings(True)
-    warning_logger = logging.getLogger('py.warnings')
-    warning_logger.addHandler(h)
 
 
 def parse_args(args):
@@ -317,4 +303,18 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
 
 
 if __name__ == '__main__':
+    # Specifies lowest severity log messages to handle.
+    logger.setLevel(logging.DEBUG)
+    h = logging.StreamHandler()
+    h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
+    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
+                          "%Y-%m-%d %H:%M:%S")
+    h.setFormatter(f)
+    logger.addHandler(h)
+
+    # Redirect warnings module messages to logging system.
+    logging.captureWarnings(True)
+    warning_logger = logging.getLogger('py.warnings')
+    warning_logger.addHandler(h)
+
     main()
