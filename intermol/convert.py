@@ -177,7 +177,7 @@ def main(args=None):
             mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
-        if args.get('lmp_in'):
+        elif args.get('lmp_in'):
             input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
                                                            lmppath=lmppath)
