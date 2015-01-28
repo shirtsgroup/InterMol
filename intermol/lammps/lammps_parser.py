@@ -176,9 +176,9 @@ class LammpsParser(object):
                     if tmpparams['C6']._value == 0 and tmpparams['C5']._value == 0:
                         # Stupid convention?
                         if params['phi'].value_in_unit(units.degrees) == 180:
-                            params['phi']._value = 0
+                            params['phi'] = 0 * units.degrees
                         else:
-                            params['phi']._value = 180
+                            params['phi'] = 180 * units.degrees
                         tmpparams = convert_dihedral_from_trig_to_RB(params)
                         typename = 'multi/harmonic'
                         # It's a RB dihedral.

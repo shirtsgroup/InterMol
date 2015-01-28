@@ -112,7 +112,7 @@ def convert_dihedral_from_RB_to_OPLS(c):
     if (c5 !=0.0 * c0.unit and c1+c2+c3+c4 != 0.0 * c0.unit):
         print "This Rb dihedral is inconsistent with OPLS style",
         print "because C5 = ",c5,
-        print " (should be 0) and c1+c2+c3+c4 = ",c1+c2+c3+c4,
+        print " (should be 0) and c1+c2+c3+c4 = ", c1+c2+c3+c4,
         print " (should be 0)"
         # REALLY SHOULD ADD SOME SORT OF EXCEPTION HERE.
     # note - f1 and f3 are opposite sign as expected in GROMACS, probably because of angle conventions.
