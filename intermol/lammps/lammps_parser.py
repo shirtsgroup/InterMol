@@ -72,7 +72,11 @@ class LammpsParser(object):
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
-            typename = self.lookup_lammps_bonds[bond]
+            try:
+                typename = self.lookup_lammps_bonds[bond]
+            except KeyError:
+                logger.error("Found unimplemented bond type {0} for LAMMPS!".format(
+                    bond.__class__.__name__))
             canonical_force_scale = self.SCALE_FROM
 
         if bond in [HarmonicBond, HarmonicPotentialBond]:
@@ -100,7 +104,11 @@ class LammpsParser(object):
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
-            typename = self.lookup_lammps_angles[angle]
+            try:
+                typename = self.lookup_lammps_angles[angle]
+            except KeyError:
+                logger.error("Found unimplemented angle type {0} for LAMMPS!".format(
+                    angle.__class__.__name__))
             canonical_force_scale = self.SCALE_FROM
 
         if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
