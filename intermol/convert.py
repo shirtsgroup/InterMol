@@ -189,11 +189,10 @@ def main(args=None):
             input_type = 'gromacs'
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
-        if args.get('lmp_in'):
+        elif args.get('lmp_in'):
             input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
-                                                           lmppath=lmppath)
-        if args.get('des_in'):
+        elif args.get('des_in'):
             input_type = 'desmond'
             e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
                                                              despath=despath)
