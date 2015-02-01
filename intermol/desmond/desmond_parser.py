@@ -223,8 +223,6 @@ class DesmondParser(object):
             loger.warn("WriteError: found unsupported dihedral type {0}".format(
                 dihedral.__class__.__name__))        
 
-        pass
-        
     def __init__(self, infile, defines=None):
         """
         Initializes a DesmondParse object which serves to read in a CMS file
