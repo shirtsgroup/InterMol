@@ -110,23 +110,35 @@ class DesmondParser(object):
     lookup_desmond_bonds = to_lookup(desmond_bonds)
     desmond_bond_types = to_type(desmond_bonds)
 
-    def canonical_bond(self, params, bond, direction='into'):
-        """
-        Args:
-            params:
-            bond:
-            direction:
-        Returns:
-        """
+
+    def canonical_bond(self, name, kwds, bond, direction = 'into'):
+
         if direction == 'into':
-            return bond, params
+            canonical_force_scale = self.canonical_force_scale_into
+            phase = 'Read'
         else:
-            b_type = self.lookup_desmond_bonds[bond.__class__]
-            if b_type:
-                return b_type, params
+            canonical_force_scale = self.canonical_force_scale_from
+            phase = 'Write'
+
+        if bond in [HarmonicBond, HarmonicPotentialBond]:
+
+            kwds['k'] = canonical_force_scale * kwds['k']
+
+            if direction == 'into':
+                if name == 'harm_constrainted':
+                    kdws['c'] = True
             else:
-                logger.warn("WriteError: found unsupported bond type {0}.".format(
-                    bond.__class__.__name__))
+                # harmonic potentials in Gromacs should be constrained
+                optkwds = forcefunctions.optparamlookup(bond)
+                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
+                    name = 'harm_constrained'
+                else:
+                    name = 'harm'
+                return name, kwds
+
+        else:
+            raise Exception("%sError: bondtype %s is not supported by Desmond" % (phase, bond.__class__.__name__))
+
 
     desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
                       'HARM': HarmonicAngle,
@@ -143,6 +155,43 @@ class DesmondParser(object):
             direction:
         Returns:
         """
+
+        if direction == 'into':
+            canonical_force_scale = self.canonical_force_scale_into
+            phase = 'Read'
+        else:
+            canonical_force_scale = self.canonical_force_scale_from
+            phase = 'Write'
+
+        if bond in [HarmonicAngle, UreyBradleyAngle]:
+
+            kwds['k'] = canonical_force_scale * kwds['k']
+
+            if direction == 'into':
+                if name == 'harm_constrainted':
+                    kdws['c'] = True
+            else:
+                # harmonic potentials in Gromacs should be constrained
+                optkwds = forcefunctions.optparamlookup(bond)
+                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
+                    name = 'harm_constrained'
+                else:
+                    name = 'harm'
+                return name, kwds
+
+
+            if isinstance(angle,UreyBradleyAngle):
+                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), 0.5*float(angle.kUB.in_units_of(units.kilocalorie_per_mole*units.angstroms**(-2))._value)))
+                i+=1
+            if angle.c:
+                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+            else:
+                if isinstance(angle, HarmonicAngle) or isinstance(angle, UreyBradleyAngle):
+                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
+                else:
+                    raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
+
+
         if direction == 'into':
             return angle, params
         else:
@@ -164,7 +213,14 @@ class DesmondParser(object):
                                 }
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
-        
+
+        d_type = self.lookup_desmond_angles[dihedral.__class__]
+        if d_type:
+            return d_type, params
+        else:
+            loger.warn("WriteError: found unsupported dihedral type {0}".format(
+                dihedral.__class__.__name__))        
+
 
     def __init__(self, infile, defines=None):
         """
@@ -340,17 +396,6 @@ class DesmondParser(object):
         # order we want.
         logger.debug("Parsing [ vdwtypes]...")
         
-        u
-        u
-        v
-        r
-        q
-        t
-        w
-        x
-        x
-        v
-        v
         for j in range(ff_number):
         	vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
                 vdwtypeskeys.append(entry_values[j].split()[1])
@@ -1222,34 +1267,6 @@ class DesmondParser(object):
 
         return lines
 
-    def canonical_bond(self, name, kwds, bond, direction = 'into'):
-
-        if direction == 'into':
-            canonical_force_scale = self.canonical_force_scale_into
-            phase = 'Read'
-        else:
-            canonical_force_scale = self.canonical_force_scale_from
-            phase = 'Write'
-
-        if bond in [HarmonicBond, HarmonicPotentialBond]:
-
-            kwds['k'] = canonical_force_scale * kwds['k']
-
-            if direction == 'into':
-                if name == 'harm_constrainted':
-                    kdws['c'] = True
-            else:
-                # harmonic potentials in Gromacs should be constrained
-                optkwds = forcefunctions.optparamlookup(bond)
-                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
-                    name = 'harm_constrained'
-                else:
-                    name = 'harm'
-                return name, kwds
-
-        else:
-            raise Exception("%sError: bondtype %s is not supported by Desmond" % (phase, bond.__class__.__name__))
-
     def write_bonds(self, moleculetype):
 
         #-ADDING BONDS
@@ -1308,17 +1325,20 @@ class DesmondParser(object):
         anglelist = sorted(moleculetype.angleForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2,x.atom3))
         for angle in anglelist:
             i+=1
-            if isinstance(angle,UreyBradleyAngle):
-                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), 0.5*float(angle.kUB.in_units_of(units.kilocalorie_per_mole*units.angstroms**(-2))._value)))
-                i+=1
-            if angle.c:
-                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-            else:
-                if isinstance(angle, HarmonicAngle) or isinstance(angle, UreyBradleyAngle):
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-                else:
-                    raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
-
+            kwds = self.get_parameter_kwds_from_force(angle)
+            try:
+                name = self.lookup_desmond_bonds[angle.__class__]
+            except:
+                raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
+            name, kwds = self.canonical_angle(name, kwds, angle.__class__, direction = 'from')
+            line = '      %d %d %d %d %s' %(i, angle.atom1, angle.atom3, angle.atom3, name)
+            angle_params = self.get_parameter_list_from_kwds(angle, kwds)
+            u = self.unitvars[angle.__class__.__name__]
+            for j, p in enumerate(angle_params):
+                line += "%15.8f" % (p.value_in_unit(u[j]))
+            line += '\n'    
+            dlines.append(line)
+            
         header = "    ffio_angles[%d] {\n" % (i)
         hlines = endheadersection(i==0,header,hlines)
 
