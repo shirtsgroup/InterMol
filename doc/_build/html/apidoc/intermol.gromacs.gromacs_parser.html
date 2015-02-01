@@ -1,0 +1,794 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.gromacs.gromacs_parser module &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../index.html"/>
+        <link rel="up" title="intermol.gromacs package" href="intermol.gromacs.html"/>
+        <link rel="next" title="intermol.lammps package" href="intermol.lammps.html"/>
+        <link rel="prev" title="intermol.gromacs.gromacs_driver module" href="intermol.gromacs.gromacs_driver.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="intermol.html">intermol package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="intermol.gromacs.html">intermol.gromacs package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="intermol.gromacs.html">intermol.gromacs package</a> &raquo;</li>
+      
+    <li>intermol.gromacs.gromacs_parser module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/apidoc/intermol.gromacs.gromacs_parser.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="module-intermol.gromacs.gromacs_parser">
+<span id="intermol-gromacs-gromacs-parser-module"></span><h1>intermol.gromacs.gromacs_parser module<a class="headerlink" href="#module-intermol.gromacs.gromacs_parser" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser">
+<em class="property">class </em><tt class="descclassname">intermol.gromacs.gromacs_parser.</tt><tt class="descname">GromacsParser</tt><big>(</big><em>top_file</em>, <em>gro_file</em>, <em>system=None</em>, <em>include_dir=None</em>, <em>defines=None</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A class containing methods required to read in a Gromacs(4.5.4) Topology File</p>
+<dl class="class">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.TopMoleculeType">
+<em class="property">class </em><tt class="descname">TopMoleculeType</tt><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.TopMoleculeType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.TopMoleculeType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Inner class to store information about a molecule type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.canonical_angle">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">canonical_angle</tt><big>(</big><em>params</em>, <em>angle</em>, <em>direction='into'</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.canonical_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.canonical_angle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>params</strong> &#8211; </li>
+<li><strong>angle</strong> &#8211; </li>
+<li><strong>direction</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.canonical_bond">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">canonical_bond</tt><big>(</big><em>params</em>, <em>bond</em>, <em>direction='into'</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.canonical_bond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.canonical_bond" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>params</strong> &#8211; </li>
+<li><strong>bond</strong> &#8211; </li>
+<li><strong>direction</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.canonical_dihedral">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">canonical_dihedral</tt><big>(</big><em>params</em>, <em>dihedral</em>, <em>direction='into'</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.canonical_dihedral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.canonical_dihedral" title="Permalink to this definition">¶</a></dt>
+<dd><p>We can fit everything into two types of dihedrals - dihedral_trig, and
+improper harmonic. Dihedral trig is of the form</p>
+<blockquote>
+<div>fc0 + sum_i=1^6 fci (cos(nx-phi)</div></blockquote>
+<p>Proper dihedrals can be stored easily in this form, since they have
+only 1 n. Improper dihedrals can as well (flag as improper). RB can be
+stored as well, assuming phi = 0 or 180. Fourier can also be stored. A
+full dihedral trig can be decomposed into multiple proper dihedrals.</p>
+<p>Will need to handle multiple dihedrals little differently in that we
+will need to add multiple 9 dihedrals together into a single
+dihedral_trig, as long as they have the same phi angle (seems to be
+always the case).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>params</strong> &#8211; </li>
+<li><strong>dihedral</strong> &#8211; </li>
+<li><strong>direction</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.choose_parameter_kwds_from_forces">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">choose_parameter_kwds_from_forces</tt><big>(</big><em>entries</em>, <em>n_atoms</em>, <em>force_type</em>, <em>gromacs_force</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.choose_parameter_kwds_from_forces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.choose_parameter_kwds_from_forces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a force&#8217;s parameters into a keyword dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entries</strong> (<em>str</em>) &#8211; The <cite>split()</cite> line being parsed.</li>
+<li><strong>n_atoms</strong> (<em>int</em>) &#8211; The number of atoms in the force.</li>
+<li><strong>force_type</strong> &#8211; The type of the force.</li>
+<li><strong>gromacs_force</strong> &#8211; The</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p><strong>kwds</strong> &#8211;
+The force&#8217;s parameters, e.g.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>{&#8216;length&#8217;: Quantity(value=0.13, unit=nanometers),</dt>
+<dd><p class="first last">&#8216;k&#8217;: ...</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_angle">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_angle</tt><big>(</big><em>angle</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_atom">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_atom</tt><big>(</big><em>temp_atom</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_atom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_bond">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_bond</tt><big>(</big><em>bond</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_bond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_bond" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_dihedral">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_dihedral</tt><big>(</big><em>dihedral</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_dihedral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_dihedral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dihedral object based on a [ dihedrals ] entry.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_exclusion">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_exclusion</tt><big>(</big><em>exclusion</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_exclusion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_exclusion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_kwds_from_entries">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_kwds_from_entries</tt><big>(</big><em>entries</em>, <em>force_class</em>, <em>offset=0</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_kwds_from_entries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_kwds_from_entries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_molecule">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_molecule</tt><big>(</big><em>top_moltype</em>, <em>mol_name</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_molecule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_molecule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_moleculetype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_moleculetype</tt><big>(</big><em>top_moltype</em>, <em>mol_name</em>, <em>mol_count</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_moleculetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_moleculetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_pair">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_pair</tt><big>(</big><em>pair</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a pair force object based on a [ pairs ] entry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.create_settle">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">create_settle</tt><big>(</big><em>settle</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.create_settle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.create_settle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.directive_before_moleculetype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">directive_before_moleculetype</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.directive_before_moleculetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.directive_before_moleculetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.find_dihedraltype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">find_dihedraltype</tt><big>(</big><em>bondingtypes</em>, <em>improper</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.find_dihedraltype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.find_dihedraltype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the type of dihedral interaction between four atoms.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.find_forcetype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">find_forcetype</tt><big>(</big><em>bondingtypes</em>, <em>types_of_kind</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.find_forcetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.find_forcetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.get_parameter_kwds_from_force">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">get_parameter_kwds_from_force</tt><big>(</big><em>force</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.get_parameter_kwds_from_force"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.get_parameter_kwds_from_force" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.get_parameter_list_from_force">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">get_parameter_list_from_force</tt><big>(</big><em>force</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.get_parameter_list_from_force"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.get_parameter_list_from_force" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_angle_types">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_angle_types</tt><em class="property"> = {'1': &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngleType'&gt;, '3': &lt;class 'intermol.forces.cross_bond_bond_angle_type.CrossBondBondAngleType'&gt;, '2': &lt;class 'intermol.forces.cosine_squared_angle_type.CosineSquaredAngleType'&gt;, '5': &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngleType'&gt;, '4': &lt;class 'intermol.forces.cross_bond_angle_angle_type.CrossBondAngleAngleType'&gt;, '6': &lt;class 'intermol.forces.quartic_angle_type.QuarticAngleType'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_angle_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_angles">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_angles</tt><em class="property"> = {'1': &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;, '3': &lt;class 'intermol.forces.cross_bond_bond_angle_type.CrossBondBondAngle'&gt;, '2': &lt;class 'intermol.forces.cosine_squared_angle_type.CosineSquaredAngle'&gt;, '5': &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;, '4': &lt;class 'intermol.forces.cross_bond_angle_angle_type.CrossBondAngleAngle'&gt;, '6': &lt;class 'intermol.forces.quartic_angle_type.QuarticAngle'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_bond_types">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_bond_types</tt><em class="property"> = {'1': &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBondType'&gt;, '3': &lt;class 'intermol.forces.morse_bond_type.MorseBondType'&gt;, '2': &lt;class 'intermol.forces.g96_bond_type.G96BondType'&gt;, '5': &lt;class 'intermol.forces.connection_bond_type.ConnectionBondType'&gt;, '4': &lt;class 'intermol.forces.cubic_bond_type.CubicBondType'&gt;, '7': &lt;class 'intermol.forces.fene_bond_type.FeneBondType'&gt;, '6': &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBondType'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_bond_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_bonds">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_bonds</tt><em class="property"> = {'1': &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;, '3': &lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;, '2': &lt;class 'intermol.forces.g96_bond_type.G96Bond'&gt;, '5': &lt;class 'intermol.forces.connection_bond_type.ConnectionBond'&gt;, '4': &lt;class 'intermol.forces.cubic_bond_type.CubicBond'&gt;, '7': &lt;class 'intermol.forces.fene_bond_type.FeneBond'&gt;, '6': &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBond'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_combination_rules">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_combination_rules</tt><em class="property"> = {'1': 'Multiply-C6C12', '3': 'Multiply-Sigeps', '2': 'Lorentz-Berthelot'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_combination_rules" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_dihedral_types">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_dihedral_types</tt><em class="property"> = {'Trig': &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedralType'&gt;, '1': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedralType'&gt;, '3': &lt;class 'intermol.forces.rb_dihedral_type.RbDihedralType'&gt;, '2': &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedralType'&gt;, '5': &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedralType'&gt;, '4': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedralType'&gt;, '9': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedralType'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_dihedral_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_dihedrals">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_dihedrals</tt><em class="property"> = {'Trig': &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;, '1': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;, '3': &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;, '2': &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;, '5': &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;, '4': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;, '9': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_pair_types">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_pair_types</tt><em class="property"> = {'1A': &lt;class 'intermol.forces.lj_c_pair_type.LjCPairType'&gt;, '1C': &lt;class 'intermol.forces.lj_default_pair_type.LjDefaultPairType'&gt;, '1B': &lt;class 'intermol.forces.lj_sigeps_pair_type.LjSigepsPairType'&gt;, '2A': &lt;class 'intermol.forces.ljq_c_pair_type.LjqCPairType'&gt;, '2B': &lt;class 'intermol.forces.ljq_sigeps_pair_type.LjqSigepsPairType'&gt;, '2C': &lt;class 'intermol.forces.ljq_default_pair_type.LjqDefaultPairType'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_pair_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.gromacs_pairs">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">gromacs_pairs</tt><em class="property"> = {'1A': &lt;class 'intermol.forces.lj_c_pair_type.LjCPair'&gt;, '1C': &lt;class 'intermol.forces.lj_default_pair_type.LjDefaultPair'&gt;, '1B': &lt;class 'intermol.forces.lj_sigeps_pair_type.LjSigepsPair'&gt;, '2A': &lt;class 'intermol.forces.ljq_c_pair_type.LjqCPair'&gt;, '2B': &lt;class 'intermol.forces.ljq_sigeps_pair_type.LjqSigepsPair'&gt;, '2C': &lt;class 'intermol.forces.ljq_default_pair_type.LjqDefaultPair'&gt;}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.gromacs_pairs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.invalid_line">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">invalid_line</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.invalid_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.invalid_line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_atom_atomtype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_atom_atomtype</tt><big>(</big><em>index</em>, <em>state=0</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.lookup_atom_atomtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_atom_atomtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_atom_bondingtype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_atom_bondingtype</tt><big>(</big><em>index</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.lookup_atom_bondingtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_atom_bondingtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_angles">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_gromacs_angles</tt><em class="property"> = {&lt;class 'intermol.forces.cosine_squared_angle_type.CosineSquaredAngle'&gt;: '2', &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;: '1', &lt;class 'intermol.forces.cross_bond_bond_angle_type.CrossBondBondAngle'&gt;: '3', &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;: '5', &lt;class 'intermol.forces.cross_bond_angle_angle_type.CrossBondAngleAngle'&gt;: '4', &lt;class 'intermol.forces.quartic_angle_type.QuarticAngle'&gt;: '6'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_bonds">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_gromacs_bonds</tt><em class="property"> = {&lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;: '3', &lt;class 'intermol.forces.connection_bond_type.ConnectionBond'&gt;: '5', &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;: '1', &lt;class 'intermol.forces.fene_bond_type.FeneBond'&gt;: '7', &lt;class 'intermol.forces.g96_bond_type.G96Bond'&gt;: '2', &lt;class 'intermol.forces.cubic_bond_type.CubicBond'&gt;: '4', &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBond'&gt;: '6'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_combination_rules">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_gromacs_combination_rules</tt><em class="property"> = {'Multiply-Sigeps': '3', 'Lorentz-Berthelot': '2', 'Multiply-C6C12': '1'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_combination_rules" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_dihedrals">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_gromacs_dihedrals</tt><em class="property"> = {&lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;: '2', &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;: '3', &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'Trig', &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;: '5'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_pairs">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">lookup_gromacs_pairs</tt><em class="property"> = {&lt;class 'intermol.forces.lj_sigeps_pair_type.LjSigepsPair'&gt;: '1B', &lt;class 'intermol.forces.lj_c_pair_type.LjCPair'&gt;: '1A', &lt;class 'intermol.forces.ljq_c_pair_type.LjqCPair'&gt;: '2A', &lt;class 'intermol.forces.ljq_default_pair_type.LjqDefaultPair'&gt;: '2C', &lt;class 'intermol.forces.lj_default_pair_type.LjDefaultPair'&gt;: '1C', &lt;class 'intermol.forces.ljq_sigeps_pair_type.LjqSigepsPair'&gt;: '2B'}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.lookup_gromacs_pairs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.paramlist">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">paramlist</tt><em class="property"> = {'QuarticBreakableBond': ['k', 'B1', 'B2', 'Rc', 'U0'], 'fene_expandable_bond': ['k', 'length', 'epsilon', 'sigma', 'delta'], 'ThreeOutVirtualType': ['a', 'b', 'c'], 'LjDefaultPair': [], 'LjqDefaultPair': [], 'improper_harmonic_dihedral': ['xi', 'k'], 'cubic_bond': ['length', 'C2', 'C3'], 'ljq_c_pair': ['qi', 'qj', 'C6', 'C12'], 'ConnectionBond': [], 'BuckinghamNonbondedType': ['a', 'b', 'C6'], 'ConnectionBondType': [], 'ThreeOutVirtual': ['a', 'b', 'c'], 'FeneExpandableBond': ['k', 'length', 'epsilon', 'sigma', 'delta'], 'LjCPair': ['C6', 'C12'], 'four_fdn_virtual': ['a', 'b', 'c'], 'ThreeFadVirtual': ['theta', 'd'], 'RbDihedralType': ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'], 'FeneBond': ['length', 'kb'], 'TrigDihedral': ['phi', 'fc0', 'fc1', 'fc2', 'fc3', 'fc4', 'fc5', 'fc6'], 'ThreeFadVirtualType': ['theta', 'd'], 'ThreeLinearVirtual': ['a', 'b'], 'LjCPairType': ['C6', 'C12'], 'cross_bond_bond_angle': ['r1', 'r2', 'k'], 'LjSigepsNonbonded': ['sigma', 'epsilon'], 'LjqDefaultPairType': [], 'cosine_squared_angle': ['theta', 'k'], 'ImproperHarmonicDihedralType': ['xi', 'k'], 'nonlinear_bond': ['epsilon', 'r0', 'lamda'], 'LjqSigepsPair': ['qi', 'qj', 'sigma', 'epsilon'], 'G96BondType': ['length', 'k'], 'harmonic_bond': ['length', 'k'], 'trig_dihedral': ['phi', 'fc0', 'fc1', 'fc2', 'fc3', 'fc4', 'fc5', 'fc6'], 'LjqCPair': ['qi', 'qj', 'C6', 'C12'], 'LjSigepsNonbondedType': ['sigma', 'epsilon'], 'CubicBondType': ['length', 'C2', 'C3'], 'QuarticBondType': ['length', 'C2', 'C3', 'C4'], 'urey_bradley_angle': ['theta', 'k', 'r', 'kUB'], 'LjSigepsPairType': ['sigma', 'epsilon'], 'harmonic_angle': ['theta', 'k'], 'two_virtual': ['a'], 'NCogVirtualType': [], 'TwoVirtualType': ['a'], 'lj_c_nonbonded': ['C6', 'C12'], 'FeneBondType': ['length', 'kb'], 'NonlinearBond': ['epsilon', 'r0', 'lamda'], 'TrigDihedralType': ['phi', 'fc0', 'fc1', 'fc2', 'fc3', 'fc4', 'fc5', 'fc6'], 'LjCNonbondedType': ['C6', 'C12'], 'UreyBradleyAngleType': ['theta', 'k', 'r', 'kUB'], 'HarmonicPotentialBond': ['length', 'k'], 'three_fad_virtual': ['theta', 'd'], 'LjCNonbonded': ['C6', 'C12'], 'three_out_virtual': ['a', 'b', 'c'], 'CrossBondBondAngle': ['r1', 'r2', 'k'], 'HarmonicAngle': ['theta', 'k'], 'HarmonicPotentialBondType': ['length', 'k'], 'CubicBond': ['length', 'C2', 'C3'], 'cross_bond_angle_angle': ['r1', 'r2', 'r3', 'k'], 'lj_c_pair': ['C6', 'C12'], 'harmonic_potential_bond': ['length', 'k'], 'three_fd_virtual': ['a', 'd'], 'QuarticBreakableBondType': ['k', 'B1', 'B2', 'Rc', 'U0'], 'QuarticAngle': ['theta', 'C0', 'C1', 'C2', 'C3', 'C4'], 'ThreeLinearVirtualType': ['a', 'b'], 'NonlinearBondType': ['epsilon', 'r0', 'lamda'], 'CosineSquaredAngle': ['theta', 'k'], 'LjDefaultPairType': [], 'ThreeFdVirtual': ['a', 'd'], 'buckingham_nonbonded': ['a', 'b', 'C6'], 'FourierDihedral': ['c1', 'c2', 'c3', 'c4', 'c5'], 'HarmonicBondType': ['length', 'k'], 'HarmonicBond': ['length', 'k'], 'proper_periodic_dihedral': ['phi', 'k', 'multiplicity'], 'FourFdnVirtual': ['a', 'b', 'c'], 'NCogVirtual': [], 'TwoVirtual': ['a'], 'BuckinghamNonbonded': ['a', 'b', 'C6'], 'UreyBradleyAngle': ['theta', 'k', 'r', 'kUB'], 'n_cog_virtual': [], 'QuarticAngleType': ['theta', 'C0', 'C1', 'C2', 'C3', 'C4'], 'NCowVirtualType': [], 'quartic_angle': ['theta', 'C0', 'C1', 'C2', 'C3', 'C4'], 'RbDihedral': ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'], 'fene_bond': ['length', 'kb'], 'ImproperHarmonicDihedral': ['xi', 'k'], 'MorseBond': ['length', 'D', 'beta'], 'LjqCPairType': ['qi', 'qj', 'C6', 'C12'], 'FourFdnVirtualType': ['a', 'b', 'c'], 'lj_default_pair': [], 'ThreeFdVirtualType': ['a', 'd'], 'CrossBondAngleAngleType': ['r1', 'r2', 'r3', 'k'], 'quartic_breakable_bond': ['k', 'B1', 'B2', 'Rc', 'U0'], 'QuarticBond': ['length', 'C2', 'C3', 'C4'], 'ProperPeriodicDihedral': ['phi', 'k', 'multiplicity'], 'quartic_bond': ['length', 'C2', 'C3', 'C4'], 'ljq_default_pair': [], 'ProperPeriodicDihedralType': ['phi', 'k', 'multiplicity'], 'n_cow_virtual': [], 'connection_bond': [], 'cosine_angle': ['k'], 'ljq_sigeps_pair': ['qi', 'qj', 'sigma', 'epsilon'], 'CrossBondAngleAngle': ['r1', 'r2', 'r3', 'k'], 'morse_bond': ['length', 'D', 'beta'], 'NCowVirtual': [], 'lj_sigeps_nonbonded': ['sigma', 'epsilon'], 'FeneExpandableBondType': ['k', 'length', 'epsilon', 'sigma', 'delta'], 'FourierDihedralType': ['c1', 'c2', 'c3', 'c4', 'c5'], 'HarmonicAngleType': ['theta', 'k'], 'LjqSigepsPairType': ['qi', 'qj', 'sigma', 'epsilon'], 'CosineAngle': ['k'], 'lj_sigeps_pair': ['sigma', 'epsilon'], 'rb_dihedral': ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'], 'G96Bond': ['length', 'k'], 'CrossBondBondAngleType': ['r1', 'r2', 'k'], 'three_linear_virtual': ['a', 'b'], 'g96_bond': ['length', 'k'], 'CosineAngleType': ['k'], 'MorseBondType': ['length', 'D', 'beta'], 'LjSigepsPair': ['sigma', 'epsilon'], 'CosineSquaredAngleType': ['theta', 'k'], 'fourier_dihedral': ['c1', 'c2', 'c3', 'c4', 'c5']}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.paramlist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_angle">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_angle</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ angles ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_angletype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_angletype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_angletype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_angletype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ angletypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_atom">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_atom</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ atoms ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_atomtype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_atomtype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_atomtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_atomtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ atomtypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_bond">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_bond</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_bond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_bond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ bonds ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_bondtype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_bondtype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_bondtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_bondtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ bondtypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_cmap">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_cmap</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_cmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_cmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ cmaps ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_cmaptype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_cmaptype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_cmaptype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_cmaptype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ cmaptypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_defaults">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_defaults</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the [ defaults ] line.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_dihedral">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_dihedral</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_dihedral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_dihedral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ dihedrals ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_dihedraltype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_dihedraltype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_dihedraltype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_dihedraltype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ dihedraltypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_exclusion">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_exclusion</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_exclusion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_exclusion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ exclusions ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_file">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_file</tt><big>(</big><em>top_file</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_forcetype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_forcetype</tt><big>(</big><em>bondingtypes</em>, <em>forcename</em>, <em>line</em>, <em>n_atoms</em>, <em>gromacs_force_types</em>, <em>canonical_force</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_forcetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_forcetype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_implicittype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_implicittype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_implicittype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_implicittype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ implicit_genborn_params ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_line">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_line</tt><big>(</big><em>top_file</em>, <em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process one line from a file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_molecule">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_molecule</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_molecule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_molecule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ molecules ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_moleculetype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_moleculetype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_moleculetype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_moleculetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ moleculetypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_nonbond_params">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_nonbond_params</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_nonbond_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_nonbond_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ nonbond_param ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_pair">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_pair</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ pairs ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_pairtype">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_pairtype</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_pairtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_pairtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ pairtypes ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.process_settle">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">process_settle</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.process_settle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.process_settle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the [ settles ] category.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.read">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">read</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.read" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">system</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.too_few_fields">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">too_few_fields</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.too_few_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.too_few_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.type_parameters_are_unique">
+<em class="property">static </em><tt class="descclassname">GromacsParser.</tt><tt class="descname">type_parameters_are_unique</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.type_parameters_are_unique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.type_parameters_are_unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if two force types are unique.</p>
+<p>Currently only tests TrigDihedralType and ImproperHarmonicDihedralType
+because these are the only two forcetypes that we currently allow to
+to have multiple values for the same set of 4 atom bondingtypes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.unitvars">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">unitvars</tt><em class="property"> = {'QuarticBreakableBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'lj_sigeps_pair_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'ThreeOutVirtualType': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'LjDefaultPair': [], 'fourier_dihedral_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'ConnectionBond': [], 'BuckinghamNonbondedType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'three_fad_virtual_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'ConnectionBondType': [], 'ThreeOutVirtual': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'FeneExpandableBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'LjCPair': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'NonlinearBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'urey_bradley_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'improper_harmonic_dihedral_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'ThreeFadVirtual': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'quartic_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'harmonic_potential_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'trig_dihedral_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'RbDihedralType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'FeneBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'TrigDihedral': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'harmonic_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'ThreeFadVirtualType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'three_fd_virtual_type': [Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'ThreeLinearVirtual': [Unit({}), Unit({})], 'LjCPairType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'LjSigepsNonbonded': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'LjqDefaultPairType': [], 'ImproperHarmonicDihedralType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'three_linear_virtual_type': [Unit({}), Unit({})], 'LjqSigepsPair': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'G96BondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'lj_sigeps_nonbonded_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'HarmonicBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'LjqCPair': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'LjSigepsNonbondedType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'CubicBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'QuarticBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'LjSigepsPairType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'FourierDihedral': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'NCogVirtualType': [], 'lj_default_pair_type': [], 'TwoVirtualType': [Unit({})], 'FeneBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'lj_c_nonbonded_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'TrigDihedralType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'LjCNonbondedType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'UreyBradleyAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'HarmonicPotentialBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'LjCNonbonded': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'fene_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'CrossBondBondAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'HarmonicAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'ljq_c_pair_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'HarmonicPotentialBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'CubicBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'fene_expandable_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'cross_bond_angle_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'QuarticBreakableBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'QuarticAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -3.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -4.0})], 'ThreeLinearVirtualType': [Unit({}), Unit({})], 'NonlinearBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'CosineSquaredAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'LjDefaultPairType': [], 'ThreeFdVirtual': [Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'two_virtual_type': [Unit({})], 'cosine_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'HarmonicBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'connection_bond_type': [], 'cross_bond_bond_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'FourFdnVirtual': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'NCogVirtual': [], 'g96_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'quartic_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -3.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -4.0})], 'quartic_breakable_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'TwoVirtual': [Unit({})], 'BuckinghamNonbonded': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'UreyBradleyAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'three_out_virtual_type': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'ljq_sigeps_pair_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'lj_c_pair_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'ljq_default_pair_type': [], 'QuarticAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -3.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -4.0})], 'NCowVirtualType': [], 'LjqDefaultPair': [], 'buckingham_nonbonded_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'morse_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'ImproperHarmonicDihedral': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'MorseBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'LjqCPairType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 6.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 12.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'cosine_squared_angle_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'FourFdnVirtualType': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'ThreeFdVirtualType': [Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'CrossBondAngleAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'cubic_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'QuarticBond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -3.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'ProperPeriodicDihedral': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({})], 'ProperPeriodicDihedralType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({})], 'four_fdn_virtual_type': [Unit({}), Unit({}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'HarmonicAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;radian&quot;, symbol=&quot;rad&quot;): -2.0})], 'n_cog_virtual_type': [], 'nonlinear_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'harmonic_bond_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'proper_periodic_dihedral_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({})], 'CrossBondAngleAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'n_cow_virtual_type': [], 'RbDihedral': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'NCowVirtual': [], 'FeneExpandableBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0})], 'FourierDihedralType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'LjqSigepsPairType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;charge&quot;), name=&quot;elementary charge&quot;, symbol=&quot;e&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'CosineAngle': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'G96Bond': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -4.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'CrossBondBondAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -2.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0, BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0})], 'CosineAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'MorseBondType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): -1.0})], 'rb_dihedral_type': [Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'LjSigepsPair': [Unit({BaseUnit(base_dim=BaseDimension(&quot;length&quot;), name=&quot;nanometer&quot;, symbol=&quot;nm&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})], 'CosineSquaredAngleType': [Unit({BaseUnit(base_dim=BaseDimension(&quot;angle&quot;), name=&quot;degree&quot;, symbol=&quot;deg&quot;): 1.0}), Unit({BaseUnit(base_dim=BaseDimension(&quot;amount&quot;), name=&quot;mole&quot;, symbol=&quot;mol&quot;): -1.0, ScaledUnit(factor=1.0, master=gram*nanometer**2/(picosecond**2), name='kilojoule', symbol='kJ'): 1.0})]}</em><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.unitvars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write this topology in GROMACS file format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; the name of the file to write out to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_angles">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_angles</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_angles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_atoms">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_atoms</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_atoms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_atomtypes">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_atomtypes</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_atomtypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_atomtypes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_bonds">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_bonds</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_bonds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_defaults">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_defaults</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_dihedrals">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_dihedrals</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_dihedrals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_exclusions">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_exclusions</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_exclusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_exclusions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_molecules">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_molecules</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_molecules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_molecules" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_moleculetypes">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_moleculetypes</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_moleculetypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_moleculetypes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_nonbonded_types">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_nonbonded_types</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_nonbonded_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_nonbonded_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_pairs">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_pairs</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_pairs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_settles">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_settles</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_settles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_settles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.gromacs.gromacs_parser.GromacsParser.write_system">
+<tt class="descclassname">GromacsParser.</tt><tt class="descname">write_system</tt><big>(</big><em>top</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#GromacsParser.write_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.GromacsParser.write_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.gromacs.gromacs_parser.default_gromacs_include_dir">
+<tt class="descclassname">intermol.gromacs.gromacs_parser.</tt><tt class="descname">default_gromacs_include_dir</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#default_gromacs_include_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.default_gromacs_include_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the location where gromacs #include files are referenced from, by
+searching for (1) gromacs environment variables, (2) just using the default
+gromacs install location, /usr/local/gromacs/share/gromacs/top.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.gromacs.gromacs_parser.load_gromacs">
+<tt class="descclassname">intermol.gromacs.gromacs_parser.</tt><tt class="descname">load_gromacs</tt><big>(</big><em>top_file</em>, <em>gro_file</em>, <em>include_dir=None</em>, <em>defines=None</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#load_gromacs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.load_gromacs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a set of GROMACS input files into a <cite>System</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>top_file</strong> &#8211; </li>
+<li><strong>gro_file</strong> &#8211; </li>
+<li><strong>include_dir</strong> &#8211; </li>
+<li><strong>defines</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">system</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.gromacs.gromacs_parser.write_gromacs">
+<tt class="descclassname">intermol.gromacs.gromacs_parser.</tt><tt class="descname">write_gromacs</tt><big>(</big><em>top_file</em>, <em>gro_file</em>, <em>system</em><big>)</big><a class="reference internal" href="../_modules/intermol/gromacs/gromacs_parser.html#write_gromacs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.gromacs.gromacs_parser.write_gromacs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a set of GROMACS input files into a <cite>System</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>top_file</strong> &#8211; </li>
+<li><strong>gro_file</strong> &#8211; </li>
+<li><strong>include_dir</strong> &#8211; </li>
+<li><strong>defines</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">system</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="intermol.lammps.html" class="btn btn-neutral float-right" title="intermol.lammps package"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="intermol.gromacs.gromacs_driver.html" class="btn btn-neutral" title="intermol.gromacs.gromacs_driver module"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

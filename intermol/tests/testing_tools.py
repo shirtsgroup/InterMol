@@ -1,8 +1,7 @@
 import logging
 import os
 
-#ENGINES = ['gromacs', 'lammps', 'desmond']
-ENGINES = ['gromacs']
+ENGINES = ['gromacs', 'lammps', 'desmond']
 
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
@@ -20,7 +19,8 @@ if not testing_logger.handlers:
     testing_logger.setLevel(logging.DEBUG)
     h = logging.StreamHandler()
     h.setLevel(logging.INFO)  # ignores DEBUG level for now
-    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
+                          "%Y-%m-%d %H:%M:%S")
     h.setFormatter(f)
     testing_logger.addHandler(h)
 
@@ -79,7 +79,7 @@ def summarize_results(input_type, results, outdir):
 
             out.write('\n')
             out.write('{:^{}}'.format('Results for {0} to {1} Conversion\n'.format(
-                input_type.upper(), engine), total_width))
+                input_type.upper(), engine.upper()), total_width))
             out.write('='*total_width + '\n')
             out.write('{:<{}}   {:>{}}\n'.format('Input File', col1_width, 'Status/Potential Energy Diff', col2_width))
             out.write('-'*total_width + '\n')

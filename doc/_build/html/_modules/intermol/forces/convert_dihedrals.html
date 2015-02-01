@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.forces.convert_dihedrals &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>intermol.forces.convert_dihedrals</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for intermol.forces.convert_dihedrals</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">simtk.unit</span> <span class="kn">as</span> <span class="nn">units</span>
+
+
+<div class="viewcode-block" id="convert_nothing"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_nothing">[docs]</a><span class="k">def</span> <span class="nf">convert_nothing</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; useful utility for not converting anything&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_proper_to_trig"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_proper_to_trig">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_proper_to_trig</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;k&#39;</span><span class="p">]</span>
+    <span class="n">multiplicity</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;multiplicity&#39;</span><span class="p">]</span>
+    <span class="n">zu</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">k</span><span class="o">.</span><span class="n">unit</span>
+    <span class="n">fcs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;phi&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">],</span>
+        <span class="s">&#39;fc0&#39;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
+        <span class="s">&#39;fc1&#39;</span><span class="p">:</span> <span class="n">zu</span><span class="p">,</span>
+        <span class="s">&#39;fc2&#39;</span><span class="p">:</span> <span class="n">zu</span><span class="p">,</span>
+        <span class="s">&#39;fc3&#39;</span><span class="p">:</span> <span class="n">zu</span><span class="p">,</span>
+        <span class="s">&#39;fc4&#39;</span><span class="p">:</span> <span class="n">zu</span><span class="p">,</span>
+        <span class="s">&#39;fc5&#39;</span><span class="p">:</span> <span class="n">zu</span><span class="p">,</span>
+        <span class="s">&#39;fc6&#39;</span><span class="p">:</span> <span class="n">zu</span>
+        <span class="p">}</span>
+
+    <span class="n">k</span> <span class="c"># which force constant is nonzero because of the multiplicity?</span>
+    <span class="n">fk</span> <span class="o">=</span> <span class="s">&quot;fc</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">multiplicity</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="n">fk</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="k">return</span> <span class="n">fcs</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_fourier_to_trig"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_fourier_to_trig">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_fourier_to_trig</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+
+    <span class="n">fcs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">F1</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;c1&#39;</span><span class="p">]</span>
+    <span class="n">F2</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;c2&#39;</span><span class="p">]</span>
+    <span class="n">F3</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;c3&#39;</span><span class="p">]</span>
+    <span class="n">F4</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;c4&#39;</span><span class="p">]</span>
+
+    <span class="n">zu</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">F1</span><span class="o">.</span><span class="n">unit</span>
+
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">degrees</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">F1</span><span class="o">+</span><span class="n">F2</span><span class="o">+</span><span class="n">F3</span><span class="o">+</span><span class="n">F4</span><span class="p">)</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">F1</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">F2</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">F3</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">F4</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zu</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zu</span>
+
+    <span class="k">return</span> <span class="n">fcs</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_trig_to_fourier"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_trig_to_fourier">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_trig_to_fourier</span><span class="p">(</span><span class="n">fcs</span><span class="p">):</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">F</span><span class="p">[</span><span class="s">&#39;F1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc1&#39;</span><span class="p">]</span>
+    <span class="n">F</span><span class="p">[</span><span class="s">&#39;F2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc2&#39;</span><span class="p">]</span>
+    <span class="n">F</span><span class="p">[</span><span class="s">&#39;F3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc3&#39;</span><span class="p">]</span>
+    <span class="n">F</span><span class="p">[</span><span class="s">&#39;F4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc4&#39;</span><span class="p">]</span>
+    <span class="n">F</span><span class="p">[</span><span class="s">&#39;F5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># probably not correct?  No test cases.</span>
+
+    <span class="k">if</span> <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc0&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">F</span><span class="p">[</span><span class="s">&#39;F1&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">F</span><span class="p">[</span><span class="s">&#39;F2&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">F</span><span class="p">[</span><span class="s">&#39;F3&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">F</span><span class="p">[</span><span class="s">&#39;F4&#39;</span><span class="p">]):</span>
+        <span class="k">print</span> <span class="s">&quot;This dihedral is inconsistent with OPLS format&quot;</span><span class="p">,</span>
+
+    <span class="k">return</span> <span class="n">F</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_trig_to_proper"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_trig_to_proper">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_trig_to_proper</span><span class="p">(</span><span class="n">fcs</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s">&#39;0&#39;</span><span class="p">):</span>
+
+    <span class="c"># this has to be smarter, because there are two options; there&#39;s one, or there are multiple.</span>
+    <span class="c"># we handle this by returning multiple keywords</span>
+
+    <span class="c"># create a copy of the dictionary to strip out several parameters</span>
+    <span class="n">ftmp</span> <span class="o">=</span> <span class="n">fcs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">ftmp</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;phi&#39;</span><span class="p">)</span>
+    <span class="n">ftmp</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;fc0&#39;</span><span class="p">)</span>
+    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">ftmp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="n">ncount</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">coeff</span><span class="o">.</span><span class="n">_value</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coefficients</span><span class="p">)</span>
+
+    <span class="n">halfangle</span> <span class="o">=</span> <span class="p">(</span><span class="mi">180</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span><span class="o">.</span><span class="n">in_units_of</span><span class="p">(</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="n">plist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s">&#39;180&#39;</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">fcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c"># only one of these should be nonzero</span>
+        <span class="k">if</span> <span class="n">coeff</span><span class="o">.</span><span class="n">_value</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;fc0&#39;</span><span class="p">,</span> <span class="s">&#39;phi&#39;</span><span class="p">]:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s">&#39;180&#39;</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">halfangle</span><span class="o">-</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span>
+            <span class="n">p</span><span class="p">[</span><span class="s">&#39;multiplicity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">dimensionless</span>
+            <span class="n">p</span><span class="p">[</span><span class="s">&#39;k&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">*</span><span class="n">sign</span>
+            <span class="n">plist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plist</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_RB_to_OPLS"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_RB_to_OPLS">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_RB_to_OPLS</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+
+    <span class="n">c0</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C0&#39;</span><span class="p">]</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C1&#39;</span><span class="p">]</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C2&#39;</span><span class="p">]</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C3&#39;</span><span class="p">]</span>
+    <span class="n">c4</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C4&#39;</span><span class="p">]</span>
+    <span class="n">c5</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C5&#39;</span><span class="p">]</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">c5</span> <span class="o">!=</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">c0</span><span class="o">.</span><span class="n">unit</span> <span class="ow">and</span> <span class="n">c1</span><span class="o">+</span><span class="n">c2</span><span class="o">+</span><span class="n">c3</span><span class="o">+</span><span class="n">c4</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">c0</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">&quot;This Rb dihedral is inconsistent with OPLS style&quot;</span><span class="p">,</span>
+        <span class="k">print</span> <span class="s">&quot;because C5 = &quot;</span><span class="p">,</span><span class="n">c5</span><span class="p">,</span>
+        <span class="k">print</span> <span class="s">&quot; (should be 0) and c1+c2+c3+c4 = &quot;</span><span class="p">,</span><span class="n">c1</span><span class="o">+</span><span class="n">c2</span><span class="o">+</span><span class="n">c3</span><span class="o">+</span><span class="n">c4</span><span class="p">,</span>
+        <span class="k">print</span> <span class="s">&quot; (should be 0)&quot;</span>
+        <span class="c"># REALLY SHOULD ADD SOME SORT OF EXCEPTION HERE.</span>
+    <span class="c"># note - f1 and f3 are opposite sign as expected in GROMACS, probably because of angle conventions.</span>
+    <span class="n">f</span><span class="p">[</span><span class="s">&#39;f1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">c1</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">c3</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">f</span><span class="p">[</span><span class="s">&#39;f2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">c2</span> <span class="o">-</span> <span class="n">c4</span>
+    <span class="n">f</span><span class="p">[</span><span class="s">&#39;f3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c3</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">f</span><span class="p">[</span><span class="s">&#39;f4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">c4</span> <span class="o">/</span> <span class="mf">4.0</span>
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_OPLS_to_RB"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_OPLS_to_RB">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_OPLS_to_RB</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;f1&#39;</span><span class="p">]</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;f2&#39;</span><span class="p">]</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;f3&#39;</span><span class="p">]</span>
+    <span class="n">f4</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s">&#39;f4&#39;</span><span class="p">]</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="c"># Note: c1 and c3 are the negative of what is defined on equation 4.64 of Gromacs Manual 4.6.1</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f2</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">f1</span><span class="o">+</span><span class="n">f3</span><span class="p">)</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">f1</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">f3</span><span class="p">)</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f2</span> <span class="o">+</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">f4</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">f3</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">f4</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;CO&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span>  <span class="c"># need to keep everything in units</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;CO&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span>
+    <span class="k">return</span> <span class="n">c</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_trig_to_RB"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_trig_to_RB">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_trig_to_RB</span><span class="p">(</span><span class="n">fcs</span><span class="p">):</span>
+
+    <span class="c"># sign is -1 or 1</span>
+    <span class="c"># RB is \sum_n=0^6 cos(x)^n</span>
+    <span class="c"># Trig is f_0 + \sum_n=1^6 cos(nx-phi)</span>
+    <span class="c"># we restrict to phi = 0 or 180 (might need to generalize later), so we can write as</span>
+    <span class="c">#               f_0 + \sum_n=1^6 cos(nx)cos(phi) + sin(nx)sin(phi)</span>
+    <span class="c">#               f_0 + \sum_n=1^6 cos(nx)  (phi = 0)</span>
+    <span class="c">#               f_0 + \sum_n=1^6 -cos(nx)  (phi = 180)</span>
+    <span class="c"># phi = 180 corresponds to a sign of -1 on everything but f_0.  Easier to multiply just f_0, </span>
+    <span class="c"># then multiply the rest. </span>
+    <span class="c"># cos(2x) = 2cos^2(x)-1</span>
+    <span class="c"># cos(3x) = 4cos^3(x)-3cos(x)</span>
+    <span class="c"># cos(4x) = 8cos^4(X)-8cos^2(x)+1</span>
+    <span class="c"># cos(5x) = 16cos^5(x)-20cos^3(x)+5cos(x)</span>
+    <span class="c"># cos(6x) = 32cos^6(x)-48cos^4(x)+18cos^2(x)-1</span>
+    <span class="c"># Thus:</span>
+    <span class="c">#   f0 + f1*cos(x) + f2*cos(2x) + f3*cos(3x) + f4*cos(4x) + f5*cos(5x) + f6*cos(6x) </span>
+    <span class="c">#   z = cos(x)</span>
+    <span class="c"># = f0 + f1*z + f2*(2z^2-1) + f3*(4*z^3-3*z) + f4*(8z^4-8z^2+1) + f5*(16z^5-20z^3+5*z) + f6*(32z^6-48z^4+18*z^2-1) </span>
+    <span class="c"># c0 =  f0-f2+f4-f6</span>
+    <span class="c"># c1 =  f1-3f3+5f5</span>
+    <span class="c"># c2 = 2f2-8f4+18f6</span>
+    <span class="c"># c3 = 4f3-20f5</span>
+    <span class="c"># c4 = 8f4-48f6</span>
+    <span class="c"># c5 = 16f5</span>
+    <span class="c"># c6 = 32f6</span>
+
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_in_unit</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">radians</span><span class="p">))</span>
+    <span class="n">fc0</span> <span class="o">=</span> <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc0&#39;</span><span class="p">]</span>
+    <span class="n">fc1</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc1&#39;</span><span class="p">]</span>
+    <span class="n">fc2</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc2&#39;</span><span class="p">]</span>
+    <span class="n">fc3</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc3&#39;</span><span class="p">]</span>
+    <span class="n">fc4</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc4&#39;</span><span class="p">]</span>
+    <span class="n">fc5</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc5&#39;</span><span class="p">]</span>
+    <span class="n">fc6</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc6&#39;</span><span class="p">]</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fc0</span> <span class="o">-</span> <span class="n">fc2</span> <span class="o">+</span> <span class="n">fc4</span> <span class="o">-</span> <span class="n">fc6</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fc1</span> <span class="o">-</span> <span class="mf">3.0</span><span class="o">*</span><span class="n">fc3</span> <span class="o">+</span> <span class="mf">5.0</span><span class="o">*</span><span class="n">fc5</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">fc2</span> <span class="o">-</span> <span class="mf">8.0</span><span class="o">*</span><span class="n">fc4</span> <span class="o">+</span> <span class="mf">18.0</span><span class="o">*</span><span class="n">fc6</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.0</span><span class="o">*</span><span class="n">fc3</span> <span class="o">-</span> <span class="mf">20.0</span><span class="o">*</span><span class="n">fc5</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">8.0</span><span class="o">*</span><span class="n">fc4</span> <span class="o">-</span> <span class="mf">48.0</span><span class="o">*</span><span class="n">fc6</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16.0</span><span class="o">*</span><span class="n">fc5</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">32.0</span><span class="o">*</span><span class="n">fc6</span>
+
+    <span class="c"># Multiply by -1 on odd powers to switch between sign conventions.</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C1&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C3&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;C5&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">c</span>
+
+</div>
+<div class="viewcode-block" id="convert_dihedral_from_RB_to_trig"><a class="viewcode-back" href="../../../apidoc/intermol.forces.convert_dihedrals.html#intermol.forces.convert_dihedrals.convert_dihedral_from_RB_to_trig">[docs]</a><span class="k">def</span> <span class="nf">convert_dihedral_from_RB_to_trig</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+
+    <span class="n">c0</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C0&#39;</span><span class="p">]</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C1&#39;</span><span class="p">]</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C2&#39;</span><span class="p">]</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C3&#39;</span><span class="p">]</span>
+    <span class="n">c4</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C4&#39;</span><span class="p">]</span>
+    <span class="n">c5</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C5&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s">&#39;C6&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>  <span class="c"># program might not define this one, need to check it exists.</span>
+        <span class="n">c6</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;C6&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c6</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">c0</span><span class="o">.</span><span class="n">unit</span>
+
+    <span class="c"># See above for conversion; simply inverting the matrix.</span>
+    <span class="c"># Need to handle sign for 180.</span>
+    <span class="n">fcs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="c"># sign?  units?  Is there a way to get out of this?</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;phi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">degrees</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">c0</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">c2</span> <span class="o">+</span> <span class="mf">0.3750</span><span class="o">*</span><span class="n">c4</span> <span class="o">+</span> <span class="mf">0.3125</span><span class="o">*</span><span class="n">c6</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">c1</span> <span class="o">+</span> <span class="mf">0.75</span><span class="o">*</span><span class="n">c3</span> <span class="o">+</span> <span class="mf">0.6250</span><span class="o">*</span><span class="n">c5</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">c2</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">c4</span> <span class="o">+</span> <span class="mf">0.46875</span><span class="o">*</span><span class="n">c6</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.25</span><span class="o">*</span><span class="n">c3</span> <span class="o">+</span> <span class="mf">0.3125</span><span class="o">*</span><span class="n">c5</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.125</span><span class="o">*</span><span class="n">c4</span> <span class="o">+</span> <span class="mf">0.1875</span><span class="o">*</span><span class="n">c6</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0625</span><span class="o">*</span><span class="n">c5</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.03125</span><span class="o">*</span><span class="n">c6</span>
+
+    <span class="c"># Multiplying by -1 on odd powers to switch between sign conventions</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc1&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc3&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">fcs</span><span class="p">[</span><span class="s">&#39;fc5&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    
+    <span class="k">return</span> <span class="n">fcs</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -55,12 +55,13 @@ def end_header_section(blank_section, header, header_lines):
         header_lines[0] = header
     return header_lines
 
+
 def split_with_quotes(line):
     line = list(line)
     in_quotes = False
     for i, char in enumerate(line):
         if char == '"':
-            in_quotes == not in_quotes
+            in_quotes = not in_quotes
         if char == ' ' and in_quotes:
             line[i] = '_'
 
@@ -69,6 +70,7 @@ def split_with_quotes(line):
         sub = sub.replace('"', '')
         space_split[i] = sub.replace('_', ' ')
     return space_split
+
 
 def to_lookup(forward_dict, key_rule=None, value_rule=None):
     temp_list = []
@@ -221,7 +223,8 @@ class DesmondParser(object):
             loger.warn("WriteError: found unsupported dihedral type {0}".format(
                 dihedral.__class__.__name__))        
 
-
+        pass
+        
     def __init__(self, infile, defines=None):
         """
         Initializes a DesmondParse object which serves to read in a CMS file
@@ -234,9 +237,9 @@ class DesmondParser(object):
         self.defines = dict()        # list of defines
         self.comments = list()      # list of comments
 
-        self.atomtypes = HashMap()
-        self.bondtypes = HashMap()
-        self.constrainttypes = HashMap()
+        self.atomtypes = dict()
+        self.bondtypes = dict()
+        self.constrainttypes = dict()
         
         if defines:
             self.defines.union(defines)

@@ -7,10 +7,14 @@ import warnings
 import numpy as np
 
 from intermol.gromacs import gromacs_driver
+from intermol.lammps import lammps_driver
+from intermol.desmond import desmond_driver
 import intermol.tests
 
 
 # Make a global logging object.
+from intermol.tests.testing_tools import which
+
 logger = logging.getLogger('InterMolLog')
 if __name__ == "__main__":
     # Specifies lowest severity log messages to handle.
@@ -38,8 +42,8 @@ def parse_args(args):
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
     group_in.add_argument('--lmp_in', nargs=1, metavar='file',
-            help='input file for conversion from LAMMPS file format (expects'
-                 ' data file in same directory and a read_data call)')
+            help='input file for conversion from LAMMPS file format (expects '
+                 'data file in same directory and a read_data call)')
 
     # Output arguments.
     group_out = parser.add_argument_group('Choose output conversion format(s)')
@@ -84,7 +88,6 @@ def parse_args(args):
 
 def main(args=None):
     logger.info('Beginning InterMol conversion')
-
     if not args:
         args = vars(parse_args(args))
 
@@ -96,9 +99,22 @@ def main(args=None):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
 
+    # Grab the paths to the executables.
+    gropath = args.get('gropath')
+    if not gropath:
+        gropath = ''
+    lmppath = args.get('lmppath')
+    if not lmppath:
+        for exe in ['lmp_mpi', 'lmp_openmpi']:
+            if which(exe):
+                lmppath = exe
+                break
+        else:
+            logger.exception('Found no LAMMPS executable.')
+    despath = args.get('despath')
+
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
-        gropath = args.get('gropath')
         gromacs_files = args['gro_in']
 
         prefix = os.path.splitext(os.path.basename(gromacs_files[0]))[0]
@@ -113,6 +129,14 @@ def main(args=None):
         gro_in = gro_in[0]
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
+    elif args.get('lmp_in'):
+        lammps_file = args['lmp_in']
+        prefix = os.path.splitext(os.path.basename(lammps_file))[0]
+        system = lammps_driver.read_file(in_file=lammps_file)
+    elif args.get('des_in'):
+        cms_file = args['des_in']
+        prefix = os.path.splitext(os.path.basename(cms_file))[0]
+        system = desmond_driver.read_file(cms_file=cms_file)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -125,29 +149,53 @@ def main(args=None):
     oname = os.path.join(args['odir'], oname)  # Prepend output directory to oname.
 
     output_status = dict()
+    # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system,
-                '{0}.top'.format(oname), '{0}.gro'.format(oname))
-            output_status['gromacs'] = 0
+            gromacs_driver.write_file(system, '{0}.top'.format(oname),
+                                      '{0}.gro'.format(oname))
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
+        else:
+            output_status['gromacs'] = 0
+    if args.get('lammps'):
+        try:
+            lammps_driver.write_file('{0}.input'.format(oname), system)
+        except Exception as e:
+            logger.exception(e)
+            output_status['lammps'] = e
+        else:
+            output_status['lammps'] = 0
+    if args.get('desmond'):
+        try:
+            desmond_driver.write_file('{0}.cms'.format(oname), system)
+        except Exception as e:
+            logger.exception(e)
+            output_status['desmond'] = e
+        else:
+            output_status['desmond'] = 0
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.dirname(intermol.tests.__file__)
 
-        # Gromacs
         mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
+        cfg_path = os.path.join(tests_path, 'desmond', 'onepoint.cfg')
+
         # Evaluate input energies.
         if args.get('gro_in'):
             input_type = 'gromacs'
-            tests_path = os.path.dirname(intermol.tests.__file__)
-            mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
+        elif args.get('lmp_in'):
+            input_type = 'lammps'
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmppath)
+        elif args.get('des_in'):
+            input_type = 'desmond'
+            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
+                                                             despath=despath)
         else:
             logger.warn('Code should have never made it here!')
 
@@ -161,28 +209,61 @@ def main(args=None):
                 out, outfile = gromacs_driver.gromacs_energies(
                         '{0}.top'.format(oname), '{0}.gro'.format(oname),
                         mdp_path, gropath, '')
-                output_status['gromacs'] = get_diff(e_in, out)
-                e_out.append(out)
-                e_outfile.append(outfile)
             except Exception as e:
                 output_status['gromacs'] = e
                 logger.exception(e)
                 e_out.append(-1)
                 e_outfile.append(-1)
+            else:
+                output_status['gromacs'] = get_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
+        if args.get('lammps') and output_status['lammps'] == 0:
+            output_type.append('lammps')
+            try:
+                out, outfile = lammps_driver.lammps_energies(
+                        '{0}.input'.format(oname), lmppath)
+            except Exception as e:
+                output_status['lammps'] = e
+                logger.exception(e)
+                e_out.append(-1)
+                e_outfile.append(-1)
+            else:
+                output_status['lammps'] = get_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
+        if args.get('desmond') and output_status['desmond'] == 0:
+            output_type.append('desmond')
+            try:
+                out, outfile = desmond_driver.desmond_energies(
+                        '{0}.input'.format(oname), cfg_path, lmppath)
+            except Exception as e:
+                output_status['desmond'] = e
+                logger.exception(e)
+                e_out.append(-1)
+                e_outfile.append(-1)
+            else:
+                output_status['desmond'] = get_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
 
         # Display energy comparison results.
-        out = ['InterMol Conversion Energy Comparison Results','']
-        out.append('{0} input energy file: {1}'.format(input_type, e_infile))
-        for out_type, file in zip(output_type, e_outfile):
-            out.append('{0} output energy file: {1}'.format(out_type, file))
-        out += summarize_energy_results(e_in, e_out, input_type, output_type)
+        out = ['InterMol Conversion Energy Comparison Results', '',
+               '{0} input energy file: {1}'.format(input_type, e_infile)]
+        for out_type, out_file in zip(output_type, e_outfile):
+            out.append('{0} output energy file: {1}'.format(out_type, out_file))
+
+        results = summarize_energy_results(e_in, e_out, input_type, output_type)
+        out.append(results)
         logger.info('\n'.join(out))
     logger.info('Finished!')
     return output_status
 
 
 def get_diff(e_in, e_out):
-    """returns difference in potential energy
+    """Returns difference in potential energy.
 
     arguments:
         e_in  - dictionary of energy groups from input file
@@ -191,16 +272,16 @@ def get_diff(e_in, e_out):
     returns:
         potential energy difference in units of the input
     """
-    type = 'Potential' # getting difference in potential energy
+    type = 'Potential'
     input = e_in[type]
     diff = e_out[type].in_units_of(input.unit) - input
     return diff._value
 
 
 def find_match(key, dictionary, unit):
-    """helper function for summarize_energy_results() """
+    """Helper function for `summarize_energy_results`. """
     if key in dictionary:
-        return dictionary[key].in_units_of(unit)._value
+        return dictionary[key].value_in_unit(unit)
     else:
         return np.nan
 
@@ -251,13 +332,13 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     for i in range(len(data)):
         line = '%20s ' % labels[i]
         line += '%18.8f ' % data[i][0]
-        for j in range(1,len(data[i])):
-            line += '%18.8f %18.8f' % (data[i][j],data[i][j]-data[i][0])
+        for j in range(1, len(data[i])):
+            line += '%18.8f %18.8f' % (data[i][j], data[i][j]-data[i][0])
         out.append(line)
     out.append('')
     # get differences in potential energy
     i = labels.index('Potential')
-    diff = data[i,1::] - data[i,0]
+    diff = data[i, 1::] - data[i, 0]
     for d, otype in zip(diff, output_types):
         out.append('difference in potential energy from %s=>%s conversion: %18.8f'
                     % (input_type, otype, d))

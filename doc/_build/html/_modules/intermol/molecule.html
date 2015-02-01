@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.molecule &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>intermol.molecule</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for intermol.molecule</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="Molecule"><a class="viewcode-back" href="../../apidoc/intermol.molecule.html#intermol.molecule.Molecule">[docs]</a><span class="k">class</span> <span class="nc">Molecule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An abstract molecule object. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the molecule</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): name of the molecule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;MOL&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Molecule.add_atom"><a class="viewcode-back" href="../../apidoc/intermol.molecule.html#intermol.molecule.Molecule.add_atom">[docs]</a>    <span class="k">def</span> <span class="nf">add_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an atom</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atom (Atom): the atom to add into the molecule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Molecule.atoms"><a class="viewcode-back" href="../../apidoc/intermol.molecule.html#intermol.molecule.Molecule.atoms">[docs]</a>    <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an orderedset of atoms. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atoms</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Molecule &#39;{}&#39; with {} atoms&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Molecule{} &#39;{}&#39; with {} atoms&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
