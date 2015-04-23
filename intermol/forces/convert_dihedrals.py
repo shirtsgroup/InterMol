@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import math
 
 import simtk.unit as units
@@ -62,7 +64,7 @@ def convert_dihedral_from_trig_to_fourier(fcs):
     F['F5'] = 0  # probably not correct?  No test cases.
 
     if fcs['fc0'] != 0.5*(F['F1']+F['F2']+F['F3']+F['F4']):
-        print "This dihedral is inconsistent with OPLS format",
+        print("This dihedral is inconsistent with OPLS format")
 
     return F
 
@@ -110,10 +112,10 @@ def convert_dihedral_from_RB_to_OPLS(c):
 
     f = dict()
     if (c5 !=0.0 * c0.unit and c1+c2+c3+c4 != 0.0 * c0.unit):
-        print "This Rb dihedral is inconsistent with OPLS style",
-        print "because C5 = ",c5,
-        print " (should be 0) and c1+c2+c3+c4 = ", c1+c2+c3+c4,
-        print " (should be 0)"
+        print("This Rb dihedral is inconsistent with OPLS style")
+        print("because C5 = ", c5)
+        print(" (should be 0) and c1+c2+c3+c4 = ", c1+c2+c3+c4)
+        print(" (should be 0)")
         # REALLY SHOULD ADD SOME SORT OF EXCEPTION HERE.
     # note - f1 and f3 are opposite sign as expected in GROMACS, probably because of angle conventions.
     f['f1'] = 2.0 * c1 + 3.0 * c3 / 2.0

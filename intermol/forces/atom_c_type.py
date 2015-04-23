@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_atom_type import AbstractAtomType
+from intermol.forces.abstract_atom_type import AbstractAtomType
 
 
 class AtomCType(AbstractAtomType):

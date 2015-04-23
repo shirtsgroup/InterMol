@@ -1,6 +1,6 @@
 import simtk.unit as units
 
-import forcedata
+import intermol.forces.forcedata as forcedata
 
 """
 functions for manipulating the data to extract keywords and unit-ed parameter lists from forces, 
@@ -38,7 +38,7 @@ def build_paramlist(program):
 
     paramlist = tmp_paramlist.copy()
     # add type and underscore names
-    for name, paramset in tmp_paramlist.iteritems():
+    for name, paramset in tmp_paramlist.items():
         paramlist[capifyname(name)] = tmp_paramlist[name]
         paramlist[capifyname(name + '_type')] = tmp_paramlist[name]
 
@@ -60,7 +60,7 @@ def build_unitvars(program, paramlist, dumself=None):
     """
     unitvars = dict()
     unitdefs = forcedata.ProgramUnitSets[program]
-    for name, uset in forcedata.master_unitlist.iteritems():
+    for name, uset in forcedata.master_unitlist.items():
         unitset = specify(unitdefs, uset, dumself)
 
         # reorder the units if necessary according to the order in the given paramlist
@@ -146,7 +146,7 @@ def optparamkeylookup(force_type):
 
     """
     name = force_type.__name__.lower()
-    for key, params in forcedata.AbstractOptParams.iteritems():
+    for key, params in forcedata.AbstractOptParams.items():
         if key in name:
             return key
 

@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_3_virtual_type import Abstract3VirtualType
+from intermol.forces.abstract_3_virtual_type import Abstract3VirtualType
 
 
 class ThreeFdVirtualType(Abstract3VirtualType):

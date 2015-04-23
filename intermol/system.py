@@ -60,7 +60,7 @@ class System(object):
 
     @property
     def atoms(self):
-        for mol_type in self.molecule_types.itervalues():
+        for mol_type in self.molecule_types.values():
             for mol in mol_type.molecules:
                 for atom in mol.atoms:
                     yield atom

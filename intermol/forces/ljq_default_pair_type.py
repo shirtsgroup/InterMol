@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_pair_type import AbstractPairType
+from intermol.forces.abstract_pair_type import AbstractPairType
 
 
 class LjqDefaultPairType(AbstractPairType):

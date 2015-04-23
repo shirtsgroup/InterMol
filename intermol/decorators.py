@@ -33,9 +33,9 @@ def accepts(*types):
 
     """
     def check_accepts(f):
-        nargs = (f.func_code.co_argcount - 1)  # exclude self
+        nargs = (f.__code__.co_argcount - 1)  # exclude self
         assert len(types) == nargs, ("Incorrect number of args supplied in "
-                "@accepts decorator for class method %s" % (f.func_name))
+                "@accepts decorator for class method %s" % (f.__name__))
 
         def new_f(*args, **kwds):
             for (a, t) in zip(args[1:], types):
@@ -43,8 +43,8 @@ def accepts(*types):
                     assert isinstance(a, t), "arg %r does not match %s" % (a, t)
             return f(*args, **kwds)
 
-        new_f.func_name = f.func_name  # copy function name
-        new_f.func_doc = f.func_doc  # copy docstring
+        new_f.__name__ = f.__name__  # copy function name
+        new_f.__doc__ = f.__doc__  # copy docstring
         return new_f
 
     return check_accepts
@@ -66,18 +66,18 @@ def accepts_compatible_units(*units, **unitdict):
 
     """
     def check_units(f):
-        nargs = (f.func_code.co_argcount - 1) # exclude self
-        #assert len(units) == nargs, "incorrect number of units supplied in @accepts_compatible_units decorator for class method %s" % (f.func_name)
+        nargs = (f.__code__.co_argcount - 1)  # exclude self
+        #assert len(units) == nargs, "incorrect number of units supplied in @accepts_compatible_units decorator for class method %s" % (f.__name__)
         def new_f(*args, **kwds):
             for (a, u) in zip(args[1:], units):
                 if u is not None:
                     assert (a.unit).is_compatible(u), "arg %r does not have units compatible with %s" % (a,u)
-            for (k, u) in unitdict.iteritems():  # should be ignored if no unitdict
+            for (k, u) in unitdict.items():  # should be ignored if no unitdict
                 if u is not None:
                     assert (kwds[k].unit).is_compatible(u), "kwd arg %s does not have units compatible with %s" % (kwds[k],u)
             return f(*args, **kwds)
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
+        new_f.__name__ = f.__name__
+        new_f.__doc__ = f.__doc__
         return new_f
     return check_units
 
@@ -95,9 +95,9 @@ def returns(rtype):
     def check_returns(f):
         def new_f(*args, **kwds):
             result = f(*args, **kwds)
-            assert isinstance(result, rtype), "return value %r does not match %s" % (result,rtype)
+            assert isinstance(result, rtype), "return value %r does not match %s" % (result, rtype)
             return result
-        new_f.func_name = f.func_name # copy function name
-        new_f.func_doc = f.func_doc # copy docstring
+        new_f.__name__ = f.__name__
+        new_f.__doc__ = f.__doc__
         return new_f
     return check_returns 

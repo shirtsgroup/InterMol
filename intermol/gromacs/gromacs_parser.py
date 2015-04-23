@@ -11,7 +11,7 @@ import intermol.forces.forcefunctions as ff
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
-from grofile_parser import GromacsGroParser
+from intermol.gromacs.grofile_parser import GromacsGroParser
 
 
 logger = logging.getLogger('InterMolLog')
@@ -447,7 +447,7 @@ class GromacsParser(object):
     def write_atomtypes(self, top):
         top.write('[ atomtypes ]\n')
         top.write(';type, bondingtype, atomic_number, mass, charge, ptype, sigma, epsilon\n')
-        for atomtype in sorted(self.system.atomtypes.itervalues(), key=lambda x: x.atomtype):
+        for atomtype in sorted(self.system.atomtypes.values(), key=lambda x: x.atomtype):
             if atomtype.atomtype.isdigit():
                 atomtype.atomtype = "LMP_{0}".format(atomtype.atomtype)
             if atomtype.bondtype.isdigit():
@@ -474,7 +474,7 @@ class GromacsParser(object):
     def write_nonbonded_types(self, top):
         top.write('[ nonbond_params ]\n')
         top.write('i    j    func    sigma     epsilon\n')
-        for nbtype in sorted(self.system.nonbonded_types.itervalues(), key=lambda x: (x.atom1, x.atom2)):
+        for nbtype in sorted(self.system.nonbonded_types.values(), key=lambda x: (x.atom1, x.atom2)):
             # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
                     nbtype.atom1, nbtype.atom2, nbtype.type))
@@ -489,7 +489,7 @@ class GromacsParser(object):
         top.write('\n')
 
     def write_moleculetypes(self, top):
-        for mol_name, mol_type in self.system.molecule_types.iteritems():
+        for mol_name, mol_type in self.system.molecule_types.items():
             self.current_molecule_type = mol_type
             top.write('[ moleculetype ]\n')
             # Gromacs can't handle spaces in the molecule name.
@@ -524,7 +524,7 @@ class GromacsParser(object):
     def write_molecules(self, top):
         top.write('[ molecules ]\n')
         top.write('; Compound        nmols\n')
-        for mol_name, mol_type in self.system.molecule_types.iteritems():
+        for mol_name, mol_type in self.system.molecule_types.items():
             n_molecules = len(mol_type.molecules)
             # The following lines are more 'chemical'.
             printname = mol_name
@@ -733,7 +733,7 @@ class GromacsParser(object):
 
         atom.position = self.gro.positions[self.n_atoms_added]
 
-        for state, atomtype in atom.atomtype.iteritems():
+        for state, atomtype in atom.atomtype.items():
             intermol_atomtype = self.system.atomtypes.get(atomtype)
             if not intermol_atomtype:
                 logger.warn('A corresponding AtomType for {0} was not'
@@ -785,7 +785,7 @@ class GromacsParser(object):
                 kwds = self.choose_parameter_kwds_from_forces(
                     bond, n_atoms, bond_type, gromacs_bond)
             # Give it canonical form parameters.
-            canonical_bond, kwds = self.canonical_angle(kwds, gromacs_bond,
+            canonical_bond, kwds = self.canonical_bond(kwds, gromacs_bond,
                                                         direction='into')
             new_bond = canonical_bond(*atoms, **kwds)
         else:
@@ -1074,7 +1074,7 @@ class GromacsParser(object):
         elif stripped.startswith('[') and not ignore:
             # The start of a category.
             if not stripped.endswith(']'):
-                e =  ValueError('Illegal line in .top file: '+line)
+                e = ValueError('Illegal line in .top file: '+line)
                 logger.exception(e)
             self.current_directive = stripped[1:-1].strip()
             logger.debug("Parsing {0}...".format(self.current_directive))
@@ -1397,8 +1397,6 @@ class GromacsParser(object):
             self.dihedraltypes[key].add(dihedral_type)
         else:
             self.dihedraltypes[key] = {dihedral_type}
-
-
 
     def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
                           gromacs_force_types, canonical_force):

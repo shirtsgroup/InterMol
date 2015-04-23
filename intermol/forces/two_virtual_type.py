@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_2_virtual_type import Abstract2VirtualType
+from intermol.forces.abstract_2_virtual_type import Abstract2VirtualType
 
 
 class TwoVirtualType(Abstract2VirtualType):

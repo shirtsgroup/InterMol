@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_bond_type import AbstractBondType
+from intermol.forces.abstract_bond_type import AbstractBondType
 
 
 class CubicBondType(AbstractBondType):

@@ -75,7 +75,7 @@ class LammpsParser(object):
             try:
                 typename = self.lookup_lammps_bonds[bond]
             except KeyError:
-                logger.error("Found unimplemented bond type {0} for LAMMPS!".format(
+                logger.exception("Found unimplemented bond type {0} for LAMMPS!".format(
                     bond.__class__.__name__))
             canonical_force_scale = self.SCALE_FROM
 
@@ -107,7 +107,7 @@ class LammpsParser(object):
             try:
                 typename = self.lookup_lammps_angles[angle]
             except KeyError:
-                logger.error("Found unimplemented angle type {0} for LAMMPS!".format(
+                logger.exception("Found unimplemented angle type {0} for LAMMPS!".format(
                     angle.__class__.__name__))
             canonical_force_scale = self.SCALE_FROM
 
@@ -428,7 +428,7 @@ class LammpsParser(object):
                         parsable_keywords[keyword](data_lines)
 
         # Indentify 1-2, 1-3, and 1-4 neighbors and create pair forces
-        for mol_type in self.system.molecule_types.itervalues():
+        for mol_type in self.system.molecule_types.values():
             molecule = list(mol_type.molecules)[0]
             onetwo =   [set() for i in range(len(molecule.atoms) + 1)]
             onethree = [set() for i in range(len(molecule.atoms) + 1)]
@@ -972,7 +972,7 @@ class LammpsParser(object):
                            }
 
         # Read all atom specific and FF information.
-        for mol_name, mol_type in self.system.molecule_types.iteritems():
+        for mol_name, mol_type in self.system.molecule_types.items():
             logger.debug(
                 "    Writing moleculetype {0}...".format(mol_name))
 

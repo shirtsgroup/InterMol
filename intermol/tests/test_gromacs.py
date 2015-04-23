@@ -10,8 +10,8 @@ from six import string_types
 import sys
 
 from intermol import convert
-from testing_tools import (add_handler, remove_handler, summarize_results,
-                           ENGINES)
+from intermol.tests.testing_tools import (add_handler, remove_handler,
+                                          summarize_results, ENGINES)
 
 logger = logging.getLogger('InterMolLog')
 testing_logger = logging.getLogger('testing')
@@ -71,7 +71,7 @@ def gromacs(flags, test_type='unit'):
             flags[engine] = True
 
         cmd_line_equivalent = []
-        for flag, flag_value in flags.iteritems():
+        for flag, flag_value in flags.items():
             if isinstance(flag_value, list):
                 in_files = ' '.join(flag_value)
                 arg = '--{0} {1}'.format(flag, in_files)
@@ -87,7 +87,7 @@ def gromacs(flags, test_type='unit'):
             ' '.join(cmd_line_equivalent)))
 
         diff = convert.main(flags)
-        for engine, result in diff.iteritems():
+        for engine, result in diff.items():
             results[engine][name] = result
         remove_handler(h1, h2)
 
@@ -110,7 +110,7 @@ def test_gromacs_unit():
 
     results = gromacs(flags, test_type='unit')
     zeros = np.zeros(shape=(len(results['gromacs'])))
-    for engine, tests in results.iteritems():
+    for engine, tests in results.items():
         tests = np.array(tests.values())
         try:
             passed = np.allclose(tests, zeros, atol=unit_test_tolerance)
@@ -139,7 +139,7 @@ def test_gromacs_stress():
 
     results = gromacs(flags, test_type='stress')
     zeros = np.zeros(shape=(len(results['gromacs'])))
-    for engine, tests in results.iteritems():
+    for engine, tests in results.items():
         tests = np.array(tests.values())
         try:
             passed = np.allclose(tests, zeros, atol=stress_test_tolerance)

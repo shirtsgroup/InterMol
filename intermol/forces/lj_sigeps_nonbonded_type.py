@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_nonbonded_type import AbstractNonbondedType
+from intermol.forces.abstract_nonbonded_type import AbstractNonbondedType
 
 
 class LjSigepsNonbondedType(AbstractNonbondedType):

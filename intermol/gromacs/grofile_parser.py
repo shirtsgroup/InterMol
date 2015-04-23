@@ -95,9 +95,6 @@ class GromacsGroParser(object):
                         atom.residue_index, atom.residue_name, atom.name, n + 1))
                 for pos in atom.position:
                     gro.write('{0:17.12f}'.format(pos.value_in_unit(nanometers)))
-                if len(atom.position) == 0:
-                    import pdb
-                    pdb.set_trace()
                 gro.write('\n')
 
             # Check for rectangular; should be symmetric, so we don't have to

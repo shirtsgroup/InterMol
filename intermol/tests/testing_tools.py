@@ -68,7 +68,7 @@ def summarize_results(input_type, results, outdir):
     col1_width = max(len(x) for x in results[input_type])
     # 10 is length of Input File
     col1_width = max(col1_width, 10)
-    col2_width = max(len(str(x)) for x in results[input_type].itervalues())
+    col2_width = max(len(str(x)) for x in results[input_type].values())
     # 28 is length of Status/Potential Energy Diff.
     col2_width = max(col2_width, 28)
     total_width = col1_width + col2_width + 3
@@ -83,7 +83,7 @@ def summarize_results(input_type, results, outdir):
             out.write('='*total_width + '\n')
             out.write('{:<{}}   {:>{}}\n'.format('Input File', col1_width, 'Status/Potential Energy Diff', col2_width))
             out.write('-'*total_width + '\n')
-            for name, res in result.iteritems():
+            for name, res in result.items():
                 out.write('{:{}}   {!s:>{}}\n'.format(name, col1_width, res, col2_width))
             out.write('\n')
 

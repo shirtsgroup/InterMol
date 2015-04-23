@@ -89,7 +89,7 @@ def main(args=None):
         gropath = ''
     lmppath = args.get('lmppath')
     if not lmppath:
-        for exe in ['lmp_mpi', 'lmp_openmpi']:
+        for exe in ['lmp_serial', 'lmp_mpi', 'lmp_openmpi']:
             if which(exe):
                 lmppath = exe
                 break
@@ -113,7 +113,9 @@ def main(args=None):
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
     elif args.get('lmp_in'):
-        lammps_file = args['lmp_in']
+        lammps_file = args['lmp_in'][0]
+        #import pdb
+        #pdb.set_trace()
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
         system = lammps_driver.read_file(in_file=lammps_file)
     else:
@@ -263,12 +265,12 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     # find all distinct labels
     labels = set(energy_input.keys())
     for e_out in energy_outputs:
-        for key, value in e_out.iteritems():
+        for key, value in e_out.items():
             labels.add(key)
 
     # set up energy comparison table
     labels = list(labels)
-    unit = energy_input[energy_input.keys()[0]].unit
+    unit = energy_input[list(energy_input.keys())[0]].unit
     energy_all = [energy_input] + energy_outputs
     data = np.empty((len(labels), len(energy_all)))
     for i in range(len(data)):

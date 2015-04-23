@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_type import AbstractType
+from intermol.forces.abstract_type import AbstractType
 
 
 class Settles(AbstractType):

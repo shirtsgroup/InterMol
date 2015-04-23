@@ -1,7 +1,7 @@
 import simtk.unit as units
 
 from intermol.decorators import accepts_compatible_units
-from abstract_4_virtual_type import Abstract4VirtualType
+from intermol.forces.abstract_4_virtual_type import Abstract4VirtualType
 
 
 class FourFdnVirtualType(Abstract4VirtualType):

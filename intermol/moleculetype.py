@@ -1,4 +1,4 @@
-from orderedset import OrderedSet
+from intermol.orderedset import OrderedSet
 
 
 class MoleculeType(object):

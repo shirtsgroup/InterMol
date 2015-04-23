@@ -1,4 +1,4 @@
-from abstract_type import AbstractType
+from intermol.forces.abstract_type import AbstractType
 
 
 class Abstract2VirtualType(AbstractType):
