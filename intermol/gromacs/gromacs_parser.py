@@ -21,7 +21,7 @@ def load_gromacs(top_file, gro_file, include_dir=None, defines=None):
     """Load a set of GROMACS input files into a `System`.
 
     Args:
-        top_file:
+        top_filename:
         gro_file:
         include_dir:
         defines:
@@ -37,7 +37,7 @@ def write_gromacs(top_file, gro_file, system):
     """Load a set of GROMACS input files into a `System`.
 
     Args:
-        top_file:
+        top_filename:
         gro_file:
         include_dir:
         defines:
@@ -351,7 +351,7 @@ class GromacsParser(object):
         Args:
             defines: Sets of default defines to use while parsing.
         """
-        self.top_file = top_file
+        self.top_filename = top_file
         self.gro_file = gro_file
         if not system:
             system = System()
@@ -390,9 +390,9 @@ class GromacsParser(object):
         self.cmaptypes = dict()
         self.nonbonded_types = dict()
 
-        # Parse the top_file into a set of plain text, intermediate
+        # Parse the top_filename into a set of plain text, intermediate
         # TopMoleculeType objects.
-        self.process_file(self.top_file)
+        self.process_file(self.top_filename)
 
         # Open the corresponding gro file and push all the information to the
         # InterMol system.
@@ -423,7 +423,7 @@ class GromacsParser(object):
         gro = GromacsGroParser(self.gro_file)
         gro.write(self.system)
 
-        with open(self.top_file, 'w') as top:
+        with open(self.top_filename, 'w') as top:
             self.write_defaults(top)
             self.write_atomtypes(top)
             if self.system.nonbonded_types:
@@ -1052,16 +1052,17 @@ class GromacsParser(object):
         return forcetype
 
     # =========== Pre-processing and forcetype creation =========== #
-    def process_file(self, top_file):
+    def process_file(self, top_filename):
         append = ''
-        for line in open(top_file):
-            if line.strip().endswith('\\'):
-                append = '{0} {1}'.format(append, line[:line.rfind('\\')])
-            else:
-                self.process_line(top_file, '{0} {1}'.format(append, line))
-                append = ''
+        with open(top_filename) as top_file:
+            for line in top_file:
+                if line.strip().endswith('\\'):
+                    append = '{0} {1}'.format(append, line[:line.rfind('\\')])
+                else:
+                    self.process_line(top_filename, '{0} {1}'.format(append, line))
+                    append = ''
 
-    def process_line(self, top_file, line):
+    def process_line(self, top_filename, line):
         """Process one line from a file."""
         if ';' in line:
             line = line[:line.index(';')]
@@ -1090,12 +1091,12 @@ class GromacsParser(object):
             if command == '#include' and not ignore:
                 # Locate the file to include
                 name = stripped[len(command):].strip(' \t"<>')
-                search_dirs = self.include_dirs+(os.path.dirname(top_file),)
+                search_dirs = self.include_dirs+(os.path.dirname(top_filename),)
                 for sub_dir in search_dirs:
-                    top_file = os.path.join(sub_dir, name)
-                    if os.path.isfile(top_file):
+                    top_filename = os.path.join(sub_dir, name)
+                    if os.path.isfile(top_filename):
                         # We found the file, so process it.
-                        self.process_file(top_file)
+                        self.process_file(top_filename)
                         break
                 else:
                     e = ValueError('Could not locate #include file: '+name)
@@ -1147,8 +1148,7 @@ class GromacsParser(object):
         elif not ignore:
             # A line of data for the current category
             if self.current_directive is None:
-                e = ValueError('Unexpected line in .top file: {0}'.format(line))
-                logger.exception(e)
+                raise ValueError('Unexpected line in .top file: "{0}"'.format(line))
             if self.current_directive == 'defaults':
                 self.process_defaults(line)
             elif self.current_directive == 'moleculetype':
