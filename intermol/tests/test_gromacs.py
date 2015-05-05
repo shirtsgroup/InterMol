@@ -37,31 +37,35 @@ def gromacs(flags, test_type='unit'):
             ...}
 
     """
-    resource_dir = resource_filename('intermol',
-                                     'tests/gromacs/{0}_tests'.format(test_type))
+    test_dir = resource_filename('intermol', 'tests/gromacs/{0}_tests'.format(test_type))
 
-    gro_files = sorted(glob(os.path.join(resource_dir, '*/*.gro')))
+    gro_files = sorted(glob(os.path.join(test_dir, '*/*.gro')))
     gro_files = [x for x in gro_files if not x.endswith('out.gro')]
-    top_files = sorted(glob(os.path.join(resource_dir, '*/*.top')))
+    top_files = sorted(glob(os.path.join(test_dir, '*/*.top')))
     names = [os.path.splitext(os.path.basename(gro))[0] for gro in gro_files]
 
     # The results of all conversions are stored in nested dictionaries:
-    # results = {'gromacs': {'bond1: result, 'bond2: results...},
-    #            'lammps': {'bond1: result, 'bond2: results...},
+    # results = {'gromacs': {'bond1: result, 'bond2: result...},
+    #            'lammps': {'bond1: result, 'bond2: result...},
     #            ...}
     per_file_results = OrderedDict((k, None) for k in names)
     results = {engine: copy(per_file_results) for engine in ENGINES}
 
-    unit_test_outputs = '{0}_test_outputs/from_gromacs'.format(test_type)
-    basedir = os.path.join(os.path.dirname(__file__), unit_test_outputs)
-    if not os.path.isdir(basedir):
-        os.mkdir(basedir)
+    base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_gromacs'.format(test_type))
+    try:
+        os.makedirs(base_output_dir)
+    except OSError:
+        if not os.path.isdir(base_output_dir):
+            raise
 
     for gro, top, name in zip(gro_files, top_files, names):
         testing_logger.info('Converting {0}'.format(name))
-        odir = '{0}/{1}'.format(basedir, name)
-        if not os.path.isdir(odir):
-            os.mkdir(odir)
+        odir = '{0}/{1}'.format(base_output_dir, name)
+        try:
+            os.makedirs(odir)
+        except OSError:
+            if not os.path.isdir(odir):
+                raise
         h1, h2 = add_handler(odir)
 
         flags['gro_in'] = [gro, top]
@@ -91,65 +95,57 @@ def gromacs(flags, test_type='unit'):
             results[engine][name] = result
         remove_handler(h1, h2)
 
-    summarize_results('gromacs', results, basedir)
+    summarize_results('gromacs', results, base_output_dir)
     return results
 
 
 def test_gromacs_unit():
     """Run the LAMMPS stress tests. """
-    unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
              'gromacs': True}
 
     testing_logger.info('Running unit tests')
-
-    output_dir = os.path.join(os.path.dirname(__file__), 'unit_test_outputs')
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
-
-    results = gromacs(flags, test_type='unit')
-    zeros = np.zeros(shape=(len(results['gromacs'])))
-    for engine, tests in results.items():
-        tests = np.array(tests.values())
-        try:
-            passed = np.allclose(tests, zeros, atol=unit_test_tolerance)
-        except:
-            raise ValueError('Found non-numeric result for GROMACS to {0}. This'
-                             ' probably means an error occured somewhere in the'
-                             ' conversion.'.format(engine.upper()))
-        assert passed, 'Unit tests do not match within {0:.1e} kJ/mol.'.format(
-                unit_test_tolerance)
-        print('All unit tests for GROMACS to {0} match within {1:.1e} kJ/mol.'.format(
-                engine.upper(), unit_test_tolerance))
+    output_dir = resource_filename('intermol', 'tests/unit_test_outputs')
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        if not os.path.isdir(output_dir):
+            raise
+    _compare_results(flags, test_tolerance=1e-4, test_type='unit')
 
 
 def test_gromacs_stress():
     """Run the GROMACS stress tests. """
-    stress_test_tolerance = 1e-4
     flags = {'stress': True,
              'energy': True,
              'gromacs': True}
 
     testing_logger.info('Running stress tests')
+    output_dir = resource_filename('intermol', 'tests/stress_test_outputs')
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        if not os.path.isdir(output_dir):
+            raise
+    _compare_results(flags, test_tolerance=1e-4, test_type='stress')
 
-    output_dir = os.path.join(os.path.dirname(__file__), 'stress_test_outputs')
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
 
-    results = gromacs(flags, test_type='stress')
+def _compare_results(flags, test_tolerance, test_type='unit'):
+    results = gromacs(flags, test_type=test_type)
     zeros = np.zeros(shape=(len(results['gromacs'])))
     for engine, tests in results.items():
         tests = np.array(tests.values())
         try:
-            passed = np.allclose(tests, zeros, atol=stress_test_tolerance)
-        except:
-            raise ValueError('Found non-numeric result. This probably means an '
-                             'error occured somewhere in the conversion.')
-        assert passed, 'Stress tests do not match within {0:.1e} kJ/mol.'.format(
-                stress_test_tolerance)
-        print('All unit tests for GROMACS to {1} match within {0:.1e} kJ/mol.'.format(
-                stress_test_tolerance, engine.upper()))
+            passed = np.allclose(tests, zeros, atol=test_tolerance)
+        except TypeError:
+            raise Exception('Found non-numeric result for GROMACS to {0}. This '
+                            'probably means an error occured somewhere in the '
+                            'conversion.\n\n'.format(engine.upper()))
+        if passed:
+            print('All {0} tests for GROMACS to {1} match within {2:.1e} kJ/mol.'.format(test_type, engine.upper(), test_tolerance))
+        else:
+            raise AssertionError('{0} tests do not match within {1:.1e} kJ/mol.'.format(test_type, test_tolerance))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import logging
 import os
-import subprocess
+from subprocess import Popen, PIPE
 
 import simtk.unit as units
 
@@ -14,11 +14,10 @@ logger = logging.getLogger('InterMolLog')
 
 
 def read_file(top_in, gro_in, gropath):
-    # Ensure .gro and .top are a valid match.
+    # Run grompp to ensure .gro and .top are a valid match.
     tests_path = os.path.dirname(intermol.tests.__file__)
     mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
-    gromacs_energies(top_in, gro_in, mdp_path, gropath, '',
-            grompp_check=True)
+    gromacs_energies(top_in, gro_in, mdp_path, gropath, '', grompp_check=True)
 
     logger.info("Reading Gromacs files '{0}', '{1}'.".format(top_in, gro_in))
     system = load_gromacs(top_in, gro_in)
@@ -32,11 +31,21 @@ def write_file(system, top_out, gro_out):
     logger.info('...done.')
 
 
-def gromacs_energies(top=None, gro=None, mdp=None,
-                     gropath=None, grosuff=None, grompp_check=False):
-    """
-    gropath = path to gromacs binaries
-    grosuff = suffix of gromacs binaries, usually '' or '_d'
+def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
+                     grompp_check=False):
+    """Compute single-point energies using GROMACS.
+
+    Args:
+        top (str):
+        gro (str):
+        mdp (str):
+        gropath (str):
+        grosuff (str):
+        grompp_check (bool):
+
+    Returns:
+        e_out:
+        ener_xvg:
     """
     if not grompp_check:
         logger.info('Evaluating energy of {0}'.format(gro))
@@ -45,7 +54,7 @@ def gromacs_energies(top=None, gro=None, mdp=None,
     if not grosuff:
         grosuff = ''
 
-    directory, _ = os.path.split(top)
+    directory, _ = os.path.split(os.path.abspath(top))
 
     tpr = os.path.join(directory, 'topol.tpr')
     ener = os.path.join(directory, 'ener.edr')
@@ -55,90 +64,67 @@ def gromacs_energies(top=None, gro=None, mdp=None,
     state = os.path.join(directory, 'state.cpt')
     traj = os.path.join(directory, 'traj.trr')
     log = os.path.join(directory, 'md.log')
-    stdout = os.path.join(directory, 'gromacs_stdout.txt')
-    stderr = os.path.join(directory, 'gromacs_stderr.txt')
+    stdout_path = os.path.join(directory, 'gromacs_stdout.txt')
+    stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
-    # if which('gmx'):
-    #     grompp_bin = os.path.join(gropath, 'gmx grompp' + grosuff)
-    #     mdrun_bin = os.path.join(gropath, 'gmx mdrun' + grosuff)
-    #     genergy_bin = os.path.join(gropath, 'gmx energy' + grosuff)
-    # else:
     if which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
-        logger.debug("Using double precision binaries for 4.x")
+        logger.debug("Using double precision binaries")
         grompp_bin = os.path.join(gropath, 'grompp_d' + grosuff)
         mdrun_bin = os.path.join(gropath, 'mdrun_d' + grosuff)
         genergy_bin = os.path.join(gropath, 'g_energy_d' + grosuff)
     elif which('grompp') and which('mdrun') and which('g_energy'):
-        logger.debug("Using single precision binaries for 4.x")
+        logger.debug("Using single precision binaries")
         grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
         mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
         genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
+    else:
+        raise IOError('Unable to find gromacs executables.')
 
-    # grompp'n it up
+    # Run grompp.
     cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
-    logger.debug('Running Gromacs with command:\n    %s' % ' '.join(cmd))
-    with open(stdout, 'w') as out, open(stderr, 'w') as err:
-        exit = subprocess.call(cmd, stdout=out, stderr=err)
-    if exit:
-        logger.error('grompp failed. See %s' % stderr)
-        raise Exception('grompp failed for {0}'.format(gro.split('/')[-1]))
+    proc = _run_gmx(cmd, stdout_path, stderr_path)
+    if proc.returncode != 0:
+        logger.error('grompp failed. See %s' % stderr_path)
     if grompp_check:
         return
 
-    # mdrunin'
-    cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', 
+    # Run single-point calculation with mdrun.
+    cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
         conf, '-e', ener, '-g', log]
-    logger.debug('Running Gromacs with command:\n    %s' % ' '.join(cmd))
-    with open(stdout, 'wa') as out, open(stderr, 'a') as err:
-        exit = subprocess.call(cmd, stdout=out, stderr=err)
-    if exit:
-        logger.error('mdrun failed. See %s' % stderr)
-        raise Exception('mdrun failed for {0}'.format(gro.split('/')[-1]))
+    proc = _run_gmx(cmd, stdout_path, stderr_path)
+    if proc.returncode != 0:
+        logger.error('mdrun failed. See %s' % stderr_path)
 
-    # energizin'
+    # Extract energies using g_energy
     select = " ".join(map(str, range(1, 20))) + " 0 "
-    cmd = 'echo {select} | {genergy_bin} -f {ener} -o {ener_xvg} -dp'.format(
-            select=select, genergy_bin=genergy_bin, ener=ener, ener_xvg=ener_xvg)
-    logger.debug('Running Gromacs with command:\n    %s' % cmd)
-    with open(stdout, 'wa') as out, open(stderr, 'a') as err:
-        exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
-    if exit:
-        logger.error('g_energy failed. See %s' % stderr)
-        raise Exception('g_energy failed for {0}'.format(gro.split('/')[-1]))
+    cmd = [genergy_bin, '-f', ener, '-o', ener_xvg, '-dp']
+    proc = _run_gmx(cmd, stdout_path, stderr_path, stdin=select)
+    if proc.returncode != 0:
+        logger.error('g_energy failed. See %s' % stderr_path)
 
-    # extract g_energy output and parse initial energies
     with open(ener_xvg) as f:
         all_lines = f.readlines()
+    energy_types = [line.split('"')[1] for line in all_lines if line[:3] == '@ s']
+    energy_values = [float(x) for x in all_lines[-1].split()[1:]]
+    energy_values = [value * units.kilojoules_per_mole for value in energy_values]
+    e_out = OrderedDict(zip(energy_types, energy_values))
 
-    types = []
-    for line in all_lines:
-        if line[:3] == '@ s':
-            types.append(line.split('"')[1])
-
-    # take last line
-    data = map(float, all_lines[-1].split()[1:])  # [0] is the time
-
-    # give everything units
-    data = [value * units.kilojoules_per_mole for value in data]
-
-    # pack it up in a dictionary
-    e_out = OrderedDict(zip(types, data))
-
-    # discard non-energy terms
+    # Discard non-energy terms.
     unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-            'Volume', 'Box-X', 'Box-Y', 'Box-atomic_number', 'Pres. DC']
+                'Volume', 'Box-X', 'Box-Y', 'Box-atomic_number', 'Pres. DC']
     for group in unwanted:
         if group in e_out:
             del e_out[group]
 
-    # dispersive energies - do buckingham energies also get dumped here?
+    # Dispersive energies.
+    # TODO: Do buckingham energies also get dumped here?
     dispersive = ['LJ (SR)', 'LJ-14', 'Disper.corr.']
     e_out['Dispersive'] = 0 * units.kilojoules_per_mole
     for group in dispersive:
         if group in e_out:
             e_out['Dispersive'] += e_out[group]
 
-    # electrostatic energies
+    # Electrostatic energies.
     electrostatic = ['Coulomb (SR)', 'Coulomb-14', 'Coul. recip.']
     e_out['Electrostatic'] = 0 * units.kilojoules_per_mole
     for group in electrostatic:
@@ -147,7 +133,8 @@ def gromacs_energies(top=None, gro=None, mdp=None,
 
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
 
-    # all the various dihedral energies - what else goes in here?
+    # All the various dihedral energies.
+    # TODO: What else goes in here?
     all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper Dih.']
     e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
     for group in all_dihedrals:
@@ -155,3 +142,15 @@ def gromacs_energies(top=None, gro=None, mdp=None,
             e_out['All dihedrals'] += e_out[group]
 
     return e_out, ener_xvg
+
+
+def _run_gmx(cmd, stdout_path, stderr_path, stdin=None):
+    """Run a gromacs subprocess. """
+    logger.debug('Running Gromacs with command:\n    %s' % ' '.join(cmd))
+
+    proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    out, err = proc.communicate(input=stdin)
+    with open(stdout_path, 'a') as stdout, open(stderr_path, 'a') as stderr:
+        stdout.write(out)
+        stderr.write(err)
+    return proc

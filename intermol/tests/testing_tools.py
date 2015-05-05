@@ -62,6 +62,8 @@ def remove_handler(h1, h2):
     logger.removeHandler(h2)
     warning_logger.removeHandler(h1)
     warning_logger.removeHandler(h2)
+    h1.close()
+    h2.close()
 
 
 def summarize_results(input_type, results, outdir):

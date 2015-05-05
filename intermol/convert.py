@@ -9,11 +9,10 @@ import numpy as np
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
 import intermol.tests
+from intermol.tests.testing_tools import which
 
 
 # Make a global logging object.
-from intermol.tests.testing_tools import which
-
 logger = logging.getLogger('InterMolLog')
 
 
