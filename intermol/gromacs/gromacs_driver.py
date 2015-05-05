@@ -1,12 +1,11 @@
 from collections import OrderedDict
 import logging
 import os
-from subprocess import Popen, PIPE
 
 import simtk.unit as units
 
 import intermol.tests
-from intermol.tests.testing_tools import which
+from intermol.tests.testing_tools import which, run_subprocess
 from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 
 
@@ -82,7 +81,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
 
     # Run grompp.
     cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
-    proc = _run_gmx(cmd, stdout_path, stderr_path)
+    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('grompp failed. See %s' % stderr_path)
     if grompp_check:
@@ -91,17 +90,22 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     # Run single-point calculation with mdrun.
     cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
         conf, '-e', ener, '-g', log]
-    proc = _run_gmx(cmd, stdout_path, stderr_path)
+    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('mdrun failed. See %s' % stderr_path)
 
     # Extract energies using g_energy
     select = " ".join(map(str, range(1, 20))) + " 0 "
     cmd = [genergy_bin, '-f', ener, '-o', ener_xvg, '-dp']
-    proc = _run_gmx(cmd, stdout_path, stderr_path, stdin=select)
+    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path, stdin=select)
     if proc.returncode != 0:
         logger.error('g_energy failed. See %s' % stderr_path)
 
+    return _group_energy_terms(ener_xvg)
+
+
+def _group_energy_terms(ener_xvg):
+    """Parse energy.xvg file to extract and group the energy terms in a dict. """
     with open(ener_xvg) as f:
         all_lines = f.readlines()
     energy_types = [line.split('"')[1] for line in all_lines if line[:3] == '@ s']
@@ -144,13 +148,3 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     return e_out, ener_xvg
 
 
-def _run_gmx(cmd, stdout_path, stderr_path, stdin=None):
-    """Run a gromacs subprocess. """
-    logger.debug('Running Gromacs with command:\n    %s' % ' '.join(cmd))
-
-    proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-    out, err = proc.communicate(input=stdin)
-    with open(stdout_path, 'a') as stdout, open(stderr_path, 'a') as stderr:
-        stdout.write(out)
-        stderr.write(err)
-    return proc

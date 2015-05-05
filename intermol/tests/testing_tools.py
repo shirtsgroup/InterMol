@@ -1,4 +1,5 @@
 import logging
+from subprocess import Popen, PIPE
 import os
 
 #ENGINES = ['gromacs', 'lammps', 'desmond']
@@ -114,3 +115,15 @@ def which(program):
             if is_exe(exe_file):
                 return exe_file
     return None
+
+
+def run_subprocess(cmd, engine, stdout_path, stderr_path, stdin=None):
+    """Run a subprocess and log the stdout and stderr. """
+    logger.debug('Running {0} with command:\n    {1}'.format(engine.upper(), ' '.join(cmd)))
+
+    proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    out, err = proc.communicate(input=stdin)
+    with open(stdout_path, 'a') as stdout, open(stderr_path, 'a') as stderr:
+        stdout.write(out)
+        stderr.write(err)
+    return proc

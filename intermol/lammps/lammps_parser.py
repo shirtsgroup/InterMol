@@ -280,9 +280,9 @@ class LammpsParser(object):
             self.ENERGY = units.dimensionless
             self.MASS = units.dimensionless
             self.CHARGE = units.dimensionless
-            logger.warn("Using unit type lj: All values are dimensionless. "
-                        "This is untested and will likely fail. "
-                        "See LAMMPS doc for more.")
+            logger.warning("Using unit type lj: All values are dimensionless. "
+                           "This is untested and will likely fail. "
+                           "See LAMMPS doc for more.")
         elif unit_set == 'electron':
             self.DIST = units.bohr
             self.VEL = units.bohr / units.atu
@@ -362,8 +362,7 @@ class LammpsParser(object):
 
         for key in keyword_check.keys():
             if not (keyword_check[key]):
-                logger.warn(
-                    'Keyword {0} not set, using LAMMPS default value {1}'.format(
+                logger.warning('Keyword {0} not set, using LAMMPS default value {1}'.format(
                         key, " ".join(keyword_defaults[key].split()[1:])))
                 parsable_keywords[key](keyword_defaults[key].split())
 
@@ -470,7 +469,7 @@ class LammpsParser(object):
         """
         self.atom_style = line[1]
         if len(line) > 2:
-            warnings.warn("Unsupported atom_style in input file.")
+            raise ValueError('Unsupported atom_style in input file.')
 
     def parse_dimension(self, line):
         """ """
@@ -490,7 +489,7 @@ class LammpsParser(object):
         """ """
         self.pair_style = []
         if line[1] == 'hybrid':
-            warnings.warn("Hybrid pair styles not yet implemented.")
+            logger.warning('Hybrid pair styles not yet implemented.')
         elif line[1] == 'lj/cut/coul/long':
             self.pair_style.append(line[1])
             self.system.nonbonded_function = 1
@@ -512,10 +511,9 @@ class LammpsParser(object):
             elif line[2] == 'arithmetic':
                 self.system.combination_rule = 'Lorentz-Berthelot'
             else:
-                warnings.warn(
-                    "Unsupported pair_modify mix argument in input file!")
+                raise ValueError('Unsupported pair_modify mix argument in input file!')
         else:
-            warnings.warn("Unsupported pair_modify style in input file!")
+            raise ValueError('Unsupported pair_modify style in input file!')
 
     def parse_bonded_style(self, line):
         """ """
@@ -562,14 +560,14 @@ class LammpsParser(object):
         elif 'coul' in line:
             self.system.coulomb_correction = float(line[line.index('coul') + 3])
         else:
-            warnings.warn("Unsupported special_bonds in input file.")
+            raise ValueError('Unsupported special_bonds in input file.')
 
     def parse_read_data(self, line):
         """ """
         if len(line) == 2:
             self.data_file = os.path.join(self.input_dir, line[1])
         else:
-            warnings.warn("Unsupported read_data arguments in input file.")
+            raise ValueError('Unsupported read_data arguments in input file.')
 
     def parse_box(self, line, dim):
         """Read box information from data file.
@@ -609,10 +607,9 @@ class LammpsParser(object):
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    warnings.warn(
-                        "Unsupported pair coeff formatting in data file!")
+                    raise ValueError('Unsupported pair coeff formatting in data file!')
             else:
-                warnings.warn("Unsupported pair coeff formatting in data file!")
+                raise ValueError('Unsupported pair coeff formatting in data file!')
 
     def parse_force_coeffs(self, data_lines, force_name, force_classes,
                            force_style, lammps_forces, canonical_force):
@@ -645,13 +642,11 @@ class LammpsParser(object):
                 if style not in force_style:
                     warn = True
             else:
-                raise ValueError(
-                    "No entries found in '%s_style'." % (force_name))
+                raise ValueError("No entries found in '%s_style'." % (force_name))
 
             if warn:
-                warnings.warn("{0} type found in {1} Coeffs that was not "
-                              "specified in {2}_style: {3}".format(
-                                    force_name, force_name, force_name, style))
+                logger.warning('{0} type found in {1} Coeffs that was not '
+                               'specified in {2}_style: {3}'.format(force_name, force_name, force_name, style))
 
             # what internal force correspond to this style
             force_class = lammps_forces[style]
@@ -707,8 +702,7 @@ class LammpsParser(object):
                     pass
                 new_atom_type = None
                 if self.system.combination_rule == "Multiply-C6C12":
-                    warnings.warn(
-                        "Combination rule 'Multiply-C6C12' not yet implemented")
+                    logger.warnings("Combination rule 'Multiply-C6C12' not yet implemented")
                 elif self.system.combination_rule in ['Multiply-Sigeps',
                                                       'Lorentz-Berthelot']:
                     atomtype = 'lmp_{:03d}'.format(int(fields[2]))
@@ -798,7 +792,7 @@ class LammpsParser(object):
         elif forceclass in ['Dihedral', 'Improper']:
             return [force.atom1, force.atom2, force.atom3, force.atom4]
         else:
-            warnings.warn("No interaction type %s defined!" % (forceclass))
+            logger.warning("No interaction type %s defined!" % (forceclass))
 
     def get_force_bondingtypes(self, force, forceclass):
         """Return the atoms involved in a force. """
@@ -810,7 +804,7 @@ class LammpsParser(object):
             return [force.bondingtype1, force.bondingtype2, force.bondingtype3,
                     force.bondingtype4]
         else:
-            warnings.warn("No interaction type %s defined!" % (forceclass))
+            logger.warning("No interaction type %s defined!" % (forceclass))
 
     def write_forces(self, forces, offset, force_name,
                      lookup_lammps_force, lammps_force_types, canonical_force):
@@ -836,15 +830,14 @@ class LammpsParser(object):
             try:
                 lookup_lammps_force[force.__class__]
             except KeyError:
-                logger.warn("Found unimplemented {0} type {1} for LAMMPS!".format(
+                logger.warning("Found unimplemented {0} type {1} for LAMMPS!".format(
                             force_name, force.__class__.__name__))
 
             # Get the parameters of the force.
             kwds = self.get_parameter_kwds_from_force(force)
 
             # Convert keywords from canonical form.
-            style, kwdslist = canonical_force(kwds, force.__class__,
-                                              direction='from')
+            style, kwdslist = canonical_force(kwds, force.__class__, direction='from')
             force_type = lammps_force_types[style]
             style_set.add(style)
 
@@ -883,7 +876,7 @@ class LammpsParser(object):
                 force_count += 1
 
         if len(style_set) > 1:
-            logger.warn("More than one {0} style found!".format(force_name))
+            logger.warning("More than one {0} style found!".format(force_name))
 
     def write_bonds(self, mol_type, offset):
         return self.write_forces(mol_type.bond_forces, offset, "Bond",
@@ -917,8 +910,8 @@ class LammpsParser(object):
 
     def write_virtuals(self, mol_type, offset):
         if len(mol_type.virtual_forces) > 0:
-            warnings.warn("Virtuals not currently supported: will need to be "
-                          "implemeneted from shake and rigid")
+            logger.warning('Virtuals not currently supported: will need to be '
+                           'implemeneted from shake and rigid')
 
     def write(self, unit_set='real'):
         """Writes a LAMMPS data and corresponding input file.
@@ -1156,7 +1149,7 @@ class LammpsParser(object):
             elif self.system.combination_rule == 'Multiply-Sigeps':
                 f.write('pair_modify mix geometric\n')
             else:
-                logger.warn("Unsupported pair combination rule on writing input file!")
+                logger.warning("Unsupported pair combination rule on writing input file!")
             f.write('\n')
 
             # bonded

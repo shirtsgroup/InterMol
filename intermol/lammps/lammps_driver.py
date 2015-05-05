@@ -1,9 +1,11 @@
+from collections import OrderedDict
 import logging
 import os
-import subprocess
+from subprocess import Popen, PIPE
 
 import simtk.unit as units
 from intermol.lammps.lammps_parser import load_lammps, write_lammps
+from intermol.tests.testing_tools import run_subprocess
 
 logger = logging.getLogger('InterMolLog')
 
@@ -30,41 +32,39 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     """
     logger.info('Evaluating energy of {0}'.format(input_file))
 
-    directory, input_file = os.path.split(input_file)
+    directory, input_file = os.path.split(os.path.abspath(input_file))
+    stdout_path = os.path.join(directory, 'lammps_stdout.txt')
+    stderr_path = os.path.join(directory, 'lammps_stderr.txt')
 
-    # mdrunin'
+    # Step into the directory.
     saved_path = os.getcwd()
     os.chdir(directory)
 
-    cmd = "{lmppath} < {input_file}".format(
-            lmppath=lmppath, input_file=input_file)
-    logger.debug('Running LAMMPS with command:\n    %s' % cmd)
-    with open('lammps_stdout.txt', 'w') as out, open('lammps_stderr.txt', 'w') as err:
-        exit = subprocess.call(cmd, stdout=out, stderr=err, shell=True)
-    os.chdir(saved_path)
-    if exit:
-        logger.error('Energy evaluation failed. See %s/lammps_stderr.txt' % directory)
-        raise Exception('Energy evaluation failed for {0}'.format(input_file))
+    cmd = [lmppath, '-in', input_file]
+    proc = run_subprocess(cmd, 'lammps', stdout_path, stderr_path)
+    if proc.returncode != 0:
+        logger.error('LAMMPS failed. See %s/lammps_stderr.txt' % directory)
 
-    # energizin'
-    proc = subprocess.Popen(["awk '/E_bond/{getline; print}' %s/lammps_stdout.txt" % (directory)],
-            stdout=subprocess.PIPE, shell=True)
-    (energies, err) = proc.communicate()
+    # Step back out.
+    os.chdir(saved_path)
+
+    return _group_energy_terms(stdout_path)
+
+
+def _group_energy_terms(stdout_path):
+    """Parse LAMMPS stdout to extract and group the energy terms in a dict. """
+    proc = Popen(["awk '/E_bond/{getline; print}' %s" % stdout_path], stdout=PIPE, shell=True)
+    energies, err = proc.communicate()
     if not energies:
         raise Exception('Unable to read LAMMPS energy output')
 
+    energy_values = [float(x) for x in energies.split()]
+    energy_values = [value * units.kilocalories_per_mole for value in energy_values]
+    energy_types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
+                    'Dispersive', 'Electrostatic', 'Coul. recip.',
+                    'Disper. corr.', 'Potential']
+    e_out = OrderedDict(zip(energy_types, energy_values))
 
-    # give everything units
-    data = map(float, energies.split())
-    data = [value * units.kilocalories_per_mole for value in data]
-
-    # pack it all up in a dictionary
-    types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
-            'Dispersive', 'Electrostatic', 'Coul. recip.', 'Disper. corr.',
-            'Potential']
-    e_out = dict(zip(types, data))
-
-    # groupings
     e_out['Electrostatic'] += e_out['Coul. recip.']
     e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
-    return e_out, '%s/lammps_stdout.txt' % directory
+    return e_out, stdout_path
