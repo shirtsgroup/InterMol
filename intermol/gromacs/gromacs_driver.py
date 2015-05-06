@@ -109,13 +109,13 @@ def _group_energy_terms(ener_xvg):
     with open(ener_xvg) as f:
         all_lines = f.readlines()
     energy_types = [line.split('"')[1] for line in all_lines if line[:3] == '@ s']
-    energy_values = [float(x) for x in all_lines[-1].split()[1:]]
-    energy_values = [value * units.kilojoules_per_mole for value in energy_values]
+    energy_values = [float(x) * units.kilojoule_per_mole for x in all_lines[-1].split()[1:]]
     e_out = OrderedDict(zip(energy_types, energy_values))
 
     # Discard non-energy terms.
     unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-                'Volume', 'Box-X', 'Box-Y', 'Box-atomic_number', 'Pres. DC']
+                'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
+                'Pres. DC', 'Vir-XY', 'Vir-XX', 'pV', 'Density', 'Enthalpy']
     for group in unwanted:
         if group in e_out:
             del e_out[group]

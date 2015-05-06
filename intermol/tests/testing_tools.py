@@ -90,10 +90,10 @@ def summarize_results(input_type, results, outdir):
                 out.write('{:{}}   {!s:>{}}\n'.format(name, col1_width, res, col2_width))
             out.write('\n')
 
-        out.write('For the standard output of each conversion, see {dir}/[system name]/{log}\n'
-                .format(dir=outdir, log=INFO_LOG))
-        out.write( 'For a detailed DEBUG-level log of each conversion, see {dir}/[system name]/{log}\n'
-                .format(dir=outdir, log=DEBUG_LOG))
+        out.write('For the standard output of each conversion,'
+                  ' see {dir}/[system name]/{log}\n'.format(dir=outdir, log=INFO_LOG))
+        out.write('For a detailed DEBUG-level log of each conversion,'
+                  ' see {dir}/[system name]/{log}\n'.format(dir=outdir, log=DEBUG_LOG))
         out.write('\n')
 
     with open('all_results.txt') as out:

@@ -58,8 +58,7 @@ def _group_energy_terms(stdout_path):
     if not energies:
         raise Exception('Unable to read LAMMPS energy output')
 
-    energy_values = [float(x) for x in energies.split()]
-    energy_values = [value * units.kilocalories_per_mole for value in energy_values]
+    energy_values = [float(x) * units.kilocalories_per_mole for x in energies.split()]
     energy_types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
                     'Dispersive', 'Electrostatic', 'Coul. recip.',
                     'Disper. corr.', 'Potential']

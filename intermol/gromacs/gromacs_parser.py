@@ -405,8 +405,7 @@ class GromacsParser(object):
         self.n_atoms_added = 0
         for mol_name, mol_count in self.molecules:
             if mol_name not in self.molecule_types:
-                e = ValueError("Unknown molecule type: {0}".format(mol_name))
-                logger.exception(e)
+                raise ValueError("Unknown molecule type: {0}".format(mol_name))
             # Grab the relevent plain text molecule type.
             top_moltype = self.molecule_types[mol_name]
             self.create_moleculetype(top_moltype, mol_name, mol_count)
@@ -1075,8 +1074,7 @@ class GromacsParser(object):
         elif stripped.startswith('[') and not ignore:
             # The start of a category.
             if not stripped.endswith(']'):
-                e = ValueError('Illegal line in .top file: '+line)
-                logger.exception(e)
+                raise ValueError('Illegal line in .top file: '+line)
             self.current_directive = stripped[1:-1].strip()
             logger.debug("Parsing {0}...".format(self.current_directive))
 
@@ -1085,8 +1083,7 @@ class GromacsParser(object):
             fields = stripped.split()
             command = fields[0]
             if len(self.if_stack) != len(self.else_stack):
-                e = RuntimeError('#if/#else stack out of sync')
-                logger.exception(e)
+                raise RuntimeError('#if/#else stack out of sync')
 
             if command == '#include' and not ignore:
                 # Locate the file to include
@@ -1099,13 +1096,12 @@ class GromacsParser(object):
                         self.process_file(top_filename)
                         break
                 else:
-                    e = ValueError('Could not locate #include file: '+name)
-                    logger.exception(e)
+                    raise ValueError('Could not locate #include file: '+name)
+
             elif command == '#define' and not ignore:
                 # Add a value to our list of defines.
                 if len(fields) < 2:
-                    e = ValueError('Illegal line in .top file: '+line)
-                    logger.exception(e)
+                    raise ValueError('Illegal line in .top file: '+line)
                 name = fields[1]
                 value_start = stripped.find(name, len(command))+len(name)+1
                 value = line[value_start:].strip()
@@ -1113,35 +1109,30 @@ class GromacsParser(object):
             elif command == '#ifdef':
                 # See whether this block should be ignored.
                 if len(fields) < 2:
-                    e = ValueError('Illegal line in .top file: '+line)
-                    logger.exception(e)
+                    raise ValueError('Illegal line in .top file: '+line)
                 name = fields[1]
                 self.if_stack.append(name in self.defines)
                 self.else_stack.append(False)
             elif command == '#ifndef':
                 # See whether this block should be ignored.
                 if len(fields) < 2:
-                    e = ValueError('Illegal line in .top file: '+line)
-                    logger.exception(e)
+                    raise ValueError('Illegal line in .top file: '+line)
                 name = fields[1]
                 self.if_stack.append(name not in self.defines)
                 self.else_stack.append(False)
             elif command == '#endif':
                 # Pop an entry off the if stack
                 if len(self.if_stack) == 0:
-                    e = ValueError('Unexpected line in .top file: '+line)
-                    logger.exception(e)
+                    raise ValueError('Unexpected line in .top file: '+line)
                 del(self.if_stack[-1])
                 del(self.else_stack[-1])
             elif command == '#else':
                 # Reverse the last entry on the if stack
                 if len(self.if_stack) == 0:
-                    e = ValueError('Unexpected line in .top file: '+line)
-                    logger.exception(e)
+                    raise ValueError('Unexpected line in .top file: '+line)
                 if self.else_stack[-1]:
-                    e = ValueError('Unexpected line in .top file: '
-                                   '#else has already been used ' + line)
-                    logger.exception(e)
+                    raise ValueError('Unexpected line in .top file: #else has'
+                                     ' already been used ' + line)
                 self.if_stack[-1] = (not self.if_stack[-1])
                 self.else_stack[-1] = True
 
@@ -1331,9 +1322,7 @@ class GromacsParser(object):
             lj_param2 = float(fields[7]) * units.kilojoules_per_mole  # epsilon
             AtomtypeClass = AtomSigepsType
         else:
-            e = ValueError("Unknown combination rule: {0}".format(
-                self.system.combination_rule))
-            logger.exception(e)
+            raise ValueError("Unknown combination rule: {0}".format(self.system.combination_rule))
         new_atom_type = AtomtypeClass(atomtype, bondingtype, atomic_number,
                                       mass, charge, ptype, lj_param1, lj_param2)
         self.system.add_atomtype(new_atom_type)
@@ -1498,18 +1487,13 @@ class GromacsParser(object):
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):
-        e = ValueError('Too few fields in [ {0} ] line: {1}'.format(
-                self.current_directive, line))
-        logger.exception(e)
+        raise ValueError('Too few fields in [ {0} ] line: {1}'.format(
+            self.current_directive, line))
 
     def invalid_line(self, line):
-        e = ValueError('Invalid format in [ {0} ] line: {1}'.format(
+        raise ValueError('Invalid format in [ {0} ] line: {1}'.format(
             self.current_directive, line))
-        logger.exception(e)
 
     def directive_before_moleculetype(self):
-        e = ValueError('Found [ {0} ] directive before [ moleculetype ]'.format(
+        raise ValueError('Found [ {0} ] directive before [ moleculetype ]'.format(
             self.current_directive))
-        logger.exception(e)
-
-

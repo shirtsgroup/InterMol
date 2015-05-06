@@ -75,13 +75,14 @@ def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
     # we handle this by returning multiple keywords
 
     # create a copy of the dictionary to strip out several parameters
-    ftmp = fcs.copy()
-    ftmp.pop('phi')
-    ftmp.pop('fc0')
-    coefficients = ftmp.values()
-    ncount = sum(coeff._value != 0.0 for coeff in coefficients)
+    # TODO: Confusing and probably unneccesary. We only want the non-zero coeffs.
+    # ftmp = fcs.copy()
+    # ftmp.pop('phi')
+    # ftmp.pop('fc0')
+    # coefficients = ftmp.values()
+    # ncount = sum(coeff._value != 0.0 for coeff in coefficients)
 
-    halfangle = (180*units.degrees).in_units_of(fcs['phi'].unit)
+    halfangle = (180 * units.degrees).in_units_of(fcs['phi'].unit)
     plist = []
     if convention == '180':
         sign = -1

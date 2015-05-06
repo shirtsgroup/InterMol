@@ -103,12 +103,12 @@ def main(args=None):
         # Find the top file since order of inputs is not enforced.
         top_in = [x for x in gromacs_files if x.endswith('.top')]
         assert(len(top_in) == 1)
-        top_in = top_in[0]
+        top_in = os.path.abspath(top_in[0])
 
         # Find the gro file since order of inputs is not enforced.
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
-        gro_in = gro_in[0]
+        gro_in = os.path.abspath(gro_in[0])
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
     elif args.get('lmp_in'):
@@ -126,14 +126,13 @@ def main(args=None):
         oname = '{0}_converted'.format(prefix)
     else:
         oname = args['oname']
-    oname = os.path.join(args['odir'], oname)  # Prepend output directory to oname.
+    oname = os.path.abspath(os.path.join(args['odir'], oname))  # Prepend output directory to oname.
 
     output_status = dict()
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system,
-                '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
@@ -152,16 +151,14 @@ def main(args=None):
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
         # Run control file paths.
-        tests_path = os.path.dirname(intermol.tests.__file__)
+        tests_path = os.path.abspath(os.path.dirname(intermol.tests.__file__))
 
         # Required for all gromacs conversions.
-        mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
+        mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
 
         # Evaluate input energies.
         if args.get('gro_in'):
             input_type = 'gromacs'
-            tests_path = os.path.dirname(intermol.tests.__file__)
-            mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
                     mdp_path, gropath, '')
         elif args.get('lmp_in'):
@@ -179,8 +176,7 @@ def main(args=None):
             output_type.append('gromacs')
             try:
                 out, outfile = gromacs_driver.gromacs_energies(
-                        '{0}.top'.format(oname), '{0}.gro'.format(oname),
-                        mdp_path, gropath, '')
+                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp_path, gropath, '')
             except Exception as e:
                 output_status['gromacs'] = e
                 logger.exception(e)
@@ -194,8 +190,7 @@ def main(args=None):
         if args.get('lammps') and output_status['lammps'] == 0:
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies(
-                        '{0}.input'.format(oname), lmppath)
+                out, outfile = lammps_driver.lammps_energies('{0}.input'.format(oname), lmppath)
             except Exception as e:
                 output_status['lammps'] = e
                 logger.exception(e)
@@ -207,8 +202,8 @@ def main(args=None):
                 e_outfile.append(outfile)
 
         # Display energy comparison results.
-        out = ['InterMol Conversion Energy Comparison Results','']
-        out.append('{0} input energy file: {1}'.format(input_type, e_infile))
+        out = ['InterMol Conversion Energy Comparison Results', '',
+               '{0} input energy file: {1}'.format(input_type, e_infile)]
         for out_type, file in zip(output_type, e_outfile):
             out.append('{0} output energy file: {1}'.format(out_type, file))
         out += summarize_energy_results(e_in, e_out, input_type, output_type)
@@ -227,9 +222,9 @@ def get_diff(e_in, e_out):
     returns:
         potential energy difference in units of the input
     """
-    type = 'Potential'
-    input = e_in[type]
-    diff = e_out[type].in_units_of(input.unit) - input
+    energy_type = 'Potential'
+    input_energy = e_in[energy_type]
+    diff = e_out[energy_type].in_units_of(input_energy.unit) - input_energy
     return diff._value
 
 

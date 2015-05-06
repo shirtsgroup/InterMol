@@ -141,7 +141,8 @@ class LammpsParser(object):
 
     lammps_impropers = {
         'harmonic': ImproperHarmonicDihedral,
-        'cvff': TrigDihedral
+        'cvff': TrigDihedral,
+        'charmm': ProperPeriodicDihedral
         }
     lookup_lammps_impropers = dict((v, k) for k, v in lammps_impropers.items())
     lammps_improper_types = dict(
@@ -199,7 +200,7 @@ class LammpsParser(object):
                     # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                     typename = 'charmm'
-                    for p in paramlist:
+                    for p in paramlist:  # TODO: Why are we iterating here?
                         # For now, might get from Sys?
                         p['weight'] = 0.0 * units.dimensionless
 
@@ -1176,16 +1177,9 @@ class LammpsParser(object):
             f.write('\n')
 
             # Specify the output energies that we are interested in.
-            energy_terms = " ".join(['ebond',
-                                     'eangle',
-                                     'edihed',
-                                     'eimp',
-                                     'epair',
-                                     'evdwl',
-                                     'ecoul',
-                                     'elong',
-                                     'etail',
-                                     'pe'])
+            energy_terms = " ".join(['ebond', 'eangle', 'edihed', 'eimp',
+                                     'epair', 'evdwl', 'ecoul', 'elong',
+                                     'etail', 'pe'])
 
             f.write('thermo_style custom {0}\n'.format(energy_terms))
             f.write('\n')
