@@ -56,7 +56,7 @@ def parse_args(args):
             metavar='path', default='',
             help='path for GROMACS binary, needed for energy evaluation')
     group_misc.add_argument('-lp', '--lmppath', dest='lmppath',
-            metavar='path', default='lmp_openmpi',
+            metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-f', '--force', dest='force', action='store_true',
             help='ignore warnings (NOTE: may lead to partially correct topologies)')
@@ -88,7 +88,7 @@ def main(args=None):
         gropath = ''
     lmppath = args.get('lmppath')
     if not lmppath:
-        for exe in ['lmp_serial', 'lmp_mpi', 'lmp_openmpi']:
+        for exe in ['lmp_mpi', 'lmp_serial', 'lmp_openmpi']:
             if which(exe):
                 lmppath = exe
                 break
@@ -159,12 +159,10 @@ def main(args=None):
         # Evaluate input energies.
         if args.get('gro_in'):
             input_type = 'gromacs'
-            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in,
-                    mdp_path, gropath, '')
+            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_path, gropath, '')
         elif args.get('lmp_in'):
             input_type = 'lammps'
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file,
-                                                           lmppath=lmppath)
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmppath=lmppath)
         else:
             logger.warn('Code should have never made it here!')
 
@@ -183,21 +181,21 @@ def main(args=None):
                 e_out.append(-1)
                 e_outfile.append(-1)
             else:
-                output_status['gromacs'] = get_diff(e_in, out)
+                output_status['gromacs'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
 
         if args.get('lammps') and output_status['lammps'] == 0:
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies('{0}.input'.format(oname), lmppath)
+                out, outfile = lammps_driver.lammps_energies('{0}.input'.format(oname), lmppath=lmppath)
             except Exception as e:
                 output_status['lammps'] = e
                 logger.exception(e)
                 e_out.append(-1)
                 e_outfile.append(-1)
             else:
-                output_status['lammps'] = get_diff(e_in, out)
+                output_status['lammps'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
 
@@ -212,7 +210,7 @@ def main(args=None):
     return output_status
 
 
-def get_diff(e_in, e_out):
+def potential_energy_diff(e_in, e_out):
     """Returns difference in potential energy.
 
     arguments:
