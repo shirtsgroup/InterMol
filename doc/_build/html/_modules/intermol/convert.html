@@ -327,7 +327,7 @@
                 <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;gromacs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;gromacs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">potential_energy_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
                 <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
                 <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
 
@@ -342,7 +342,7 @@
                 <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+                <span class="n">output_status</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">potential_energy_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
                 <span class="n">e_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
                 <span class="n">e_outfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
 
@@ -357,7 +357,7 @@
     <span class="k">return</span> <span class="n">output_status</span>
 
 </div>
-<div class="viewcode-block" id="get_diff"><a class="viewcode-back" href="../../apidoc/intermol.convert.html#intermol.convert.get_diff">[docs]</a><span class="k">def</span> <span class="nf">get_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">e_out</span><span class="p">):</span>
+<div class="viewcode-block" id="get_diff"><a class="viewcode-back" href="../../apidoc/intermol.convert.html#intermol.convert.get_diff">[docs]</a><span class="k">def</span> <span class="nf">potential_energy_diff</span><span class="p">(</span><span class="n">e_in</span><span class="p">,</span> <span class="n">e_out</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns difference in potential energy.</span>
 
 <span class="sd">    arguments:</span>

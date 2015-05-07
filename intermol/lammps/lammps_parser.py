@@ -55,7 +55,8 @@ class LammpsParser(object):
         'harmonic': HarmonicBond,
         'morse': MorseBond,
         'class2': QuarticBond,  # TODO: coefficients need special handling.
-        'fene/expand': FeneExpandableBond,
+        'fene': FeneExpandableBond,  # TODO: need special handling for LJ terms
+        'fene/expand': FeneExpandableBond,  # TODO: need special handling for LJ terms
         'quartic': QuarticBreakableBond,
         'nonlinear': NonlinearBond
         }
@@ -65,7 +66,7 @@ class LammpsParser(object):
     lammps_bond_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in lammps_bonds.items())
 
-    def canonical_bond(self, kwds, bond, direction='into'):
+    def canonical_bond(self, params, bond, direction='into'):
         """Convert to/from the canonical form of this interaction. """
         # TODO: Gromacs says harmonic potential bonds do not have constraints or
         #       exclusions. Check that this logic is supported.
@@ -75,20 +76,23 @@ class LammpsParser(object):
             try:
                 typename = self.lookup_lammps_bonds[bond]
             except KeyError:
-                raise ValueError("{0} is not supported by LAMMPS!".format(
-                    bond.__name__))
+                if bond.__name__ in ['FeneBond', 'ConnectionBond']:
+                    raise ValueError('{0} conversion has not yet been'
+                                     ' implemented in InterMol.'.format(bond.__name__))
+                else:
+                    raise ValueError("{0} is not supported by LAMMPS!".format(bond.__name__))
             canonical_force_scale = self.SCALE_FROM
 
         if bond in [HarmonicBond, HarmonicPotentialBond]:
-            kwds['k'] *= canonical_force_scale
+            params['k'] *= canonical_force_scale
 
         if bond == HarmonicPotentialBond:
             typename = 'harmonic'
 
         if direction == 'into':
-            return bond, kwds
+            return bond, params
         else:
-            return typename, [kwds]  # we expect a list
+            return typename, [params]  # we expect a list
 
     lammps_angles = {
         'harmonic': HarmonicAngle,
@@ -100,7 +104,7 @@ class LammpsParser(object):
     lammps_angle_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in lammps_angles.items())
 
-    def canonical_angle(self, kwds, angle, direction):
+    def canonical_angle(self, params, angle, direction):
         """Convert from the canonical form of this interaction. """
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
@@ -113,15 +117,15 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_FROM
 
         if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
-            kwds['k'] *= canonical_force_scale
+            params['k'] *= canonical_force_scale
 
         if angle == UreyBradleyAngle:
-            kwds['kUB'] *= canonical_force_scale
+            params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
-            return angle, kwds
+            return angle, params
         else:
-            return typename, [kwds]  # We expect a list
+            return typename, [params]  # We expect a list
 
     lammps_dihedrals = {
         'opls': FourierDihedral,
@@ -181,17 +185,14 @@ class LammpsParser(object):
             if dihedral == TrigDihedral:
                 paramlist = convert_dihedral_from_trig_to_proper(params)
                 if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                    tmpparams = convert_dihedral_from_trig_to_RB(params)
-                    if tmpparams['C6']._value == 0 and tmpparams['C5']._value == 0:
+                    if params['fc6']._value == 0 and params['fc5']._value == 0:
                         # Stupid convention?
                         if params['phi'].value_in_unit(units.degrees) == 180:
                             params['phi'] = 0 * units.degrees
-                        else:
+                        else:  # phi must be 0 or 180 to make it here.
                             params['phi'] = 180 * units.degrees
-                        tmpparams = convert_dihedral_from_trig_to_RB(params)
+                        paramlist = [convert_dihedral_from_trig_to_RB(params)]
                         typename = 'multi/harmonic'
-                        # It's a RB dihedral.
-                        paramlist = [tmpparams]
                     else:
                         # If C6 and C5 are not zero, print it out as multiple
                         # harmonics (charmm).
@@ -832,7 +833,7 @@ class LammpsParser(object):
                 lookup_lammps_force[force.__class__]
             except KeyError:
                 logger.warning("Found unimplemented {0} type {1} for LAMMPS!".format(
-                            force_name, force.__class__.__name__))
+                    force_name, force.__class__.__name__))
 
             # Get the parameters of the force.
             kwds = self.get_parameter_kwds_from_force(force)
@@ -847,6 +848,8 @@ class LammpsParser(object):
                 temp_force_type = force_type(*atom_bondingtypes, **kwds)
 
                 # New type found. Write out the force coefficients.
+                # TODO: Check by content would be nice but may lead to the
+                # equality issues again.
                 if temp_force_type not in numeric_coeff:
                     # Get the numerical type for this interaction.
                     numeric_coeff[temp_force_type] = type_count
@@ -1139,10 +1142,12 @@ class LammpsParser(object):
 
             # non-bonded
             if atom_charges:
-                f.write('pair_style lj/cut/coul/long 15.0 15.0\n')  # TODO: match mdp
+                # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/long 9.999 9.999\n')
-                f.write('kspace_style pppm 1.0e-8\n')  # TODO: match mdp
-                #f.write('kspace_style ewald 1.0e-6\n')
+                f.write('pair_style lj/cut/coul/long 15 15\n')
+                #f.write('kspace_style pppm 1.0e-6\n')
+                f.write('kspace_style ewald 1.0e-6\n')
+                #f.write('kspace_style pppm/stagger 1.0e-6\n')
             else:
                 f.write('pair_style lj/cut/coul/cut 15.0 15.0\n')  # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
