@@ -54,7 +54,7 @@ class LammpsParser(object):
     lammps_bonds = {
         'harmonic': HarmonicBond,
         'morse': MorseBond,
-        'class2': QuarticBond,
+        'class2': QuarticBond,  # TODO: coefficients need special handling.
         'fene/expand': FeneExpandableBond,
         'quartic': QuarticBreakableBond,
         'nonlinear': NonlinearBond
@@ -75,8 +75,8 @@ class LammpsParser(object):
             try:
                 typename = self.lookup_lammps_bonds[bond]
             except KeyError:
-                logger.exception("Found unimplemented bond type {0} for LAMMPS!".format(
-                    bond.__class__.__name__))
+                raise ValueError("{0} is not supported by LAMMPS!".format(
+                    bond.__name__))
             canonical_force_scale = self.SCALE_FROM
 
         if bond in [HarmonicBond, HarmonicPotentialBond]:
@@ -93,6 +93,7 @@ class LammpsParser(object):
     lammps_angles = {
         'harmonic': HarmonicAngle,
         'cosine': CosineAngle,
+        'cosine/squared': CosineSquaredAngle,
         'charmm': UreyBradleyAngle
         }
     lookup_lammps_angles = dict((v, k) for k, v in lammps_angles.items())
@@ -107,8 +108,8 @@ class LammpsParser(object):
             try:
                 typename = self.lookup_lammps_angles[angle]
             except KeyError:
-                logger.exception("Found unimplemented angle type {0} for LAMMPS!".format(
-                    angle.__class__.__name__))
+                raise ValueError("{0} is not supported by LAMMPS!".format(
+                    angle.__name__))
             canonical_force_scale = self.SCALE_FROM
 
         if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
@@ -142,7 +143,6 @@ class LammpsParser(object):
     lammps_impropers = {
         'harmonic': ImproperHarmonicDihedral,
         'cvff': TrigDihedral,
-        'charmm': ProperPeriodicDihedral
         }
     lookup_lammps_impropers = dict((v, k) for k, v in lammps_impropers.items())
     lammps_improper_types = dict(
@@ -863,6 +863,9 @@ class LammpsParser(object):
                         if p.unit == units.dimensionless and isinstance(p._value, int):
                             # LAMMPS expects an integer.
                             line += "%10d" % (p.value_in_unit(u[i]))
+                        elif style == 'charmm' and p.unit == units.degrees:
+                            # LAMMPS loves enforcing unnecessary integers.
+                            line += "%10d" % (p.value_in_unit(u[i]))
                         else:
                             line += "%18.8e" % (p.value_in_unit(u[i]))
                     line += '\n'
@@ -894,7 +897,7 @@ class LammpsParser(object):
     def write_dihedrals(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         dihedral_forces = {force for force in mol_type.dihedral_forces
-                           if not force.improper}
+                           if force.__class__ != ImproperHarmonicDihedral}
         return self.write_forces(dihedral_forces, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
@@ -903,7 +906,7 @@ class LammpsParser(object):
     def write_impropers(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         improper_forces = {force for force in mol_type.dihedral_forces
-                           if force.improper}
+                           if force.__class__ == ImproperHarmonicDihedral}
         return self.write_forces(improper_forces, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,
