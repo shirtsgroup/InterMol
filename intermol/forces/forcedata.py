@@ -330,6 +330,7 @@ master_paramlist['cosine_squared_angle'] = ['theta', 'k']
 master_unitlist['cosine_squared_angle'] = ['angleD',
                                            'energy'
 ]
+lammps_paramlist['cosine_squared_angle'] = ['k', 'theta'] # reveresd
 
 doclist['quartic_angle'] = 'stub documentation\n'
 master_paramlist['quartic_angle'] = ['theta', 'C0', 'C1', 'C2', 'C3', 'C4']
