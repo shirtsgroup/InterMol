@@ -114,12 +114,12 @@ class GromacsParser(object):
         if direction == 'into':
             return bond, params
         else:  # currently, no bonds need to be de-canonicalized
-            b_type = self.lookup_gromacs_bond_types[bond.bondtype.__class__]
-            if b_type:
-                return b_type, params
-            else:
-                logger.warn("WriteError: found unsupported bond type {0}".format(
-                        bond.bondtype.__class__.__name__))
+            try:
+                b_type = self.lookup_gromacs_bond_types[bond.bondtype.__class__]
+            except KeyError:
+                raise Exception('Found unsupported bond type {0}'.format(
+                    bond.bondtype.__class__.__name__))
+            return b_type, params
 
     gromacs_angle_types = {
         '1': HarmonicAngleType,
@@ -142,12 +142,12 @@ class GromacsParser(object):
         if direction == 'into':
             return angle, params
         else:  # currently, no angles need to be de-canonicalized
-            a_type = self.lookup_gromacs_angle_types[angle.angletype.__class__]
-            if a_type:
-                return a_type, params
-            else:
-                logger.warn("WriteError: found unsupported angle type {0}".format(
-                        angle.angletype.__class__.__name__))
+            try:
+                a_type = self.lookup_gromacs_angle_types[angle.angletype.__class__]
+            except KeyError:
+                raise Exception('Found unsupported angle type {0}'.format(
+                    angle.angletype.__class__.__name__))
+            return a_type, params
 
     gromacs_dihedral_types = {
         # TrigDihedrals are actually used for 1, 4, and 9.  Can't use lists as keys!
@@ -159,7 +159,7 @@ class GromacsParser(object):
         '9': ProperPeriodicDihedralType,
         'Trig': TrigDihedralType
         }
-    lookup_gromacs_dihedral_types = {v: k for k, v in gromacs_dihedral_types}
+    lookup_gromacs_dihedral_types = {v: k for k, v in gromacs_dihedral_types.items()}
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """
@@ -186,59 +186,35 @@ class GromacsParser(object):
         Returns:
         """
         if direction == 'into':
-            # if we are converting a type
-            if 'Type' in dihedral.__name__:
-                # Convert the dihedral parameters to the form we want to
-                # actually store.
-                converted_dihedral = dihedral  # Default.
-                if dihedral == ProperPeriodicDihedralType:  # Proper dihedral.
-                    convertfunc = convert_dihedral_from_proper_to_trig
-                    converted_dihedral = TrigDihedralType
-                elif dihedral == ImproperHarmonicDihedralType:
-                    convertfunc = convert_nothing
-                elif dihedral == RbDihedralType:
-                    convertfunc = convert_dihedral_from_RB_to_trig
-                    converted_dihedral = TrigDihedralType
-                elif dihedral == FourierDihedralType:
-                    convertfunc = convert_dihedral_from_fourier_to_trig
-                    converted_dihedral = TrigDihedralType
-                else:
-                    # TODO: exception
-                    pass
-                # Now actually convert the dihedral.
-                params = convertfunc(params)
+            # Convert the dihedral parameters to the form we want to
+            # actually store.
+            converted_dihedral = dihedral
+            if dihedral == ProperPeriodicDihedralType:
+                convertfunc = convert_dihedral_from_proper_to_trig
+                converted_dihedral = TrigDihedralType
+            elif dihedral == ImproperHarmonicDihedralType:
+                convertfunc = convert_nothing
+            elif dihedral == RbDihedralType:
+                convertfunc = convert_dihedral_from_RB_to_trig
+                converted_dihedral = TrigDihedralType
+            elif dihedral == FourierDihedralType:
+                convertfunc = convert_dihedral_from_fourier_to_trig
+                converted_dihedral = TrigDihedralType
             else:
-                # Most will be TrigDihedral.
-                converted_dihedral = TrigDihedral
-                if dihedral == TrigDihedral:  # Already converted!
-                    convertfunc = convert_nothing
-                # Proper dihedral, still need to convert
-                elif dihedral == ProperPeriodicDihedral:
-                    convertfunc = convert_dihedral_from_proper_to_trig
-                elif dihedral == ImproperHarmonicDihedral:
-                    convertfunc = convert_nothing
-                    converted_dihedral = dihedral
-                elif dihedral == RbDihedral:
-                    convertfunc = convert_dihedral_from_RB_to_trig
-                elif dihedral == FourierDihedral:
-                    convertfunc = convert_dihedral_from_fourier_to_trig
-                else:
-                    # TODO: exception
-                    pass
-                params = convertfunc(params)
+                logger.warning('Did not convert dihedral: {0}'.format(dihedral))
+            # Now actually convert the dihedral.
+            params = convertfunc(params)
             return converted_dihedral, params
-        else:
-            d_type = self.lookup_gromacs_dihedrals[dihedral.__class__]
-            if not d_type:
-                logger.warn("WriteError: found unsupported dihedral type {0}".format(
-                    dihedral.__class__.__name__))
+        else:  # Translate the dihedral types back to write them out.
+            try:
+                d_type = self.lookup_gromacs_dihedral_types[dihedral.dihedraltype.__class__]
+            except KeyError:
+                raise Exception('Found unsupported dihedral type {0}'.format(
+                    dihedral.dihedraltype.__class__.__name__))
 
-            # Translate the dihedrals back to write them out.
-            if isinstance(dihedral, TrigDihedral):
-
-                # TODO: Exceptions for cases where tmpparams and paramlist don't
-                # get assigned below.
-                if dihedral.improper:
+            dihedraltype = dihedral.dihedraltype
+            if isinstance(dihedraltype, TrigDihedralType):
+                if dihedraltype.improper:
                     # Must be a improper dihedral. Print these out as improper
                     # dihedrals (d_type = 4).
                     d_type = '4'
@@ -367,7 +343,6 @@ class GromacsParser(object):
         self.molecules = list()
         self.current_molecule_type = None
         self.current_molecule = None
-        self.dihedraltypes = dict()
         self.implicittypes = dict()
         self.pairtypes = dict()
         self.cmaptypes = dict()
@@ -488,7 +463,7 @@ class GromacsParser(object):
                 self.write_bonds(top)
             if self.current_molecule_type.angles and not self.current_molecule_type.settles:
                 self.write_angles(top)
-            if self.current_molecule_type.dihedral_forces:
+            if self.current_molecule_type.dihedrals:
                 self.write_dihedrals(top)
 
             # if moleculeType.virtualForceSet:
@@ -611,21 +586,20 @@ class GromacsParser(object):
     def write_dihedrals(self, top):
         top.write('[ dihedrals ]\n')
         top.write(';    i      j      k      l   func\n')
-        dihedrallist = sorted(self.current_molecule_type.dihedral_forces,
+        dihedrallist = sorted(self.current_molecule_type.dihedrals,
                               key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
         for dihedral in dihedrallist:
+            dihedral_params = self.get_parameter_kwds_from_force(dihedral)
+            d_type, dihedral_params = self.canonical_dihedral(dihedral_params, dihedral, direction='from')
+
             atoms = dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4
-            top.write("{0:7d} {1:7d} {2:7d} {3:7d}".format(
-                   atoms[0], atoms[1], atoms[2], atoms[3]))
+            top.write('{0:7d} {1:7d} {2:7d} {3:7d} {4:4s}'.format(
+                atoms[0], atoms[1], atoms[2], atoms[3], d_type))
 
-            kwds = self.get_parameter_kwds_from_force(dihedral)
-            d_type, paramlist = self.canonical_dihedral(kwds, dihedral, direction='from')
-            converted_dihedral = self.gromacs_dihedrals[d_type](*atoms, **paramlist[0])
-
-            top.write("{0:6d}".format(int(d_type)))
-
-            paramlist = self.get_parameter_list_from_force(converted_dihedral)
-            param_units = self.unitvars[converted_dihedral.__class__.__name__]
+            converted_dihedraltype = self.gromacs_dihedral_types[d_type]
+            paramlist = self.get_parameter_list_from_force(converted_dihedraltype)
+            param_units = self.unitvars[converted_dihedraltype.__name__]
+            import pdb; pdb.set_trace()
             for param, param_unit in zip(paramlist, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -739,19 +713,19 @@ class GromacsParser(object):
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
 
-    def create_bond(self, bond):
+    def create_bond(self, bond_entry):
         n_atoms = 2
-        atoms = [int(n) for n in bond[:n_atoms]]
-        bondtypes = tuple([self.lookup_atom_bondingtype(x) for x in atoms])
+        atoms = [int(n) for n in bond_entry[:n_atoms]]
+        bondtypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
 
         # Get forcefield parameters.
-        if len(bond) == n_atoms + 1:
+        if len(bond_entry) == n_atoms + 1:
             bond_type = self.find_forcetype(bondtypes, self.system.bondtypes)
         else:
-            bond[0] = bondtypes[0]
-            bond[1] = bondtypes[1]
-            bond = " ".join(bond)
-            bond_type = self.process_forcetype(bondtypes, 'bond', bond, n_atoms,
+            bond_entry[0] = bondtypes[0]
+            bond_entry[1] = bondtypes[1]
+            bond_entry = " ".join(bond_entry)
+            bond_type = self.process_forcetype(bondtypes, 'bond', bond_entry, n_atoms,
                 self.gromacs_bond_types, self.canonical_bond)
             self.system.bondtypes[bondtypes] = bond_type
 
@@ -850,72 +824,56 @@ class GromacsParser(object):
             if first < index:
                 self.current_molecule_type.exclusions.add((int(first), int(index)))
 
-    def create_angle(self, angle):
+    def create_angle(self, angle_entry):
         n_atoms = 3
-        atoms = [int(n) for n in angle[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x))
-                        for x in angle[:n_atoms]])
+        atoms = [int(n) for n in angle_entry[:n_atoms]]
+        btypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
 
         # Get forcefield parameters.
-        if len(angle) == n_atoms + 1:
+        if len(angle_entry) == n_atoms + 1:
             angle_type = self.find_forcetype(btypes, self.system.angletypes)
         else:
-            angle[0] = btypes[0]
-            angle[1] = btypes[1]
-            angle[2] = btypes[2]
-            angle = " ".join(angle)
-            angle_type = self.process_forcetype(btypes, 'angle', angle, n_atoms,
+            angle_entry[0] = btypes[0]
+            angle_entry[1] = btypes[1]
+            angle_entry[2] = btypes[2]
+            angle_entry = " ".join(angle_entry)
+            angle_type = self.process_forcetype(btypes, 'angle', angle_entry, n_atoms,
                 self.gromacs_angle_types, self.canonical_angle)
 
         new_angle = Angle(*atoms, angletype=angle_type)
         self.current_molecule_type.angles.add(new_angle)
 
-    def create_dihedral(self, dihedral):
+    def create_dihedral(self, dihedral_entry):
         """Create a dihedral object based on a [ dihedrals ] entry. """
-        n_entries = len(dihedral)
+        n_entries = len(dihedral_entry)
         n_atoms = 4
-        atoms = [int(i) for i in dihedral[0:n_atoms]]
-        numeric_dihedraltype = dihedral[n_atoms]
-
+        atoms = [int(i) for i in dihedral_entry[:n_atoms]]
+        btypes = [self.lookup_atom_bondingtype(x) for x in atoms]
+        numeric_dihedraltype = dihedral_entry[n_atoms]
         improper = numeric_dihedraltype in ['2', '4']
 
-        dihedral_types = [None]
-        if n_entries == n_atoms + 1:
-            btypes = [self.lookup_atom_bondingtype(int(x))
-                      for x in dihedral[:n_atoms]]
-
-            # Use the returned btypes that we get a match with!
-            dihedral_types = self.find_dihedraltype(btypes, improper=improper)
-            # Overwrite the actual dihedral if converted!
-            # These all got converted.
-            if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
-                gromacs_dihedral = TrigDihedral
+        if n_entries != n_atoms + 1:
+            # We need to add a new dihedraltype.
+            if n_entries == n_atoms + 2:
+                # Handle special dihedrals given via a #define.
+                if self.defines.get(dihedral_entry[-1]):
+                    params = self.defines[dihedral_entry[-1]].split()
+                    dihedral_entry[:-1].extend(params)
             else:
-                gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
-        elif n_entries == n_atoms + 2:
-            # This case handles special dihedral given via a #define.
-            if self.defines.get(dihedral[-1]):
-                params = self.defines[dihedral[-1]].split()
-                dihedral = dihedral[:-1] + params
-            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
-        else:
-            # Some gromacs parameters don't include sufficient entries for all
-            # types, so add some zeros. A bit of a kludge...
-            dihedral += ['0.0'] * 3
-            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
+                # Some gromacs parameters don't include sufficient entries for
+                # all types, so add some zeros. A bit of a kludge...
+                dihedral_entry.extend(['0.0'] * 3)
+            dihedral_entry = ' '.join(dihedral_entry)
+            dihedral_type = self.process_forcetype(btypes, 'dihedral', dihedral_entry, n_atoms,
+                                                   self.gromacs_dihedral_types,
+                                                   self.canonical_dihedral)
+            key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], improper])
+            self.add_dihedral_type(key, dihedral_type)
 
-        for d_type in dihedral_types:
-            kwds = self.choose_parameter_kwds_from_forces(
-                    dihedral, n_atoms, d_type, gromacs_dihedral)
-            canonical_dihedral, kwds = self.canonical_dihedral(
-                    kwds, gromacs_dihedral, direction="into")
-
-            kwds['improper'] = improper
-            new_dihedral = canonical_dihedral(*atoms, **kwds)
-
-            if not new_dihedral:
-                logger.warn("Undefined dihedral formatting: {0}".format(dihedral))
-            self.current_molecule_type.dihedral_forces.add(new_dihedral)
+        dihedral_types = self.find_dihedraltype(btypes, improper=improper)
+        for dihedral_type in dihedral_types:
+            new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
+            self.current_molecule_type.dihedrals.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
         """Determine the type of dihedral interaction between four atoms. """
@@ -939,7 +897,7 @@ class GromacsParser(object):
         for i, atoms in enumerate(atom_orders):
             a1, a2, a3, a4 = atoms
             key = tuple([a1, a2, a3, a4, improper])
-            dihedral_type = self.dihedraltypes.get(key)
+            dihedral_type = self.system.dihedraltypes.get(key)
             if dihedral_type:
                 for to_be_added in dihedral_type:
                     for already_added in dihedral_types:
@@ -1328,11 +1286,14 @@ class GromacsParser(object):
         dihedral_type.improper = numeric_dihedraltype in ['2', '4']
 
         key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], dihedral_type.improper])
-        if key in self.dihedraltypes:
+        self.add_dihedral_type(key, dihedral_type)
+
+    def add_dihedral_type(self, key, dihedral_type):
+        if key in self.system.dihedraltypes:
             # There are multiple dihedrals defined for these atom types.
-            self.dihedraltypes[key].add(dihedral_type)
+            self.system.dihedraltypes[key].add(dihedral_type)
         else:
-            self.dihedraltypes[key] = set(dihedral_type)
+            self.system.dihedraltypes[key] = set([dihedral_type])
 
     def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
                           gromacs_force_types, canonical_force):

@@ -17,7 +17,7 @@ class MoleculeType(object):
         self.bonds = set()
         self.pair_forces = set()
         self.angles = set()
-        self.dihedral_forces = set()
+        self.dihedrals = set()
         self.virtual_forces = set()
         self.torsiontorsion_forces = set()
         self.constraints = set()

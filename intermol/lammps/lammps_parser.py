@@ -779,11 +779,11 @@ class LammpsParser(object):
 
     def parse_dihedrals(self, data_lines):
         self.parse_force(data_lines, self.dihedral_classes,
-                         self.current_mol_type.dihedral_forces, n=4)
+                         self.current_mol_type.dihedrals, n=4)
 
     def parse_impropers(self, data_lines):
         self.parse_force(data_lines, self.improper_classes,
-                         self.current_mol_type.dihedral_forces, n=4)
+                         self.current_mol_type.dihedrals, n=4)
 
     def get_force_atoms(self, force, forceclass):
         """Return the atoms involved in a force. """
