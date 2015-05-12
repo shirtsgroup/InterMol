@@ -137,7 +137,7 @@ class GromacsParser(object):
     gromacs_angle_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in gromacs_angles.items())
 
-    def canonical_angle(self, params, angle, direction = 'into'):
+    def canonical_angle(self, params, angle, direction='into'):
         """
         Args:
             params:

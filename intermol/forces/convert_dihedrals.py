@@ -229,5 +229,3 @@ def convert_dihedral_from_RB_to_trig(c):
 
     return fcs
 
-
-

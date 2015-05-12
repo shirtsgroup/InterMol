@@ -34,6 +34,8 @@ class System(object):
         self._atomtypes = dict()
         self._nonbonded_types = dict()
 
+        self._bondgraph = None
+
     def add_molecule(self, molecule):
         """Add a molecule into the System. """
         self._molecule_types[molecule.name].add_molecule(molecule)
@@ -102,7 +104,8 @@ class System(object):
                     atom2 = molecule.atoms[bond.atom2 - 1]
                     yield atom1, atom2
 
-    def to_bondgraph(self):
+    @property
+    def bondgraph(self):
         """Create a NetworkX graph from the atoms and bonds in this system.
 
         Returns
@@ -119,10 +122,13 @@ class System(object):
         -----
         This method requires the NetworkX python package.
         """
-        import networkx as nx
-        g = nx.Graph()
-        g.add_edges_from(self.connected_pairs)
-        return g
+        if self._bondgraph is not None:
+            return self._bondgraph
+        else:
+            import networkx as nx
+            self._bondgraph = nx.Graph()
+            self._bondgraph.add_edges_from(self.connected_pairs)
+            return self._bondgraph
 
     # def gen_pairs(self, n_excl=4):
     #
