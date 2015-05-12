@@ -381,14 +381,13 @@ class GromacsParser(object):
         self.molecules = list()
         self.current_molecule_type = None
         self.current_molecule = None
-        self.atomtypes = dict()
         self.bondtypes = dict()
         self.angletypes = dict()
         self.dihedraltypes = dict()
         self.implicittypes = dict()
         self.pairtypes = dict()
         self.cmaptypes = dict()
-        self.nonbonded_types = dict()
+        self.nonbondedtypes = dict()
 
         # Parse the top_filename into a set of plain text, intermediate
         # TopMoleculeType objects.

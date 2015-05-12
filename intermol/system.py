@@ -75,6 +75,7 @@ class System(object):
     def n_atoms(self, n):
         self._n_atoms = n
 
+
     @property
     def box_vector(self):
         """Return the box vector. """
@@ -91,6 +92,48 @@ class System(object):
             e = ValueError("Box vector with incorrect format: {0}".format(v))
             logger.exception(e)
         self._box_vector = np.array(v)
+
+    @property
+    def connected_pairs(self):
+        for mol_type in self.molecule_types.values():
+            for molecule in mol_type.molecules:
+                for bond in mol_type.bond_forces:
+                    atom1 = molecule.atoms[bond.atom1 - 1]
+                    atom2 = molecule.atoms[bond.atom2 - 1]
+                    yield atom1, atom2
+
+    def to_bondgraph(self):
+        """Create a NetworkX graph from the atoms and bonds in this system.
+
+        Returns
+        -------
+        g : nx.Graph
+            A graph whose nodes are the Atoms in this topology, and
+            whose edges are the bonds
+
+        See Also
+        --------
+        connected_pairs
+
+        Notes
+        -----
+        This method requires the NetworkX python package.
+        """
+        import networkx as nx
+        g = nx.Graph()
+        g.add_edges_from(self.connected_pairs)
+        return g
+
+    # def gen_pairs(self, n_excl=4):
+    #
+    #     # loop over moleculetypes
+    #     #   loop over dihedral forces
+    #     #   loop over pairs and add 1-nexcl pairs
+    #     if n_excl == 4:
+    #         for dihedral in self.dihedrals:
+    #             self.pair.add((dihedral.atom1, dihedral.atom4))
+    #     else:
+    #         raise ValueError('Unsupported number of pair exclusions.')
 
     def __repr__(self):
         return "System '{}' ".format(self.name)

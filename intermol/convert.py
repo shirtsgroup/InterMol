@@ -248,19 +248,19 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         out (list of strings): which forms a summary table using "\n".join(out)
     """
     out = []
-    # remove failed evaluations (-1 in energy_outputs)
+    # Remove failed evaluations (-1 in energy_outputs)
     failed_i = [i for i, x in enumerate(energy_outputs) if x == -1]
     failed = [output_types[i] for i in failed_i]
     output_types = [x for i, x in enumerate(output_types) if i not in failed_i]
     energy_outputs = [x for x in energy_outputs if x != -1]
 
-    # find all distinct labels
+    # Find all distinct labels
     labels = set(energy_input.keys())
     for e_out in energy_outputs:
         for key, value in e_out.items():
             labels.add(key)
 
-    # set up energy comparison table
+    # Set up energy comparison table
     labels = list(labels)
     unit = energy_input[list(energy_input.keys())[0]].unit
     energy_all = [energy_input] + energy_outputs
@@ -275,7 +275,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     out.append('=======================================================================')
     header = '%20s %18s ' % ('type', 'input (%s)' % input_type)
     for otype in output_types:
-        header += '%37s' %('output (%s) diff (%s)' % (otype, otype))
+        header += '%37s' % ('output (%s) diff (%s)' % (otype, otype))
     out.append(header)
     for i in range(len(data)):
         line = '%20s ' % labels[i]
@@ -290,8 +290,8 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     for d, otype in zip(diff, output_types):
         out.append('difference in potential energy from %s=>%s conversion: %18.8f'
                     % (input_type, otype, d))
-    for f in failed:
-        out.append('energy comparison for {0} output failed'.format(f))
+    for fail in failed:
+        out.append('energy comparison for {0} output failed'.format(fail))
     out.append('=======================================================================')
     return out
 

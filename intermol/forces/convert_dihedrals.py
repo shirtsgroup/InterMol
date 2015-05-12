@@ -172,7 +172,6 @@ def convert_dihedral_from_trig_to_RB(fcs):
     # c4 = 8f4-48f6
     # c5 = 16f5
     # c6 = 32f6
-
     sign = math.cos(fcs['phi'].value_in_unit(units.radians))
     fc0 = fcs['fc0']
     fc1 = sign*fcs['fc1']
@@ -199,7 +198,6 @@ def convert_dihedral_from_trig_to_RB(fcs):
 
 
 def convert_dihedral_from_RB_to_trig(c):
-
     c0 = c['C0']
     c1 = c['C1']
     c2 = c['C2']
@@ -228,5 +226,8 @@ def convert_dihedral_from_RB_to_trig(c):
     fcs['fc1'] *= -1
     fcs['fc3'] *= -1
     fcs['fc5'] *= -1
-    
+
     return fcs
+
+
+
