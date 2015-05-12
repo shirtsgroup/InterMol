@@ -4,6 +4,10 @@ from intermol.forces.abstract_type import AbstractType
 class AbstractAtomType(AbstractType):
     __slots__ = ['atomtype', 'bondtype', 'atomic_number', 'mass', 'charge', 'ptype']
 
+    atomlist = ['c', 'sigeps' ]
+
+    subtypes = []
+
     def __init__(self, atomtype, bondtype=None, atomic_number=None, mass=None,
                  charge=None, ptype=None):
         """An abstract representation of a generic atom type.
