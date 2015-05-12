@@ -21,24 +21,3 @@ class FourFdnVirtualType(Abstract4VirtualType):
         self.a = a
         self.b = b
         self.c = c
-
-
-class FourFdnVirtual(FourFdnVirtualType):
-    """
-    stub documentation
-    """
-    def __init__(self, atom1, atom2, atom3, atom4, atom5, bondingtype1=None, bondingtype2=None, bondingtype3=None, bondingtype4=None, bondingtype5=None, 
-                 a=0.0 * units.dimensionless,
-                 b=0.0 * units.dimensionless,
-                 c=0.0 * units.nanometers,
-                 placeholder=False):
-        self.atom1 = atom1
-        self.atom2 = atom2
-        self.atom3 = atom3
-        self.atom4 = atom4
-        self.atom5 = atom5
-        FourFdnVirtualType.__init__(self, bondingtype1, bondingtype2, bondingtype3, bondingtype4, bondingtype5, 
-                a=a,
-                b=b,
-                c=c,
-                placeholder=placeholder)

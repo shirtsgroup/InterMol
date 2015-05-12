@@ -25,24 +25,3 @@ class ProperPeriodicDihedralType(AbstractDihedralType):
         self.multiplicity = multiplicity
         self.weight = weight
 
-
-class ProperPeriodicDihedral(ProperPeriodicDihedralType):
-    """
-    stub documentation
-    """
-    def __init__(self, atom1, atom2, atom3, atom4, bondingtype1=None, bondingtype2=None, bondingtype3=None, bondingtype4=None, 
-                 phi=0.0 * units.degrees,
-                 k=0.0 * units.kilojoules_per_mole,
-                 multiplicity=0.0 * units.dimensionless,
-                 weight=0.0 * units.dimensionless,
-                 improper=False):
-        self.atom1 = atom1
-        self.atom2 = atom2
-        self.atom3 = atom3
-        self.atom4 = atom4
-        ProperPeriodicDihedralType.__init__(self, bondingtype1, bondingtype2, bondingtype3, bondingtype4, 
-                phi=phi,
-                k=k,
-                multiplicity=multiplicity,
-                weight=weight,
-                improper=improper)

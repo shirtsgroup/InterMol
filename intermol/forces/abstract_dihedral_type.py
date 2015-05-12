@@ -5,6 +5,13 @@ class AbstractDihedralType(AbstractType):
     __slots__ = ['bondingtype1', 'bondingtype2', 'bondingtype3', 'bondingtype4',
                  'improper']
 
+    dihedrallist = ['improper_harmonic',
+                    'trig',
+                    'fourier',
+                    'proper_periodic',
+                    'rb'
+                    ]
+
     def __init__(self, bondingtype1, bondingtype2, bondingtype3, bondingtype4,
                  improper=False):
         super(AbstractDihedralType, self).__init__()
