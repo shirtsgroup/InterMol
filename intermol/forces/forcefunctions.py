@@ -49,7 +49,7 @@ def capifyname(forcename):
     """
     Return name of the class in camelCase.
     """
-    return forcename.replace('_',' ').title().replace(' ','')
+    return forcename.replace('_', ' ').title().replace(' ', '')
 
 
 def build_unitvars(program, paramlist, dumself=None):
@@ -93,12 +93,21 @@ def get_parameter_list_from_force(force, paramlist):
     """
 
     # We passed in an instance
-    name = force.__class__.__name__
-    pvars = []
-    for param in paramlist[name]:
-        paramstring = 'force.' + param
-        pvars.append(eval(paramstring))
-    return pvars
+    force_name = force.__class__.__name__
+    if force_name in ['Bond', 'Angle']:
+        name = eval('force.{0}type.__class__.__name__'.format(force_name.lower()))
+        pvars = []
+        for param in paramlist[name]:
+            paramstring = 'force.{0}type.{1}'.format(force_name.lower(), param)
+            pvars.append(eval(paramstring))
+        return pvars
+    else:
+        name = force.__class__.__name__
+        pvars = []
+        for param in paramlist[name]:
+            paramstring = 'force.' + param
+            pvars.append(eval(paramstring))
+        return pvars
 
 
 def get_parameter_list_from_kwds(force, kwds, paramlist):

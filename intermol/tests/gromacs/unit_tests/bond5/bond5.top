@@ -10,11 +10,11 @@
  opls_154   OH     15.9994     0.000       A    3.12000e-01  7.11280e-01
  opls_155   HO      1.0080     0.000       A    0.00000e+00  0.00000e+00
 
-;[ bondtypes ]
-;  CT    CT      5    
-;  CT    HC      5    
-;  CT    OH      5    
-;  HO    OH      5
+[ bondtypes ]
+  CT    CT      5    
+  CT    HC      5    
+  CT    OH      5    
+  HO    OH      5
 
 [ angletypes ]
   CT     CT     HC      1   110.700    313.8      

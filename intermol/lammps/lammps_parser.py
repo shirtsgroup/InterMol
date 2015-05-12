@@ -436,7 +436,7 @@ class LammpsParser(object):
             onefour =  [set() for i in range(len(molecule.atoms) + 1)]
 
             # 1-2 neighbors
-            for bond in mol_type.bond_forces:
+            for bond in mol_type.bonds:
                 onetwo[bond.atom1].add(bond.atom2)
                 onetwo[bond.atom2].add(bond.atom1)
 
@@ -771,11 +771,11 @@ class LammpsParser(object):
 
     def parse_bonds(self, data_lines):
         self.parse_force(data_lines, self.bond_classes,
-                         self.current_mol_type.bond_forces, n=2)
+                         self.current_mol_type.bonds, n=2)
 
     def parse_angles(self, data_lines):
         self.parse_force(data_lines, self.angle_classes,
-                         self.current_mol_type.angle_forces, n=3)
+                         self.current_mol_type.angles, n=3)
 
     def parse_dihedrals(self, data_lines):
         self.parse_force(data_lines, self.dihedral_classes,
@@ -886,13 +886,13 @@ class LammpsParser(object):
             logger.warning("More than one {0} style found!".format(force_name))
 
     def write_bonds(self, mol_type, offset):
-        return self.write_forces(mol_type.bond_forces, offset, "Bond",
+        return self.write_forces(mol_type.bonds, offset, "Bond",
                                  self.lookup_lammps_bonds,
                                  self.lammps_bond_types,
                                  self.canonical_bond)
 
     def write_angles(self, mol_type, offset):
-        return self.write_forces(mol_type.angle_forces, offset, "Angle",
+        return self.write_forces(mol_type.angles, offset, "Angle",
                                  self.lookup_lammps_angles,
                                  self.lammps_angle_types,
                                  self.canonical_angle)
