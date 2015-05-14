@@ -77,7 +77,7 @@ def build_unitvars(program, paramlist, dumself=None):
             # In case the units need to be defined differently.
             unitset = forcedata.ProgramUnitLists[name]
         unitvars[capifyname(name)] = unitset
-        typename = name  + '_type'
+        typename = name + '_type'
         unitvars[typename] = unitset
         unitvars[capifyname(typename)] = unitset
     return unitvars

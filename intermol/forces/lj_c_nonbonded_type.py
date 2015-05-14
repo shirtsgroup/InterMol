@@ -13,8 +13,24 @@ class LjCNonbondedType(AbstractNonbondedType):
                               type=None)
     def __init__(self, bondingtype1, bondingtype2, 
                  C6=0.0 * units.kilojoules_per_mole * units.nanometers ** (6),
-                 C12=0.0 * units.kilojoules_per_mole * units.nanometers ** (12)):
-        AbstractNonbondedType.__init__(self, bondingtype1, bondingtype2)
+                 C12=0.0 * units.kilojoules_per_mole * units.nanometers ** (12),
+                 type=False):
+        AbstractNonbondedType.__init__(self, bondingtype1, bondingtype2, type)
         self.C6 = C6
         self.C12 = C12
 
+
+class LjCNonbonded(LjCNonbondedType):
+    """
+    stub documentation
+    """
+    def __init__(self, atom1, atom2, bondingtype1=None, bondingtype2=None, 
+                 C6=0.0 * units.kilojoules_per_mole * units.nanometers ** (6),
+                 C12=0.0 * units.kilojoules_per_mole * units.nanometers ** (12),
+                 type=False):
+        self.atom1 = atom1
+        self.atom2 = atom2
+        LjCNonbondedType.__init__(self, bondingtype1, bondingtype2, 
+                C6=C6,
+                C12=C12,
+                type=type)

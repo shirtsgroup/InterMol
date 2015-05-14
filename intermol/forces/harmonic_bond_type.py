@@ -21,5 +21,17 @@ class HarmonicBondType(AbstractBondType):
         self.k = k
 
 
-# if __name__ == '__main__':
-#     hb = HarmonicBondType("BT1","BT2", length=10 * units.nanometers)
+class HarmonicBond(HarmonicBondType):
+    """
+    stub documentation
+    """
+    def __init__(self, atom1, atom2, bondingtype1=None, bondingtype2=None, 
+                 length=0.0 * units.nanometers,
+                 k=0.0 * units.kilojoules_per_mole * units.nanometers ** (-2),
+                 order=1, c=False):
+        self.atom1 = atom1
+        self.atom2 = atom2
+        HarmonicBondType.__init__(self, bondingtype1, bondingtype2, 
+                length=length,
+                k=k,
+                order=order, c=c)

@@ -53,79 +53,79 @@ ProgramUnitSets['lammps'] = {'angleD': 'dumself.DEGREE',
                              'temperature': 'dumself.TEMP'
                              }
 
-# AbstractOptParams = dict()
-# AbstractOptParamsDefaults = dict()
+AbstractOptParams = dict()
+AbstractOptParamsDefaults = dict()
 
 # defined by abstract_nonbonded_type
-# nonbondedlist = ['lj_c',
-#                  'lj_sigeps',
-#                  'buckingham'
-#                  ]
-# AbstractOptParams['nonbonded'] = ['type']
-# AbstractOptParamsDefaults['nonbonded'] = ['False']
+nonbondedlist = ['lj_c',
+                 'lj_sigeps',
+                 'buckingham'
+                 ]
+AbstractOptParams['nonbonded'] = ['type']
+AbstractOptParamsDefaults['nonbonded'] = ['False']
 
-# # defined by abstract_pair_type
-# pairlist = ['lj_c',
-#             'lj_sigeps',
-#             'ljq_c',
-#             'ljq_sigeps',
-#             'lj_default',
-#             'ljq_default'
-#             ]
-# AbstractOptParams['pair'] = ['scaleLJ', 'scaleQQ', 'long']
-# AbstractOptParamsDefaults['pair'] = ['None', 'None', 'False']
+# defined by abstract_pair_type
+pairlist = ['lj_c',
+            'lj_sigeps',
+            'ljq_c',
+            'ljq_sigeps',
+            'lj_default',
+            'ljq_default'
+            ]
+AbstractOptParams['pair'] = ['scaleLJ', 'scaleQQ', 'long']
+AbstractOptParamsDefaults['pair'] = ['None', 'None', 'False']
 
 # defined by abstract_bond_type
-# bondlist = ['harmonic',
-#             'fene',
-#             'fene_expandable',
-#             'connection',
-#             'morse',
-#             'nonlinear',
-#             'quartic',
-#             'quartic_breakable',
-#             'cubic',
-#             'harmonic_potential',
-#             'g96'
-#             ]
+bondlist = ['harmonic',
+            'fene',
+            'fene_expandable',
+            'connection',
+            'morse',
+            'nonlinear',
+            'quartic',
+            'quartic_breakable',
+            'cubic',
+            'harmonic_potential',
+            'g96'
+            ]
 
-# AbstractOptParams['bond'] = ['order', 'c']
-# AbstractOptParamsDefaults['bond'] = ['1', 'False']
+AbstractOptParams['bond'] = ['order', 'c']
+AbstractOptParamsDefaults['bond'] = ['1', 'False']
 
 # defined by abstract_angle_type
-# anglelist = ['harmonic',
-#              'urey_bradley',
-#              'cross_bond_angle',
-#              'cross_bond_bond',
-#              'cosine',
-#              'cosine_squared',
-#              'quartic'
-#              ]
-# AbstractOptParams['angle'] = ['c']
-# AbstractOptParamsDefaults['angle'] = ['False']
+anglelist = ['harmonic',
+             'urey_bradley',
+             'cross_bond_angle',
+             'cross_bond_bond',
+             'cosine',
+             'cosine_squared',
+             'quartic'
+             ]
+AbstractOptParams['angle'] = ['c']
+AbstractOptParamsDefaults['angle'] = ['False']
 
 # defined by abstract_dihedral_type
-# dihedrallist = ['improper_harmonic',
-#                 'trig',
-#                 'fourier',
-#                 'proper_periodic',
-#                 'rb'
-#                 ]
-# AbstractOptParams['dihedral'] = ['improper']
-# AbstractOptParamsDefaults['dihedral'] = ['False']
+dihedrallist = ['improper_harmonic',
+                'trig',
+                'fourier',
+                'proper_periodic',
+                'rb'
+                ]
+AbstractOptParams['dihedral'] = ['improper']
+AbstractOptParamsDefaults['dihedral'] = ['False']
 
-# virtualsitelist = ['two',
-#                    'three_linear',
-#                    'three_fd',
-#                    'three_fad',
-#                    'three_out',
-#                    'four_fdn',
-#                    'n_cog',
-#                    'n_com',
-#                    'n_cow'
-#                    ]
-# AbstractOptParams['virtual'] = ['placeholder']
-# AbstractOptParamsDefaults['virtual'] = ['False']
+virtualsitelist = ['two',
+                   'three_linear',
+                   'three_fd',
+                   'three_fad',
+                   'three_out',
+                   'four_fdn',
+                   'n_cog',
+                   'n_com',
+                   'n_cow'
+                   ]
+AbstractOptParams['virtual'] = ['placeholder']
+AbstractOptParamsDefaults['virtual'] = ['False']
 
 forcelists = [nonbondedlist, pairlist, bondlist, anglelist, dihedrallist,
               virtualsitelist]
@@ -151,103 +151,103 @@ doclist = dict()
 # =========
 # nonbonded
 # =========
-# doclist['lj_c_nonbonded'] = 'stub documentation\n'
-# master_paramlist['lj_c_nonbonded'] = ['C6', 'C12']
-# master_unitlist['lj_c_nonbonded'] = ['energy * length ** (6)',
-#                                      'energy * length ** (12)'
-# ]
+doclist['lj_c_nonbonded'] = 'stub documentation\n'
+master_paramlist['lj_c_nonbonded'] = ['C6', 'C12']
+master_unitlist['lj_c_nonbonded'] = ['energy * length ** (6)',
+                                     'energy * length ** (12)'
+]
 
-# doclist['lj_sigeps_nonbonded'] = 'stub documentation\n'
-# master_paramlist['lj_sigeps_nonbonded'] = ['sigma', 'epsilon']
-# master_unitlist['lj_sigeps_nonbonded'] = ['length',
-#                                           'energy'
-# ]
+doclist['lj_sigeps_nonbonded'] = 'stub documentation\n'
+master_paramlist['lj_sigeps_nonbonded'] = ['sigma', 'epsilon']
+master_unitlist['lj_sigeps_nonbonded'] = ['length',
+                                          'energy'
+]
 
-# doclist['buckingham_nonbonded'] = 'stub documentation\n'
-# master_paramlist['buckingham_nonbonded'] = ['a', 'b', 'C6']
-# master_unitlist['buckingham_nonbonded'] = ['energy',
-#                                            'length ** (-1)',
-#                                            'energy * length ** (6)'
-# ]
+doclist['buckingham_nonbonded'] = 'stub documentation\n'
+master_paramlist['buckingham_nonbonded'] = ['a', 'b', 'C6']
+master_unitlist['buckingham_nonbonded'] = ['energy',
+                                           'length ** (-1)',
+                                           'energy * length ** (6)'
+]
 
 # =====
 # pairs
 # =====
-# doclist['lj_c_pair'] = 'stub documentation\n'
-# master_paramlist['lj_c_pair'] = ['C6', 'C12']
-# master_unitlist['lj_c_pair'] = ['energy * length ** (6)',
-#                                 'energy * length ** (12)'
-# ]
+doclist['lj_c_pair'] = 'stub documentation\n'
+master_paramlist['lj_c_pair'] = ['C6', 'C12']
+master_unitlist['lj_c_pair'] = ['energy * length ** (6)',
+                                'energy * length ** (12)'
+]
 
-# doclist['lj_sigeps_pair'] = 'stub documentation\n'
-# master_paramlist['lj_sigeps_pair'] = ['sigma', 'epsilon']
-# master_unitlist['lj_sigeps_pair'] = ['length',
-#                                      'energy'
-# ]
+doclist['lj_sigeps_pair'] = 'stub documentation\n'
+master_paramlist['lj_sigeps_pair'] = ['sigma', 'epsilon']
+master_unitlist['lj_sigeps_pair'] = ['length',
+                                     'energy'
+]
 
-# doclist['ljq_c_pair'] = 'stub documentation\n'
-# master_paramlist['ljq_c_pair'] = ['qi', 'qj', 'C6', 'C12']
-# master_unitlist['ljq_c_pair'] = ['charge',
-#                                  'charge',
-#                                  'energy * length ** (6)',
-#                                  'energy * length ** (12)'
-# ]
-#
-# doclist['ljq_sigeps_pair'] = 'stub documentation\n'
-# master_paramlist['ljq_sigeps_pair'] = ['qi', 'qj', 'sigma', 'epsilon']
-# master_unitlist['ljq_sigeps_pair'] = ['charge',
-#                                       'charge',
-#                                       'length',
-#                                       'energy'
-# ]
+doclist['ljq_c_pair'] = 'stub documentation\n'
+master_paramlist['ljq_c_pair'] = ['qi', 'qj', 'C6', 'C12']
+master_unitlist['ljq_c_pair'] = ['charge',
+                                 'charge',
+                                 'energy * length ** (6)',
+                                 'energy * length ** (12)'
+]
 
-# doclist['lj_default_pair'] = 'stub documentation\n'
-# master_paramlist['lj_default_pair'] = []
-# master_unitlist['lj_default_pair'] = []
+doclist['ljq_sigeps_pair'] = 'stub documentation\n'
+master_paramlist['ljq_sigeps_pair'] = ['qi', 'qj', 'sigma', 'epsilon']
+master_unitlist['ljq_sigeps_pair'] = ['charge',
+                                      'charge',
+                                      'length',
+                                      'energy'
+]
 
-# doclist['ljq_default_pair'] = 'stub documentation\n'
-# master_paramlist['ljq_default_pair'] = []
-# master_unitlist['ljq_default_pair'] = []
+doclist['lj_default_pair'] = 'stub documentation\n'
+master_paramlist['lj_default_pair'] = []
+master_unitlist['lj_default_pair'] = []
+
+doclist['ljq_default_pair'] = 'stub documentation\n'
+master_paramlist['ljq_default_pair'] = []
+master_unitlist['ljq_default_pair'] = []
 
 # ====
 # bonds
 # ====
-# doclist['connection_bond'] = 'stub documentation\n'
-# master_paramlist['connection_bond'] = []
-# master_unitlist['connection_bond'] = []
+doclist['connection_bond'] = 'stub documentation\n'
+master_paramlist['connection_bond'] = []
+master_unitlist['connection_bond'] = []
 
-# doclist['cubic_bond'] = 'stub documentation\n'
-# master_paramlist['cubic_bond'] = ['length', 'C2', 'C3']
-# master_unitlist['cubic_bond'] = ['length',
-#                                  'energy * length ** (-2)',
-#                                  'energy * length ** (-3)'
-# ]
+doclist['cubic_bond'] = 'stub documentation\n'
+master_paramlist['cubic_bond'] = ['length', 'C2', 'C3']
+master_unitlist['cubic_bond'] = ['length',
+                                 'energy * length ** (-2)',
+                                 'energy * length ** (-3)'
+]
 
-# doclist['quartic_bond'] = 'stub documentation\n'
-# master_paramlist['quartic_bond'] = ['length', 'C2', 'C3', 'C4']
-# master_unitlist['quartic_bond'] = ['length',
-#                                    'energy * length ** (-2)',
-#                                    'energy * length ** (-3)',
-#                                    'energy * length ** (-4)'
-# ]
+doclist['quartic_bond'] = 'stub documentation\n'
+master_paramlist['quartic_bond'] = ['length', 'C2', 'C3', 'C4']
+master_unitlist['quartic_bond'] = ['length',
+                                   'energy * length ** (-2)',
+                                   'energy * length ** (-3)',
+                                   'energy * length ** (-4)'
+]
 
-# doclist[
-#     'quartic_breakable_bond'] = 'http://lammps.sandia.gov/doc/bond_quartic.html\n'
-# master_paramlist['quartic_breakable_bond'] = ['k', 'B1', 'B2', 'Rc', 'U0']
-# master_unitlist['quartic_breakable_bond'] = ['energy * length ** (-4)',
-#                                              'length',
-#                                              'length',
-#                                              'length',
-#                                              'energy'
-# ]
+doclist[
+    'quartic_breakable_bond'] = 'http://lammps.sandia.gov/doc/bond_quartic.html\n'
+master_paramlist['quartic_breakable_bond'] = ['k', 'B1', 'B2', 'Rc', 'U0']
+master_unitlist['quartic_breakable_bond'] = ['energy * length ** (-4)',
+                                             'length',
+                                             'length',
+                                             'length',
+                                             'energy'
+]
 
-# doclist['nonlinear_bond'] = 'http://lammps.sandia.gov/doc/bond_nonlinear.html\n'
-# master_paramlist['nonlinear_bond'] = ['epsilon', 'r0',
-#                                       'lamda']  # mispell lambda since 'lambda' is a python reserved word.
-# master_unitlist['nonlinear_bond'] = ['energy',
-#                                      'length',
-#                                      'length'
-# ]
+doclist['nonlinear_bond'] = 'http://lammps.sandia.gov/doc/bond_nonlinear.html\n'
+master_paramlist['nonlinear_bond'] = ['epsilon', 'r0',
+                                      'lamda']  # mispell lambda since 'lambda' is a python reserved word.
+master_unitlist['nonlinear_bond'] = ['energy',
+                                     'length',
+                                     'length'
+]
 
 doclist['fene_bond'] = 'stub documentation\n'
 master_paramlist['fene_bond'] = ['length', 'kb']

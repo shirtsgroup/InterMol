@@ -38,6 +38,7 @@ class System(object):
         self._nonbonded_types = dict()
 
         self._bondgraph = None
+        self._bondgraph_per_moleculetype = None
 
     def add_molecule(self, molecule):
         """Add a molecule into the System. """
@@ -80,7 +81,6 @@ class System(object):
     def n_atoms(self, n):
         self._n_atoms = n
 
-
     @property
     def box_vector(self):
         """Return the box vector. """
@@ -99,39 +99,55 @@ class System(object):
         self._box_vector = np.array(v)
 
     @property
+    def bonds(self):
+        for mol_type in self.molecule_types.values():
+            for bond in mol_type.bonds:
+                yield bond
+
+    @property
     def connected_pairs(self):
         for mol_type in self.molecule_types.values():
             for molecule in mol_type.molecules:
-                for bond in mol_type.bond_forces:
+                for bond in mol_type.bonds:
                     atom1 = molecule.atoms[bond.atom1 - 1]
                     atom2 = molecule.atoms[bond.atom2 - 1]
                     yield atom1, atom2
 
     @property
+    def connected_pairs_per_moleculetype(self):
+        for mol_type in self.molecule_types.values():
+            for i, molecule in enumerate(mol_type.molecules):
+                for j, bond in enumerate(mol_type.bonds):
+                    atom1 = molecule.atoms[bond.atom1 - 1]
+                    atom2 = molecule.atoms[bond.atom2 - 1]
+                    yield (atom1, mol_type), (atom2, mol_type)
+                break  # Only consider one molecule per moleculetype.
+
+    @property
     def bondgraph(self):
-        """Create a NetworkX graph from the atoms and bonds in this system.
-
-        Returns
-        -------
-        g : nx.Graph
-            A graph whose nodes are the Atoms in this topology, and
-            whose edges are the bonds
-
-        See Also
-        --------
-        connected_pairs
-
-        Notes
-        -----
-        This method requires the NetworkX python package.
-        """
+        """Create a NetworkX graph from the atoms and bonds in this system. """
         if self._bondgraph is not None:
             return self._bondgraph
-        else:
-            import networkx as nx
-            self._bondgraph = nx.Graph()
-            self._bondgraph.add_edges_from(self.connected_pairs)
-            return self._bondgraph
+
+        import networkx as nx
+        self._bondgraph = nx.Graph()
+        self._bondgraph.add_edges_from(self.connected_pairs)
+        return self._bondgraph
+
+    @property
+    def bondgraph_per_moleculetype(self):
+        """Create a NetworkX graph from the atoms and bonds in this system.
+
+        Only creates one unconnected subgraph per moleculetype.
+
+        """
+        if self._bondgraph_per_moleculetype is not None:
+            return self._bondgraph_per_moleculetype
+
+        import networkx as nx
+        self._bondgraph_per_moleculetype = nx.Graph()
+        self._bondgraph_per_moleculetype.add_edges_from(self.connected_pairs_per_moleculetype)
+        return self._bondgraph_per_moleculetype
 
     # def gen_pairs(self, n_excl=4):
     #
