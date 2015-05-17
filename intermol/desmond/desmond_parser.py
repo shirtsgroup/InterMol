@@ -109,15 +109,17 @@ class DesmondParser(object):
     desmond_bonds = {'HARM_CONSTRAINED': HarmonicBond,
                      'HARM': HarmonicBond
                      }
+
     lookup_desmond_bonds = to_lookup(desmond_bonds)
     desmond_bond_types = to_type(desmond_bonds)
-
 
     def canonical_bond(self, name, kwds, bond, direction = 'into'):
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
             phase = 'Read'
+            names = []
+            kwdss = []
         else:
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
@@ -146,10 +148,11 @@ class DesmondParser(object):
                       'HARM': HarmonicAngle,
                       'UB': UreyBradleyAngle
                       }
+
     lookup_desmond_angles = to_lookup(desmond_angles)
     desmond_angle_types = to_type(desmond_angles)
 
-    def canonical_angle(self, params, angle, direction = 'into'):
+    def canonical_angle(self, name, kwds, angle, direction = 'into'):
         """
         Args:
             params:
@@ -165,22 +168,23 @@ class DesmondParser(object):
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
 
-        if bond in [HarmonicAngle, UreyBradleyAngle]:
+        names = []
+        kwdss = []
+
+        if angle in [HarmonicAngle, UreyBradleyAngle]:
 
             kwds['k'] = canonical_force_scale * kwds['k']
 
             if direction == 'into':
-                if name == 'harm_constrainted':
+                if name == 'HARM_CONSTRAINED':
                     kdws['c'] = True
             else:
-                # harmonic potentials in Gromacs should be constrained
-                optkwds = forcefunctions.optparamlookup(bond)
-                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
-                    name = 'harm_constrained'
+                optkwds = forcefunctions.optparamlookup(angle)
+                if optkwds['c'] == True:
+                    name = 'HARM_CONSTRAINED'
                 else:
-                    name = 'harm'
+                    name = 'HARM'
                 return name, kwds
-
 
             if isinstance(angle,UreyBradleyAngle):
                 dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), 0.5*float(angle.kUB.in_units_of(units.kilocalorie_per_mole*units.angstroms**(-2))._value)))
@@ -191,6 +195,7 @@ class DesmondParser(object):
                 if isinstance(angle, HarmonicAngle) or isinstance(angle, UreyBradleyAngle):
                     dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
                 else:
+
                     raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
 
 
@@ -216,7 +221,28 @@ class DesmondParser(object):
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
 
-        d_type = self.lookup_desmond_angles[dihedral.__class__]
+            if isinstance(dihedral, ImproperHarmonicDihedral):
+                dlines.append('%s %10.8f %10.8f %1d %1d %1d %1d %1d %1d\n' % (
+                        'Improper_Harm', float(dihedral.xi.in_units_of(units.degrees)._value),
+                        0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
+                        0,0,0,0,0,0))
+            elif isinstance(dihedral, TrigDihedral):
+                if dihedral.improper:
+                    dtype = 'Improper_Trig'
+                else:
+                    dtype = 'Proper_Trig'
+                dlines.append('%s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (
+                        dtype,
+                        float(dihedral.phi.in_units_of(units.degrees)._value),
+                        float(dihedral.fc0.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc1.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc2.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc3.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc4.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc5.in_units_of(units.kilocalories_per_mole)._value),
+                        float(dihedral.fc6.in_units_of(units.kilocalories_per_mole)._value)))
+
+        d_type = self.lookup_desmond_dihedral[dihedral.__class__]
         if d_type:
             return d_type, params
         else:
@@ -1291,15 +1317,17 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_bonds[bond.__class__]
             except:
-                raise Exception("WriteError: bondtype %s is not supported by Desmond" % (bond.__class__.__name__))    
-            name, kwds = self.canonical_bond(name, kwds, bond.__class__, direction = 'from')
-            line = '      %d %d %d %s' %(i, bond.atom1, bond.atom2, name)
-            bond_params = self.get_parameter_list_from_kwds(bond, kwds)
-            u = self.unitvars[bond.__class__.__name__]
-            for j, p in enumerate(bond_params):
-                line += "%15.8f" % (p.value_in_unit(u[j]))
-            line += '\n'    
-            dlines.append(line)
+                raise Exception("WriteError: bondtype %s is not supported by Desmond" % (bond.__class__.__name__))
+            names, kwds = self.canonical_bond(name, kwds, bond.__class__, direction = 'from')
+            # could return multiple names, kwds
+            for i, name in enumerate(names):
+                line = '      %d %d %d %s' %(i, bond.atom1, bond.atom2, name)
+                bond_params = self.get_parameter_list_from_kwds(bond, kwds[i])
+                u = self.unitvars[bond.__class__.__name__]
+                for j, p in enumerate(bond_params):
+                    line += "%15.8f" % (p.value_in_unit(u[j]))
+                line += '\n'    
+                dlines.append(line)
         header = "    ffio_bonds[%d] {\n" % (i)
         hlines = endheadersection(i==0,header,hlines)
 
@@ -1328,17 +1356,19 @@ class DesmondParser(object):
             i+=1
             kwds = self.get_parameter_kwds_from_force(angle)
             try:
-                name = self.lookup_desmond_bonds[angle.__class__]
+                name = self.lookup_desmond_andles[angle.__class__]
             except:
                 raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
-            name, kwds = self.canonical_angle(name, kwds, angle.__class__, direction = 'from')
-            line = '      %d %d %d %d %s' %(i, angle.atom1, angle.atom3, angle.atom3, name)
-            angle_params = self.get_parameter_list_from_kwds(angle, kwds)
-            u = self.unitvars[angle.__class__.__name__]
-            for j, p in enumerate(angle_params):
-                line += "%15.8f" % (p.value_in_unit(u[j]))
-            line += '\n'    
-            dlines.append(line)
+            names, kwds = self.canonical_angle(name, kwds, angle.__class__, direction = 'from')
+            # can be multiple names and kwd lists
+            for i, name in enumerate(names):
+                line = '      %d %d %d %d %s' %(i, angle.atom1, angle.atom3, angle.atom3, name)
+                angle_params = self.get_parameter_list_from_kwds(angle, kwds[i])
+                u = self.unitvars[angle.__class__.__name__]
+                for j, p in enumerate(angle_params):
+                    line += "%15.8f" % (p.value_in_unit(u[j]))
+                line += '\n'    
+                dlines.append(line)
             
         header = "    ffio_angles[%d] {\n" % (i)
         hlines = endheadersection(i==0,header,hlines)
@@ -1369,38 +1399,27 @@ class DesmondParser(object):
 
         i = 0
         #sorting by first index
-        dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: x.atom1)
+        dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
         # first, identify the number of terms we will print
         for dihedral in dihedrallist:
             i+=1
-            dlines.append('      %d %d %d %d %d ' % (
-                    i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4))
-            if isinstance(dihedral, ImproperHarmonicDihedral):
-                dlines.append('%s %10.8f %10.8f %1d %1d %1d %1d %1d %1d\n' % (
-                        'Improper_Harm', float(dihedral.xi.in_units_of(units.degrees)._value),
-                        0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
-                        0,0,0,0,0,0))
-            elif isinstance(dihedral, TrigDihedral):
-                if dihedral.improper:
-                    dtype = 'Improper_Trig'
-                else:
-                    dtype = 'Proper_Trig'
-                dlines.append('%s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (
-                        dtype,
-                        float(dihedral.phi.in_units_of(units.degrees)._value),
-                        float(dihedral.fc0.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc1.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc2.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc3.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc4.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc5.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc6.in_units_of(units.kilocalories_per_mole)._value)))
-            else:
-                logger.error("WriteError: found unsupported dihedral. \n    %s\n    Printing zero-energy placeholder."
-                             % str(dihedral))
-                dlines.append('%s 0.0 %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' %
-                              (i, dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, 'Proper_Trig',
-                               0, 0, 0, 0, 0, 0, 0))
+            kwds = self.get_parameter_kwds_from_force(dihedral)
+            try:
+                name = self.lookup_desmond_dihedralss[dihedral.__class__]
+            except:
+                raise Exception("WriteError: dihedraltype %s is not supported by Desmond" % (dihedral.__class__.__name__))
+            name, kwds = self.canonical_dihedral(name, kwds, dihedral.__class__, direction = 'from')
+            for i, name in enumerate(name):
+                line = '      %d %d %d %d %s' %(i, dihderal.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name)
+                dihedral_params = self.get_parameter_list_from_kwds(dihedral, kwds[i])
+                u = self.unitvars[dihedral.__class__.__name__]
+                for j, p in enumerate(dihedral_params):
+                    line += "%15.8f" % (p.value_in_unit(u[j]))
+                for j in range(8-len(dihedral_params)):    
+                    line += "%6.3f" % (0.0)
+                line += '\n'
+                dlines.append(line)
+
         header = "    ffio_dihedrals[%d] {\n" % (i)
         hlines = endheadersection(i==0,header,hlines)
 
