@@ -2,8 +2,8 @@ import logging
 from subprocess import Popen, PIPE
 import os
 
-#ENGINES = ['gromacs', 'lammps', 'desmond']
-ENGINES = ['gromacs', 'lammps']
+ENGINES = ['gromacs', 'lammps', 'desmond']
+#ENGINES = ['gromacs', 'lammps']
 
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'

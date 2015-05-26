@@ -5,9 +5,7 @@ import subprocess
 
 import simtk.unit as units
 
-import intermol.tests
-from intermol.tests.testing_tools import which
-from intermol.desmond_parser import load_desmond, write_desmond
+from intermol.desmond.desmond_parser import load_desmond, write_desmond
 import shutil
 
 logger = logging.getLogger('InterMolLog')
