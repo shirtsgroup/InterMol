@@ -599,9 +599,9 @@ class GromacsParser(object):
             converted_dihedraltype = self.gromacs_dihedral_types[d_type]
             paramlist = self.get_parameter_list_from_force(converted_dihedraltype)
             param_units = self.unitvars[converted_dihedraltype.__name__]
-            import pdb; pdb.set_trace()
             for param, param_unit in zip(paramlist, param_units):
-                top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
+                value = dihedral_params[0][param.__name__].value_in_unit(param_unit)
+                top.write('{0:18.8e}'.format(value))
             top.write('\n')
         top.write('\n')
 
@@ -800,22 +800,24 @@ class GromacsParser(object):
 
     def create_settle(self, settle):
         new_settle = Settles(int(settle[0]),
-                            float(settle[2]) * units.nanometers,
-                            float(settle[3]) * units.nanometers)
+                             float(settle[2]) * units.nanometers,
+                             float(settle[3]) * units.nanometers)
         self.current_molecule_type.settles = new_settle
 
-        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
-        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+        waterbondrefk = 900 * units.kilojoules_per_mole * units.nanometers**(-2)
+        wateranglerefk = 400 * units.kilojoules_per_mole * units.degrees**(-2)
         angle = 2.0 * math.asin(0.5 * float(settle[3]) / float(settle[2])) * units.radians
         dOH = float(settle[2]) * units.nanometers
 
-        new_bond = HarmonicBond(1, 2, None, None, dOH, waterbondrefk, c=True)
+        bond_type = HarmonicBondType(None, None, length=dOH, k=waterbondrefk, c=True)
+        new_bond = Bond(1, 2, bond_type)
         self.current_molecule_type.bonds.add(new_bond)
 
-        new_bond = HarmonicBond(1, 3, None, None, dOH, waterbondrefk, c=True)
+        new_bond = Bond(1, 3, bond_type)
         self.current_molecule_type.bonds.add(new_bond)
 
-        new_angle = HarmonicAngle(3, 1, 2, None, None, None, angle, wateranglerefk, c=True)
+        angle_type = HarmonicAngleType(None, None, None, theta=angle, k=wateranglerefk, c=True)
+        new_angle = Angle(3, 1, 2, angle_type)
         self.current_molecule_type.angles.add(new_angle)
 
     def create_exclusion(self, exclusion):

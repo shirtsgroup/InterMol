@@ -51,20 +51,18 @@ class LammpsParser(object):
     SCALE_INTO = 2.0
     SCALE_FROM = 0.5
 
-    lammps_bonds = {
-        'harmonic': HarmonicBond,
-        'morse': MorseBond,
-        'class2': QuarticBond,  # TODO: coefficients need special handling.
-        'fene': FeneExpandableBond,  # TODO: need special handling for LJ terms
-        'fene/expand': FeneExpandableBond,  # TODO: need special handling for LJ terms
-        'quartic': QuarticBreakableBond,
-        'nonlinear': NonlinearBond
+    lammps_bond_types = {
+        'harmonic': HarmonicBondType,
+        'morse': MorseBondType,
+        'class2': QuarticBondType,  # TODO: coefficients need special handling.
+        'fene': FeneExpandableBondType,  # TODO: need special handling for LJ terms
+        'fene/expand': FeneExpandableBondType,  # TODO: need special handling for LJ terms
+        'quartic': QuarticBreakableBondType,
+        'nonlinear': NonlinearBondType
         }
-    lookup_lammps_bonds = {v: k for k, v in lammps_bonds.items()}
+    lookup_lammps_bond_types = {v: k for k, v in lammps_bond_types.items()}
     # Add some non 1-to-1 mappings.
-    lookup_lammps_bonds[HarmonicPotentialBond] = 'harmonic'
-    lammps_bond_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in lammps_bonds.items())
+    lookup_lammps_bond_types[HarmonicPotentialBondType] = 'harmonic'
 
     def canonical_bond(self, params, bond, direction='into'):
         """Convert to/from the canonical form of this interaction. """
@@ -83,10 +81,10 @@ class LammpsParser(object):
                     raise ValueError("{0} is not supported by LAMMPS!".format(bond.__name__))
             canonical_force_scale = self.SCALE_FROM
 
-        if bond in [HarmonicBond, HarmonicPotentialBond]:
+        if bond in [HarmonicBondType, HarmonicPotentialBondType]:
             params['k'] *= canonical_force_scale
 
-        if bond == HarmonicPotentialBond:
+        if bond == HarmonicPotentialBondType:
             typename = 'harmonic'
 
         if direction == 'into':
@@ -94,15 +92,13 @@ class LammpsParser(object):
         else:
             return typename, [params]  # we expect a list
 
-    lammps_angles = {
-        'harmonic': HarmonicAngle,
-        'cosine': CosineAngle,
-        'cosine/squared': CosineSquaredAngle,
-        'charmm': UreyBradleyAngle
+    lammps_angle_types = {
+        'harmonic': HarmonicAngleType,
+        'cosine': CosineAngleType,
+        'cosine/squared': CosineSquaredAngleType,
+        'charmm': UreyBradleyAngleType
         }
-    lookup_lammps_angles = dict((v, k) for k, v in lammps_angles.items())
-    lammps_angle_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in lammps_angles.items())
+    lookup_lammps_angle_types = {v: k for k, v in lammps_angle_types.items()}
 
     def canonical_angle(self, params, angle, direction):
         """Convert from the canonical form of this interaction. """
@@ -116,10 +112,10 @@ class LammpsParser(object):
                     angle.__name__))
             canonical_force_scale = self.SCALE_FROM
 
-        if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
+        if angle in [HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType]:
             params['k'] *= canonical_force_scale
 
-        if angle == UreyBradleyAngle:
+        if angle == UreyBradleyAngleType:
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
@@ -127,30 +123,26 @@ class LammpsParser(object):
         else:
             return typename, [params]  # We expect a list
 
-    lammps_dihedrals = {
-        'opls': FourierDihedral,
-        'multi/harmonic': RbDihedral,
-        'charmm': ProperPeriodicDihedral,
+    lammps_dihedral_types = {
+        'opls': FourierDihedralType,
+        'multi/harmonic': RbDihedralType,
+        'charmm': ProperPeriodicDihedralType,
         # not quite canonical form, but easily interconvertible
         }
     # Have to manually reverse dihedrals -- not unique.
-    lookup_lammps_dihedrals = {
-        TrigDihedral: 'Trig',
-        RbDihedral: 'multi/harmonic',
-        FourierDihedral: 'opls',
-        ProperPeriodicDihedral: 'charmm'
+    lookup_lammps_dihedral_types = {
+        TrigDihedralType: 'Trig',
+        RbDihedralType: 'multi/harmonic',
+        FourierDihedralType: 'opls',
+        ProperPeriodicDihedralType: 'charmm'
         # not quite canonical form, but easily interconvertible
         }
-    lammps_dihedral_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in lammps_dihedrals.items())
 
-    lammps_impropers = {
-        'harmonic': ImproperHarmonicDihedral,
-        'cvff': TrigDihedral,
+    lammps_improper_types = {
+        'harmonic': ImproperHarmonicDihedralType,
+        'cvff': TrigDihedralType,
         }
-    lookup_lammps_impropers = dict((v, k) for k, v in lammps_impropers.items())
-    lammps_improper_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in lammps_impropers.items())
+    lookup_lammps_improper_types = {v: k for k, v in lammps_improper_types.items()}
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """Convert from the canonical form of this interaction. """
@@ -667,14 +659,14 @@ class LammpsParser(object):
         self.bond_classes = dict()
         self.parse_force_coeffs(data_lines, "Bond",
                                 self.bond_classes, self.bond_style,
-                                self.lammps_bonds, self.canonical_bond)
+                                self.lammps_bond_types, self.canonical_bond)
 
     def parse_angle_coeffs(self, data_lines):
 
         self.angle_classes = dict()
         self.parse_force_coeffs(data_lines, "Angle",
                                 self.angle_classes, self.angle_style,
-                                self.lammps_angles, self.canonical_angle)
+                                self.lammps_angle_types, self.canonical_angle)
 
     def parse_dihedral_coeffs(self, data_lines):
 
@@ -688,7 +680,7 @@ class LammpsParser(object):
         self.improper_classes = dict()
         self.parse_force_coeffs(data_lines, "Improper",
                                 self.improper_classes, self.improper_style,
-                                self.lammps_impropers, self.canonical_dihedral)
+                                self.lammps_improper_types, self.canonical_dihedral)
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""

@@ -91,6 +91,7 @@ def get_parameter_list_from_force(force, paramlist):
     put the forces here as well.  We won't make this a function for now
     since it's needed in this module.
     """
+    # TODO: Check if this logic can be cleaned up.
 
     # We passed in an instance
     force_name = force.__class__.__name__
@@ -102,16 +103,14 @@ def get_parameter_list_from_force(force, paramlist):
             pvars.append(eval(paramstring))
         return pvars
     else:
-        name = force.__class__.__name__
         pvars = []
         try:
-            for param in paramlist[name]:
+            for param in paramlist[force_name]:
                 paramstring = 'force.' + param
                 pvars.append(eval(paramstring))
         except KeyError:
             for param in paramlist[force.__name__]:
                 paramstring = 'force.' + param
-                import pdb; pdb.set_trace()
                 pvars.append(eval(paramstring))
         return pvars
 
