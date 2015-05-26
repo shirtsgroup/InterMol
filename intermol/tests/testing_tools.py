@@ -2,6 +2,8 @@ import logging
 from subprocess import Popen, PIPE
 import os
 
+from six import string_types
+
 ENGINES = ['gromacs', 'lammps', 'desmond']
 #ENGINES = ['gromacs', 'lammps']
 
@@ -98,6 +100,22 @@ def summarize_results(input_type, results, outdir):
 
     with open('all_results.txt') as out:
         print(out.read())
+
+
+def command_line_flags(flags):
+    """Convert a dict of flags to a string for use on the command line. """
+    cmd_line_equivalent = []
+    for flag, flag_value in flags.items():
+        if isinstance(flag_value, list):
+            in_files = ' '.join(flag_value)
+            arg = '--{0} {1}'.format(flag, in_files)
+        elif not isinstance(flag_value, string_types):
+            # E.g. {'gromacs': True}
+            arg = '--{0}'.format(flag)
+        else:
+            arg = '--{0} {1}'.format(flag, flag_value)
+        cmd_line_equivalent.append(arg)
+    return cmd_line_equivalent
 
 
 def which(program):

@@ -6,12 +6,12 @@ from pkg_resources import resource_filename
 
 import logging
 import numpy as np
-from six import string_types
 import sys
 
 from intermol import convert
 from intermol.tests.testing_tools import (add_handler, remove_handler,
-                                          summarize_results, ENGINES)
+                                          summarize_results, ENGINES,
+                                          command_line_flags)
 
 logger = logging.getLogger('InterMolLog')
 testing_logger = logging.getLogger('testing')
@@ -88,10 +88,8 @@ def _convert_from_desmond(flags, test_type='unit'):
     """
     test_dir = resource_filename('intermol', 'tests/desmond/{0}_tests'.format(test_type))
 
-    gro_files = sorted(glob(os.path.join(test_dir, '*/*.gro')))
-    gro_files = [x for x in gro_files if not x.endswith('out.gro')]
-    top_files = sorted(glob(os.path.join(test_dir, '*/*.top')))
-    names = [os.path.splitext(os.path.basename(gro))[0] for gro in gro_files]
+    cms_files = sorted(glob(os.path.join(test_dir, '*/*.cms')))
+    names = [os.path.splitext(os.path.basename(cms))[0] for cms in cms_files]
 
     # The results of all conversions are stored in nested dictionaries:
     # results = {'gromacs': {'bond1: result, 'bond2: result...},
@@ -107,7 +105,7 @@ def _convert_from_desmond(flags, test_type='unit'):
         if not os.path.isdir(base_output_dir):
             raise
 
-    for gro, top, name in zip(gro_files, top_files, names):
+    for cms, name in zip(cms_files, names):
         testing_logger.info('Converting {0}'.format(name))
         odir = '{0}/{1}'.format(base_output_dir, name)
         try:
@@ -115,16 +113,16 @@ def _convert_from_desmond(flags, test_type='unit'):
         except OSError:
             if not os.path.isdir(odir):
                 raise
-        h1, h2 = add_handler(odir)
 
-        flags['gro_in'] = [gro, top]
+        flags['des_in'] = cms
         flags['odir'] = odir
         for engine in ENGINES:
             flags[engine] = True
 
-        cmd_line_equivalent = _command_line_flags(flags)
+        h1, h2 = add_handler(odir)
+        cmd_line_equivalent = command_line_flags(flags)
 
-        logger.info('Converting {0}, {1} with command:\n'.format(gro, top))
+        logger.info('Converting {0} with command:\n'.format(cms))
         logger.info('    python convert.py {0}'.format(
             ' '.join(cmd_line_equivalent)))
 
@@ -137,39 +135,21 @@ def _convert_from_desmond(flags, test_type='unit'):
     return results
 
 
-def _command_line_flags(flags):
-    """Convert a dict of flags to a string for use on the command line. """
-    cmd_line_equivalent = []
-    for flag, flag_value in flags.items():
-        if isinstance(flag_value, list):
-            in_files = ' '.join(flag_value)
-            arg = '--{0} {1}'.format(flag, in_files)
-        elif not isinstance(flag_value, string_types):
-            # E.g. {'gromacs': True}
-            arg = '--{0}'.format(flag)
-        else:
-            arg = '--{0} {1}'.format(flag, flag_value)
-        cmd_line_equivalent.append(arg)
-    return cmd_line_equivalent
-
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Run the Desmond tests.')
 
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
-            default='unit', help="The type of tests to run: 'unit', 'stress' or 'all'.")
+            default='unit', help="The type of tests to run: 'unit' or 'stress'.")
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
-    # TODO: Rewrite assertions or testing calls so that you can run 'all' but
-    #       still have working py.test.
     args = vars(parser.parse_args())
-    if args['type'] in ['unit', 'all']:
+    if args['type'] == 'unit':
         test_desmond_unit()
-    if args['type'] in ['stress', 'all']:
+    if args['type'] == 'stress':
         test_desmond_stress()
 
 
