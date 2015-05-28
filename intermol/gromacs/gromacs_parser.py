@@ -348,6 +348,9 @@ class GromacsParser(object):
         self.cmaptypes = dict()
         self.nonbondedtypes = dict()
 
+        # Used for temporarily storing types read in from [ dihedral ] entries.
+        self.temp_dihedraltypes = dict()
+
         # Parse the top_filename into a set of plain text, intermediate
         # TopMoleculeType objects.
         self.process_file(self.top_filename)
@@ -368,6 +371,12 @@ class GromacsParser(object):
             top_moltype = self.molecule_types[mol_name]
             self.create_moleculetype(top_moltype, mol_name, mol_count)
 
+        # Merge dihedraltype dictionaries.
+        for key, dihedral_set in self.temp_dihedraltypes.items():
+            if key in self.system.dihedraltypes:
+                self.system.dihedraltypes[key] = self.system.dihedraltypes[key] | dihedral_set
+            else:
+                self.system.dihedraltypes[key] = dihedral_set
         return self.system
 
     # =========== System writing =========== #
@@ -871,7 +880,7 @@ class GromacsParser(object):
                                                    self.gromacs_dihedral_types,
                                                    self.canonical_dihedral)
             key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], improper])
-            self.add_dihedral_type(key, dihedral_type)
+            self.add_dihedral_type(key, dihedral_type, temp=True)
 
             new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
             self.current_molecule_type.dihedrals.add(new_dihedral)
@@ -1294,12 +1303,21 @@ class GromacsParser(object):
         key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], dihedral_type.improper])
         self.add_dihedral_type(key, dihedral_type)
 
-    def add_dihedral_type(self, key, dihedral_type):
-        if key in self.system.dihedraltypes:
-            # There are multiple dihedrals defined for these atom types.
-            self.system.dihedraltypes[key].add(dihedral_type)
-        else:
-            self.system.dihedraltypes[key] = set([dihedral_type])
+    def add_dihedral_type(self, key, dihedral_type, temp=False):
+        if not temp:  # We're adding one from [ dihedraltypes ]
+            if key in self.system.dihedraltypes:
+                # There are multiple dihedrals defined for these atom types.
+                self.system.dihedraltypes[key].add(dihedral_type)
+            else:
+                self.system.dihedraltypes[key] = set([dihedral_type])
+        else:  # We're adding one from a [ dihedral ] entry.
+            if key in self.temp_dihedraltypes:
+                # There are multiple dihedrals defined for these atom types.
+                self.temp_dihedraltypes[key].add(dihedral_type)
+            else:
+                self.temp_dihedraltypes[key] = set([dihedral_type])
+
+
 
     def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
                           gromacs_force_types, canonical_force):
