@@ -434,7 +434,7 @@ class GromacsParser(object):
         for nbtype in sorted(self.system.nonbonded_types.values(), key=lambda x: (x.atom1, x.atom2)):
             # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
-                    nbtype.atom1, nbtype.atom2, nbtype.type))
+                    nbtype.atom1, nbtype.atom2, nbtype.form))
             if self.system.combination_rule == 'Multiply-C6C12':
                 top.write('{0:18.8e} {1:18.8e}\n'.format(
                     nbtype.C6.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
@@ -860,7 +860,8 @@ class GromacsParser(object):
                 # Handle special dihedrals given via a #define.
                 if self.defines.get(dihedral_entry[-1]):
                     params = self.defines[dihedral_entry[-1]].split()
-                    dihedral_entry[:-1].extend(params)
+                    dihedral_entry.pop()  # Remove the define and...
+                    dihedral_entry.extend(params)  # ...replace it with params.
             else:
                 # Some gromacs parameters don't include sufficient entries for
                 # all types, so add some zeros. A bit of a kludge...
@@ -1371,8 +1372,6 @@ class GromacsParser(object):
     def process_nonbond_params(self, line):
         """Process a line in the [ nonbond_param ] category."""
         fields = line.split()
-        natoms = 2
-        nonbonded_type = None
         NonbondedFunc = None
         combination_rule = self.system.combination_rule
 
@@ -1391,7 +1390,7 @@ class GromacsParser(object):
         kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)
         nonbonded_type = NonbondedFunc(*nonbonded_vars, **kwds)
         # TODO: figure out what to do with the gromacs numeric type
-        nonbonded_type.type = int(fields[2])
+        nonbonded_type.form = int(fields[2])
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     # =========== Pre-processing errors =========== #
