@@ -92,6 +92,18 @@ class GromacsParser(object):
     gromacs_pair_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in gromacs_pairs.items())
 
+    gromacs_virtual_types = {
+        '2-1': TwoVirtualType,
+        '3-1': ThreeLinearVirtualType,
+        '3-2': ThreeFdVirtualType,
+        '3-3': ThreeFadVirtualType,
+        '3-4': ThreeOutVirtualType,
+        '4-2': FourFdnVirtualType
+        }
+
+    # reverse the above dictionary
+    lookup_gromacs_virtual_types = dict((v, k) for k,v in gromacs_virtual_types.items())
+
     gromacs_bond_types = {
         '1': HarmonicBondType,
         '2': G96BondType,
@@ -1091,6 +1103,8 @@ class GromacsParser(object):
                 self.process_cmaptype(line)
             elif self.current_directive == 'nonbond_params':
                 self.process_nonbond_params(line)
+            elif self.current_directive.startswith('virtual_sites'):
+                self.process_virtual(line, virtual_type=self.current_directive[-1])
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
@@ -1397,6 +1411,34 @@ class GromacsParser(object):
         # TODO: figure out what to do with the gromacs numeric type
         nonbonded_type.form = int(fields[2])
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
+
+    def parse_virtual(self, line, virtual_type):
+        """Create an angle object based on a [ virtuals ] entry"""
+        fields = line.split()
+
+        n_atoms = virtual_type + 1  # number of atom entries
+
+        numeric_virtualtype = str(nv) + '-' + entries[d]
+
+        virtualvars = [int(i) for i in entries[0:d]] # the atoms
+        virtualvars += ([None] * d) # the bonding types, all none
+
+        gromacs_virtual = self.gromacs_virtuals[numeric_virtualtype]
+        gromacs_virtual_type = gromacs_virtual.__base__ # what's the base class
+
+
+        if numeric_virtualtype in self.gromacs_virtuals:  # if the virtualtype is defined
+            for i, u in enumerate(self.unitvars[gromacs_virtual_type.__name__]):  # look up the parameter units
+                virtualvars.extend([float(entries[d+i+1]) * u]) # add the unit-ed parameters
+        else:
+            warnings.warn("Unsupported GROMACS virtualtype: {0}".format(numeric_virtualtype))
+        new_virtual = gromacs_virtual(*virtualvars)         # create the virtual site
+        if not new_virtual:
+            warnings.warn("Undefined virtualsite formatting.")
+        else:
+            current_molecule_type.virtualForceSet.add(new_virtual)
+
+
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):

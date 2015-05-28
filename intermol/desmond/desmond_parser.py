@@ -31,8 +31,8 @@ def load_desmond(infile, defines=None):
     Returns:
         system:
     """
-    parser = DesmondParser(infile, defines=defines)
-    return parser.read()
+    parser = DesmondParser(defines=defines)
+    return parser.read(infile)
 
 def write_desmond(outfile, system):
     """Unpacks a 'System' into a DESMOND input file
@@ -87,6 +87,7 @@ def to_lookup(forward_dict, key_rule=None, value_rule=None):
 
 def to_type(forward_dict):
     return dict((k, v) for k, v in forward_dict.items())
+
 
 class DesmondParser(object):
     """
@@ -169,8 +170,24 @@ class DesmondParser(object):
     def canonical_dihedral(self, params, dihedral, direction='into'):
         pass
 
+    paramlist = ff.build_paramlist('desmond')
+    unitvars = ff.build_unitvars('desmond', paramlist)
 
-    def __init__(self, infile, defines=None):
+    gromacs_bonds = {
+        'harm': HarmonicBondType,
+        }
+
+    # reverse the above dictionary
+    #self.lookup_desmond_bonds = dict((v,k) for k,v in self.gromacs_bonds.items())
+    lookup_desmond_bonds ={
+        HarmonicBondType: 'harm',
+        HarmonicPotentialBondType: 'harm'
+        }
+
+    canonical_force_scale_into = 2.0
+    canonical_force_scale_from = 0.5
+
+    def __init__(self, system=None, defines=None):
         """
         Initializes a DesmondParse object which serves to read in a CMS file
         into the abstract representation.
@@ -199,22 +216,9 @@ class DesmondParser(object):
 
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
-        self.paramlist = ff.build_paramlist('desmond')
-        self.unitvars = ff.build_unitvars('desmond', self.paramlist)
-
-        self.gromacs_bonds = {
-            'harm': HarmonicBondType,
-            }
-
-        # reverse the above dictionary
-        #self.lookup_desmond_bonds = dict((v,k) for k,v in self.gromacs_bonds.items())
-        self.lookup_desmond_bonds ={
-            HarmonicBondType: 'harm',
-            HarmonicPotentialBondType: 'harm'
-            }
-
-        self.canonical_force_scale_into = 2.0
-        self.canonical_force_scale_from = 0.5
+        if not system:
+            system = System()
+        self.system = system
 
     def get_parameter_list_from_kwds(self, force, kwds):
         return ff.get_parameter_list_from_kwds(force, kwds, self.paramlist)
@@ -387,8 +391,8 @@ class DesmondParser(object):
 
                 newAtomType = None
                 currentMolecule.add_atom(atom)
-                if not System._sys._atomtypes.get(AbstractAtomType(atom.atomtype.get(0))): #if atomtype not in System, add it
-                    if System._sys.combination_rule == 'Multiply-C6C12':
+                if not self.system._atomtypes.get(AbstractAtomType(atom.atomtype.get(0))): #if atomtype not in System, add it
+                    if self.system.combination_rule == 'Multiply-C6C12':
                         sigma = (etemp/stemp)**(1/6)
                         epsilon = (stemp)/(4*sigma**6)
                         newAtomType = AtomCType(split[ivdwtypes],             #atomtype/name
@@ -399,7 +403,7 @@ class DesmondParser(object):
                                       'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
                                       sigma * units.kilocalorie_per_mole * units.angstroms**(6),
                                       epsilon * units.kilocalorie_per_mole * units.angstroms**(12))
-                    elif (System._sys.combination_rule == 'Lorentz-Berthelot') or (System._sys.combination_rule == 'Multiply-Sigeps'):
+                    elif (self.system.combination_rule == 'Lorentz-Berthelot') or (self.system.combination_rule == 'Multiply-Sigeps'):
                         newAtomType = AtomSigepsType(split[ivdwtype], #atomtype/name
                                       split[ivdwtype],                 #bondtype
                                       -1,                   #atomic_number
@@ -408,7 +412,7 @@ class DesmondParser(object):
                                       'A',                  #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
                                       stemp,
                                       etemp)
-                    System._sys._atomtypes.add(newAtomType)
+                    self.system.add_atomtype(newAtomType)
 
         if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
             if self.a_blockpos[0] < start:
@@ -420,7 +424,7 @@ class DesmondParser(object):
         # now construct an atomlist with all the atoms
         index = 0
         for molecule in NewMolecules:
-            System._sys.add_molecule(molecule)
+            self.system.add_molecule(molecule)
             for atom in molecule.atoms:
                 # does this need to be a deep copy?
                 tmpatom = copy.deepcopy(atom)
@@ -428,7 +432,7 @@ class DesmondParser(object):
                 atomlist.add(tmpatom)
                 index +=1
 
-        currentMoleculeType = System._sys._molecules[moleculeName]
+        currentMoleculeType = self.system._molecules[moleculeName]
         currentMoleculeType.nrexcl = 0 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
                                        #MRS: basically, we have to figure out the furthest number of bonds out
                                        # to exclude OR explicitly set gromacs exclusions. Either should work.
@@ -471,11 +475,11 @@ class DesmondParser(object):
                 warnings.warn("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
             if coulcorr:
-                System._sys.coulomb_correction = coulcorr  # need this for gromacs to have the global declared
+                self.system.coulomb_correction = coulcorr  # need this for gromacs to have the global declared
                 #If we have difference between global and local, catch in gromacs.
 
             if ljcorr:
-                System._sys.lj_correction = ljcorr  # need this for gromacs to have the global declared
+                self.system.lj_correction = ljcorr  # need this for gromacs to have the global declared
                 #If we have difference between global and local, catch in gromacs.
 
             if newPairForce:
@@ -752,8 +756,8 @@ class DesmondParser(object):
         vdwtypercol = 0
 
         #DEFAULT VALUES WHEN CONVERTING TO GROMACS
-        System._sys.nonbonded_function = 1
-        System._sys.genpairs = 'yes'
+        self.system.nonbonded_function = 1
+        self.system.genpairs = 'yes'
 
         logger.debug('Parsing [ molecule %s]'%(moleculeName))
         logger.debug('Parsing [ ffio]')
@@ -774,11 +778,11 @@ class DesmondParser(object):
                 combrule = lines[i+combrcol]
                 if re.search("GEOMETRIC", combrule, re.IGNORECASE):
                     if re.search("ARITHMETIC", combrule, re.IGNORECASE):
-                        System._sys.combination_rule = 'Lorentz-Berthelot'
+                        self.system.combination_rule = 'Lorentz-Berthelot'
                     else:
-                        System._sys.combination_rule = 'Multiply-Sigeps'
+                        self.system.combination_rule = 'Multiply-Sigeps'
                 elif re.search("LJ12_6_C6C12", combrule, re.IGNORECASE):  # is this even valid?
-                    System._sys.combination_rule = 'Multiply-C6C12'
+                    self.system.combination_rule = 'Multiply-C6C12'
                 if (vdwtypercol > 0):
                     vdwrule = lines[i+vdwtypercol]
                 # MISSING: need to identify vdw rule here -- currently assuming LJ12_6_sig_epsilon!
@@ -1017,9 +1021,9 @@ class DesmondParser(object):
             v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
             nvec += 1
 
-        System._sys.box_vector = v
+        self.system.box_vector = v
 
-    def read_file(self, filename, verbose=True):
+    def read(self, filename, verbose=True):
 
         #        Load in data from file
 
@@ -1034,7 +1038,7 @@ class DesmondParser(object):
         fl = open(filename, 'r')
         lines = list(fl)
         fl.close()
-        i,j=0,0
+        i, j = 0, 0
 
         for line in lines:
             if re.search("f_m_ct",line,re.VERBOSE):
@@ -1155,7 +1159,7 @@ class DesmondParser(object):
         ep = None
         stemp = None
         etemp = None
-        combRule = System._sys.combination_rule
+        combRule = self.system.combination_rule
         for atom in molecule.atoms:
             i+=1
             if atom.residue_index:
@@ -1531,8 +1535,8 @@ class DesmondParser(object):
             i += 2
             atom = '      %d %d ' % (pair.atom1, pair.atom2)
             if isinstance(pair,LjDefaultPair) or isinstance(pair,LjqDefaultPair):
-                dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, System._sys.lj_correction)
-                dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i, pair.atom1, pair.atom2, System._sys.coulomb_correction)
+                dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, self.system.lj_correction)
+                dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i, pair.atom1, pair.atom2, self.system.coulomb_correction)
             elif isinstance(pair, LjSigepsPair) or isinstance(pair, LjCPair) or isinstance(pair, LjqCPair) or isinstance(pair, LjqSigepsPair):
                 # Check logic here -- not clear that we can correctly determine which type it is.
                 # Basically, I think it's whether scaleLJ is defined or not.
@@ -1562,7 +1566,7 @@ class DesmondParser(object):
                         i -= 1
                     else:
                         dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i-1, pair.atom1, pair.atom2,
-                                                                                System._sys.coulomb_correction)
+                                                                                self.system.coulomb_correction)
                         i -= 1
 
             else:
@@ -1740,7 +1744,7 @@ class DesmondParser(object):
         lines.append('  :::\n')
 
         #box vector
-        bv = System._sys.box_vector
+        bv = self.system.box_vector
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
@@ -1768,7 +1772,7 @@ class DesmondParser(object):
         nmol = 0
         totalatoms = []
         totalatoms.append(0)
-        for moleculetype in System._sys._molecules.itervalues():
+        for moleculetype in self.system._molecules.itervalues():
             for molecule in moleculetype.moleculeSet:
                 for atom in molecule.atoms:
                     i += 1
@@ -1809,7 +1813,7 @@ class DesmondParser(object):
 
         i = 0
         nonecnt = 0
-        for moleculetype in System._sys._molecules.itervalues():
+        for moleculetype in self.system._molecules.itervalues():
             # sort the bondlist because Desmond requires the first time a bond is listed to have
             # the atoms in ascending order
             repeatmol = len(moleculetype.moleculeSet)
@@ -1847,7 +1851,7 @@ class DesmondParser(object):
 
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
-        for moleculetype in System._sys._molecules.itervalues():
+        for moleculetype in self.system._molecules.itervalues():
             logger.debug('Writing molecule block %s...'% moleculetype.name)
             #BEGINNING BLOCK
 
@@ -2002,11 +2006,11 @@ class DesmondParser(object):
                 lines.append('    %s\n' % moleculetype.name)
 
             #Adding Combination Rule
-            if System._sys.combination_rule == 'Multiply-C6C12':
+            if self.system.combination_rule == 'Multiply-C6C12':
                 lines.append('    C6C12\n')   # this may not exist in DESMOND, or if so, need to be corrected
-            elif System._sys.combination_rule == 'Lorentz-Berthelot':
+            elif self.system.combination_rule == 'Lorentz-Berthelot':
                 lines.append('    ARITHMETIC/GEOMETRIC\n')
-            elif System._sys.combination_rule == 'Multiply-Sigeps':
+            elif self.system.combination_rule == 'Multiply-Sigeps':
                 lines.append('    GEOMETRIC\n')
 
 
