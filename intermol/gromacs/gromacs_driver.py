@@ -100,7 +100,6 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path, stdin=select)
     if proc.returncode != 0:
         logger.error('g_energy failed. See %s' % stderr_path)
-
     return _group_energy_terms(ener_xvg)
 
 

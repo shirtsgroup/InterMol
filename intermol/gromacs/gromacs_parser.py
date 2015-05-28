@@ -371,12 +371,6 @@ class GromacsParser(object):
             top_moltype = self.molecule_types[mol_name]
             self.create_moleculetype(top_moltype, mol_name, mol_count)
 
-        # Merge dihedraltype dictionaries.
-        for key, dihedral_set in self.temp_dihedraltypes.items():
-            if key in self.system.dihedraltypes:
-                self.system.dihedraltypes[key] = self.system.dihedraltypes[key] | dihedral_set
-            else:
-                self.system.dihedraltypes[key] = dihedral_set
         return self.system
 
     # =========== System writing =========== #
@@ -728,7 +722,9 @@ class GromacsParser(object):
         bondtypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
 
         # Get forcefield parameters.
-        if len(bond_entry) == n_atoms + 1:
+        if bond_entry[2] == '5':
+            bond_type = ConnectionBondType(*bondtypes)
+        elif len(bond_entry) == n_atoms + 1:
             bond_type = self.find_forcetype(bondtypes, self.system.bondtypes)
         else:
             bond_entry[0] = bondtypes[0]
@@ -736,7 +732,6 @@ class GromacsParser(object):
             bond_entry = " ".join(bond_entry)
             bond_type = self.process_forcetype(bondtypes, 'bond', bond_entry, n_atoms,
                 self.gromacs_bond_types, self.canonical_bond)
-            self.system.bondtypes[bondtypes] = bond_type
 
         new_bond = Bond(*atoms, bondtype=bond_type)
         self.current_molecule_type.bonds.add(new_bond)
@@ -879,8 +874,6 @@ class GromacsParser(object):
             dihedral_type = self.process_forcetype(btypes, 'dihedral', dihedral_entry, n_atoms,
                                                    self.gromacs_dihedral_types,
                                                    self.canonical_dihedral)
-            key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], improper])
-            self.add_dihedral_type(key, dihedral_type, temp=True)
 
             new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
             self.current_molecule_type.dihedrals.add(new_dihedral)
@@ -1303,21 +1296,12 @@ class GromacsParser(object):
         key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], dihedral_type.improper])
         self.add_dihedral_type(key, dihedral_type)
 
-    def add_dihedral_type(self, key, dihedral_type, temp=False):
-        if not temp:  # We're adding one from [ dihedraltypes ]
-            if key in self.system.dihedraltypes:
-                # There are multiple dihedrals defined for these atom types.
-                self.system.dihedraltypes[key].add(dihedral_type)
-            else:
-                self.system.dihedraltypes[key] = set([dihedral_type])
-        else:  # We're adding one from a [ dihedral ] entry.
-            if key in self.temp_dihedraltypes:
-                # There are multiple dihedrals defined for these atom types.
-                self.temp_dihedraltypes[key].add(dihedral_type)
-            else:
-                self.temp_dihedraltypes[key] = set([dihedral_type])
-
-
+    def add_dihedral_type(self, key, dihedral_type):
+        if key in self.system.dihedraltypes:
+            # There are multiple dihedrals defined for these atom types.
+            self.system.dihedraltypes[key].add(dihedral_type)
+        else:
+            self.system.dihedraltypes[key] = set([dihedral_type])
 
     def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
                           gromacs_force_types, canonical_force):
