@@ -873,10 +873,13 @@ class GromacsParser(object):
             key = tuple([btypes[0], btypes[1], btypes[2], btypes[3], improper])
             self.add_dihedral_type(key, dihedral_type)
 
-        dihedral_types = self.find_dihedraltype(btypes, improper=improper)
-        for dihedral_type in dihedral_types:
             new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
             self.current_molecule_type.dihedrals.add(new_dihedral)
+        else:  # Lookup all dihedraltypes that match.
+            dihedral_types = self.find_dihedraltype(btypes, improper=improper)
+            for dihedral_type in dihedral_types:
+                new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
+                self.current_molecule_type.dihedrals.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
         """Determine the type of dihedral interaction between four atoms. """
