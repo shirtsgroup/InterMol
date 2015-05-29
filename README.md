@@ -8,7 +8,8 @@ InterMol: a conversion tool for molecular dynamics simulations
 
 We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions.
 
-To check out how it works, use the ````convert.py```` script found in the ````intermol```` directory:
+To check out how it works, first run 'python setup.py develop' in the root directory.  
+Then use the ````convert.py```` script found in the ````intermol```` directory:
 
 ````
 $ python convert.py -h
