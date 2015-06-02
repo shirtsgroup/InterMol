@@ -51,7 +51,7 @@ class LammpsParser(object):
     SCALE_INTO = 2.0
     SCALE_FROM = 0.5
 
-    lammps_bond_types = {
+    lammps_bondtypes = {
         'harmonic': HarmonicBondType,
         'morse': MorseBondType,
         'class2': QuarticBondType,  # TODO: coefficients need special handling.
@@ -60,9 +60,9 @@ class LammpsParser(object):
         'quartic': QuarticBreakableBondType,
         'nonlinear': NonlinearBondType
         }
-    lookup_lammps_bond_types = {v: k for k, v in lammps_bond_types.items()}
+    lookup_lammps_bondtypes = {v: k for k, v in lammps_bondtypes.items()}
     # Add some non 1-to-1 mappings.
-    lookup_lammps_bond_types[HarmonicPotentialBondType] = 'harmonic'
+    lookup_lammps_bondtypes[HarmonicPotentialBondType] = 'harmonic'
 
     def canonical_bond(self, params, bond, direction='into'):
         """Convert to/from the canonical form of this interaction. """
@@ -72,7 +72,7 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_bonds[bond]
+                typename = self.lookup_lammps_bondtypes[bond]
             except KeyError:
                 if bond.__name__ in ['FeneBond', 'ConnectionBond']:
                     raise ValueError('{0} conversion has not yet been'
@@ -92,13 +92,13 @@ class LammpsParser(object):
         else:
             return typename, [params]  # we expect a list
 
-    lammps_angle_types = {
+    lammps_angletypes = {
         'harmonic': HarmonicAngleType,
         'cosine': CosineAngleType,
         'cosine/squared': CosineSquaredAngleType,
         'charmm': UreyBradleyAngleType
         }
-    lookup_lammps_angle_types = {v: k for k, v in lammps_angle_types.items()}
+    lookup_lammps_angletypes = {v: k for k, v in lammps_angletypes.items()}
 
     def canonical_angle(self, params, angle, direction):
         """Convert from the canonical form of this interaction. """
@@ -106,7 +106,7 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_angles[angle]
+                typename = self.lookup_lammps_anglestypes[angle]
             except KeyError:
                 raise ValueError("{0} is not supported by LAMMPS!".format(
                     angle.__name__))
@@ -123,14 +123,14 @@ class LammpsParser(object):
         else:
             return typename, [params]  # We expect a list
 
-    lammps_dihedral_types = {
+    lammps_dihedraltypes = {
         'opls': FourierDihedralType,
         'multi/harmonic': RbDihedralType,
         'charmm': ProperPeriodicDihedralType,
         # not quite canonical form, but easily interconvertible
         }
     # Have to manually reverse dihedrals -- not unique.
-    lookup_lammps_dihedral_types = {
+    lookup_lammps_dihedraltypes = {
         TrigDihedralType: 'Trig',
         RbDihedralType: 'multi/harmonic',
         FourierDihedralType: 'opls',
@@ -138,11 +138,11 @@ class LammpsParser(object):
         # not quite canonical form, but easily interconvertible
         }
 
-    lammps_improper_types = {
+    lammps_impropertypes = {
         'harmonic': ImproperHarmonicDihedralType,
         'cvff': TrigDihedralType,
         }
-    lookup_lammps_improper_types = {v: k for k, v in lammps_improper_types.items()}
+    lookup_lammps_impropertypes = {v: k for k, v in lammps_impropertypes.items()}
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """Convert from the canonical form of this interaction. """
@@ -153,28 +153,28 @@ class LammpsParser(object):
 
         if direction == 'into':
             converted_dihedral = dihedral  # Default
-            if dihedral == ProperPeriodicDihedral:  # Proper dihedral
+            if dihedral == ProperPeriodicDihedralType:  # Proper dihedral
                 convertfunc = convert_dihedral_from_proper_to_trig
-                converted_dihedral = TrigDihedral
-            elif dihedral == ImproperHarmonicDihedral:
+                converted_dihedral = TrigDihedralType
+            elif dihedral == ImproperHarmonicDihedralType:
                 convertfunc = convert_nothing
-            elif dihedral == RbDihedral:
+            elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
-                converted_dihedral = TrigDihedral
+                converted_dihedral = TrigDihedralType
             elif dihedral == FourierDihedralType:
                 convertfunc = convert_dihedral_from_fourier_to_trig
-                converted_dihedral = TrigDihedral
+                converted_dihedral = TrigDihedralType
                 # Now actually convert the dihedral.
             params = convertfunc(params)
             return converted_dihedral, params
 
         else:  # writing out
             try:
-                typename = self.lookup_lammps_dihedrals[dihedral]
+                typename = self.lookup_lammps_dihedraltypes[dihedral]
             except KeyError:
-                typename = self.lookup_lammps_impropers[dihedral]
+                typename = self.lookup_lammps_impropertypes[dihedral]
 
-            if dihedral == TrigDihedral:
+            if dihedral == TrigDihedralType:
                 paramlist = convert_dihedral_from_trig_to_proper(params)
                 if params['phi'].value_in_unit(units.degrees) in [0, 180]:
                     if params['fc6']._value == 0 and params['fc5']._value == 0:
@@ -190,14 +190,13 @@ class LammpsParser(object):
                         # harmonics (charmm).
                         typename = 'charmm'
                 if typename in ['charmm', 'Trig']:
-                    # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                     typename = 'charmm'
                     for p in paramlist:  # TODO: Why are we iterating here?
                         # For now, might get from Sys?
                         p['weight'] = 0.0 * units.dimensionless
 
-            elif dihedral == ImproperHarmonicDihedral:
+            elif dihedral == ImproperHarmonicDihedralType:
                 params['k'] *= canonical_force_scale
                 paramlist = [params]
 
@@ -659,7 +658,7 @@ class LammpsParser(object):
         self.bond_classes = dict()
         self.parse_force_coeffs(data_lines, "Bond",
                                 self.bond_classes, self.bond_style,
-                                self.lammps_bond_types, self.canonical_bond)
+                                self.lammps_bondtypes, self.canonical_bond)
 
     def parse_angle_coeffs(self, data_lines):
 
@@ -879,20 +878,20 @@ class LammpsParser(object):
 
     def write_bonds(self, mol_type, offset):
         return self.write_forces(mol_type.bonds, offset, "Bond",
-                                 self.lookup_lammps_bonds,
-                                 self.lammps_bond_types,
+                                 self.lookup_lammps_bondtypes,
+                                 self.lammps_bondtypes,
                                  self.canonical_bond)
 
     def write_angles(self, mol_type, offset):
         return self.write_forces(mol_type.angles, offset, "Angle",
-                                 self.lookup_lammps_angles,
+                                 self.lookup_lammps_angletypes,
                                  self.lammps_angle_types,
                                  self.canonical_angle)
 
     def write_dihedrals(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         dihedral_forces = {force for force in mol_type.dihedral_forces
-                           if force.__class__ != ImproperHarmonicDihedral}
+                           if force.dihedraltype.__class__ != ImproperHarmonicDihedralType}
         return self.write_forces(dihedral_forces, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
@@ -901,7 +900,7 @@ class LammpsParser(object):
     def write_impropers(self, mol_type, offset):
         """Separate dihedrals from impropers. """
         improper_forces = {force for force in mol_type.dihedral_forces
-                           if force.__class__ == ImproperHarmonicDihedral}
+                           if force.dihedraltype.__class__ == ImproperHarmonicDihedralType}
         return self.write_forces(improper_forces, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,

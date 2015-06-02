@@ -5,4 +5,4 @@ class Dihedral(object):
         self.atom2 = atom2
         self.atom3 = atom3
         self.atom4 = atom4
-        self.dihedraltype = dihedraltype
+        self.forcetype = dihedraltype

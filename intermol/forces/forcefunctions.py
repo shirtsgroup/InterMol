@@ -96,10 +96,10 @@ def get_parameter_list_from_force(force, paramlist):
     # We passed in an instance
     force_name = force.__class__.__name__
     if force_name in ['Bond', 'Angle', 'Dihedral']:
-        name = eval('force.{0}type.__class__.__name__'.format(force_name.lower()))
+        name = force.forcetype.__class__.__name__
         pvars = []
         for param in paramlist[name]:
-            paramstring = 'force.{0}type.{1}'.format(force_name.lower(), param)
+            paramstring = 'force.forcetype.{1}'.format(force_name.lower(), param)
             pvars.append(eval(paramstring))
         return pvars
     else:
@@ -130,7 +130,7 @@ def get_parameter_kwds_from_force(force, forceparams, paramlist):
     kwds = dict()
     force_name = force.__class__.__name__
     if force_name in ['Bond', 'Angle', 'Dihedral']:
-        name = eval('force.{0}type.__class__.__name__'.format(force_name.lower()))
+        name = force.forcetype.__class__.__name__
         force_params = forceparams(force)
         for i, p in enumerate(paramlist[name]):
             kwds[p] = force_params[i]

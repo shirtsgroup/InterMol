@@ -127,10 +127,10 @@ class GromacsParser(object):
             return bond, params
         else:  # currently, no bonds need to be de-canonicalized
             try:
-                b_type = self.lookup_gromacs_bond_types[bond.bondtype.__class__]
+                b_type = self.lookup_gromacs_bond_types[bond.forcetype.__class__]
             except KeyError:
                 raise Exception('Found unsupported bond type {0}'.format(
-                    bond.bondtype.__class__.__name__))
+                    bond.forcetype.__class__.__name__))
             return b_type, params
 
     gromacs_angle_types = {
@@ -155,10 +155,10 @@ class GromacsParser(object):
             return angle, params
         else:  # currently, no angles need to be de-canonicalized
             try:
-                a_type = self.lookup_gromacs_angle_types[angle.angletype.__class__]
+                a_type = self.lookup_gromacs_angle_types[angle.forcetype.__class__]
             except KeyError:
                 raise Exception('Found unsupported angle type {0}'.format(
-                    angle.angletype.__class__.__name__))
+                    angle.forcetype.__class__.__name__))
             return a_type, params
 
     gromacs_dihedral_types = {
@@ -219,12 +219,12 @@ class GromacsParser(object):
             return converted_dihedral, params
         else:  # Translate the dihedral types back to write them out.
             try:
-                d_type = self.lookup_gromacs_dihedral_types[dihedral.dihedraltype.__class__]
+                d_type = self.lookup_gromacs_dihedral_types[dihedral.forcetype.__class__]
             except KeyError:
                 raise Exception('Found unsupported dihedral type {0}'.format(
-                    dihedral.dihedraltype.__class__.__name__))
+                    dihedral.forcetype.__class__.__name__))
 
-            dihedraltype = dihedral.dihedraltype
+            dihedraltype = dihedral.forcetype
             if isinstance(dihedraltype, TrigDihedralType):
                 if dihedraltype.improper:
                     # Must be a improper dihedral. Print these out as improper
@@ -575,7 +575,7 @@ class GromacsParser(object):
             top.write('{0:7d} {1:7d} {2:4s}'.format(
                 bond.atom1, bond.atom2, b_type))
 
-            param_units = self.unitvars[bond.bondtype.__class__.__name__]
+            param_units = self.unitvars[bond.forcetype.__class__.__name__]
             for param, param_unit in zip(bond_params, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -592,7 +592,7 @@ class GromacsParser(object):
             top.write('{0:7d} {1:7d} {2:7d} {3:4s}'.format(
                 angle.atom1, angle.atom2, angle.atom3, a_type))
 
-            param_units = self.unitvars[angle.angletype.__class__.__name__]
+            param_units = self.unitvars[angle.forcetype.__class__.__name__]
             for param, param_unit in zip(angle_params, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -1103,8 +1103,8 @@ class GromacsParser(object):
                 self.process_cmaptype(line)
             elif self.current_directive == 'nonbond_params':
                 self.process_nonbond_params(line)
-            elif self.current_directive.startswith('virtual_sites'):
-                self.process_virtual(line, virtual_type=self.current_directive[-1])
+            #elif self.current_directive.startswith('virtual_sites'):
+            #    self.process_virtual(line, virtual_type=self.current_directive[-1])
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""

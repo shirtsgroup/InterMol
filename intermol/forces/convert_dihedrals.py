@@ -98,6 +98,8 @@ def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
             p['multiplicity'] = int(k[2])*units.dimensionless
             p['k'] = coeff*sign
             plist.append(p)
+        else:  # TODO: What's the other case here?
+            pass
 
     return plist
 

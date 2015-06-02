@@ -4,4 +4,4 @@ class Angle(object):
         self.atom1 = atom1
         self.atom2 = atom2
         self.atom3 = atom3
-        self.angletype = angletype
+        self.forcetype = angletype
