@@ -64,33 +64,34 @@ class LammpsParser(object):
     # Add some non 1-to-1 mappings.
     lookup_lammps_bondtypes[HarmonicPotentialBondType] = 'harmonic'
 
-    def canonical_bond(self, params, bond, direction='into'):
+    def canonical_bond(self, parameters, bond, direction='into'):
         """Convert to/from the canonical form of this interaction. """
         # TODO: Gromacs says harmonic potential bonds do not have constraints or
         #       exclusions. Check that this logic is supported.
+        forcetype_class = bond.forcetype.__class__
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_bondtypes[bond]
+                typename = self.lookup_lammps_bondtypes[forcetype_class]
             except KeyError:
-                if bond.__name__ in ['FeneBond', 'ConnectionBond']:
+                if isinstance(bond.forcetype, (FeneBondType, ConnectionBondType)):
                     raise ValueError('{0} conversion has not yet been'
-                                     ' implemented in InterMol.'.format(bond.__name__))
+                                     ' implemented in InterMol.'.format(forcetype_class.__name__))
                 else:
-                    raise ValueError("{0} is not supported by LAMMPS!".format(bond.__name__))
+                    raise ValueError("{0} is not supported by LAMMPS!".format(forcetype_class.__name__))
             canonical_force_scale = self.SCALE_FROM
 
-        if bond in [HarmonicBondType, HarmonicPotentialBondType]:
-            params['k'] *= canonical_force_scale
+        if isinstance(bond.forcetype, (HarmonicBondType, HarmonicPotentialBondType)):
+            parameters['k'] *= canonical_force_scale
 
-        if bond == HarmonicPotentialBondType:
+        if isinstance(bond.forcetype, HarmonicPotentialBondType):
             typename = 'harmonic'
 
         if direction == 'into':
-            return bond, params
+            return bond, parameters
         else:
-            return typename, [params]  # we expect a list
+            return typename, [parameters]  # we expect a list
 
     lammps_angletypes = {
         'harmonic': HarmonicAngleType,
@@ -100,28 +101,28 @@ class LammpsParser(object):
         }
     lookup_lammps_angletypes = {v: k for k, v in lammps_angletypes.items()}
 
-    def canonical_angle(self, params, angle, direction):
+    def canonical_angle(self, parameters, angle, direction):
         """Convert from the canonical form of this interaction. """
+        forcetype_class = angle.forcetype.__class__
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_anglestypes[angle]
+                typename = self.lookup_lammps_angletypes[forcetype_class]
             except KeyError:
-                raise ValueError("{0} is not supported by LAMMPS!".format(
-                    angle.__name__))
+                raise ValueError("{0} is not supported by LAMMPS!".format(forcetype_class.__name__))
             canonical_force_scale = self.SCALE_FROM
 
-        if angle in [HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType]:
-            params['k'] *= canonical_force_scale
+        if isinstance(angle.forcetype, (HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType)):
+            parameters['k'] *= canonical_force_scale
 
-        if angle == UreyBradleyAngleType:
-            params['kUB'] *= canonical_force_scale
+        if isinstance(angle.forcetype, UreyBradleyAngleType):
+            parameters['kUB'] *= canonical_force_scale
 
         if direction == 'into':
-            return angle, params
+            return angle, parameters
         else:
-            return typename, [params]  # We expect a list
+            return typename, [parameters]  # We expect a list
 
     lammps_dihedraltypes = {
         'opls': FourierDihedralType,
@@ -144,8 +145,9 @@ class LammpsParser(object):
         }
     lookup_lammps_impropertypes = {v: k for k, v in lammps_impropertypes.items()}
 
-    def canonical_dihedral(self, params, dihedral, direction='into'):
+    def canonical_dihedral(self, parameters, dihedral, direction='into'):
         """Convert from the canonical form of this interaction. """
+        forcetype_class = dihedral.forcetype.__class__
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
@@ -165,40 +167,37 @@ class LammpsParser(object):
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedralType
                 # Now actually convert the dihedral.
-            params = convertfunc(params)
-            return converted_dihedral, params
-
-        else:  # writing out
-            try:
-                typename = self.lookup_lammps_dihedraltypes[dihedral]
-            except KeyError:
-                typename = self.lookup_lammps_impropertypes[dihedral]
-
-            if dihedral == TrigDihedralType:
-                paramlist = convert_dihedral_from_trig_to_proper(params)
-                if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                    if params['fc6']._value == 0 and params['fc5']._value == 0:
+            parameters = convertfunc(parameters)
+            return converted_dihedral, parameters
+        else:
+            dihedraltype = dihedral.forcetype
+            if isinstance(dihedraltype, TrigDihedralType):
+                typename = 'Trig'
+                paramlist = convert_dihedral_from_trig_to_proper(parameters)
+                if parameters['phi'].value_in_unit(units.degrees) in [0, 180]:
+                    if parameters['fc6']._value == 0 and parameters['fc5']._value == 0:
                         # Stupid convention?
-                        if params['phi'].value_in_unit(units.degrees) == 180:
-                            params['phi'] = 0 * units.degrees
+                        if parameters['phi'].value_in_unit(units.degrees) == 180:
+                            parameters['phi'] = 0 * units.degrees
                         else:  # phi must be 0 or 180 to make it here.
-                            params['phi'] = 180 * units.degrees
-                        paramlist = [convert_dihedral_from_trig_to_RB(params)]
+                            parameters['phi'] = 180 * units.degrees
+                        paramlist = [convert_dihedral_from_trig_to_RB(parameters)]
                         typename = 'multi/harmonic'
                     else:
                         # If C6 and C5 are not zero, print it out as multiple
                         # harmonics (charmm).
                         typename = 'charmm'
                 if typename in ['charmm', 'Trig']:
-                    paramlist = convert_dihedral_from_trig_to_proper(params)
+                    paramlist = convert_dihedral_from_trig_to_proper(parameters)
                     typename = 'charmm'
                     for p in paramlist:  # TODO: Why are we iterating here?
                         # For now, might get from Sys?
                         p['weight'] = 0.0 * units.dimensionless
 
-            elif dihedral == ImproperHarmonicDihedralType:
-                params['k'] *= canonical_force_scale
-                paramlist = [params]
+            elif isinstance(dihedraltype, ImproperHarmonicDihedralType):
+                parameters['k'] *= canonical_force_scale
+                paramlist = [parameters]
+                typename = self.lookup_lammps_impropertypes[dihedraltype]
 
             return typename, paramlist
 
@@ -789,18 +788,18 @@ class LammpsParser(object):
 
     def get_force_bondingtypes(self, force, forceclass):
         """Return the atoms involved in a force. """
+        forcetype = force.forcetype
         if forceclass in ['Bond', 'Pair']:
-            return [force.bondingtype1, force.bondingtype2]
+            return [forcetype.bondingtype1, forcetype.bondingtype2]
         elif forceclass in ['Angle']:
-            return [force.bondingtype1, force.bondingtype2, force.bondingtype3]
+            return [forcetype.bondingtype1, forcetype.bondingtype2, forcetype.bondingtype3]
         elif forceclass in ['Dihedral', 'Improper']:
-            return [force.bondingtype1, force.bondingtype2, force.bondingtype3,
-                    force.bondingtype4]
+            return [forcetype.bondingtype1, forcetype.bondingtype2, forcetype.bondingtype3,
+                    forcetype.bondingtype4]
         else:
             logger.warning("No interaction type %s defined!" % (forceclass))
 
-    def write_forces(self, forces, offset, force_name,
-                     lookup_lammps_force, lammps_force_types, canonical_force):
+    def write_forces(self, forces, offset, force_name, lammps_forcetypes, canonical_force):
         """The general force writing function.
 
         Currently supports bonds, angles, dihedrals, impropers.
@@ -818,55 +817,46 @@ class LammpsParser(object):
         style_set = self.style_dict[force_name]
 
         for force in forces:
-            atom_indices = self.get_force_atoms(force, force_name)
             atom_bondingtypes = self.get_force_bondingtypes(force, force_name)
-            try:
-                lookup_lammps_force[force.__class__]
-            except KeyError:
-                logger.warning("Found unimplemented {0} type {1} for LAMMPS!".format(
-                    force_name, force.__class__.__name__))
-
-            # Get the parameters of the force.
-            kwds = self.get_parameter_kwds_from_force(force)
+            parameters = self.get_parameter_kwds_from_force(force)
 
             # Convert keywords from canonical form.
-            style, kwdslist = canonical_force(kwds, force.__class__, direction='from')
-            force_type = lammps_force_types[style]
+            style, canonical_parameters = canonical_force(parameters, force, direction='from')
+            ForceType = lammps_forcetypes[style]
             style_set.add(style)
 
             # A single force can produce multiple forces.
-            for kwds in kwdslist:
-                temp_force_type = force_type(*atom_bondingtypes, **kwds)
+            for kwd_params in canonical_parameters:
+                force_type = ForceType(*atom_bondingtypes, **kwd_params)
 
                 # New type found. Write out the force coefficients.
-                # TODO: Check by content would be nice but may lead to the
-                # equality issues again.
-                if temp_force_type not in numeric_coeff:
+                if force_type not in numeric_coeff:
                     # Get the numerical type for this interaction.
-                    numeric_coeff[temp_force_type] = type_count
+                    numeric_coeff[force_type] = type_count
                     line = '{0:d} {1}'.format(type_count, style)
                     type_count += 1
 
                     # Generate the list of parameters for this force in the
                     # order they appear in the file format.
-                    params = self.get_parameter_list_from_force(temp_force_type)
+                    ordered_params = self.get_parameter_list_from_force(force_type)
 
-                    # Generate the units for this force.
-                    u = self.unitvars[force_type.__name__]
-                    for i, p in enumerate(params):
-                        if p.unit == units.dimensionless and isinstance(p._value, int):
+                    # Convert force parameters to the correct units.
+                    output_units = self.unitvars[ForceType.__name__]
+                    for param, unit in zip(ordered_params, output_units):
+                        if param.unit == units.dimensionless and isinstance(param._value, int):
                             # LAMMPS expects an integer.
-                            line += "%10d" % (p.value_in_unit(u[i]))
-                        elif style == 'charmm' and p.unit == units.degrees:
+                            line += "%10d" % (param.value_in_unit(unit))
+                        elif style == 'charmm' and param.unit == units.degrees:
                             # LAMMPS loves enforcing unnecessary integers.
-                            line += "%10d" % (p.value_in_unit(u[i]))
+                            line += "%10d" % (param.value_in_unit(unit))
                         else:
-                            line += "%18.8e" % (p.value_in_unit(u[i]))
+                            line += "%18.8e" % (param.value_in_unit(unit))
                     line += '\n'
                     coeff_list.append(line)
 
                 # Write out the force entry.
-                line = '{0:-6d} {1:6d}'.format(force_count, numeric_coeff[temp_force_type])
+                atom_indices = self.get_force_atoms(force, force_name)
+                line = '{0:-6d} {1:6d}'.format(force_count, numeric_coeff[force_type])
                 for atom in atom_indices:
                     line += '{0:6d}'.format(atom + offset)
                 line += '\n'
@@ -878,32 +868,28 @@ class LammpsParser(object):
 
     def write_bonds(self, mol_type, offset):
         return self.write_forces(mol_type.bonds, offset, "Bond",
-                                 self.lookup_lammps_bondtypes,
                                  self.lammps_bondtypes,
                                  self.canonical_bond)
 
     def write_angles(self, mol_type, offset):
         return self.write_forces(mol_type.angles, offset, "Angle",
-                                 self.lookup_lammps_angletypes,
-                                 self.lammps_angle_types,
+                                 self.lammps_angletypes,
                                  self.canonical_angle)
 
     def write_dihedrals(self, mol_type, offset):
         """Separate dihedrals from impropers. """
-        dihedral_forces = {force for force in mol_type.dihedral_forces
-                           if force.dihedraltype.__class__ != ImproperHarmonicDihedralType}
+        dihedral_forces = {force for force in mol_type.dihedrals
+                           if not isinstance(force.forcetype, ImproperHarmonicDihedralType)}
         return self.write_forces(dihedral_forces, offset, "Dihedral",
-                                 self.lookup_lammps_dihedrals,
-                                 self.lammps_dihedral_types,
+                                 self.lammps_dihedraltypes,
                                  self.canonical_dihedral)
 
     def write_impropers(self, mol_type, offset):
         """Separate dihedrals from impropers. """
-        improper_forces = {force for force in mol_type.dihedral_forces
-                           if force.dihedraltype.__class__ == ImproperHarmonicDihedralType}
+        improper_forces = {force for force in mol_type.dihedrals
+                           if isinstance(force.forcetype, ImproperHarmonicDihedralType)}
         return self.write_forces(improper_forces, offset, "Improper",
-                                 self.lookup_lammps_impropers,
-                                 self.lammps_improper_types,
+                                 self.lammps_impropertypes,
                                  self.canonical_dihedral)
 
     def write_virtuals(self, mol_type, offset):
