@@ -14,7 +14,7 @@ def convert_dihedral_from_proper_to_trig(p):
 
     k = p['k']
     multiplicity = p['multiplicity']
-    zu = 0*k.unit
+    zu = 0 * k.unit
     fcs = {
         'phi': p['phi'],
         'fc0': k,
@@ -26,7 +26,6 @@ def convert_dihedral_from_proper_to_trig(p):
         'fc6': zu
         }
 
-    k # which force constant is nonzero because of the multiplicity?
     fk = "fc%d" % (multiplicity._value)
     fcs[fk] = k
     return fcs
@@ -69,7 +68,7 @@ def convert_dihedral_from_trig_to_fourier(fcs):
     return F
 
 
-def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
+def convert_dihedral_from_trig_to_proper(fcs):
 
     # this has to be smarter, because there are two options; there's one, or there are multiple.
     # we handle this by returning multiple keywords
@@ -82,23 +81,15 @@ def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
     # coefficients = ftmp.values()
     # ncount = sum(coeff._value != 0.0 for coeff in coefficients)
 
-    halfangle = (180 * units.degrees).in_units_of(fcs['phi'].unit)
     plist = []
-    if convention == '180':
-        sign = -1
-    else:
-        sign = 1
-    for k, coeff in fcs.items():  # only one of these should be nonzero
-        if coeff._value != 0.0 and k not in ['fc0', 'phi']:
+    for parameter_key, parameter_value in fcs.items():  # only one of these should be nonzero
+        if parameter_value._value != 0.0 and parameter_key not in ['fc0', 'phi']:
             p = dict()
-            if convention == '180':
-                p['phi'] = halfangle-fcs['phi']
-            else:
-                p['phi'] = fcs['phi']
-            p['multiplicity'] = int(k[2])*units.dimensionless
-            p['k'] = coeff*sign
+            p['phi'] = fcs['phi']
+            p['multiplicity'] = int(parameter_key[2]) * units.dimensionless
+            p['k'] = parameter_value
             plist.append(p)
-        else:  # TODO: What's the other case here?
+        else:  # TODO: What's the other case here? Error?
             pass
 
     return plist
@@ -174,14 +165,16 @@ def convert_dihedral_from_trig_to_RB(fcs):
     # c4 = 8f4-48f6
     # c5 = 16f5
     # c6 = 32f6
-    sign = math.cos(fcs['phi'].value_in_unit(units.radians))
+
+    # phi = 180 corresponds to a sign of -1 on everything but f_0
     fc0 = fcs['fc0']
-    fc1 = sign*fcs['fc1']
-    fc2 = sign*fcs['fc2']
-    fc3 = sign*fcs['fc3']
-    fc4 = sign*fcs['fc4']
-    fc5 = sign*fcs['fc5']
-    fc6 = sign*fcs['fc6']
+    sign = math.cos(fcs['phi'].value_in_unit(units.radians))
+    fc1 = sign * fcs['fc1']
+    fc2 = sign * fcs['fc2']
+    fc3 = sign * fcs['fc3']
+    fc4 = sign * fcs['fc4']
+    fc5 = sign * fcs['fc5']
+    fc6 = sign * fcs['fc6']
 
     c = dict()
     c['C0'] = fc0 - fc2 + fc4 - fc6
@@ -192,10 +185,6 @@ def convert_dihedral_from_trig_to_RB(fcs):
     c['C5'] = 16.0*fc5
     c['C6'] = 32.0*fc6
 
-    # Multiply by -1 on odd powers to switch between sign conventions.
-    c['C1'] *= -1
-    c['C3'] *= -1
-    c['C5'] *= -1
     return c
 
 
@@ -214,7 +203,6 @@ def convert_dihedral_from_RB_to_trig(c):
     # See above for conversion; simply inverting the matrix.
     # Need to handle sign for 180.
     fcs = dict()
-    # sign?  units?  Is there a way to get out of this?
     fcs['phi'] = 0 * units.degrees
     fcs['fc0'] = 1.0*c0 + 0.5*c2 + 0.3750*c4 + 0.3125*c6
     fcs['fc1'] = 1.0*c1 + 0.75*c3 + 0.6250*c5
@@ -223,11 +211,6 @@ def convert_dihedral_from_RB_to_trig(c):
     fcs['fc4'] = 0.125*c4 + 0.1875*c6
     fcs['fc5'] = 0.0625*c5
     fcs['fc6'] = 0.03125*c6
-
-    # Multiplying by -1 on odd powers to switch between sign conventions
-    fcs['fc1'] *= -1
-    fcs['fc3'] *= -1
-    fcs['fc5'] *= -1
 
     return fcs
 

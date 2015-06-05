@@ -208,6 +208,10 @@ class GromacsParser(object):
                 convertfunc = convert_nothing
             elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
+                # Sign convention from psi to phi.
+                params['C1'] *= -1
+                params['C3'] *= -1
+                params['C5'] *= -1
                 converted_dihedral = TrigDihedralType
             elif dihedral == FourierDihedralType:
                 convertfunc = convert_dihedral_from_fourier_to_trig
@@ -218,30 +222,22 @@ class GromacsParser(object):
             params = convertfunc(params)
             return converted_dihedral, params
         else:  # Translate the dihedral types back to write them out.
-            try:
-                d_type = self.lookup_gromacs_dihedral_types[dihedral.forcetype.__class__]
-            except KeyError:
-                raise Exception('Found unsupported dihedral type {0}'.format(
-                    dihedral.forcetype.__class__.__name__))
-
             dihedraltype = dihedral.forcetype
             if isinstance(dihedraltype, TrigDihedralType):
                 if dihedraltype.improper:
-                    # Must be a improper dihedral. Print these out as improper
-                    # dihedrals (d_type = 4).
                     d_type = '4'
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                 else:
-                    # Print as a RB dihedral if the phi is 0.
-                    if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                        tmpparams = convert_dihedral_from_trig_to_RB(params)
-                        if tmpparams['C6']._value == 0:
-                            d_type = '3'
-                        else:
-                            # If C6 is not zero, then we have to print it out as
-                            # multiple propers.
-                            d_type = '9'
-                    if d_type in ['9', 'Trig']:
+                    if (params['phi'].value_in_unit(units.degrees) in [0, 180] and
+                                params['fc6']._value == 0):
+                        d_type = '3'
+                        params = convert_dihedral_from_trig_to_RB(params)
+                        # Sign convention from phi to psi.
+                        params['C1'] *= -1
+                        params['C3'] *= -1
+                        params['C5'] *= -1
+                        paramlist = [params]
+                    else:
                         # Print as proper dihedral. If one nonzero term, as a
                         # type 1, if multiple, type 9.
                         paramlist = convert_dihedral_from_trig_to_proper(params)
@@ -249,10 +245,14 @@ class GromacsParser(object):
                             d_type = '1'
                         else:
                             d_type = '9'
-                    elif d_type == '3':
-                        paramlist = [tmpparams]
-            else:
+            elif isinstance(dihedraltype, ImproperHarmonicDihedralType):
+                d_type = '2'
                 paramlist = [params]
+            else:
+                raise ValueError('A non-canonical dihedral was found in the system. '
+                     'All dihedrals should have been converted to either '
+                     'TrigDihedralType or ImproperHarmonicType so '
+                     'something likely went wrong while reading in.')
             return d_type, paramlist
 
     def choose_parameter_kwds_from_forces(self, entries, n_atoms, force_type,

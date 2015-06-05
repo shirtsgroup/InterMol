@@ -41,8 +41,8 @@ def write_lammps(in_file, system, unit_set='real'):
     Returns:
         system:
     """
-    parser = LammpsParser(in_file, system, unit_set)
-    return parser.write()
+    parser = LammpsParser(in_file, system)
+    return parser.write(unit_set=unit_set)
 
 
 class LammpsParser(object):
@@ -147,30 +147,86 @@ class LammpsParser(object):
 
     def canonical_dihedral(self, parameters, dihedral, direction='into'):
         """Convert from the canonical form of this interaction. """
-        forcetype_class = dihedral.forcetype.__class__
         if direction == 'into':
-            canonical_force_scale = self.SCALE_INTO
-        else:
-            canonical_force_scale = self.SCALE_FROM
-
-        if direction == 'into':
-            converted_dihedral = dihedral  # Default
-            if dihedral == ProperPeriodicDihedralType:  # Proper dihedral
+            if dihedral == ProperPeriodicDihedralType:
                 convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedralType
             elif dihedral == ImproperHarmonicDihedralType:
                 convertfunc = convert_nothing
+                converted_dihedral = ImproperHarmonicDihedralType
             elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 converted_dihedral = TrigDihedralType
             elif dihedral == FourierDihedralType:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedralType
-                # Now actually convert the dihedral.
+            else:
+                # Should never get here.
+                pass
+            # Now actually convert the dihedral.
             parameters = convertfunc(parameters)
+
+            # Adjust scaling conventions.
+            canonical_force_scale = self.SCALE_INTO
+            if converted_dihedral == TrigDihedralType:
+                # TODO: Is this correct for all conversions or do we need to
+                #       scale pre-conversion?
+                parameters['fc0'] *= canonical_force_scale
+                parameters['fc1'] *= canonical_force_scale
+                parameters['fc2'] *= canonical_force_scale
+                parameters['fc3'] *= canonical_force_scale
+                parameters['fc4'] *= canonical_force_scale
+                parameters['fc5'] *= canonical_force_scale
+                parameters['fc6'] *= canonical_force_scale
+            elif converted_dihedral == ImproperHarmonicDihedralType:
+                parameters['k'] *= canonical_force_scale
+
             return converted_dihedral, parameters
         else:
+            canonical_force_scale = self.SCALE_FROM
             dihedraltype = dihedral.forcetype
+            if isinstance(dihedraltype, TrigDihedralType):
+                parameters['fc0'] *= canonical_force_scale
+                parameters['fc1'] *= canonical_force_scale
+                parameters['fc2'] *= canonical_force_scale
+                parameters['fc3'] *= canonical_force_scale
+                parameters['fc4'] *= canonical_force_scale
+                parameters['fc5'] *= canonical_force_scale
+                parameters['fc6'] *= canonical_force_scale
+
+                if dihedraltype.improper:
+                    # TODO
+                    d_type = '4'
+                    paramlist = convert_dihedral_from_trig_to_proper(parameters)
+                else:
+                    if (parameters['phi'].value_in_unit(units.degrees) in [0, 180] and
+                                parameters['fc5']._value == 0 and
+                                parameters['fc6']._value == 0):
+                        typename = 'multi/harmonic'
+                        parameters = convert_dihedral_from_trig_to_RB(parameters)
+                        # Sign convention from phi to psi.
+                        parameters['C1'] *= -1
+                        parameters['C3'] *= -1
+                        paramlist = [parameters]
+                    else:
+                        # Print as proper dihedral. If one nonzero term, as a
+                        # type 1, if multiple, type 9.
+                        typename = 'charmm'
+                        paramlist = convert_dihedral_from_trig_to_proper(parameters)
+
+            elif isinstance(dihedraltype, ImproperHarmonicDihedralType):
+                parameters['k'] *= canonical_force_scale
+                d_type = '2'
+                paramlist = [parameters]
+            else:
+                raise ValueError('A non-canonical dihedral was found in the '
+                                 'system. All dihedrals should have been '
+                                 'converted to either TrigDihedralType or '
+                                 'ImproperHarmonicType so something likely '
+                                 'went wrong while reading in.')
+            return typename, paramlist
+
+    def bogus(self):
             if isinstance(dihedraltype, TrigDihedralType):
                 typename = 'Trig'
                 paramlist = convert_dihedral_from_trig_to_proper(parameters)
@@ -197,7 +253,7 @@ class LammpsParser(object):
             elif isinstance(dihedraltype, ImproperHarmonicDihedralType):
                 parameters['k'] *= canonical_force_scale
                 paramlist = [parameters]
-                typename = self.lookup_lammps_impropertypes[dihedraltype]
+                typename = self.lookup_lammps_impropertypes[dihedraltype.__class__]
 
             return typename, paramlist
 
@@ -212,7 +268,7 @@ class LammpsParser(object):
         return ff.get_parameter_kwds_from_force(
                 force, self.get_parameter_list_from_force, self.paramlist)
 
-    def __init__(self, in_file, system=None, unit_set='real'):
+    def __init__(self, in_file, system=None):
         """
         """
         self.in_file = in_file
@@ -827,7 +883,11 @@ class LammpsParser(object):
 
             # A single force can produce multiple forces.
             for kwd_params in canonical_parameters:
-                force_type = ForceType(*atom_bondingtypes, **kwd_params)
+                try:
+                    force_type = ForceType(*atom_bondingtypes, **kwd_params)
+                except KeyError as err:
+                    print(err)
+                    import pdb; pdb.set_trace()
 
                 # New type found. Write out the force coefficients.
                 if force_type not in numeric_coeff:
