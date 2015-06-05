@@ -168,17 +168,7 @@ class LammpsParser(object):
 
             # Adjust scaling conventions.
             canonical_force_scale = self.SCALE_INTO
-            if converted_dihedral == TrigDihedralType:
-                # TODO: Is this correct for all conversions or do we need to
-                #       scale pre-conversion?
-                parameters['fc0'] *= canonical_force_scale
-                parameters['fc1'] *= canonical_force_scale
-                parameters['fc2'] *= canonical_force_scale
-                parameters['fc3'] *= canonical_force_scale
-                parameters['fc4'] *= canonical_force_scale
-                parameters['fc5'] *= canonical_force_scale
-                parameters['fc6'] *= canonical_force_scale
-            elif converted_dihedral == ImproperHarmonicDihedralType:
+            if converted_dihedral == ImproperHarmonicDihedralType:
                 parameters['k'] *= canonical_force_scale
 
             return converted_dihedral, parameters
@@ -186,14 +176,6 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_FROM
             dihedraltype = dihedral.forcetype
             if isinstance(dihedraltype, TrigDihedralType):
-                parameters['fc0'] *= canonical_force_scale
-                parameters['fc1'] *= canonical_force_scale
-                parameters['fc2'] *= canonical_force_scale
-                parameters['fc3'] *= canonical_force_scale
-                parameters['fc4'] *= canonical_force_scale
-                parameters['fc5'] *= canonical_force_scale
-                parameters['fc6'] *= canonical_force_scale
-
                 if dihedraltype.improper:
                     # TODO
                     d_type = '4'
@@ -204,9 +186,6 @@ class LammpsParser(object):
                                 parameters['fc6']._value == 0):
                         typename = 'multi/harmonic'
                         parameters = convert_dihedral_from_trig_to_RB(parameters)
-                        # Sign convention from phi to psi.
-                        parameters['C1'] *= -1
-                        parameters['C3'] *= -1
                         paramlist = [parameters]
                     else:
                         # Print as proper dihedral. If one nonzero term, as a
@@ -216,7 +195,7 @@ class LammpsParser(object):
 
             elif isinstance(dihedraltype, ImproperHarmonicDihedralType):
                 parameters['k'] *= canonical_force_scale
-                d_type = '2'
+                typename = 'harmonic'
                 paramlist = [parameters]
             else:
                 raise ValueError('A non-canonical dihedral was found in the '
