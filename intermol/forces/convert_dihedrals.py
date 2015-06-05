@@ -88,6 +88,7 @@ def convert_dihedral_from_trig_to_proper(fcs):
             p['phi'] = fcs['phi']
             p['multiplicity'] = int(parameter_key[2]) * units.dimensionless
             p['k'] = parameter_value
+            p['weight'] = 0 * units.dimensionless
             plist.append(p)
         else:  # TODO: What's the other case here? Error?
             pass

@@ -883,11 +883,7 @@ class LammpsParser(object):
 
             # A single force can produce multiple forces.
             for kwd_params in canonical_parameters:
-                try:
-                    force_type = ForceType(*atom_bondingtypes, **kwd_params)
-                except KeyError as err:
-                    print(err)
-                    import pdb; pdb.set_trace()
+                force_type = ForceType(*atom_bondingtypes, **kwd_params)
 
                 # New type found. Write out the force coefficients.
                 if force_type not in numeric_coeff:
