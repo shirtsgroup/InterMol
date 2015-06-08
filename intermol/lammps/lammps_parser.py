@@ -1152,9 +1152,11 @@ class LammpsParser(object):
             if atom_charges:
                 # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/long 9.999 9.999\n')
-                f.write('pair_style lj/cut/coul/long 15 15\n')
+                #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
+                f.write('pair_style lj/cut/coul/cut 19.999 19.999\n')
+                #f.write('pair_style lj/cut/coul/long 15 15\n')
                 #f.write('kspace_style pppm 1.0e-6\n')
-                f.write('kspace_style ewald 1.0e-6\n')
+                #f.write('kspace_style ewald 1.0e-6\n')
                 #f.write('kspace_style pppm/stagger 1.0e-6\n')
             else:
                 f.write('pair_style lj/cut/coul/cut 15.0 15.0\n')  # TODO: match mdp
