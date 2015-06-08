@@ -24,10 +24,10 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def test_gromacs_unit():
+def test_gromacs_unit(energy=True):
     """Run the LAMMPS stress tests. """
     flags = {'unit': True,
-             'energy': True,
+             'energy': energy,
              'gromacs': True}
 
     testing_logger.info('Running unit tests')
@@ -40,10 +40,10 @@ def test_gromacs_unit():
     _run_gromacs_and_compare(flags, test_tolerance=1e-4, test_type='unit')
 
 
-def test_gromacs_stress():
+def test_gromacs_stress(energy=True):
     """Run the GROMACS stress tests. """
     flags = {'stress': True,
-             'energy': True,
+             'energy': energy,
              'gromacs': True}
 
     testing_logger.info('Running stress tests')
@@ -143,6 +143,8 @@ if __name__ == "__main__":
 
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
             default='unit', help="The type of tests to run: 'unit' or 'stress'.")
+    compute_energies = parser.add_argument('-e', '--energy', dest='compute_energies',
+            action='store_true', help="Compute and compare the input and output energies.")
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -150,9 +152,9 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
     if args['type'] == 'unit':
-        test_gromacs_unit()
+        test_gromacs_unit(args['compute_energies'])
     if args['type'] == 'stress':
-        test_gromacs_stress()
+        test_gromacs_stress(args['compute_energies'])
 
 
 

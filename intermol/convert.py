@@ -145,7 +145,7 @@ def main(args=None):
             logger.exception(e)
             output_status['gromacs'] = e
         else:
-            output_status['gromacs'] = 0
+            output_status['gromacs'] = 'Converted'
 
     if args.get('lammps'):
         try:
@@ -154,7 +154,7 @@ def main(args=None):
             logger.exception(e)
             output_status['lammps'] = e
         else:
-            output_status['lammps'] = 0
+            output_status['lammps'] = 'Converted'
 
     if args.get('desmond'):
         try:
@@ -163,7 +163,7 @@ def main(args=None):
             logger.exception(e)
             output_status['desmond'] = e
         else:
-            output_status['desmond'] = 0
+            output_status['desmond'] = 'Converted'
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):

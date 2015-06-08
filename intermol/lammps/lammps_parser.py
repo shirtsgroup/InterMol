@@ -118,6 +118,7 @@ class LammpsParser(object):
 
         if isinstance(angle.forcetype, UreyBradleyAngleType):
             parameters['kUB'] *= canonical_force_scale
+            parameters['k'] *= canonical_force_scale
 
         if direction == 'into':
             return angle, parameters

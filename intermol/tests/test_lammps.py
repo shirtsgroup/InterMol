@@ -25,10 +25,10 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def test_lammps_unit():
+def test_lammps_unit(energy=True):
     """Run the LAMMPS unit tests. """
     flags = {'unit': True,
-             'energy': True,
+             'energy': energy,
              'lammps': True}
 
     testing_logger.info('Running unit tests')
@@ -41,10 +41,10 @@ def test_lammps_unit():
     _run_lammps_and_compare(flags, test_tolerance=1e-4, test_type='unit')
 
 
-def test_lammps_stress():
+def test_lammps_stress(energy=True):
     """Run the LAMMPS stress tests. """
     flags = {'stress': True,
-             'energy': True,
+             'energy': energy,
              'lammps': True}
 
     testing_logger.info('Running stress tests')
@@ -143,26 +143,15 @@ if __name__ == "__main__":
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
             default='unit', help="The type of tests to run: 'unit' or 'stress'.")
 
+    compute_energies = parser.add_argument('-e', '--energy', dest='compute_energies',
+            action='store_true', help="Compute and compare the input and output energies.")
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
     args = vars(parser.parse_args())
     if args['type'] == 'unit':
-        test_lammps_unit()
+        test_lammps_unit(args['compute_energies'])
     if args['type'] == 'stress':
-        test_lammps_stress()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        test_lammps_stress(args['compute_energies'])
