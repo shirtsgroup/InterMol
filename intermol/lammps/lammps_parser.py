@@ -899,9 +899,6 @@ class LammpsParser(object):
                 force_list.append(line)
                 force_count += 1
 
-        if len(style_set) > 1:
-            logger.warning("More than one {0} style found!".format(force_name))
-
     def write_bonds(self, mol_type, offset):
         return self.write_forces(mol_type.bonds, offset, "Bond",
                                  self.lammps_bondtypes,
@@ -1006,7 +1003,6 @@ class LammpsParser(object):
             # Atom specific information.
             x_min = y_min = z_min = np.inf
             logger.debug("    Writing atoms...")
-            cumulative_atoms = 0
             atom_charges = False
             for molecule in mol_type.molecules:
                 for atom in molecule.atoms:
@@ -1035,7 +1031,7 @@ class LammpsParser(object):
 
                     atom_list.append(
                         '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
-                            atom.index + cumulative_atoms,
+                            atom.index,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
                             atom.charge[0].value_in_unit(self.CHARGE),
@@ -1047,15 +1043,14 @@ class LammpsParser(object):
                     if atom.velocity:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                                atom.index + cumulative_atoms,
+                                atom.index,
                                 atom.velocity[0].value_in_unit(self.VEL),
                                 atom.velocity[1].value_in_unit(self.VEL),
                                 atom.velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                                atom.index + cumulative_atoms, 0, 0, 0))
-                cumulative_atoms += len(molecule.atoms)
+                                atom.index, 0, 0, 0))
 
         bond_list = self.force_dict['Bond']
         angle_list = self.force_dict['Angle']
