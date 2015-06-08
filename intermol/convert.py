@@ -191,7 +191,7 @@ def main(args=None):
         output_type = []
         e_outfile = []
         e_out = []
-        if args.get('gromacs') and output_status['gromacs'] == 0:
+        if args.get('gromacs') and output_status['gromacs'] == 'Converted':
             output_type.append('gromacs')
             try:
                 out, outfile = gromacs_driver.gromacs_energies(
@@ -206,7 +206,7 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
-        if args.get('lammps') and output_status['lammps'] == 0:
+        if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
                 out, outfile = lammps_driver.lammps_energies(
@@ -221,7 +221,7 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
-        if args.get('desmond') and output_status['desmond'] == 0:
+        if args.get('desmond') and output_status['desmond'] == 'Converted':
             output_type.append('desmond')
             try:
                 out, outfile = desmond_driver.desmond_energies(
