@@ -238,7 +238,7 @@ def main(args=None):
             output_type.append('desmond')
             try:
                 out, outfile = desmond_driver.desmond_energies(
-                        '{0}.input'.format(oname), cfg_path, lmppath)
+                        '{0}.cms'.format(oname), cfg_path, despath)
             except Exception as e:
                 output_status['desmond'] = e
                 logger.exception(e)
@@ -257,7 +257,8 @@ def main(args=None):
 
         results = summarize_energy_results(e_in, e_out, input_type, output_type)
         out.append(results)
-        logger.info('\n'.join(out))
+        #logger.info('\n'.join(out))
+        logger.info(out)
     logger.info('Finished!')
     return output_status
 

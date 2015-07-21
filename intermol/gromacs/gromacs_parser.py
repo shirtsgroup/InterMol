@@ -13,7 +13,7 @@ from intermol.moleculetype import MoleculeType
 from intermol.system import System
 from grofile_parser import GromacsGroParser
 
-
+import pdb
 logger = logging.getLogger('InterMolLog')
 
 
@@ -46,7 +46,6 @@ def write_gromacs(top_file, gro_file, system):
     """
     parser = GromacsParser(top_file, gro_file, system)
     return parser.write()
-
 
 def default_gromacs_include_dir():
     """Find the location where gromacs #include files are referenced from, by
@@ -114,6 +113,7 @@ class GromacsParser(object):
             direction:
         Returns:
         """
+
         if direction == 'into':
             return bond, params
         else:  # currently, no bonds need to be de-canonicalized
@@ -1313,7 +1313,7 @@ class GromacsParser(object):
         else:
             bondingtype = fields[1]
         if fields[2]:
-            atomic_number = fields[2]
+            atomic_number = int(fields[2])
         else:
             atomic_number = -1
         mass = float(fields[3]) * units.amu

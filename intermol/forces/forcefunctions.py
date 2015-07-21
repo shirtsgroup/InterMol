@@ -104,7 +104,9 @@ def get_parameter_list_from_force(force, paramlist):
 def get_parameter_list_from_kwds(force, kwds, paramlist):
     """ """
     # We passed in an instance, not a class
-    name = force.__class__.__name__
+    #name = force.__class__.__name__
+    # We passed in a class, not an instance
+    name = force.__name__
     ordered = []
     for p in paramlist[name]:
         ordered.append(kwds[p])

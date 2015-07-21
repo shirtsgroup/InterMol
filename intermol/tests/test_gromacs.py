@@ -61,6 +61,7 @@ def gromacs(flags, test_type='unit'):
     for gro, top, name in zip(gro_files, top_files, names):
         testing_logger.info('Converting {0}'.format(name))
         odir = '{0}/{1}'.format(basedir, name)
+
         if not os.path.isdir(odir):
             os.mkdir(odir)
         h1, h2 = add_handler(odir)
@@ -90,6 +91,7 @@ def gromacs(flags, test_type='unit'):
         diff = convert.main(flags)
         for engine, result in diff.iteritems():
             results[engine][name] = result
+
         remove_handler(h1, h2)
 
     summarize_results('gromacs', results, basedir)
@@ -171,17 +173,3 @@ if __name__ == "__main__":
         test_gromacs_unit()
     if args['type'] in ['stress', 'all']:
         test_gromacs_stress()
-
-
-
-
-
-
-
-
-
-
-
-
-
-

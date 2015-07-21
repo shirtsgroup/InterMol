@@ -3,10 +3,10 @@ import logging
 import warnings
 import os
 import math
+import numpy as np
 
 import simtk.unit as units
 from intermol.atom import Atom
-
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
 from intermol.molecule import Molecule
@@ -14,35 +14,37 @@ from intermol.moleculetype import MoleculeType
 from intermol.system import System
 import cmap_parameters
 
+#MRS for old desmond functionality
+import re
+import copy 
+
 import pdb #FOR DEBUGGING PURPOSES
 
 
 logger = logging.getLogger('InterMolLog')
 
 # driver helper functions
-def load_desmond(infile, defines=None):
+def load_desmond(cms_file, defines=None):
     """Load a DESMOND input file into a 'System'
 
     Args:
-        infile:
+        cms_file:
         include_dir:
         defines:
     Returns:
         system:
     """
-    parser = DesmondParser(infile, defines=defines)
+    parser = DesmondParser(cms_file, defines=defines)
     return parser.read()
 
-def write_gromacs(outfile, system):
+def write_desmond(cms_file, system):
     """Unpacks a 'System' into a DESMOND input file
 
     Args:
-        outfile:
+        cms_file:
         system:
-    Returns:
-        outfile:
     """
-    parser = DesmondParser(outfile, system)
+    parser = DesmondParser(cms_file, system)
     return parser.write()
 
 # parser helper functions
@@ -72,19 +74,10 @@ def split_with_quotes(line):
     return space_split
 
 
-def to_lookup(forward_dict, key_rule=None, value_rule=None):
-    temp_list = []
+def create_lookup(forward_dict):
+    return dict((v,k) for k,v in forward_dict.items()) 
 
-    for k, v in forward_dict.items():
-        if key_rule:
-            k = key_rule(k)
-        if value_rule:
-            v = value_rule(v)
-        temp_list.append(v, k)
-    
-    return dict(temp_list)    
-
-def to_type(forward_dict):
+def create_type(forward_dict):
     return dict((k, eval(v.__name__ + 'Type')) for k, v in forward_dict.items())
          
 class DesmondParser(object):
@@ -97,117 +90,132 @@ class DesmondParser(object):
                                  '2': 'Lorentz-Berthelot',
                                  '3': 'Multiply-Sigeps'
                                  }
-    lookup_desmond_combination_rules = to_lookup(desmond_combination_rules)
+    lookup_desmond_combination_rules = create_lookup(desmond_combination_rules)
 
     desmond_pairs = {'LJ12_6_SIG_EPSILON': LjSigepsPair,
                      'LJ': LjDefaultPair,
                      'COULOMB': LjDefaultPair
                      }
-    lookup_desmond_pairs = to_lookup(desmond_pairs) 
-    desmond_pair_types = to_type(desmond_pairs)
+    lookup_desmond_pairs = create_lookup(desmond_pairs)  # not unique
+    desmond_pair_types = create_type(desmond_pairs)
      
     desmond_bonds = {'HARM_CONSTRAINED': HarmonicBond,
                      'HARM': HarmonicBond
                      }
 
-    lookup_desmond_bonds = to_lookup(desmond_bonds)
-    desmond_bond_types = to_type(desmond_bonds)
+    lookup_desmond_bonds = create_lookup(desmond_bonds)  # not unique
+    desmond_bond_types = create_type(desmond_bonds)
 
-    def canonical_bond(self, name, kwds, bond, direction = 'into'):
-
-        if direction == 'into':
-            canonical_force_scale = self.canonical_force_scale_into
-            phase = 'Read'
-            names = []
-            kwdss = []
-        else:
-            canonical_force_scale = self.canonical_force_scale_from
-            phase = 'Write'
-
-        if bond in [HarmonicBond, HarmonicPotentialBond]:
-
-            kwds['k'] = canonical_force_scale * kwds['k']
-
-            if direction == 'into':
-                if name == 'harm_constrainted':
-                    kdws['c'] = True
-            else:
-                # harmonic potentials in Gromacs should be constrained
-                optkwds = forcefunctions.optparamlookup(bond)
-                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
-                    name = 'harm_constrained'
-                else:
-                    name = 'harm'
-                return name, kwds
-
-        else:
-            raise Exception("%sError: bondtype %s is not supported by Desmond" % (phase, bond.__class__.__name__))
-
-
-    desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
-                      'HARM': HarmonicAngle,
-                      'UB': UreyBradleyAngle
-                      }
-
-    lookup_desmond_angles = to_lookup(desmond_angles)
-    desmond_angle_types = to_type(desmond_angles)
-
-    def canonical_angle(self, name, kwds, angle, direction = 'into'):
-        """
-        Args:
-            params:
-            angle:
-            direction:
-        Returns:
-        """
+    def canonical_bond(self, params, bond, direction = 'into'):
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
             phase = 'Read'
         else:
+            try:
+                name = self.lookup_desmond_bonds[bond.__class__]  # check to make sure this OK given the c
+            except:
+                raise Exception("WriteError: bondtype %s is not supported by Desmond" % (bond.__class__.__name__))
+
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
 
         names = []
-        kwdss = []
+        paramlists = []
 
-        if angle in [HarmonicAngle, UreyBradleyAngle]:
+        if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
 
-            kwds['k'] = canonical_force_scale * kwds['k']
+            params['k'] = canonical_force_scale * params['k']
 
             if direction == 'into':
                 if name == 'HARM_CONSTRAINED':
-                    kdws['c'] = True
+                    params['c'] = True
             else:
-                optkwds = forcefunctions.optparamlookup(angle)
-                if optkwds['c'] == True:
+                # harmonic potentials in Gromacs should be constrained
+                optkwds = forcefunctions.optparamlookup(bond.__class__)
+                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
                     name = 'HARM_CONSTRAINED'
                 else:
                     name = 'HARM'
-                return name, kwds
+                names.append(name)
+                paramlists.append(params)
+            return names, paramlists
+        
+    desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
+                      'HARM': HarmonicAngle,
+                      'UB': UreyBradleyNoharmAngle
+                      }
 
-            if isinstance(angle,UreyBradleyAngle):
-                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'UB', float(angle.r.in_units_of(units.angstroms)._value), 0.5*float(angle.kUB.in_units_of(units.kilocalorie_per_mole*units.angstroms**(-2))._value)))
-                i+=1
-            if angle.c:
-                dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm_constrained', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-            else:
-                if isinstance(angle, HarmonicAngle) or isinstance(angle, UreyBradleyAngle):
-                    dlines.append('      %d %d %d %d %s %10.8f %10.8f\n' % (i, angle.atom1, angle.atom2, angle.atom3, 'Harm', float(angle.theta.in_units_of(units.degrees)._value), 0.5*float(angle.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value)))
-                else:
+    lookup_desmond_angles = create_lookup(desmond_angles)
+    desmond_angle_types = create_type(desmond_angles)
 
-                    raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
-
+    def canonical_angle(self, params, angle, direction = 'into'):
+        """
+        Args:
+            name:
+            kwds: 
+            angle: 
+            direction: 'into' means into the canonical form, 'from' means from the 
+                        canonical form into Desmond
+        Returns:
+            modified list of keywords and names 
+        """
 
         if direction == 'into':
-            return angle, params
+            canonical_force_scale = self.canonical_force_scale_into
+            phase = 'Read'
         else:
-            a_type = self.lookup_desmond_angles[angle.__class__]
-            if a_type:
-                return a_type, params
+
+            # we'd like to automate this, but currently have to state explicitly.
+            if angle.__class__ not in [HarmonicAngle, UreyBradleyAngle]:
+               raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
+
+            #try:
+            #    name = self.lookup_desmond_angles[angle.__class__]
+            #except:
+            #    raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
+
+            canonical_force_scale = self.canonical_force_scale_from
+            phase = 'Write'
+
+        names = []
+        paramlists = []
+        
+        if angle.__class__ in [HarmonicAngle, UreyBradleyAngle]:
+
+            params['k'] = canonical_force_scale * params['k']
+
+            if direction == 'into':
+                if name == 'HARM_CONSTRAINED':
+                    params['c'] = True
             else:
-                loger.warn("WriteError: found unsupported angle type {0}".format(
-                    angle.__class__.__name__))
+                optkwds = forcefunctions.optparamlookup(angle.__class__)
+                if optkwds['c'] == True:
+                    params = 'HARM_CONSTRAINED'
+                else:
+                    name = 'HARM'
+
+            if angle.__class__ in [UreyBradleyAngle]:
+                if direction == 'into':
+                    # do something with joining two??
+                    k = 0
+                else:
+                    params_harmpart = {k:v for (k,v) in params.iteritems() if k in ['theta','k','c'] }
+                    names.append(name)
+                    paramlists.append(params_harmpart)
+                    name = 'UB'
+                    params['kUB'] = canonical_force_scale * params['kUB']
+                    params_ubpart = {k:v for (k,v) in params.iteritems() if k in ['r','kUB'] }
+                    names.append(name)
+                    paramlists.append(params_ubpart)
+            else:
+                names.append(name)
+                paramlists.append(params)
+
+            return names, paramlists
+
+        else:
+            raise Exception("%sError: angletype %s is not supported by Desmond" % (phase, angles.__class__.__name__))
 
     desmond_dihedrals = {'IMPROPER_HARM': ImproperHarmonicDihedral,
                          'PROPER_TRIG': TrigDihedral,
@@ -215,60 +223,72 @@ class DesmondParser(object):
                          'OPLS_PROPER': TrigDihedral,
                          'OPLS_IMPROPER': TrigDihedral
                          }
-    lookup_desmond_dihedrals = {TrigDihedral: 'Trig',
+    lookup_desmond_dihedrals = {TrigDihedral: 'TRIG',
                                 ImproperHarmonicDihedral: 'IMPROPER_HARM'
                                 }
 
+    lookup_desmond_dihedral = create_lookup(desmond_dihedrals)
+    desmond_dihedral_types = create_type(desmond_dihedrals)
+
     def canonical_dihedral(self, params, dihedral, direction='into'):
 
-            if isinstance(dihedral, ImproperHarmonicDihedral):
-                dlines.append('%s %10.8f %10.8f %1d %1d %1d %1d %1d %1d\n' % (
-                        'Improper_Harm', float(dihedral.xi.in_units_of(units.degrees)._value),
-                        0.5*float(dihedral.k.in_units_of(units.kilocalorie_per_mole/units.radians**2)._value),
-                        0,0,0,0,0,0))
-            elif isinstance(dihedral, TrigDihedral):
-                if dihedral.improper:
-                    dtype = 'Improper_Trig'
-                else:
-                    dtype = 'Proper_Trig'
-                dlines.append('%s %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f\n' % (
-                        dtype,
-                        float(dihedral.phi.in_units_of(units.degrees)._value),
-                        float(dihedral.fc0.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc1.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc2.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc3.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc4.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc5.in_units_of(units.kilocalories_per_mole)._value),
-                        float(dihedral.fc6.in_units_of(units.kilocalories_per_mole)._value)))
-
-        d_type = self.lookup_desmond_dihedral[dihedral.__class__]
-        if d_type:
-            return d_type, params
+        if direction == 'into':
+            canonical_force_scale = self.canonical_force_scale_into
+            phase = 'Read'
         else:
-            loger.warn("WriteError: found unsupported dihedral type {0}".format(
-                dihedral.__class__.__name__))        
+            try:
+                name = self.lookup_desmond_dihedrals[dihedral.__class__]
+            except:
+                raise Exception("WriteError: dihedraltype %s is not supported by Desmond" % (dihedral.__class__.__name__))
 
-    def __init__(self, infile, defines=None):
+            canonical_force_scale = self.canonical_force_scale_from
+            phase = 'Write'
+
+        names = []
+        paramlists = []
+
+        if dihedral.__class__ in [ImproperHarmonicDihedral, TrigDihedral]:
+            if dihedral in [ImproperHarmonicDihedral]:
+                params['k'] = params['k'] * canonical_force_scale
+                name = 'IMPROPER_HARM'
+                names.append(name)
+                params.append(params)
+
+            elif dihedral in [TrigDihedral]:
+                optkwds = forcefunctions.optparamlookup(dihedral.__class__)
+                if optkwds['improper']:
+                    name = 'IMPROPER_TRIG'
+                else:
+                    name = 'PROPER_TRIG'
+                names.append(name)
+                paramlists.append(params)
+
+            return names, paramlists
+
+    def __init__(self, cms_file, system=None, defines=None):
         """
         Initializes a DesmondParse object which serves to read in a CMS file
         into the abstract representation.
 
         Args:
         defines: Sets of default defines to use while parsing.
+
         """
+
+        self.cms_file = cms_file
+        if not system:
+            system = System()
+        self.system = system
         self.includes = set()       # set storing includes
         self.defines = dict()        # list of defines
         self.comments = list()      # list of comments
-
+        
         self.atomtypes = dict()
         self.bondtypes = dict()
         self.constrainttypes = dict()
         
         if defines:
             self.defines.union(defines)
-        self.defines["FLEX_SPC"] = None
-        self.defines["POSRE"] = None
         self.viparr = 1
 
         self.fblockpos = []
@@ -280,17 +300,6 @@ class DesmondParser(object):
 
         self.paramlist = forcefunctions.build_paramlist('desmond')
         self.unitvars = forcefunctions.build_unitvars('desmond', self.paramlist)
-
-        self.gromacs_bonds = {
-            'harm': HarmonicBond,
-            }
-
-        # reverse the above dictionary
-        #self.lookup_desmond_bonds = dict((v,k) for k,v in self.gromacs_bonds.items())
-        self.lookup_desmond_bonds ={
-            HarmonicBond : 'harm',
-            HarmonicPotentialBond : 'harm'
-            }
 
         self.canonical_force_scale_into = 2.0
         self.canonical_force_scale_from = 0.5
@@ -365,7 +374,7 @@ class DesmondParser(object):
 
     def parse_bonds(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         
         forces = []
         if len(self.b_blockpos) > 1:  #LOADING M_BONDS
@@ -414,7 +423,7 @@ class DesmondParser(object):
 
     def parse_vdwtypes(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         # molecule name is at sites, but vdwtypes come
         # before sites. So we store info in vdwtypes and
         # edit it later at sites. Eventually, we should
@@ -429,7 +438,7 @@ class DesmondParser(object):
 
     def parse_sites(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         #correlate with atomtypes and atoms in GROMACS
         logger.debug("Parsing [ sites]...")
         
@@ -466,8 +475,8 @@ class DesmondParser(object):
 
                 newAtomType = None
                 currentMolecule.add_atom(atom)
-                if not System._sys._atomtypes.get(AbstractAtomType(atom.atomtype.get(0))): #if atomtype not in System, add it
-                    if System._sys.combination_rule == 'Multiply-C6C12':
+                if not self.system._atomtypes.get(AbstractAtomType(atom.atomtype.get(0))): #if atomtype not in self.system, add it
+                    if self.system.combination_rule == 'Multiply-C6C12':
                         sigma = (etemp/stemp)**(1/6)
                         epsilon = (stemp)/(4*sigma**6)
                         newAtomType = AtomCType(split[ivdwtypes],             #atomtype/name
@@ -478,7 +487,7 @@ class DesmondParser(object):
                                       'A',                             #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
                                       sigma * units.kilocalorie_per_mole * angstroms**(6),
                                       epsilon * units.kilocalorie_per_mole * unit.angstro,s**(12))
-                    elif (System._sys.combination_rule == 'Lorentz-Berthelot') or (System._sys.combination_rule == 'Multiply-Sigeps'):
+                    elif (self.system.combination_rule == 'Lorentz-Berthelot') or (self.system.combination_rule == 'Multiply-Sigeps'):
                         newAtomType = AtomSigepsType(split[ivdwtype], #atomtype/name
                                       split[ivdwtype],                 #bondtype
                                       -1,                   #atomic_number
@@ -487,19 +496,19 @@ class DesmondParser(object):
                                       'A',                  #pcharge...saw this in top--NEED TO CONVERT TO ACTUAL UNITS
                                       stemp,
                                       etemp)
-                    System._sys._atomtypes.add(newAtomType)
+                    self.system.add_atomtype(newAtomType)
 
         if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
             if self.a_blockpos[0] < start:
                 # generate the new molecules for this block; the number of molecules depends on
                 # The number of molecules depends on the number of entries in ffio_sites (ff_number)
-                NewMolecules = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, sysDirectiveAtm, verbose)
+                NewMolecules = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, verbose)
                 self.a_blockpos.pop(0)
 
         # now construct an atomlist with all the atoms
         index = 0
         for molecule in NewMolecules:
-            System._sys.add_molecule(molecule)
+            self.system.add_molecule(molecule)
             for atom in molecule.atoms:
                 # does this need to be a deep copy?
                 tmpatom = copy.deepcopy(atom)
@@ -507,7 +516,7 @@ class DesmondParser(object):
                 atomlist.add(tmpatom)
                 index +=1
 
-        currentMoleculeType = System._sys._molecules[moleculeName]
+        currentMoleculeType = self.system._molecules[moleculeName]
         currentMoleculeType.nrexcl = 0 #PLACEHOLDER FOR NREXCL...WE NEED TO FIND OUT WHERE IT IS
                                        #MRS: basically, we have to figure out the furthest number of bonds out 
                                        # to exclude OR explicitly set gromacs exclusions. Either should work.
@@ -516,7 +525,7 @@ class DesmondParser(object):
 
     def parse_pairs(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         logger.debug("Parsing [ pairs]...")
         ljcorr = False
         coulcorr = False
@@ -550,11 +559,11 @@ class DesmondParser(object):
                 warnings.warn("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
             if coulcorr:
-                System._sys.coulomb_correction = coulcorr  # need this for gromacs to have the global declared 
+                self.system.coulomb_correction = coulcorr  # need this for gromacs to have the global declared 
                 #If we have difference between global and local, catch in gromacs.
 
             if ljcorr:
-                System._sys.lj_correction = ljcorr  # need this for gromacs to have the global declared 
+                self.system.lj_correction = ljcorr  # need this for gromacs to have the global declared 
                 #If we have difference between global and local, catch in gromacs.
 
             if newPairForce:
@@ -565,7 +574,7 @@ class DesmondParser(object):
 
     def parse_angles(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         logger.debug("Parsing [ angles]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -622,7 +631,7 @@ class DesmondParser(object):
 
     def parse_dihedrals(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         logger.debug("Parsing [ dihedrals]...")
 
         for j in range(ff_number):
@@ -686,7 +695,7 @@ class DesmondParser(object):
 
     def parse_torsion_torsion(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         logger.debug("Parsing [ torsion-torsion]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -707,11 +716,11 @@ class DesmondParser(object):
             else:
                 warnings.warn("ReadError: found unsupported torsion-torsion type in: %s" % str(line[i]))
             if newTorsionTorsionForce:
-                currentMoleculeType.torsiontorsionForceSet.add(newTorsionTorsionForce)
+                currentMoleculeType.torsiontorsion_force.add(newTorsionTorsionForce)
 
     def parse_exclusions(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType = sites_args
+        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         logger.debug("Parsing [ exclusions]...")
         for j in range(ff_number):
             temp = entry_values[j].split()
@@ -784,7 +793,7 @@ class DesmondParser(object):
             if newConstraint:
                 currentMoleculeType.constraints.add(newConstraint)
 
-    def load_ffio_block(self, lines, moleculeName, start, end, sysDirective, sysDirectiveAtm, verbose = False):
+    def load_ffio_block(self, lines, moleculeName, start, end, sysDirective, verbose = False):
 
 #        Loading in ffio blocks from Desmond format
 #        Args:
@@ -793,7 +802,6 @@ class DesmondParser(object):
 #            start: beginning of where ffio_ff starts for each molecule
 #            end: ending of where ffio_ff ends for each molecule
 #           sysDirective: help locate positions of specific data in ffio blocks
-#           sysDirectiveAtm: help locate positions of specific data in m_atoms
 
         i = start
         j = start
@@ -825,17 +833,17 @@ class DesmondParser(object):
         bPreambleRead = False
         stored_ffio_types = []  # a list of stored ffio_type to keep track 
                               # of the ordering later
-        atomlist = OrderedSet()
+        atomlist = OrderedDict()
         namecol = 0
         combrcol = 0
         vdwtypercol = 0
 
         #DEFAULT VALUES WHEN CONVERTING TO GROMACS
-        System._sys.nonbonded_function = 1
-        System._sys.genpairs = 'yes'
+        self.system.nonbonded_function = 1
+        self.system.genpairs = 'yes'
 
-        logger.debug('Parsing [ molecule %s]'%(moleculeName))
-        logger.debug('Parsing [ ffio]')
+        logger.debug('Parsing [ molecule %s ]'%(moleculeName))
+        logger.debug('Parsing [ ffio ]')
 
         while i < end:
             if not bPreambleRead:
@@ -850,20 +858,19 @@ class DesmondParser(object):
                     i+=1
                 i+=1 # skip the ':::'    
                 # figure out combination rule
-                combrule = lines[i+combrcol]
-                if re.search("GEOMETRIC", combrule, re.IGNORECASE):
-                    if re.search("ARITHMETIC", combrule, re.IGNORECASE):
-                        System._sys.combination_rule = 'Lorentz-Berthelot'
-                    else:
-                        System._sys.combination_rule = 'Multiply-Sigeps'
-                elif re.search("LJ12_6_C6C12", combrule, re.IGNORECASE):  # is this even valid?
-                    System._sys.combination_rule = 'Multiply-C6C12'
+                combrule = lines[i+combrcol].upper()
+                if "ARITHMETIC/GEOMETRIC" in combrule:
+                    self.system.combination_rule = 'Lorentz-Berthelot'
+                elif "GEOMETRIC/GEOMETRIC" in combrule:
+                    self.system.combination_rule = 'Multiply-Sigeps'
+                elif "LJ12_6_C6C12" in combrule:
+                    self.system.combination_rule = 'Multiply-C6C12'
                 if (vdwtypercol > 0):
                     vdwrule = lines[i+vdwtypercol]
                 # MISSING: need to identify vdw rule here -- currently assuming LJ12_6_sig_epsilon!
 
                 # skip to the next ffio entry
-                while not re.search('ffio',lines[i]):
+                while not ("ffio" in lines[i]):
                     i+=1
                 bPreambleRead = True
 
@@ -883,7 +890,7 @@ class DesmondParser(object):
             if type in sysDirective:
                 ff_type, ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
                 shared_args = [atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys]
-                sites_args = [currentMolecule, i, lines, moleculeName, start, sysDirectiveAtm, verbose, currentMoleculeType]
+                sites_args = [currentMoleculeType, i, lines, moleculeName, start, verbose, currentMoleculeType]
                 if type == 'ffio_sites':
                     currentMoleculeType = sysDirective[type](shared_args, sites_args)
                 else:
@@ -908,7 +915,7 @@ class DesmondParser(object):
         split = []
         i = start
         bondForceSet = HashMap()
-        forces = OrderedSet()
+        forces = OrderedDict()
         while i < end:
             if ':::' in lines[i]:
                 if bg:
@@ -935,7 +942,7 @@ class DesmondParser(object):
 
         return [bondForceSet, forces]
 
-    def loadMAtoms(self, lines, start, end, currentMolecule, slength, sysDirective, verbose = False): #adds positions and such to atoms in each molecule in System
+    def loadMAtoms(self, lines, start, end, currentMolecule, slength, verbose = False): #adds positions and such to atoms in each molecule in System
 
 #        Loading in m_atoms from Desmond format
 #        Args:
@@ -970,43 +977,41 @@ class DesmondParser(object):
                 i+=1
                 break
             else:
-                match = sysDirective.match(lines[i])
-                if match:
-                    if match.group('First'):
-                        start+=1
-                    if match.group('xcoord'):
-                        logger.debug("   Parsing [ xcoord]...")
-                        xcol = i - start
-                    elif match.group('ycoord'):
-                        logger.debug("   Parsing [ ycoord]...")
-                        ycol = i - start
-                    elif match.group('zcoord'):
-                        logger.debug("   Parsing [ zcoord]...")
-                        zcol = i - start
-                    elif match.group('rindex'):
-                        logger.debug("   Parsing [ rindex]...")
-                        rincol = i - start
-                    elif match.group('rname'):
-                        logger.debug("   Parsing [ rname]...")
-                        rncol = i - start
-                    elif match.group('aZ'):
-                        logger.debug("   Parsing [ atomic number ]...")
-                        azcol = i - start
-                    elif match.group('pdbaname'):
-                        logger.debug("   Parsing [ pdb atom name]...")
-                        pdbancol = i - start
-                    elif match.group('aname'):
-                        logger.debug("   Parsing [ atom name]...")
-                        ancol = i - start
-                    elif match.group('xvelocity'):
-                        logger.debug("   Parsing [ xvelocity]...")
-                        vxcol = i - start
-                    elif match.group('yvelocity'):
-                        logger.debug("   Parsing [ yvelocity]...")
-                        vycol = i - start
-                    elif match.group('zvelocity'):
-                        logger.debug("   Parsing [ zvelocity]...")
-                        vzcol = i - start
+                if 'First column' in lines[i]:
+                    start += 1
+                elif 'r_m_x_coord' in lines[i]: 
+                    logger.debug("   Parsing [ x coord ]...")
+                    xcol = i - start
+                elif 'r_m_y_coord' in lines[i]: 
+                    logger.debug("   Parsing [ y coord ]...")
+                    ycol = i - start
+                elif 'r_m_z_coord' in lines[i]: 
+                    logger.debug("   Parsing [ z coord ]...")
+                    zcol = i - start
+                elif 'i_m_residue_number' in lines[i]:    
+                    logger.debug("   Parsing [ rindex ]...")
+                    rincol = i - start
+                elif 's_m_pdb_residue_name' in lines[i]:
+                    logger.debug("   Parsing [ rname]...")
+                    rncol = i - start
+                elif 'i_m_atomic_number' in lines[i]:
+                    logger.debug("   Parsing [ atomic number ]...")
+                    azcol = i - start
+                elif 's_m_atom_name' in lines[i]:
+                    logger.debug("   Parsing [ pdb atom name]...")
+                    pdbancol = i - start 
+                elif 's_m_atom_name' in lines[i]:
+                    logger.debug("   Parsing [ atom name ]...")
+                    ancol = i - start
+                elif 'r_ffio_x_vel' in lines[i]:
+                    logger.debug("   Parsing [ x velocity ]...")
+                    vxcol = i - start
+                elif 'r_ffio_y_vel' in lines[i]:
+                    logger.debug("   Parsing [ y velocity ]...")
+                    vycol = i - start
+                elif 'r_ffio_z_vel' in lines[i]:
+                    logger.debug("   Parsing [ z velocity ]...")
+                    vzcol = i - start
             i+=1
 
         atom = None
@@ -1029,6 +1034,7 @@ class DesmondParser(object):
                         atom.atomic_number = int(aline[azcol])
                     except Exception as e:
                         logger.exception(e) # EDZ: just pass statement before, now exception is recorded, but supressed
+
                     atom.position = [float(aline[xcol]) * units.angstroms,
                                      float(aline[ycol]) * units.angstroms,
                                      float(aline[zcol]) * units.angstroms]
@@ -1096,21 +1102,18 @@ class DesmondParser(object):
             v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
             nvec += 1
 
-        System._sys.box_vector = v
+        self.system.box_vector = v
 
-    def read_file(self, filename, verbose=True):
+    def read(self, verbose=True):
 
 #        Load in data from file
-
 #       Read data in Desmond format
-
 #        Args:
-#            filename: the name of the file to write out to
 
         lines = list()
 
         molnames = []
-        fl = open(filename, 'r')
+        fl = open(self.cms_file, 'r')
         lines = list(fl)
         fl.close()
         i,j=0,0
@@ -1140,7 +1143,7 @@ class DesmondParser(object):
         self.b_blockpos.append(i)
         self.ffio_blockpos.append(i)
 
-        sysDirectiveTopD = {'ffio_vdwtypes': self.parse_vdwtypes,
+        sysDirectiveTop = {'ffio_vdwtypes': self.parse_vdwtypes,
                             'ffio_sites': self.parse_sites,
                             'ffio_bonds': self.parse_bonds,
                             'ffio_pairs': self.parse_pairs,
@@ -1151,54 +1154,6 @@ class DesmondParser(object):
                             'ffio_exclusions': self.parse_exclusions,
                             'ffio_restraints': self.parse_restraints
                             }
-
-        sysDirectiveTop = re.compile(r"""
-          ((?P<vdwtypes>\s*ffio_vdwtypes)
-          |
-          (?P<sites>\s*ffio_sites)
-          |
-          (?P<bonds>\s*ffio_bonds)
-          |
-          (?P<pairs>\s*ffio_pairs)
-          |
-          (?P<angles>\s*ffio_angles)
-          |
-          (?P<dihedrals>\s*ffio_dihedrals)
-          |
-          (?P<torsiontorsion>\s*ffio_torsion_torsion)
-          |
-          (?P<constraints>\s*ffio_constraints)
-          |
-          (?P<exclusions>\s*ffio_exclusions)
-          |
-          (?P<restraints>\s*ffio_restraints))
-        """, re.VERBOSE)
-
-        sysDirectiveStr = re.compile(r"""
-          ((?P<xcoord>\s*r_m_x_coord)
-          |
-          (?P<ycoord>\s*r_m_y_coord)
-          |
-          (?P<zcoord>\s*r_m_z_coord)
-          |
-          (?P<rindex>\s*i_m_residue_number)
-          |
-          (?P<rname>\s*s_m_pdb_residue_name)
-          |
-          (?P<aZ>\s*i_m_atomic_number)
-          |
-          (?P<pdbaname>\s*s_m_pdb_atom_name)
-          |
-          (?P<aname>\s*s_m_atom_name)
-          |
-          (?P<xvelocity>\s*r_ffio_x_vel)
-          |
-          (?P<yvelocity>\s*r_ffio_y_vel)
-          |
-          (?P<zvelocity>\s*r_ffio_z_vel)
-          |
-          (?P<First>\s*[#][\s+]First[\s+]column[\s+]is[\s+]atom[\s+]index[\s+][#]))
-        """, re.VERBOSE)
 
         #LOADING Ffio blocks
         logger.debug("Reading ffio block...")
@@ -1215,7 +1170,7 @@ class DesmondParser(object):
             if molname == "":
                 molname = "Molecule_"+str(len(molnames)+1)
             molnames.append(molname)    
-            self.load_ffio_block(lines, molname, self.ffio_blockpos[i], self.fblockpos[i+1]-1, sysDirectiveTopD, sysDirectiveStr,  verbose)
+            self.load_ffio_block(lines, molname, self.ffio_blockpos[i], self.fblockpos[i+1]-1, sysDirectiveTop,  verbose)
             i+=1
         i = 0
 
@@ -1234,7 +1189,7 @@ class DesmondParser(object):
         ep = None
         stemp = None
         etemp = None
-        combRule = System._sys.combination_rule
+        combrule = self.system.combination_rule
         for atom in molecule.atoms:
             i+=1
             if atom.residue_index:
@@ -1252,10 +1207,10 @@ class DesmondParser(object):
 
             sig = float(atom.sigma[0].in_units_of(units.angstroms)._value)
             ep = float(atom.epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
-            if combRule == 'Multiply-C6C12':   #MRS: seems like this should be automated more?
+            if combrule == 'Multiply-C6C12':   #MRS: seems like this should be automated more?
                 stemp = ep * (4 * (sig**6))
                 etemp = stemp * (sig**6)
-            elif combRule in ['Lorentz-Berthelot','Multiply-Sigeps']:
+            elif combrule in ['Lorentz-Berthelot','Multiply-Sigeps']:
                 stemp = sig
                 etemp = ep
             if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in vdwtypes:
@@ -1310,26 +1265,24 @@ class DesmondParser(object):
         hlines.append("      :::\n")
 
         i = 0
-        bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2))
+        bondlist = sorted(list(moleculetype.bond_forces), key=lambda x: (x.atom1, x.atom2))
         for bond in bondlist:
-            i += 1
+            atoms = [bond.atom1,bond.atom2]
             kwds = self.get_parameter_kwds_from_force(bond)
-            try:
-                name = self.lookup_desmond_bonds[bond.__class__]
-            except:
-                raise Exception("WriteError: bondtype %s is not supported by Desmond" % (bond.__class__.__name__))
-            names, kwds = self.canonical_bond(name, kwds, bond.__class__, direction = 'from')
-            # could return multiple names, kwds
-            for i, name in enumerate(names):
-                line = '      %d %d %d %s' %(i, bond.atom1, bond.atom2, name)
-                bond_params = self.get_parameter_list_from_kwds(bond, kwds[i])
-                u = self.unitvars[bond.__class__.__name__]
-                for j, p in enumerate(bond_params):
-                    line += "%15.8f" % (p.value_in_unit(u[j]))
+            names, paramlists = self.canonical_bond(kwds, bond, direction = 'from')
+            # could in general return multiple types and paramlists
+            for nbond, name in enumerate(names):
+                i += 1
+                converted_bond = self.desmond_bonds[name](*atoms, **paramlists[nbond])
+                line = '      %d %d %d %s' %(i, atoms[0], atoms[1], name)
+                bond_params = self.get_parameter_list_from_force(converted_bond)
+                param_units = self.unitvars[converted_bond.__class__.__name__]
+                for param, param_unit in zip(bond_params, param_units):
+                    line += "%15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'    
                 dlines.append(line)
         header = "    ffio_bonds[%d] {\n" % (i)
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
 
         dlines.append("      :::\n")
         dlines.append("    }\n")
@@ -1350,28 +1303,27 @@ class DesmondParser(object):
         hlines.append("      r_ffio_c1\n")
         hlines.append("      r_ffio_c2\n")
         hlines.append("      :::\n")
+
         i = 0
-        anglelist = sorted(moleculetype.angleForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2,x.atom3))
+        anglelist = sorted(list(moleculetype.angle_forces), key=lambda x: (x.atom1,x.atom2,x.atom3))
         for angle in anglelist:
-            i+=1
+            atoms = [angle.atom1,angle.atom2,angle.atom3]
             kwds = self.get_parameter_kwds_from_force(angle)
-            try:
-                name = self.lookup_desmond_andles[angle.__class__]
-            except:
-                raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
-            names, kwds = self.canonical_angle(name, kwds, angle.__class__, direction = 'from')
-            # can be multiple names and kwd lists
-            for i, name in enumerate(names):
-                line = '      %d %d %d %d %s' %(i, angle.atom1, angle.atom3, angle.atom3, name)
-                angle_params = self.get_parameter_list_from_kwds(angle, kwds[i])
-                u = self.unitvars[angle.__class__.__name__]
-                for j, p in enumerate(angle_params):
-                    line += "%15.8f" % (p.value_in_unit(u[j]))
+            names, paramlists = self.canonical_angle(kwds, angle, direction = 'from')
+            # could return multiple names and kwd lists
+            for nangle, name in enumerate(names):
+                i+=1
+                converted_angle = self.desmond_angles[name](*atoms, **paramlists[nangle])
+                line = '      %d %d %d %d %s' % (i, atoms[0], atoms[1], atoms[2], name)
+                angle_params = self.get_parameter_list_from_force(converted_angle)
+                param_units = self.unitvars[converted_angle.__class__.__name__]
+                for param, param_unit in zip(angle_params, param_units):
+                    line += "%15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'    
                 dlines.append(line)
             
         header = "    ffio_angles[%d] {\n" % (i)
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
 
         dlines.append("      :::\n")
         dlines.append("    }\n")
@@ -1399,29 +1351,27 @@ class DesmondParser(object):
 
         i = 0
         #sorting by first index
-        dihedrallist = sorted(moleculetype.dihedralForceSet.itervalues(), key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+        dihedrallist = sorted(list(moleculetype.dihedral_forces), key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
         # first, identify the number of terms we will print
         for dihedral in dihedrallist:
-            i+=1
+            atoms = [dihedral.atom1,dihedral.atom2,dihedral.atom3,dihedral.atom4]
             kwds = self.get_parameter_kwds_from_force(dihedral)
-            try:
-                name = self.lookup_desmond_dihedralss[dihedral.__class__]
-            except:
-                raise Exception("WriteError: dihedraltype %s is not supported by Desmond" % (dihedral.__class__.__name__))
-            name, kwds = self.canonical_dihedral(name, kwds, dihedral.__class__, direction = 'from')
-            for i, name in enumerate(name):
-                line = '      %d %d %d %d %s' %(i, dihderal.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4, name)
-                dihedral_params = self.get_parameter_list_from_kwds(dihedral, kwds[i])
-                u = self.unitvars[dihedral.__class__.__name__]
-                for j, p in enumerate(dihedral_params):
-                    line += "%15.8f" % (p.value_in_unit(u[j]))
+            names, paramlists = self.canonical_dihedral(kwds, dihedral, direction = 'from')
+            for ndihedrals, name in enumerate(names):
+                i+=1
+                line = '      %d %d %d %d %d %s' %(i, atoms[0], atoms[1], atoms[2], atoms[3], name)
+                converted_dihedral= self.desmond_dihedral[name](*atoms,**paramlists[ndihedrals])
+                dihedral_params = self.get_parameter_list_from_force(converted_dihedral)
+                param_units = self.unitvars[converted_dihedral.__class__.__name__]
+                for param, param_unit in zip(dihedral_params, param_units):
+                    line += "%15.8f" % (param.value_in_unit(param_unit))
                 for j in range(8-len(dihedral_params)):    
                     line += "%6.3f" % (0.0)
                 line += '\n'
                 dlines.append(line)
 
         header = "    ffio_dihedrals[%d] {\n" % (i)
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
 
         dlines.append("      :::\n")
         dlines.append("    }\n")
@@ -1449,7 +1399,7 @@ class DesmondParser(object):
         hlines.append("      :::\n")
         i = 0
 
-        for torsiontorsion in moleculetype.torsiontorsionForceSet.itervalues():
+        for torsiontorsion in moleculetype.torsiontorsion_forces:
             i+=1
             # only type of torsion/torsion is CMAP currently
             dlines.append('      %d %d %d %d %d %d %d %d %d %s %d\n' % (
@@ -1461,7 +1411,7 @@ class DesmondParser(object):
                     'cmap', torsiontorsion.chart))
         header = "    ffio_torsion_torsion[%d] {\n"%(i)
 
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
         dlines.append("      :::\n")
         dlines.append("    }\n")
         hlines.extend(dlines)
@@ -1508,7 +1458,7 @@ class DesmondParser(object):
                 warnings.warn("Can't handle more than excluding 1-4 interactions right now!")
 
             fullbondlist = []
-            fullbondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2))
+            fullbondlist = sorted(list(moleculetype.bond_forces), key=lambda x: (x.atom1, x.atom2))
             # exclude HarmonicPotential types, which do not have exclusions.
             bondlist = [bond for bond in fullbondlist if (not isinstance(bond, HarmonicPotentialBond))]
 
@@ -1516,7 +1466,9 @@ class DesmondParser(object):
             currentatom = 0
             atompos = []
             bondindex = 0
-            nsize = len((moleculetype.moleculeSet)[0].atoms)+1
+            for molecule in moleculetype.molecules:
+                nsize = len(molecule.atoms)+1
+                break  # only need the first
             atombonds = np.zeros([nsize,8],int)  # assume max of 8 for now
             natombonds = np.zeros(nsize,int)
             for bond in bondlist:
@@ -1527,6 +1479,7 @@ class DesmondParser(object):
 
             for atom in range(1,nsize):
                 atomexclude = set()  # will be a unique set
+
                 # need to make this recursive! And there must be a better algorithm
                 for j1 in range(natombonds[atom]):
                     toatom1 = atombonds[atom,j1];
@@ -1552,7 +1505,7 @@ class DesmondParser(object):
 
 
         header = "    ffio_exclusions[%d] {\n"%(i)
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
 
         dlines.append("      :::\n")
         dlines.append("    }\n")
@@ -1574,12 +1527,12 @@ class DesmondParser(object):
         hlines.append("      r_ffio_c2\n")
         hlines.append("      :::\n")
         i = 0
-        for pair in moleculetype.pairForceSet.itervalues():
+        for pair in sorted(list(moleculetype.pair_forces), key=lambda x: (x.atom1, x.atom2)):
             i += 2
             atom = '      %d %d ' % (pair.atom1, pair.atom2)
             if isinstance(pair,LjDefaultPair) or isinstance(pair,LjqDefaultPair):
-                dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, System._sys.lj_correction)
-                dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i, pair.atom1, pair.atom2, System._sys.coulomb_correction)
+                dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, self.system.lj_correction)
+                dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i, pair.atom1, pair.atom2, self.system.coulomb_correction)
             elif isinstance(pair, LjSigepsPair) or isinstance(pair, LjCPair) or isinstance(pair, LjqCPair) or isinstance(pair, LjqSigepsPair):
                 # Check logic here -- not clear that we can correctly determine which type it is.
                 # Basically, I think it's whether scaleLJ is defined or not.
@@ -1609,7 +1562,7 @@ class DesmondParser(object):
                         i -= 1
                     else:
                         dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i-1, pair.atom1, pair.atom2,
-                                                                                System._sys.coulomb_correction)
+                                                                                self.system.coulomb_correction)
                         i -= 1
 
             else:
@@ -1617,7 +1570,7 @@ class DesmondParser(object):
 
 
         header = "    ffio_pairs[%d] {\n"%(i)
-        hlines = endheadersection(i==0,header,hlines)
+        hlines = end_header_section(i==0,header,hlines)
 
         dlines.append("      :::\n")
         dlines.append("    }\n")
@@ -1639,7 +1592,7 @@ class DesmondParser(object):
         alen_max = alen
         clen_max = clen
 
-        for constraint in moleculetype.constraints.itervalues():
+        for constraint in moleculetype.constraints:
             if re.search('AH',constraint.type):
                 alen = int(list(constraint.type)[-1])
                 clen = alen
@@ -1653,13 +1606,13 @@ class DesmondParser(object):
 
         # not sure we need to sort these, but makes it easier to debug
         i = 0
-        constraintlist = sorted(moleculetype.constraints.itervalues(),key=lambda x: x.atom1)
+        constraintlist = sorted(list(moleculetype.constraints),key=lambda x: x.atom1)
         dlines = list()
         hlines = list()
 
         for constraint in constraintlist: #calculate the max number of atoms in constraint
             i+=1
-            if re.search('HOH',constraint.type):
+            if constraint.type == 'HOH':
                 cline = '      %d %d %d %d ' % (i,int(constraint.atom1),int(constraint.atom2),int(constraint.atom3))
                 for j in range(alen_max-3):
                     cline += '0 '
@@ -1669,39 +1622,20 @@ class DesmondParser(object):
                 cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
                 for j in range(clen_max-3):
                     cline += ' <>'
-            elif re.match('AH',constraint.type):
-                alen = int(list(constraint.type)[-1])
+            elif constraint.type == 'AH':
+                catoms = [constraint.atom1,constraint.atom2,constraint.atom3,constraint.atom4,
+                         constraint.atom5,constraint.atom6,constraint.atom7,constraint.atom8]
+                clengths = [constraint.length1,constraint.length2,constraint.length3,constraint.length4,
+                             constraint.length5,constraint.length6,constraint.length7,constraint.length8]
+                alen = int(list(constraint.type)[-1])+2
                 cline = '      %d ' % i
-                cline += ' %d ' % int(constraint.atom1)
-                cline += ' %d ' % int(constraint.atom2)
-                if alen > 1:
-                    cline += ' %d ' % int(constraint.atom3)
-                if alen > 2:
-                    cline += ' %d ' % int(constraint.atom4)
-                if alen > 3:
-                    cline += ' %d ' % int(constraint.atom5)
-                if alen > 4:
-                    cline += ' %d ' % int(constraint.atom6)
-                if alen > 5:
-                    cline += ' %d ' % int(constraint.atom7)
-                if alen > 6:
-                    cline += ' %d ' % int(constraint.atom8)
+                for j in range(alen):
+                    cline += ' %d ' % int(catoms[i])
                 for j in range(alen,alen_max):
                     cline += ' 0 '
                 cline += constraint.type
-                cline += ' %10.8f' % (float(constraint.length1.in_units_of(units.angstroms)._value))
-                if alen > 1:
-                    cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
-                if alen > 2:
-                    cline += ' %10.8f' % (float(constraint.length3.in_units_of(units.angstroms)._value))
-                if alen > 3:
-                    cline += ' %10.8f' % (float(constraint.length4.in_units_of(units.angstroms)._value))
-                if alen > 4:
-                    cline += ' %10.8f' % (float(constraint.length5.in_units_of(units.angstroms)._value))
-                if alen > 5:
-                    cline += ' %10.8f' % (float(constraint.length6.in_units_of(units.angstroms)._value))
-                if alen > 6:
-                    cline += ' %10.8f' % (float(constraint.length7.in_units_of(units.angstroms)._value))
+                for j in range(alen):
+                    cline += ' %10.8f' % (float(clengths[i].in_units_of(units.angstroms)._value))
                 for j in range(alen,alen_max):
                     cline += ' 0.0'
             cline += '\n'
@@ -1743,7 +1677,7 @@ class DesmondParser(object):
         hlines.extend(dlines)
         return hlines
 
-    def write_file(self, filename, verbose=True):
+    def write(self, verbose=True):
 
 #        Write this topology to file
 #        Write out this topology in Desmond format
@@ -1787,7 +1721,7 @@ class DesmondParser(object):
         lines.append('  :::\n')
 
         #box vector
-        bv = System._sys.box_vector
+        bv = self.system.box_vector
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
@@ -1815,8 +1749,8 @@ class DesmondParser(object):
         nmol = 0
         totalatoms = []
         totalatoms.append(0)
-        for moleculetype in System._sys._molecules.itervalues():
-            for molecule in moleculetype.moleculeSet:
+        for moleculetype in self.system._molecule_types.itervalues():
+            for molecule in moleculetype.molecules:
                 for atom in molecule.atoms:
                     i += 1
                     line = '    %d        %d' % (i,1) #HAVE TO PUT THE 1 HERE OR ELSE DESMOND DIES, EVEN THOUGH IT DOESN'T USE IT
@@ -1856,21 +1790,27 @@ class DesmondParser(object):
 
         i = 0
         nonecnt = 0
-        for moleculetype in System._sys._molecules.itervalues():
+        for moleculetype in self.system._molecule_types.itervalues():
             # sort the bondlist because Desmond requires the first time a bond is listed to have
             # the atoms in ascending order
-            repeatmol = len(moleculetype.moleculeSet)
+            repeatmol = len(moleculetype.molecules)
             #MRS: need to be fixed; gromacs loads in one set of bonds per molecue; desmond loads in all
-            atompermol = len(moleculetype.moleculeSet[0].atoms)
-            bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: (x.atom1,x.atom2))
+
+            # OrderedSet isn't indexable so get the first molecule by iterating.
+            for molecule in moleculetype.molecules:
+                atoms_per_molecule = len(molecule.atoms)
+                # all should have the same, once we have info from one, break.
+                break
+
+            bondlist = sorted(list(moleculetype.bond_forces), key=lambda x: (x.atom1,x.atom2))
             for n in range(repeatmol):
                 for bond in bondlist:
                     if bond and bond.order:
                         i += 1
                         dlines.append('    %d %d %d %d %d %d\n'
                                       %(i,
-                                        bond.atom1 + n*atompermol + totalatoms[nmol],
-                                        bond.atom2 + n*atompermol + totalatoms[nmol],
+                                        bond.atom1 + n*atoms_per_molecule + totalatoms[nmol],
+                                        bond.atom2 + n*atoms_per_molecule + totalatoms[nmol],
                                         int(bond.order),
                                         1,
                                         1))
@@ -1894,8 +1834,8 @@ class DesmondParser(object):
 
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
-        for moleculetype in System._sys._molecules.itervalues():
-            logger.debug('Writing molecule block %s...'% moleculetype.name)
+        for molecule_name, moleculetype in self.system.molecule_types.iteritems():
+            logger.debug('Writing molecule block %s...' % (molecule_name))
             #BEGINNING BLOCK
             
             logger.debug("  Writing f_m_ct...")
@@ -1926,14 +1866,13 @@ class DesmondParser(object):
                 for atom in molecule.atoms:
                     resName = atom.residue_name
                     break
-                if re.match("T3P", resName) or re.search("WAT", resName):
-                    #lines[bpos] = ('  s_m_entry_name\n')
+                if resname == "T3P" or resname == "WAT":
                     lines.append('  "TIP3P water box"\n')
                     lines.append('  "TIP3P water box"\n')
                     lines.append('  1\n')
                     endline = '  solvent\n'
                 else:
-                    lines.append('  %s\n'%(moleculetype.name))
+                    lines.append('  %s\n' % (molecule_name))
                     endline = '  ion\n'
                     del lines[bpos]
                     del lines[bpos] #deletes line for num component (only in TIP3)
@@ -1963,7 +1902,7 @@ class DesmondParser(object):
             lines.append('    :::\n')
 
             i = 0
-            for molecule in moleculetype.moleculeSet:
+            for molecule in moleculetype.molecules:
                 for atom in molecule.atoms:
                     i += 1
                     #NOT SURE WHAT TO PUT FOR MMOD TYPE; 1 is currently used.
@@ -2005,17 +1944,21 @@ class DesmondParser(object):
             i = 0
             nonecnt = 0
 
-            repeatmol = len(moleculetype.moleculeSet)
-            atompermol = len(moleculetype.moleculeSet[0].atoms)
-            bondlist = sorted(moleculetype.bondForceSet.itervalues(), key=lambda x: x.atom1)
+            repeatmol = len(moleculetype.molecules)
+
+            for molecule in moleculetype.molecules:
+                atoms_per_molecule = len(molecule.atoms)
+                break
+
+            bondlist = sorted(list(moleculetype.bond_forces), key=lambda x: x.atom1)
             for n in range(repeatmol): 
                 for bond in bondlist:
                     if bond and bond.order:
                         i += 1
                         dlines.append('    %d %d %d %d %d %d\n'
                                       %(i,
-                                        bond.atom1 + n*atompermol,
-                                        bond.atom2 + n*atompermol,
+                                        bond.atom1 + n*atoms_per_molecule,
+                                        bond.atom2 + n*atoms_per_molecule,
                                         int(bond.order),
                                         1,
                                         1))
@@ -2027,14 +1970,15 @@ class DesmondParser(object):
             header = '  m_bond[%d] {\n'%i
 
             if (i>0):
-                hlines = endheadersection(False,header,hlines)
+                hlines = end_header_section(False,header,hlines)
                 lines.extend(hlines)
                 lines.extend(dlines)
                 lines.append('    :::\n')
                 lines.append('  }\n')
 
             #FFIO
-            molecule =  moleculetype.moleculeSet[0]
+            # only need the first molecule
+            molecule = next(iter(moleculetype.molecules))
             logger.debug("  Writing ffio...")
             lines.append('  ffio_ff {\n')
             lines.append('    s_ffio_name\n')
@@ -2043,37 +1987,29 @@ class DesmondParser(object):
             lines.append('    :::\n')
 
             #Adding Molecule Name
-            if re.search("Viparr", moleculetype.name):
+            if "Viparr" in molecule_name:
                 lines.append('    Generated by Viparr\n')
             else:
-                lines.append('    %s\n' % moleculetype.name)
+                lines.append('    %s\n' % molecule_name)
 
             #Adding Combination Rule
-            if System._sys.combination_rule == 'Multiply-C6C12':
+            if self.system.combination_rule == 'Multiply-C6C12':
                 lines.append('    C6C12\n')   # this may not exist in DESMOND, or if so, need to be corrected
-            elif System._sys.combination_rule == 'Lorentz-Berthelot':
+            elif self.system.combination_rule == 'Lorentz-Berthelot':
                 lines.append('    ARITHMETIC/GEOMETRIC\n')
-            elif System._sys.combination_rule == 'Multiply-Sigeps':
+            elif self.system.combination_rule == 'Multiply-Sigeps':
                 lines.append('    GEOMETRIC\n')
-
 
             #Adding Version
             lines.append('    1.0.0\n') #All files had this, check if version is 1.0.0
 
             lines += self.write_vdwtypes_and_sites(molecule)
-
             lines += self.write_bonds(moleculetype)
-
             lines += self.write_angles(moleculetype)
-
             lines += self.write_dihedrals(moleculetype)
-
             lines += self.write_torsion_torsion(moleculetype)
-
             lines += self.write_exclusions(moleculetype)
-
             lines += self.write_pairs(moleculetype)
-
             lines += self.write_constraints(moleculetype)
 
             #STILL NEED TO ADD RESTRAINTS
@@ -2081,7 +2017,7 @@ class DesmondParser(object):
             lines.append("  }\n")
             lines.append("}\n")
 
-        fout = open(filename, 'w')
+        fout = open(self.cms_file, 'w')
         for line in lines:
             fout.write(line)
         fout.close()

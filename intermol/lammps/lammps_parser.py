@@ -381,7 +381,7 @@ class LammpsParser(object):
             # per LAMMPS file.
             self.current_mol_type = MoleculeType(self.molecule_name)
             self.current_mol_type.nrexcl = 3  # TODO: automate determination!
-            # NOTE: nrexcl is a global in lammps and should probably be 
+            # NOTE: nrexcl is a global in lammps and should probably be
             # determined in parse_special_bonds
             self.system.add_molecule_type(self.current_mol_type)
             self.current_mol = Molecule(self.molecule_name)

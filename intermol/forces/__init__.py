@@ -10,14 +10,15 @@ from atom_sigeps_type import AtomSigepsType
 
 from settles import Settles
 
-# what is below here really should be written automatically
+# what is below here really should be written automatically eventually.
+
 # nonbonded
 # don't think we use the functions, just the types?
 from lj_c_nonbonded_type import LjCNonbondedType, LjCNonbonded
 from lj_sigeps_nonbonded_type import LjSigepsNonbondedType, LjSigepsNonbonded
 from buckingham_nonbonded_type import BuckinghamNonbondedType, BuckinghamNonbonded
 
-#pairs
+# pairs
 from lj_c_pair_type import LjCPairType, LjCPair 
 from lj_sigeps_pair_type import LjSigepsPairType, LjSigepsPair
 from ljq_c_pair_type import LjqCPairType, LjqCPair 
@@ -25,7 +26,7 @@ from ljq_sigeps_pair_type import LjqSigepsPairType, LjqSigepsPair
 from lj_default_pair_type import LjDefaultPairType, LjDefaultPair
 from ljq_default_pair_type import LjqDefaultPairType, LjqDefaultPair
 
-#bonds
+# bonds
 from connection_bond_type import ConnectionBondType, ConnectionBond
 from cubic_bond_type import CubicBondType, CubicBond
 from fene_bond_type import FeneBondType, FeneBond
@@ -39,7 +40,7 @@ from quartic_breakable_bond_type import QuarticBreakableBondType, QuarticBreakab
 from quartic_bond_type import QuarticBondType, QuarticBond
 
 
-#angles
+# angles
 from cross_bond_angle_angle_type import CrossBondAngleAngleType, CrossBondAngleAngle
 from cross_bond_bond_angle_type import CrossBondBondAngleType, CrossBondBondAngle
 from cosine_angle_type import CosineAngleType, CosineAngle
@@ -47,8 +48,9 @@ from cosine_squared_angle_type import CosineSquaredAngleType, CosineSquaredAngle
 from harmonic_angle_type import HarmonicAngleType, HarmonicAngle
 from quartic_angle_type import QuarticAngleType, QuarticAngle
 from urey_bradley_angle_type import UreyBradleyAngleType, UreyBradleyAngle
+from urey_bradley_noharm_angle_type import UreyBradleyNoharmAngleType, UreyBradleyNoharmAngle
 
-#dihedrals
+# dihedrals
 from fourier_dihedral_type import FourierDihedralType, FourierDihedral
 from improper_harmonic_dihedral_type import ImproperHarmonicDihedralType, ImproperHarmonicDihedral
 from proper_periodic_dihedral_type import ProperPeriodicDihedralType, ProperPeriodicDihedral
