@@ -121,9 +121,10 @@ def desmond_energies(cms, cfg, despath):
         if exit:
             logger.error('Energy evaluation failed. See %s/desmond_stderr.txt' % direc)
             os.chdir(cwd) # return directory up a level again
-        raise Exception('Energy evaluation failed for {0}'.format(cms))
+            raise Exception('Energy evaluation failed for {0}'.format(cms))
     else:
         raise Exception('Desmond binary not found')
     tot_energy = get_desmond_energy_from_file(energy_file)
+    os.chdir(cwd) # return directory up a level again
     return tot_energy, energy_file
 
