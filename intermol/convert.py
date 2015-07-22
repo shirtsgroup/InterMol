@@ -256,10 +256,10 @@ def main(args=None):
             out.append('{0} output energy file: {1}'.format(out_type, out_file))
 
         results = summarize_energy_results(e_in, e_out, input_type, output_type)
-        out.append(results)
-        #logger.info('\n'.join(out))
-        logger.info(out)
+        out.extend(results)
+        logger.info('\n'.join(out))
     logger.info('Finished!')
+
     return output_status
 
 
