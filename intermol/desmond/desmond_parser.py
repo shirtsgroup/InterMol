@@ -441,7 +441,7 @@ class DesmondParser(object):
         currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
         #correlate with atomtypes and atoms in GROMACS
         logger.debug("Parsing [ sites]...")
-        
+
         #set indices to avoid continually calling list functions.    
         ivdwtype = entry_data.index('s_ffio_vdwtype')+1
         icharge = entry_data.index('r_ffio_charge')+1
@@ -772,22 +772,30 @@ class DesmondParser(object):
                     templen = int(list(split[funct_pos])[-1])
                 elif 'HOH' in split[funct_pos]:
                     templen = 2    # Different desmond files have different options here.
-                if templen == 1:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
-                elif templen == 2:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
-                elif templen == 3:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
-                elif templen == 4:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
-                elif templen == 5:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
-                elif templen == 6:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
-                elif templen == 7:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
-                elif templen == 8:
-                    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
+                params = [tempatom[0], tempatom[0],templength[0],split[funct_pos]]
+                # should verify the templen =2 is correct.
+                if templen == 2:
+                    params.extend([tempatom[2],templength[1],None,templength[2]])
+                else:
+                    for t in range(3,templen):
+                        params.extend([tempatom[t-1],templength[t-2]])
+                newConstraint = Constraint(*params)
+                #if templen == 1:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
+                #elif templen == 2:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
+                #elif templen == 3:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
+                #elif templen == 4:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
+                #elif templen == 5:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
+                #elif templen == 6:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
+                #elif templen == 7:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
+                #elif templen == 8:
+                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
             else:
                 warnings.warn("ReadError: found unsupported constraint")
             if newConstraint:
@@ -1051,6 +1059,7 @@ class DesmondParser(object):
                     if (ancol):
                         aline = aline[ancol].strip()
                     if re.match('$^',pdbaline) and not re.match('$^',aline):
+                        pfdb.set_trace()
                         atom.name = aline
                     elif re.match('$^',aline) and not re.match('$^',pdbaline):
                         atom.name = pdbaline
@@ -1116,23 +1125,23 @@ class DesmondParser(object):
         fl = open(self.cms_file, 'r')
         lines = list(fl)
         fl.close()
-        i,j=0,0
+        i=0
+        j=0
 
         for line in lines:
-            if re.search("f_m_ct",line,re.VERBOSE):
+            if 'f_m_ct' in line:
                 if j > 0:
                     self.fblockpos.append(i)
                 j+=1
-            if re.search("m_atom",line,re.VERBOSE) and not (re.search("i_m",line)
-            or re.search("s_m",line)):
+            if 'm_atom' in line and not (('i_m' in line) or ('s_m' in line)):
                 if j > 1:
                     self.a_blockpos.append(i)
                 j+=1
-            if re.search("m_bond",line,re.VERBOSE):
+            if 'm_bond' in line:
                 if j > 2:
                     self.b_blockpos.append(i)
                 j+=1
-            if re.search("ffio_ff",line,re.VERBOSE):
+            if 'ffio_ff' in line:
                 if j > 2:
                     self.ffio_blockpos.append(i)
                 j+=1
