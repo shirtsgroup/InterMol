@@ -278,6 +278,8 @@ class DesmondParser(object):
             system = System()
         self.system = system
 
+        self.vdwtypes = []
+
         self.bondtypes = dict()
 
         self.viparr = 1
@@ -293,6 +295,20 @@ class DesmondParser(object):
 
         self.canonical_force_scale_into = 2.0
         self.canonical_force_scale_from = 0.5
+
+        self.atom_col_vars = {'i_m_mmod_type',
+                              'r_m_x_coord',
+                              'r_m_y_coord',
+                              'r_m_z_coord',
+                              'i_m_residue_number',
+                              's_m_pdb_residue_name',
+                              'i_m_atomic_number',
+                              's_m_pdb_atom_name',
+                              's_m_atom_name',
+                              'r_ffio_x_vel',
+                              'r_ffio_y_vel',
+                              'r_ffio_z_vel'
+                              }
 
     def get_parameter_list_from_kwds(self, force, kwds):
         return forcefunctions.get_parameter_list_from_kwds(force, kwds, self.paramlist)
@@ -801,8 +817,6 @@ class DesmondParser(object):
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
         self.vdwtypeskeys = []
-        self.vdwtypes = []
-        sitetypes = []
 
         split = []
         constraints = []
@@ -951,18 +965,6 @@ class DesmondParser(object):
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
         cols = dict()
-        col_vars = {'r_m_x_coord',
-                    'r_m_y_coord',
-                    'r_m_z_coord',
-                    'i_m_residue_number',
-                    's_m_pdb_residue_name',
-                    'i_m_atomic_number',
-                    's_m_pdb_atom_name',
-                    's_m_atom_name',
-                    'r_ffio_x_vel',
-                    'r_ffio_y_vel',
-                    'r_ffio_z_vel'
-                    }
         while i < end:
             if ':::' in lines[i]:
                 i+=1
@@ -970,7 +972,7 @@ class DesmondParser(object):
             else:
                 if 'First column' in lines[i]:
                     start += 1
-                for c in col_vars:
+                for c in self.atom_col_vars:
                     if c in lines[i]:
                         logger.debug("   Parsing [ %s ] ..." % c)
                         cols[c] = i - start
@@ -1179,19 +1181,19 @@ class DesmondParser(object):
             elif combrule in ['Lorentz-Berthelot','Multiply-Sigeps']:
                 stemp = sig
                 etemp = ep
-            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in vdwtypes:
+            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in self.vdwtypes:
                 self.vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)))
 
         lines = []
         logger.debug("   -Writing vdwtypes...")
-        lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
+        lines.append("    ffio_vdwtypes[%d] {\n"%(len(self.vdwtypes)))
         lines.append("      s_ffio_name\n")
         lines.append("      s_ffio_funct\n")
         lines.append("      r_ffio_c1\n")
         lines.append("      r_ffio_c2\n")
         lines.append("      :::\n")
         i = 0
-        for v in vdwtypes:
+        for v in self.vdwtypes:
             i+=1
             lines.append('      %d%2s'%(i,v))
         lines.append("      :::\n")
@@ -1848,17 +1850,8 @@ class DesmondParser(object):
             apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
             lines.append('m_atom\n')
             lines.append('    # First column is atom index #\n')
-            lines.append('    i_m_mmod_type\n')
-            lines.append('    r_m_x_coord\n')
-            lines.append('    r_m_y_coord\n')
-            lines.append('    r_m_z_coord\n')
-            lines.append('    i_m_residue_number\n')
-            lines.append('    s_m_pdb_residue_name\n')
-            lines.append('    i_m_atomic_number\n')
-            lines.append('    s_m_atom_name\n')
-            lines.append('    r_ffio_x_vel\n')
-            lines.append('    r_ffio_y_vel\n')
-            lines.append('    r_ffio_z_vel\n')
+            for vars in self.atom_col_vars:
+                lines.append('    %s\n' % vars)
             lines.append('    :::\n')
 
             i = 0
