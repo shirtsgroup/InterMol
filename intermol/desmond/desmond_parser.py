@@ -369,13 +369,13 @@ class DesmondParser(object):
 
     def parse_bonds(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         
         forces = []
         if len(self.b_blockpos) > 1:  #LOADING M_BONDS
             if self.b_blockpos[0] < start:
                 npermol = len(currentMoleculeType.moleculeSet[0].atoms)
-                forces = self.loadMBonds(atomlist, lines, self.b_blockpos[0], i, npermol, verbose)
+                forces = self.loadMBonds(atomlist, lines, self.b_blockpos[0], i, npermol)
                 currentMoleculeType.bondForceSet = forces[0]
                 self.b_blockpos.pop(0)
         logger.debug("Parsing [ bonds ]...")
@@ -418,7 +418,7 @@ class DesmondParser(object):
 
     def parse_vdwtypes(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         # molecule name is at sites, but vdwtypes come
         # before sites. So we store info in vdwtypes and
         # edit it later at sites. Eventually, we should
@@ -431,9 +431,9 @@ class DesmondParser(object):
         	vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
                 vdwtypeskeys.append(entry_values[j].split()[1])
 
-    def parse_sites(self, shared_args, sites_args):
+    def parse_sites(self, shared_args, sites_args, i):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         #correlate with atomtypes and atoms in GROMACS
         logger.debug("Parsing [ sites]...")
 
@@ -498,7 +498,7 @@ class DesmondParser(object):
             if self.a_blockpos[0] < start:
                 # generate the new molecules for this block; the number of molecules depends on
                 # The number of molecules depends on the number of entries in ffio_sites (ff_number)
-                NewMolecules = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number, verbose)
+                NewMolecules = self.loadMAtoms(lines, self.a_blockpos[0], i, currentMolecule, ff_number)
                 self.a_blockpos.pop(0)
 
         # now construct an atomlist with all the atoms
@@ -521,7 +521,7 @@ class DesmondParser(object):
 
     def parse_pairs(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         logger.debug("Parsing [ pairs]...")
         ljcorr = False
         coulcorr = False
@@ -570,7 +570,7 @@ class DesmondParser(object):
 
     def parse_angles(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         logger.debug("Parsing [ angles]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -627,7 +627,7 @@ class DesmondParser(object):
 
     def parse_dihedrals(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         logger.debug("Parsing [ dihedrals]...")
 
         for j in range(ff_number):
@@ -691,7 +691,7 @@ class DesmondParser(object):
 
     def parse_torsion_torsion(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         logger.debug("Parsing [ torsion-torsion]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -716,7 +716,7 @@ class DesmondParser(object):
 
     def parse_exclusions(self, shared_args, sites_args):
         atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys = shared_args
-        currentMolecule, i, lines, moleculeName, start, verbose, currentMoleculeType = sites_args
+        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
         logger.debug("Parsing [ exclusions]...")
         for j in range(ff_number):
             temp = entry_values[j].split()
@@ -797,7 +797,7 @@ class DesmondParser(object):
             if newConstraint:
                 currentMoleculeType.constraints.add(newConstraint)
 
-    def load_ffio_block(self, lines, moleculeName, start, end, sysDirective, verbose = False):
+    def load_ffio_block(self, lines, moleculeName, start, end):
 
 #        Loading in ffio blocks from Desmond format
 #        Args:
@@ -805,7 +805,6 @@ class DesmondParser(object):
 #            moleculeName: name of current molecule
 #            start: beginning of where ffio_ff starts for each molecule
 #            end: ending of where ffio_ff ends for each molecule
-#           sysDirective: help locate positions of specific data in ffio blocks
 
         i = start
         j = start
@@ -889,21 +888,21 @@ class DesmondParser(object):
     
         # now process all the data
         for type in stored_ffio_types:
-            if type in sysDirective:
+            if type in self.sysDirective:
                 ff_type, ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
                 shared_args = [atomlist, entry_data, entry_values, ff_number, ff_type, vdwtypes, vdwtypeskeys]
-                sites_args = [currentMoleculeType, i, lines, moleculeName, start, verbose, currentMoleculeType]
+                sites_args = [currentMolecule, lines, moleculeName, start, currentMoleculeType]
                 if type == 'ffio_sites':
-                    currentMoleculeType = sysDirective[type](shared_args, sites_args)
+                    currentMoleculeType = self.sysDirective[type](shared_args, sites_args, i)
                 else:
-                    sysDirective[type](shared_args, sites_args)
+                    self.sysDirective[type](shared_args, sites_args)
             elif type == 'Done with ffio':
                 continue    
             else:
                 while '}' not in lines[i]:
                     i+=1   # not the most robust if there is nesting in a particular pattern
 
-    def loadMBonds(self, atomlist, lines, start, end, npermol, verbose = False): #adds new bonds for each molecule in System
+    def loadMBonds(self, atomlist, lines, start, end, npermol): #adds new bonds for each molecule in System
 
 #        Loading in m_bonds in Desmond format
 #        Args:
@@ -944,7 +943,7 @@ class DesmondParser(object):
 
         return [bondForceSet, forces]
 
-    def loadMAtoms(self, lines, start, end, currentMolecule, slength, verbose = False): #adds positions and such to atoms in each molecule in System
+    def loadMAtoms(self, lines, start, end, currentMolecule, slength): #adds positions and such to atoms in each molecule in System
 
 #        Loading in m_atoms from Desmond format
 #        Args:
@@ -953,7 +952,6 @@ class DesmondParser(object):
 #           end: ending of where m_atoms ends for each molecule
 #           currentMolecule
 #           slength: number of unique atoms in m_atoms, used to calculate repetitions
-#           sysDirective: help locate positions of specific data in m_atoms
 
         logger.debug("Parsing [ m_atom ]...")
         i = start
@@ -964,19 +962,19 @@ class DesmondParser(object):
 
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
-        block_title_variables = {'r_m_x_coord': xcol,
-                                 'r_m_y_coord': ycol,
-                                 'r_m_y_coord': zcol,
-                                 'i_m_residue_number': rincol,
-                                 's_m_pdb_residue_name': rncol,
-                                 'i_m_atomic_number': azcol,
-                                 's_m_pdb_atom_name': pdbancol,
-                                 's_m_atom_name': ancol,
-                                 'r_ffio_x_vel': vxcol,
-                                 'r_ffio_y_vel': vycol,
-                                 'r_ffio_z_vel': vzcol,
-                                 }
-        block_titles = block_title_variables.keys()
+        cols = dict()
+        col_vars = {'r_m_x_coord',
+                    'r_m_y_coord',
+                    'r_m_z_coord',
+                    'i_m_residue_number',
+                    's_m_pdb_residue_name',
+                    'i_m_atomic_number',
+                    's_m_pdb_atom_name',
+                    's_m_atom_name',
+                    'r_ffio_x_vel',
+                    'r_ffio_y_vel',
+                    'r_ffio_z_vel'
+                    }
         while i < end:
             if ':::' in lines[i]:
                 i+=1
@@ -984,10 +982,10 @@ class DesmondParser(object):
             else:
                 if 'First column' in lines[i]:
                     start += 1
-                for b in block_titles:
-                    if b in lines[i]:
-                        logger.debug("   Parsing [ %s ] ..." % b)
-                        block_title_variables[b] = i - start
+                for c in col_vars:
+                    if c in lines[i]:
+                        logger.debug("   Parsing [ %s ] ..." % c)
+                        cols[c] = i - start
                         break
             i+=1
 
@@ -1005,30 +1003,31 @@ class DesmondParser(object):
                     break
                 else:
                     aline = split_with_quotes(lines[i])
-                    atom.residue_index = int(aline[rincol])
-                    atom.residue_name = aline[rncol].strip()
+                    atom.residue_index = int(aline[cols['i_m_residue_number']])
+                    atom.residue_name = aline[cols['s_m_pdb_residue_name']].strip()
                     try:
-                        atom.atomic_number = int(aline[azcol])
+                        atom.atomic_number = int(aline[cols['i_m_atomic_number']])
                     except Exception as e:
                         logger.exception(e) # EDZ: just pass statement before, now exception is recorded, but supressed
 
-                    atom.position = [float(aline[xcol]) * units.angstroms,
-                                     float(aline[ycol]) * units.angstroms,
-                                     float(aline[zcol]) * units.angstroms]
-                    if vxcol == vycol == vzcol == None:
-                        atom.velocity = [0.0 * units.angstroms * units.picoseconds**(-1),
-                                        0.0 * units.angstroms * units.picoseconds**(-1),
-                                        0.0 * units.angstroms * units.picoseconds**(-1)]
-                    else:
-                        atom.velocity = [float(aline[vxcol]) * units.angstroms * units.picoseconds**(-1),
-                                        float(aline[vycol]) * units.angstroms * units.picoseconds**(-1),
-                                        float(aline[vzcol]) * units.angstroms * units.picoseconds**(-1)]
-                    if (pdbancol):    
-                        pdbaline = aline[pdbancol].strip()
-                    if (ancol):
-                        aline = aline[ancol].strip()
+                    atom.position = [float(aline[cols['r_m_x_coord']]) * units.angstroms,
+                                     float(aline[cols['r_m_y_coord']]) * units.angstroms,
+                                     float(aline[cols['r_m_z_coord']]) * units.angstroms]
+                    atom.velocity = [0.0 * units.angstroms * units.picoseconds**(-1),
+                                     0.0 * units.angstroms * units.picoseconds**(-1),
+                                     0.0 * units.angstroms * units.picoseconds**(-1)]
+                    if 'r_ffio_x_vel' in cols:
+                        atom.velocity[0] = float(aline[cols['r_ffio_x_vel']]) * units.angstroms * units.picoseconds**(-1)
+                    if 'r_ffio_y_vel' in cols:
+                        atom.velocity[1] = float(aline[cols['r_ffio_y_vel']]) * units.angstroms * units.picoseconds**(-1)
+                    if 'r_ffio_z_vel' in cols:
+                        atom.velocity[2] = float(aline[cols['r_ffio_z_vel']]) * units.angstroms * units.picoseconds**(-1)
+
+                    if 's_m_pdb_atom_name' in cols:
+                        pdbaline = aline[cols['s_m_pdb_atom_name']].strip()
+                    if 's_m_atom_name' in cols:
+                        aline = aline[cols['s_m_atom_name']].strip()
                     if re.match('$^',pdbaline) and not re.match('$^',aline):
-                        pfdb.set_trace()
                         atom.name = aline
                     elif re.match('$^',aline) and not re.match('$^',pdbaline):
                         atom.name = pdbaline
@@ -1054,7 +1053,7 @@ class DesmondParser(object):
         return molecules
 
 
-    def load_box_vector(self, lines, start, end, verbose = False):
+    def load_box_vector(self, lines, start, end):
 
 #       Loading Box Vector
 #       Create a Box Vector to load into the System
@@ -1082,7 +1081,7 @@ class DesmondParser(object):
 
         self.system.box_vector = v
 
-    def read(self, verbose=True):
+    def read(self):
 
 #        Load in data from file
 #       Read data in Desmond format
@@ -1117,22 +1116,23 @@ class DesmondParser(object):
                 j+=1
             i+=1
         i-=1
+
         self.fblockpos.append(i)
         self.a_blockpos.append(i)
         self.b_blockpos.append(i)
         self.ffio_blockpos.append(i)
 
-        sysDirectiveTop = {'ffio_vdwtypes': self.parse_vdwtypes,
-                            'ffio_sites': self.parse_sites,
-                            'ffio_bonds': self.parse_bonds,
-                            'ffio_pairs': self.parse_pairs,
-                            'ffio_angles': self.parse_angles,
-                            'ffio_dihedrals': self.parse_dihedrals,
-                            'ffio_torsion_torsion': self.parse_torsion_torsion,
-                            'ffio_constraints': self.parse_constraints,
-                            'ffio_exclusions': self.parse_exclusions,
-                            'ffio_restraints': self.parse_restraints
-                            }
+        self.sysDirective = {'ffio_vdwtypes': self.parse_vdwtypes,
+                             'ffio_sites': self.parse_sites,
+                             'ffio_bonds': self.parse_bonds,
+                             'ffio_pairs': self.parse_pairs,
+                             'ffio_angles': self.parse_angles,
+                             'ffio_dihedrals': self.parse_dihedrals,
+                             'ffio_torsion_torsion': self.parse_torsion_torsion,
+                             'ffio_constraints': self.parse_constraints,
+                             'ffio_exclusions': self.parse_exclusions,
+                             'ffio_restraints': self.parse_restraints
+                             }
 
         #LOADING Ffio blocks
         logger.debug("Reading ffio block...")
@@ -1149,14 +1149,14 @@ class DesmondParser(object):
             if molname == "":
                 molname = "Molecule_"+str(len(molnames)+1)
             molnames.append(molname)    
-            self.load_ffio_block(lines, molname, self.ffio_blockpos[i], self.fblockpos[i+1]-1, sysDirectiveTop,  verbose)
+            self.load_ffio_block(lines, molname, self.ffio_blockpos[i], self.fblockpos[i+1]-1)
             i+=1
         i = 0
 
         #LOAD RAW BOX VECTOR-Same throughout cms
 
         logger.debug("Reading Box Vector...")
-        self.load_box_vector(lines, self.fblockpos[0], self.a_blockpos[0], verbose)
+        self.load_box_vector(lines, self.fblockpos[0], self.a_blockpos[0])
 
     def write_vdwtypes_and_sites(self, molecule):
 
@@ -1656,7 +1656,7 @@ class DesmondParser(object):
         hlines.extend(dlines)
         return hlines
 
-    def write(self, verbose=True):
+    def write(self):
 
 #        Write this topology to file
 #        Write out this topology in Desmond format
