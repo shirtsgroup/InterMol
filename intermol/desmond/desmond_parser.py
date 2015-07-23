@@ -356,64 +356,13 @@ class DesmondParser(object):
         self.stored_ffio_data[ff_type]['entry_values'] = entry_values
 
     def retrive_ffio_data(self, ff_type):
-        return [self.stored_ffio_data[ff_type]['ff_type'],
-                self.stored_ffio_data[ff_type]['ff_number'],
+        return [self.stored_ffio_data[ff_type]['ff_number'],
                 self.stored_ffio_data[ff_type]['entry_data'],
                 self.stored_ffio_data[ff_type]['entry_values']
                 ]
 
-    def parse_bonds(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type, = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
-        
-        forces = []
-        if len(self.b_blockpos) > 1:  #LOADING M_BONDS
-            if self.b_blockpos[0] < start:
-                npermol = len(currentMoleculeType.moleculeSet[0].atoms)
-                forces = self.loadMBonds(lines, self.b_blockpos[0], i, npermol)
-                currentMoleculeType.bondForceSet = forces[0]
-                self.b_blockpos.pop(0)
-        logger.debug("Parsing [ bonds ]...")
-
-        for j in range(ff_number):
-            entries = entry_values[j].split()
-            key = entries[3].upper()
-            atoms = map(int, entries[1:3])
-            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
-            atoms.extend(bondingtypes)
-
-            if key == "HARM_CONSTRAINED":
-                constrained = 1
-            elif key == "HARM":
-                constrained = 0
-            else:
-                warnings.warn("ReadError: Found unsupported bond")
-            optionalkwd = {'c': constrained}
-            params = map(float, entries[4:6])
-
-            #MRS: it would be best to create the keywords first, and then create the type
-            #so that they keywords can be converted into canonical form. Otherwise we have
-            #to operate on the structures
-            
-            newbond_type = self.create_forcetype(Harmonicbond_type, bondingtypes, params, optionalkwd)
-            newbond_force = self.create_forcetype(HarmonicBond, atoms, params, optionalkwd)
-
-            # KLUDGE:  This below should be done in a separate routine, and shouldn't have to be done twice
-            newbond_type.k *= self.canonical_force_scale_into
-            newbond_force.k *= self.canonical_force_scale_into
-
-            if newbond_force in currentMoleculeType.bondForceSet:
-                oldbond_force = currentMoleculeType.bondForceSet.get(newbond_force)
-                currentMoleculeType.bondForceSet.remove(newbond_force)
-                newbond_force.order = oldbond_force.order
-                currentMoleculeType.bondForceSet.add(newbond_force)
-
-            if newbond_type not in self.bondtypes:
-	    	self.bondtypes.add(newbond_type)
-
-    def parse_vdwtypes(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_vdwtypes(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         # molecule name is at sites, but vdwtypes come
         # before sites. So we store info in vdwtypes and
         # edit it later at sites. Eventually, we should
@@ -426,9 +375,8 @@ class DesmondParser(object):
             self.vdwtypes.append(entry_values[j].split()[3:]) #THIS IS ASSUMING ALL VDWTYPES ARE STORED AS LJ12_6_SIG_EPSILON
             self.vdwtypeskeys.append(entry_values[j].split()[1])
 
-    def parse_sites(self, shared_args, sites_args, i):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_sites(self, type, i, currentMolecule, lines, moleculeName, start, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         #correlate with atomtypes and atoms in GROMACS
         logger.debug("Parsing [ sites]...")
 
@@ -514,9 +462,57 @@ class DesmondParser(object):
                                        # for now, we'll go with the latter
         return currentMoleculeType
 
-    def parse_pairs(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_bonds(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
+
+        forces = []
+        if len(self.b_blockpos) > 1:  #LOADING M_BONDS
+            if self.b_blockpos[0] < start:
+                npermol = len(currentMoleculeType.moleculeSet[0].atoms)
+                # of the parsers, this is the only one that uses 'lines'. Can we remove?
+                forces = self.loadMBonds(lines, self.b_blockpos[0], i, npermol) 
+                currentMoleculeType.bondForceSet = forces[0]
+                self.b_blockpos.pop(0)
+        logger.debug("Parsing [ bonds ]...")
+
+        for j in range(ff_number):
+            entries = entry_values[j].split()
+            key = entries[3].upper()
+            atoms = map(int, entries[1:3])
+            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
+            atoms.extend(bondingtypes)
+
+            if key == "HARM_CONSTRAINED":
+                constrained = 1
+            elif key == "HARM":
+                constrained = 0
+            else:
+                warnings.warn("ReadError: Found unsupported bond")
+            optionalkwd = {'c': constrained}
+            params = map(float, entries[4:6])
+
+            #MRS: it would be best to create the keywords first, and then create the type
+            #so that they keywords can be converted into canonical form. Otherwise we have
+            #to operate on the structures
+
+            newbond_type = self.create_forcetype(Harmonicbond_type, bondingtypes, params, optionalkwd)
+            newbond_force = self.create_forcetype(HarmonicBond, atoms, params, optionalkwd)
+
+            # KLUDGE:  This below should be done in a separate routine, and shouldn't have to be done twice
+            newbond_type.k *= self.canonical_force_scale_into
+            newbond_force.k *= self.canonical_force_scale_into
+
+            if newbond_force in currentMoleculeType.bondForceSet:
+                oldbond_force = currentMoleculeType.bondForceSet.get(newbond_force)
+                currentMoleculeType.bondForceSet.remove(newbond_force)
+                newbond_force.order = oldbond_force.order
+                currentMoleculeType.bondForceSet.add(newbond_force)
+
+            if newbond_type not in self.bondtypes:
+                self.bondtypes.add(newbond_type)
+
+    def parse_pairs(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ pairs]...")
         ljcorr = False
         coulcorr = False
@@ -563,9 +559,8 @@ class DesmondParser(object):
                 # if COUL is not included, then it is because the charges are zero, and they will give the
                 # same energy.  This could eventually be improved by checking versus the sites.
 
-    def parse_angles(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_angles(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ angles]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -591,7 +586,7 @@ class DesmondParser(object):
                 kwd = [0, 0] + map(float, split[5:7]) 
                 angleType = UreyBradleyAngle
             else:
-                warnings.warn("ReadError: found unsupported angle in: %s" %str(lines[i]))
+                warnings.warn("ReadError: found unsupported angle in")  # move this catch to canonical_angles
 
             if angleType:
                 newangle_force = self.create_forcetype(angleType, params, kwd)
@@ -620,9 +615,8 @@ class DesmondParser(object):
                 # add it on
                 currentMoleculeType.angleForceSet.add(newangle_force)
 
-    def parse_dihedrals(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_dihedrals(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ dihedrals]...")
 
         for j in range(ff_number):
@@ -684,9 +678,8 @@ class DesmondParser(object):
         #3 improper dihedrals, funct = 2
         #Ryckaert-Bellemans type dihedrals, funct = 3 and pairs are removed
 
-    def parse_torsion_torsion(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_torsion_torsion(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ torsion-torsion]...")
         for j in range(ff_number):
             split = entry_values[j].split()
@@ -709,9 +702,8 @@ class DesmondParser(object):
             if newTorsionTorsionForce:
                 currentMoleculeType.torsiontorsion_force.add(newTorsionTorsionForce)
 
-    def parse_exclusions(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
-        currentMolecule, lines, moleculeName, start, currentMoleculeType = sites_args
+    def parse_exclusions(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ exclusions]...")
         for j in range(ff_number):
             temp = entry_values[j].split()
@@ -719,11 +711,11 @@ class DesmondParser(object):
             newExclusion = Exclusions(map(int,temp))  # convert to integers
             currentMoleculeType.exclusions.add(newExclusion)
 
-    def parse_restraints(self, shared_args, sites_args):
+    def parse_restraints(self, type, lines, currentMoleculeType):
         warnings.warn("Parsing [ restraints] not yet implemented")
 
-    def parse_constraints(self, shared_args, sites_args):
-        entry_data, entry_values, ff_number, ff_type = shared_args
+    def parse_constraints(self, type, lines, currentMoleculeType):
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ constraints]...")
         ctype = 1
         funct_pos = 0
@@ -887,13 +879,11 @@ class DesmondParser(object):
         # now process all the data
         for type in self.stored_ffio_types:
             if type in self.sysDirective:
-                ff_type, ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
-                shared_args = [entry_data, entry_values, ff_number, ff_type]
                 sites_args = [currentMolecule, lines, moleculeName, start, currentMoleculeType]
                 if type == 'ffio_sites':
-                    currentMoleculeType = self.sysDirective[type](shared_args, sites_args, i)
+                    currentMoleculeType = self.sysDirective[type](type, i, currentMolecule, lines, moleculeName, start, currentMoleculeType)
                 else:
-                    self.sysDirective[type](shared_args, sites_args)
+                    self.sysDirective[type](type, lines, currentMoleculeType)
             elif type == 'Done with ffio':
                 continue    
             else:
