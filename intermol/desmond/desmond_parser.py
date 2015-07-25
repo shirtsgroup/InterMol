@@ -216,13 +216,13 @@ class DesmondParser(object):
                         if matched_angle.__class__ == HarmonicAngle:
                             angle.k = matched_angle.k 
                             angle.theta = matched_angle.theta
-                            self.angle_forces.remove(matched_angle)
+                            molecule_type.angle_forces.remove(matched_angle)
                 elif angle.__class__ == HarmonicAngle:
                     matched_angle = molecule_type.match_angles(angle)
                     if matched_angle and matched_angle.__class__ == UreyBradleyAngle:
                         angle.r = matched_angle.r
                         angle.kUB = matched_angle.kUB
-                        self.angle.forces.remove(matched_angle)
+                        molecule_type.angle.forces.remove(matched_angle)
             elif direction == 'from' and angle.__class__ in [UreyBradleyAngle]: 
                 params_harmpart = {k:v for (k,v) in params.iteritems() if k in ['theta','k','c'] }
                 names.append(name)
@@ -345,7 +345,7 @@ class DesmondParser(object):
         self.canonical_force_scale_into = 2.0
         self.canonical_force_scale_from = 0.5
 
-        self.atom_col_vars = {'i_m_mmod_type',
+        self.atom_col_vars = ['i_m_mmod_type',
                               'r_m_x_coord',
                               'r_m_y_coord',
                               'r_m_z_coord',
@@ -357,7 +357,18 @@ class DesmondParser(object):
                               'r_ffio_x_vel',
                               'r_ffio_y_vel',
                               'r_ffio_z_vel'
-                              }
+                              ]
+
+        self.atom_box_vars = ['r_chorus_box_ax',
+                              'r_chorus_box_ay',
+                              'r_chorus_box_az',
+                              'r_chorus_box_bx',
+                              'r_chorus_box_by',
+                              'r_chorus_box_bz',
+                              'r_chorus_box_cx',
+                              'r_chorus_box_cy',
+                              'r_chorus_box_cz'
+                              ]
 
     def get_parameter_list_from_kwds(self, force, kwds):
         return forcefunctions.get_parameter_list_from_kwds(force, kwds, self.paramlist)
@@ -1049,7 +1060,7 @@ class DesmondParser(object):
         i = start
         v = np.zeros([3,3])*units.angstroms
         while (i<end):
-            if 'r_chorus_box_ax' in lines[i]:
+            if self.atom_box_vars[0] in lines[i]:
                 startboxlabel = i-start
             if ':::' in lines[i]:
                 endlabel = i
@@ -1668,15 +1679,8 @@ class DesmondParser(object):
         logger.debug("Writing first f_m_ct...")
         lines.append('f_m_ct {\n')
         lines.append('  s_m_title\n')
-        lines.append('  r_chorus_box_ax\n')
-        lines.append('  r_chorus_box_ay\n')
-        lines.append('  r_chorus_box_az\n')
-        lines.append('  r_chorus_box_bx\n')
-        lines.append('  r_chorus_box_by\n')
-        lines.append('  r_chorus_box_bz\n')
-        lines.append('  r_chorus_box_cx\n')
-        lines.append('  r_chorus_box_cy\n')
-        lines.append('  r_chorus_box_cz\n')
+        for c in self.atom_box_vars:
+            lines.append('  %s\n' % c)
         lines.append('  s_ffio_ct_type\n')
         lines.append('  :::\n')
 
@@ -1692,17 +1696,9 @@ class DesmondParser(object):
         apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
         lines.append('m_atom\n')
         lines.append('    # First column is atom index #\n')
-        lines.append('    i_m_mmod_type\n')
-        lines.append('    r_m_x_coord\n')
-        lines.append('    r_m_y_coord\n')
-        lines.append('    r_m_z_coord\n')
-        lines.append('    i_m_residue_number\n')
-        lines.append('    s_m_pdb_residue_name\n')
-        lines.append('    i_m_atomic_number\n')
-        lines.append('    s_m_atom_name\n')
-        lines.append('    r_ffio_x_vel\n')
-        lines.append('    r_ffio_y_vel\n')
-        lines.append('    r_ffio_z_vel\n')
+        for vars in self.atom_col_vars:
+                if '_pdb_atom' not in vars:
+                    lines.append('    %s\n' % vars)
         lines.append('    :::\n')
 
         i = 0
@@ -1804,15 +1800,8 @@ class DesmondParser(object):
             bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
             lines.append('  s_m_entry_name\n')
             lines.append('  i_ffio_num_component\n')
-            lines.append('  r_chorus_box_ax\n')
-            lines.append('  r_chorus_box_ay\n')
-            lines.append('  r_chorus_box_az\n')
-            lines.append('  r_chorus_box_bx\n')
-            lines.append('  r_chorus_box_by\n')
-            lines.append('  r_chorus_box_bz\n')
-            lines.append('  r_chorus_box_cx\n')
-            lines.append('  r_chorus_box_cy\n')
-            lines.append('  r_chorus_box_cz\n')
+            for c in self.atom_box_vars:
+                lines.append('  %s\n' % c)
             lines.append('  s_ffio_ct_type\n')
             lines.append('  :::\n')
 
@@ -1849,7 +1838,8 @@ class DesmondParser(object):
             lines.append('m_atom\n')
             lines.append('    # First column is atom index #\n')
             for vars in self.atom_col_vars:
-                lines.append('    %s\n' % vars)
+                if '_pdb_atom' not in vars:  # kludge, have better filter
+                    lines.append('    %s\n' % vars)
             lines.append('    :::\n')
 
             i = 0
