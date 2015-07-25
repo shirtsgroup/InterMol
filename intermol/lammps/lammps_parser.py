@@ -166,9 +166,10 @@ class LammpsParser(object):
         else:  # writing out
             try:
                 typename = self.lookup_lammps_dihedrals[dihedral]
-            except KeyError:
+            #except KeyError:  #throwing a key error upsets the debugging.
+            #MRS: should probably pass the dihedral, so can inspect if the improper flag is set.
+            except:
                 typename = self.lookup_lammps_impropers[dihedral]
-
             if dihedral == TrigDihedral:
                 paramlist = convert_dihedral_from_trig_to_proper(params)
                 if params['phi'].value_in_unit(units.degrees) in [0, 180]:
@@ -837,7 +838,9 @@ class LammpsParser(object):
             # Convert keywords from canonical form.
             style, kwdslist = canonical_force(kwds, force.__class__,
                                               direction='from')
-            force_type = lammps_force_types[style]
+            force_type = lammps_force_types[style] #MRS: problem: might be a improper, not a dihedral, no way to 
+                                                   # change lammps_force_types
+                
             style_set.add(style)
 
             # A single force can produce multiple forces.

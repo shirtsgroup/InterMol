@@ -9,6 +9,8 @@ from atom_c_type import AtomCType
 from atom_sigeps_type import AtomSigepsType
 
 from settles import Settles
+#from exclusions import Exclusions
+from torsion_torsion_cmap import TorsionTorsionCMAP
 
 # what is below here really should be written automatically eventually.
 
@@ -38,7 +40,6 @@ from morse_bond_type import MorseBondType, MorseBond
 from nonlinear_bond_type import NonlinearBondType, NonlinearBond
 from quartic_breakable_bond_type import QuarticBreakableBondType, QuarticBreakableBond
 from quartic_bond_type import QuarticBondType, QuarticBond
-
 
 # angles
 from cross_bond_angle_angle_type import CrossBondAngleAngleType, CrossBondAngleAngle

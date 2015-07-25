@@ -3,7 +3,6 @@ import simtk.unit as units
 from intermol.decorators import accepts_compatible_units
 from abstract_bond_type import AbstractBondType
 
-
 class HarmonicBondType(AbstractBondType):
     __slots__ = ['length', 'k', 'order', 'c']
 

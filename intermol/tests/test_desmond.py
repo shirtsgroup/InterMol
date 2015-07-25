@@ -92,14 +92,14 @@ def desmond(flags, test_type='unit'):
 
 
 def test_desmond_unit():
-    """Run the LAMMPS stress tests. """
+    """Run the LAMMPS unit tests. """
     unit_test_tolerance = 1e-4
     flags = {'unit': True,
              'energy': True,
              'desmond': True}
 
     testing_logger.info('Running unit tests')
-
+    flags['energy'] = False
     output_dir = os.path.join(os.path.dirname(__file__), 'unit_test_outputs')
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)

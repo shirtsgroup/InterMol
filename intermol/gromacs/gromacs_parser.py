@@ -377,6 +377,7 @@ class GromacsParser(object):
         self.current_directive = None
         self.if_stack = list()
         self.else_stack = list()
+
         self.molecule_types = OrderedDict()
         self.molecules = list()
         self.current_molecule_type = None
@@ -663,8 +664,10 @@ class GromacsParser(object):
 
     def write_exclusions(self, top):
         top.write('[ exclusions ]\n')
-        for index1, index2 in self.current_molecule_type.exclusions:
-            top.write('{0:6d} {1:6d}\n'.format(index1, index2))
+        exclusionlist = sorted(self.current_molecule_type.exclusions,
+                               key=lambda x: (x[0], x[1]))
+        for exclusion in exclusionlist:
+            top.write('{0:6d} {1:6d}\n'.format(exclusion[0], exclusion[1]))
         top.write('\n')
 
     # =========== System creation =========== #
@@ -785,7 +788,7 @@ class GromacsParser(object):
                 kwds = self.choose_parameter_kwds_from_forces(
                     bond, n_atoms, bond_type, gromacs_bond)
             # Give it canonical form parameters.
-            canonical_bond, kwds = self.canonical_angle(kwds, gromacs_bond,
+            canonical_bond, kwds = self.canonical_bond(kwds, gromacs_bond,
                                                         direction='into')
             new_bond = canonical_bond(*atoms, **kwds)
         else:
