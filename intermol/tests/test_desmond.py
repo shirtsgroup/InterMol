@@ -99,7 +99,6 @@ def test_desmond_unit():
              'desmond': True}
 
     testing_logger.info('Running unit tests')
-    flags['energy'] = False
     output_dir = os.path.join(os.path.dirname(__file__), 'unit_test_outputs')
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
