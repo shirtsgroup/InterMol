@@ -16,6 +16,8 @@ To add another bonded force interacton in one of the existing categories:
 
 4. write the docstrings
 
+5. add the entry in __init__.py
+
 Adding new categories will take extra effort, adding an
 abstract_force_type, and additional logic, but should be clear.
 """
@@ -94,6 +96,7 @@ AbstractOptParamsDefaults['bond'] = ['1', 'False']
 # defined by abstract_angle_type
 anglelist = ['harmonic',
              'urey_bradley',
+             'urey_bradley_noharm',
              'cross_bond_angle',
              'cross_bond_bond',
              'cosine',
@@ -297,6 +300,13 @@ master_unitlist['urey_bradley_angle'] = ['angleD',
                                          'energy * length ** (-2)'
 ]
 lammps_paramlist['urey_bradley_angle'] = ['k', 'theta', 'kUB', 'r']
+
+# urey_bradley with no harmonic terms (in Desmond)
+doclist['urey_bradley_noharm_angle'] = 'stub documentation\n'
+master_paramlist['urey_bradley_noharm_angle'] = ['r', 'kUB']
+master_unitlist['urey_bradley_noharm_angle'] = ['length',
+                                                'energy * length ** (-2)'
+]
 
 doclist['harmonic_angle'] = 'stub documentation\n'
 master_paramlist['harmonic_angle'] = ['theta', 'k']

@@ -5,7 +5,6 @@ import os
 from six import string_types
 
 ENGINES = ['gromacs', 'lammps', 'desmond']
-#ENGINES = ['gromacs', 'lammps']
 
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
@@ -23,7 +22,8 @@ if not testing_logger.handlers:
     testing_logger.setLevel(logging.DEBUG)
     h = logging.StreamHandler()
     h.setLevel(logging.INFO)  # ignores DEBUG level for now
-    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s", "%Y-%m-%d %H:%M:%S")
+    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
+                          "%Y-%m-%d %H:%M:%S")
     h.setFormatter(f)
     testing_logger.addHandler(h)
 

@@ -47,6 +47,7 @@ from intermol.forces.cosine_squared_angle_type import CosineSquaredAngleType, Co
 from intermol.forces.harmonic_angle_type import HarmonicAngleType, HarmonicAngle
 from intermol.forces.quartic_angle_type import QuarticAngleType, QuarticAngle
 from intermol.forces.urey_bradley_angle_type import UreyBradleyAngleType, UreyBradleyAngle
+from intermol.forces.urey_bradley_noharm_angle_type import UreyBradleyNoharmAngleType, UreyBradleyNoharmAngle
 
 #dihedrals
 from intermol.forces.fourier_dihedral_type import FourierDihedralType, FourierDihedral
