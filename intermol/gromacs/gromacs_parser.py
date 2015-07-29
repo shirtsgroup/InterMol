@@ -661,8 +661,10 @@ class GromacsParser(object):
 
     def write_exclusions(self, top):
         top.write('[ exclusions ]\n')
-        for index1, index2 in self.current_molecule_type.exclusions:
-            top.write('{0:6d} {1:6d}\n'.format(index1, index2))
+        exclusionlist = sorted(self.current_molecule_type.exclusions,
+                               key=lambda x: (x[0], x[1]))
+        for exclusion in exclusionlist:
+            top.write('{0:6d} {1:6d}\n'.format(exclusion[0], exclusion[1]))
         top.write('\n')
 
     # =========== System creation =========== #
@@ -1303,7 +1305,7 @@ class GromacsParser(object):
         else:
             bondingtype = fields[1]
         if fields[2]:
-            atomic_number = fields[2]
+            atomic_number = int(fields[2])
         else:
             atomic_number = -1
         mass = float(fields[3]) * units.amu
