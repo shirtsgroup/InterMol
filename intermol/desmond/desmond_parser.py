@@ -6,6 +6,7 @@ import numpy as np
 import simtk.unit as units
 from intermol.atom import Atom
 from intermol.forces import *
+import intermol.forces.forcefunctions as ff
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
@@ -137,7 +138,7 @@ class DesmondParser(object):
 
             else:
                 # harmonic potentials in Gromacs should be constrained (??: check what this means)
-                optkwds = forcefunctions.optparamlookup(bond.__class__)
+                optkwds = ff.optparamlookup(bond.__class__)
                 if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
                     name = 'HARM_CONSTRAINED'
                 else:
@@ -148,7 +149,7 @@ class DesmondParser(object):
 
     desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
                       'HARM': HarmonicAngle,
-                      #'UB': UreyBradleyNoharmAngle
+                      'UB': UreyBradleyNoharmAngle
                       }
 
     lookup_desmond_angles = create_lookup(desmond_angles)
@@ -197,7 +198,7 @@ class DesmondParser(object):
                     angle.c = False
             else:
                 params['k'] = canonical_force_scale * params['k']
-                optkwds = forcefunctions.optparamlookup(angle.__class__)
+                optkwds = ff.optparamlookup(angle.__class__)
                 if optkwds['c'] == True:
                     name = 'HARM_CONSTRAINED'
                 else:
@@ -307,7 +308,7 @@ class DesmondParser(object):
                     params.append(params)
 
                 elif dihedral in [TrigDihedral]:
-                    optkwds = forcefunctions.optparamlookup(dihedral.__class__)
+                    optkwds = ff.optparamlookup(dihedral.__class__)
                     if optkwds['improper']:
                         name = 'IMPROPER_TRIG'
                     else:
@@ -339,8 +340,8 @@ class DesmondParser(object):
         self.b_blockpos = []
         self.ffio_blockpos = []
 
-        self.paramlist = forcefunctions.build_paramlist('desmond')
-        self.unitvars = forcefunctions.build_unitvars('desmond', self.paramlist)
+        self.paramlist = ff.build_paramlist('desmond')
+        self.unitvars = ff.build_unitvars('desmond', self.paramlist)
 
         self.canonical_force_scale_into = 2.0
         self.canonical_force_scale_from = 0.5
@@ -371,16 +372,16 @@ class DesmondParser(object):
                               ]
 
     def get_parameter_list_from_kwds(self, force, kwds):
-        return forcefunctions.get_parameter_list_from_kwds(force, kwds, self.paramlist)
+        return ff.get_parameter_list_from_kwds(force, kwds, self.paramlist)
 
     def get_parameter_list_from_force(self, force):
-        return forcefunctions.get_parameter_list_from_force(force, self.paramlist)
+        return ff.get_parameter_list_from_force(force, self.paramlist)
 
     def get_parameter_kwds_from_force(self, force):
-        return forcefunctions.get_parameter_kwds_from_force(force, self.get_parameter_list_from_force, self.paramlist)
+        return ff.get_parameter_kwds_from_force(force, self.get_parameter_list_from_force, self.paramlist)
 
     def create_kwd_dict(self, forcetype_object, values, optvalues = None):
-        kwd = forcefunctions.create_kwd_dict(self.unitvars, self.paramlist, forcetype_object, values, optvalues = optvalues)
+        kwd = ff.create_kwd_dict(self.unitvars, self.paramlist, forcetype_object, values, optvalues = optvalues)
         return kwd
 
     def create_forcetype(self, forcetype_object, paramlist, values, optvalues = None):

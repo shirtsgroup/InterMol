@@ -117,12 +117,12 @@ class GromacsParser(object):
         if direction == 'into':
             return bond, params
         else:  # currently, no bonds need to be de-canonicalized
-            b_type = self.lookup_gromacs_bonds[bond.__class__]
-            if b_type:
-                return b_type, params
-            else:
-                logger.warn("WriteError: found unsupported bond type {0}".format(
-                        bond.__class__.__name__))
+            try:
+                b_type = self.lookup_gromacs_bonds[bond.__class__]
+            except KeyError:
+                raise Exception('Found unsupported bond type {0}'.format(
+                    bond.__class__.__name__))
+            return b_type, params
 
     gromacs_angles = {
         '1': HarmonicAngle,
@@ -148,12 +148,12 @@ class GromacsParser(object):
         if direction == 'into':
             return angle, params
         else:  # currently, no angles need to be de-canonicalized
-            a_type = self.lookup_gromacs_angles[angle.__class__]
-            if a_type:
-                return a_type, params
-            else:
-                logger.warn("WriteError: found unsupported angle type {0}".format(
-                        angle.__class__.__name__))
+            try:
+                a_type = self.lookup_gromacs_angles[angle.__class__]
+            except KeyError:
+                raise Exception('Found unsupported angle type {0}'.format(
+                    angle.__class__.__name__))
+            return a_type, params
 
     gromacs_dihedrals = {
         # TrigDihedrals are actually used for 1, 4, and 9.  Can't use lists as keys!
@@ -200,74 +200,56 @@ class GromacsParser(object):
         Returns:
         """
         if direction == 'into':
-            # if we are converting a type
-            if 'Type' in dihedral.__name__:
-                # Convert the dihedral parameters to the form we want to
-                # actually store.
-                converted_dihedral = dihedral  # Default.
-                if dihedral == ProperPeriodicDihedralType:  # Proper dihedral.
-                    convertfunc = convert_dihedral_from_proper_to_trig
-                    converted_dihedral = TrigDihedralType
-                elif dihedral == ImproperHarmonicDihedralType:
-                    convertfunc = convert_nothing
-                elif dihedral == RbDihedralType:
-                    convertfunc = convert_dihedral_from_RB_to_trig
-                    converted_dihedral = TrigDihedralType
-                elif dihedral == FourierDihedralType:
-                    convertfunc = convert_dihedral_from_fourier_to_trig
-                    converted_dihedral = TrigDihedralType
-                else:
-                    # TODO: exception
-                    pass
-                # Now actually convert the dihedral.
-                params = convertfunc(params)
-            else:
-                # Most will be TrigDihedral.
+            converted_dihedral = dihedral
+            convertfunc = convert_nothing
+            if dihedral == ProperPeriodicDihedralType:
+                convertfunc = convert_dihedral_from_proper_to_trig
+                converted_dihedral = TrigDihedralType
+            elif dihedral == ProperPeriodicDihedral:
+                convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedral
-                if dihedral == TrigDihedral:  # Already converted!
-                    convertfunc = convert_nothing
-                # Proper dihedral, still need to convert
-                elif dihedral == ProperPeriodicDihedral:
-                    convertfunc = convert_dihedral_from_proper_to_trig
-                elif dihedral == ImproperHarmonicDihedral:
-                    convertfunc = convert_nothing
-                    converted_dihedral = dihedral
-                elif dihedral == RbDihedral:
-                    convertfunc = convert_dihedral_from_RB_to_trig
-                elif dihedral == FourierDihedral:
-                    convertfunc = convert_dihedral_from_fourier_to_trig
-                else:
-                    # TODO: exception
-                    pass
-                params = convertfunc(params)
+            elif dihedral in (ImproperHarmonicDihedralType, ImproperHarmonicDihedral):
+                convertfunc = convert_nothing
+            elif dihedral == RbDihedralType:
+                convertfunc = convert_dihedral_from_RB_to_trig
+                # Sign convention from psi to phi.
+                params['C1'] *= -1
+                params['C3'] *= -1
+                params['C5'] *= -1
+                converted_dihedral = TrigDihedralType
+            elif dihedral == RbDihedral:
+                convertfunc = convert_dihedral_from_RB_to_trig
+                # Sign convention from psi to phi.
+                params['C1'] *= -1
+                params['C3'] *= -1
+                params['C5'] *= -1
+                converted_dihedral = TrigDihedral
+            elif dihedral == FourierDihedralType:
+                convertfunc = convert_dihedral_from_fourier_to_trig
+                converted_dihedral = TrigDihedralType
+            elif dihedral == FourierDihedral:
+                convertfunc = convert_dihedral_from_fourier_to_trig
+                converted_dihedral = TrigDihedral
+            else:
+                logger.warning('Did not convert dihedral: {0}'.format(dihedral))
+            params = convertfunc(params)
             return converted_dihedral, params
         else:
-            d_type = self.lookup_gromacs_dihedrals[dihedral.__class__]
-            if not d_type:
-                logger.warn("WriteError: found unsupported dihedral type {0}".format(
-                    dihedral.__class__.__name__))
-
-            # Translate the dihedrals back to write them out.
             if isinstance(dihedral, TrigDihedral):
-
-                # TODO: Exceptions for cases where tmpparams and paramlist don't
-                # get assigned below.
                 if dihedral.improper:
-                    # Must be a improper dihedral. Print these out as improper
-                    # dihedrals (d_type = 4).
                     d_type = '4'
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                 else:
-                    # Print as a RB dihedral if the phi is 0.
-                    if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                        tmpparams = convert_dihedral_from_trig_to_RB(params)
-                        if tmpparams['C6']._value == 0:
-                            d_type = '3'
-                        else:
-                            # If C6 is not zero, then we have to print it out as
-                            # multiple propers.
-                            d_type = '9'
-                    if d_type in ['9', 'Trig']:
+                    if (params['phi'].value_in_unit(units.degrees) in [0, 180] and
+                                params['fc6']._value == 0):
+                        d_type = '3'
+                        params = convert_dihedral_from_trig_to_RB(params)
+                        # Sign convention from phi to psi.
+                        params['C1'] *= -1
+                        params['C3'] *= -1
+                        params['C5'] *= -1
+                        paramlist = [params]
+                    else:
                         # Print as proper dihedral. If one nonzero term, as a
                         # type 1, if multiple, type 9.
                         paramlist = convert_dihedral_from_trig_to_proper(params)
@@ -275,10 +257,14 @@ class GromacsParser(object):
                             d_type = '1'
                         else:
                             d_type = '9'
-                    elif d_type == '3':
-                        paramlist = [tmpparams]
-            else:
+            elif isinstance(dihedral, ImproperHarmonicDihedral):
+                d_type = '2'
                 paramlist = [params]
+            else:
+                raise ValueError('A non-canonical dihedral was found in the system. '
+                     'All dihedrals should have been converted to either '
+                     'TrigDihedralType or ImproperHarmonicType so '
+                     'something likely went wrong while reading in.')
             return d_type, paramlist
 
     def choose_parameter_kwds_from_forces(self, entries, n_atoms, force_type,
