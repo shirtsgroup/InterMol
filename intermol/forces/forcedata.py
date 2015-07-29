@@ -350,6 +350,7 @@ master_paramlist['improper_harmonic_dihedral'] = ['xi', 'k']
 master_unitlist['improper_harmonic_dihedral'] = ['angleD',
                                                  'energy * angleR **(-2)'
 ]
+lammps_paramlist['improper_harmonic_dihedral'] = ['k', 'xi']
 
 doclist['fourier_dihedral'] = 'stub documentation\n'
 master_paramlist['fourier_dihedral'] = ['c1', 'c2', 'c3', 'c4', 'c5']

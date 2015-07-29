@@ -36,8 +36,14 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     stdout_path = os.path.join(directory, 'lammps_stdout.txt')
     stderr_path = os.path.join(directory, 'lammps_stderr.txt')
     # TODO: Read energy info from stdout in memory instead of from log files.
-    os.remove(stdout_path)
-    os.remove(stderr_path)
+    try:
+        os.remove(stdout_path)
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove(stderr_path)
+    except FileNotFoundError:
+        pass
 
     # Step into the directory.
     saved_path = os.getcwd()

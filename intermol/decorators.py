@@ -68,11 +68,12 @@ def accepts_compatible_units(*units, **unitdict):
     def check_units(f):
         nargs = (f.__code__.co_argcount - 1)  # exclude self
         #assert len(units) == nargs, "incorrect number of units supplied in @accepts_compatible_units decorator for class method %s" % (f.__name__)
+
         def new_f(*args, **kwds):
-            for (a, u) in zip(args[1:], units):
+            for a, u in zip(args[1:], units):
                 if u is not None:
                     assert (a.unit).is_compatible(u), "arg %r does not have units compatible with %s" % (a,u)
-            for (k, u) in unitdict.items():  # should be ignored if no unitdict
+            for k, u in unitdict.items():  # should be ignored if no unitdict
                 if u is not None:
                     assert (kwds[k].unit).is_compatible(u), "kwd arg %s does not have units compatible with %s" % (kwds[k],u)
             return f(*args, **kwds)

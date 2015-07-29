@@ -8,6 +8,7 @@ import numpy as np
 
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
+from intermol.desmond import desmond_driver
 import intermol.tests
 from intermol.tests.testing_tools import which
 
@@ -83,9 +84,12 @@ def main(args=None):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
 
+    # Paths to simulator executables.
+    # GROMACS
     gropath = args.get('gropath')
     if not gropath:
         gropath = ''
+    # LAMMPS
     lmppath = args.get('lmppath')
     if not lmppath:
         for exe in ['lmp_mpi', 'lmp_serial', 'lmp_openmpi']:
@@ -94,6 +98,8 @@ def main(args=None):
                 break
         else:
             logger.exception('Found no LAMMPS executable.')
+    # DESMOND
+    despath = args.get('despath')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -113,10 +119,12 @@ def main(args=None):
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
     elif args.get('lmp_in'):
         lammps_file = args['lmp_in'][0]
-        #import pdb
-        #pdb.set_trace()
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
         system = lammps_driver.read_file(in_file=lammps_file)
+    elif args.get('des_in'):
+        cms_file = args['des_in']
+        prefix = os.path.splitext(os.path.basename(cms_file))[0]
+        system = desmond_driver.read_file(cms_file=cms_file)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -137,7 +145,7 @@ def main(args=None):
             logger.exception(e)
             output_status['gromacs'] = e
         else:
-            output_status['gromacs'] = 0
+            output_status['gromacs'] = 'Converted'
 
     if args.get('lammps'):
         try:
@@ -146,15 +154,24 @@ def main(args=None):
             logger.exception(e)
             output_status['lammps'] = e
         else:
-            output_status['lammps'] = 0
+            output_status['lammps'] = 'Converted'
+
+    if args.get('desmond'):
+        try:
+            desmond_driver.write_file('{0}.cms'.format(oname), system)
+        except Exception as e:
+            logger.exception(e)
+            output_status['desmond'] = e
+        else:
+            output_status['desmond'] = 'Converted'
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.abspath(os.path.dirname(intermol.tests.__file__))
 
-        # Required for all gromacs conversions.
         mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
+        cfg_path = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint.cfg'))
 
         # Evaluate input energies.
         if args.get('gro_in'):
@@ -163,6 +180,10 @@ def main(args=None):
         elif args.get('lmp_in'):
             input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmppath=lmppath)
+        elif args.get('des_in'):
+            input_type = 'desmond'
+            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
+                                                             despath=despath)
         else:
             logger.warn('Code should have never made it here!')
 
@@ -170,7 +191,7 @@ def main(args=None):
         output_type = []
         e_outfile = []
         e_out = []
-        if args.get('gromacs') and output_status['gromacs'] == 0:
+        if args.get('gromacs') and output_status['gromacs'] == 'Converted':
             output_type.append('gromacs')
             try:
                 out, outfile = gromacs_driver.gromacs_energies(
@@ -185,10 +206,11 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
-        if args.get('lammps') and output_status['lammps'] == 0:
+        if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies('{0}.input'.format(oname), lmppath=lmppath)
+                out, outfile = lammps_driver.lammps_energies(
+                    '{0}.input'.format(oname), lmppath=lmppath)
             except Exception as e:
                 output_status['lammps'] = e
                 logger.exception(e)
@@ -196,6 +218,21 @@ def main(args=None):
                 e_outfile.append(-1)
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
+        if args.get('desmond') and output_status['desmond'] == 'Converted':
+            output_type.append('desmond')
+            try:
+                out, outfile = desmond_driver.desmond_energies(
+                    '{0}.input'.format(oname), cfg_path, lmppath)
+            except Exception as e:
+                output_status['desmond'] = e
+                logger.exception(e)
+                e_out.append(-1)
+                e_outfile.append(-1)
+            else:
+                output_status['desmond'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
 
