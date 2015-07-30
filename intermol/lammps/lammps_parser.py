@@ -154,10 +154,6 @@ class LammpsParser(object):
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """Convert from the canonical form of this interaction. """
-        if direction == 'into':
-            canonical_force_scale = self.SCALE_INTO
-        else:
-            canonical_force_scale = self.SCALE_FROM
 
         if direction == 'into':
             converted_dihedral = dihedral  # Default
@@ -174,42 +170,76 @@ class LammpsParser(object):
                 converted_dihedral = TrigDihedral
                 # Now actually convert the dihedral.
             params = convertfunc(params)
+
+            # Adjust scaling conventions.
+            canonical_force_scale = self.SCALE_INTO
+            if converted_dihedral == ImproperHarmonicDihedralType:
+                params['k'] *= canonical_force_scale
+
             return converted_dihedral, params
 
-        else:  # writing out
-            try:
-                typename = self.lookup_lammps_dihedrals[dihedral]
-            except KeyError:
-                typename = self.lookup_lammps_impropers[dihedral]
-
+        else:
+            canonical_force_scale = self.SCALE_FROM
             if dihedral == TrigDihedral:
-                paramlist = convert_dihedral_from_trig_to_proper(params)
-                if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-                    if params['fc6']._value == 0 and params['fc5']._value == 0:
-                        # Stupid convention?
-                        if params['phi'].value_in_unit(units.degrees) == 180:
-                            params['phi'] = 0 * units.degrees
-                        else:  # phi must be 0 or 180 to make it here.
-                            params['phi'] = 180 * units.degrees
-                        paramlist = [convert_dihedral_from_trig_to_RB(params)]
-                        typename = 'multi/harmonic'
-                    else:
-                        # If C6 and C5 are not zero, print it out as multiple
-                        # harmonics (charmm).
-                        typename = 'charmm'
-                if typename in ['charmm', 'Trig']:
-                    # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
+                if False: #dihedral.improper:
+                    # TODO
+                    d_type = '4'
                     paramlist = convert_dihedral_from_trig_to_proper(params)
-                    typename = 'charmm'
-                    for p in paramlist:  # TODO: Why are we iterating here?
-                        # For now, might get from Sys?
-                        p['weight'] = 0.0 * units.dimensionless
+                else:
+                    if (params['phi'].value_in_unit(units.degrees) in [0, 180] and
+                                params['fc5']._value == 0 and
+                                params['fc6']._value == 0):
+                        typename = 'multi/harmonic'
+                        parameters = convert_dihedral_from_trig_to_RB(params)
+                        paramlist = [parameters]
+                    else:
+                        # Print as proper dihedral. If one nonzero term, as a
+                        # type 1, if multiple, type 9.
+                        typename = 'charmm'
+                        paramlist = convert_dihedral_from_trig_to_proper(params)
 
-            elif dihedral == ImproperHarmonicDihedral:
+            elif dihedral ==  ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
+                typename = 'harmonic'
                 paramlist = [params]
-
+            else:
+                raise ValueError('A non-canonical dihedral was found in the '
+                                 'system. All dihedrals should have been '
+                                 'converted to either TrigDihedralType or '
+                                 'ImproperHarmonicType so something likely '
+                                 'went wrong while reading in.')
             return typename, paramlist
+
+
+            #
+            # if dihedral == TrigDihedral:
+            #     paramlist = convert_dihedral_from_trig_to_proper(params)
+            #     if params['phi'].value_in_unit(units.degrees) in [0, 180]:
+            #         if params['fc6']._value == 0 and params['fc5']._value == 0:
+            #             # Stupid convention?
+            #             if params['phi'].value_in_unit(units.degrees) == 180:
+            #                 params['phi'] = 0 * units.degrees
+            #             else:  # phi must be 0 or 180 to make it here.
+            #                 params['phi'] = 180 * units.degrees
+            #             paramlist = [convert_dihedral_from_trig_to_RB(params)]
+            #             typename = 'multi/harmonic'
+            #         else:
+            #             # If C6 and C5 are not zero, print it out as multiple
+            #             # harmonics (charmm).
+            #             typename = 'charmm'
+            #     if typename in ['charmm', 'Trig']:
+            #         # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
+            #         paramlist = convert_dihedral_from_trig_to_proper(params)
+            #         typename = 'charmm'
+            #         for p in paramlist:  # TODO: Why are we iterating here?
+            #             # For now, might get from Sys?
+            #             p['weight'] = 0.0 * units.dimensionless
+            #
+            # elif dihedral == ImproperHarmonicDihedral:
+            #     params['k'] *= canonical_force_scale
+            #     paramlist = [params]
+            #
+            # return typename, paramlist
 
     def create_kwds_from_entries(self, entries, force_class, offset=0):
         return ff.create_kwds_from_entries(self.unitvars, self.paramlist,
