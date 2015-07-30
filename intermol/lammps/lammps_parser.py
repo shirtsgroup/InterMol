@@ -41,8 +41,8 @@ def write_lammps(in_file, system, unit_set='real'):
     Returns:
         system:
     """
-    parser = LammpsParser(in_file, system, unit_set)
-    return parser.write()
+    parser = LammpsParser(in_file, system)
+    return parser.write(unit_set=unit_set)
 
 
 class LammpsParser(object):
@@ -210,37 +210,6 @@ class LammpsParser(object):
                                  'went wrong while reading in.')
             return typename, paramlist
 
-
-            #
-            # if dihedral == TrigDihedral:
-            #     paramlist = convert_dihedral_from_trig_to_proper(params)
-            #     if params['phi'].value_in_unit(units.degrees) in [0, 180]:
-            #         if params['fc6']._value == 0 and params['fc5']._value == 0:
-            #             # Stupid convention?
-            #             if params['phi'].value_in_unit(units.degrees) == 180:
-            #                 params['phi'] = 0 * units.degrees
-            #             else:  # phi must be 0 or 180 to make it here.
-            #                 params['phi'] = 180 * units.degrees
-            #             paramlist = [convert_dihedral_from_trig_to_RB(params)]
-            #             typename = 'multi/harmonic'
-            #         else:
-            #             # If C6 and C5 are not zero, print it out as multiple
-            #             # harmonics (charmm).
-            #             typename = 'charmm'
-            #     if typename in ['charmm', 'Trig']:
-            #         # Print as proper dihedral; if one nonzero term, as a type 1, if multiple, type 9
-            #         paramlist = convert_dihedral_from_trig_to_proper(params)
-            #         typename = 'charmm'
-            #         for p in paramlist:  # TODO: Why are we iterating here?
-            #             # For now, might get from Sys?
-            #             p['weight'] = 0.0 * units.dimensionless
-            #
-            # elif dihedral == ImproperHarmonicDihedral:
-            #     params['k'] *= canonical_force_scale
-            #     paramlist = [params]
-            #
-            # return typename, paramlist
-
     def create_kwds_from_entries(self, entries, force_class, offset=0):
         return ff.create_kwds_from_entries(self.unitvars, self.paramlist,
                 entries, force_class, offset=offset)
@@ -252,7 +221,7 @@ class LammpsParser(object):
         return ff.get_parameter_kwds_from_force(
                 force, self.get_parameter_list_from_force, self.paramlist)
 
-    def __init__(self, in_file, system=None, unit_set='real'):
+    def __init__(self, in_file, system=None):
         """
         """
         self.in_file = in_file
@@ -1023,7 +992,6 @@ class LammpsParser(object):
             # Atom specific information.
             x_min = y_min = z_min = np.inf
             logger.debug("    Writing atoms...")
-            cumulative_atoms = 0
             atom_charges = False
             for molecule in mol_type.molecules:
                 for atom in molecule.atoms:
@@ -1052,7 +1020,7 @@ class LammpsParser(object):
 
                     atom_list.append(
                         '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
-                            atom.index + cumulative_atoms,
+                            atom.index,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
                             atom.charge[0].value_in_unit(self.CHARGE),
@@ -1064,15 +1032,14 @@ class LammpsParser(object):
                     if atom.velocity:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                                atom.index + cumulative_atoms,
+                                atom.index,
                                 atom.velocity[0].value_in_unit(self.VEL),
                                 atom.velocity[1].value_in_unit(self.VEL),
                                 atom.velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
-                                atom.index + cumulative_atoms, 0, 0, 0))
-                cumulative_atoms += len(molecule.atoms)
+                                atom.index, 0, 0, 0))
 
         bond_list = self.force_dict['Bond']
         angle_list = self.force_dict['Angle']
@@ -1174,14 +1141,13 @@ class LammpsParser(object):
             if atom_charges:
                 # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/long 9.999 9.999\n')
-                f.write('pair_style lj/cut/coul/long 15 15\n')
+                #f.write('pair_style lj/cut/coul/long 15 15\n')
                 #f.write('kspace_style pppm 1.0e-6\n')
-                f.write('kspace_style ewald 1.0e-6\n')
+                #f.write('kspace_style ewald 1.0e-6\n')
                 #f.write('kspace_style pppm/stagger 1.0e-6\n')
-            else:
-                f.write('pair_style lj/cut/coul/cut 15.0 15.0\n')  # TODO: match mdp
+                f.write('pair_style lj/cut/coul/cut 19.99999 19.99999\n')  # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
-                f.write('kspace_style none\n')  # if there are no charges
+                #f.write('kspace_style none\n')  # if there are no charges
 
             if self.system.combination_rule == 'Lorentz-Berthelot':
                 f.write('pair_modify mix arithmetic\n')
