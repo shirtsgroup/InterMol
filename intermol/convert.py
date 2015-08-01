@@ -118,7 +118,7 @@ def main(args=None):
 
         system = gromacs_driver.read_file(top_in, gro_in, gropath)
     elif args.get('lmp_in'):
-        lammps_file = args['lmp_in'][0]
+        lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
         system = lammps_driver.read_file(in_file=lammps_file)
     elif args.get('des_in'):
