@@ -696,8 +696,8 @@ class DesmondParser(object):
                 # next 4 lines definitely not the right way to do it.
                 opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), map(lambda s: units.kilocalorie_per_mole*float(s), split[7:11]))}
                 kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
-                kwds.update({'phi': 0 * units.degrees})
                 kwds = map(lambda x: x._value,kwds.values())
+                kwds.insert(0,0) # insert phi into the first section
                 # ^^^^^ will need to put this into canonical form, can't until we can pass in either arrays, or keywords ^^^^
 
             new_dihedral = self.create_forcetype(self.desmond_dihedrals[key], atoms, kwds)
