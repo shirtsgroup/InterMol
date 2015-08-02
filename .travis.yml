@@ -1,5 +1,11 @@
 language: python
 
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+
 python:
   - "2.7"
 
