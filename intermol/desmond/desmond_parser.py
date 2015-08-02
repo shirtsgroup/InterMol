@@ -791,7 +791,7 @@ class DesmondParser(object):
                 else:
                     for t in range(3,templen):
                         params.extend([tempatom[t-1],templength[t-2]])
-                new_constraint = constraint(*params)
+                new_constraint = Constraint(*params)
                 #if templen == 1:
                 #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
                 #elif templen == 2:
