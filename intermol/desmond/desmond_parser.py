@@ -125,7 +125,7 @@ class DesmondParser(object):
 
         if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
 
-            params['k'] = canonical_force_scale * params['k']
+            params['k'] *= canonical_force_scale
 
             if direction == 'into':
                 if name == 'HARM_CONSTRAINED':
@@ -188,9 +188,9 @@ class DesmondParser(object):
 
             if direction == 'into':
                 if angle.__class__ in [UreyBradleyAngle, UreyBradleyNoharmAngle]:
-                    angle.kUB *=  canonical_force_scale * angle.kUB
+                    angle.kUB *=  canonical_force_scale
                 if angle.__class__ in [UreyBradleyAngle, HarmonicAngle]:
-                    angle.k *=  canonical_force_scale * angle.k
+                    angle.k *=  canonical_force_scale
 
                 if name == 'HARM_CONSTRAINED':  # this needs to go first because HARM is a substring
                     angle.c = True
@@ -229,7 +229,7 @@ class DesmondParser(object):
                 names.append(name)
                 paramlists.append(params_harmpart)
                 name = 'UB'
-                params['kUB'] = canonical_force_scale * params['kUB']
+                params['kUB'] *= canonical_force_scale
                 params_ubpart = {k:v for (k,v) in params.items() if k in ['r','kUB'] }
                 names.append(name)
                 paramlists.append(params_ubpart)
