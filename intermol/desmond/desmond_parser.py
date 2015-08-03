@@ -234,7 +234,7 @@ class DesmondParser(object):
                 names.append(name)
                 paramlists.append(params_ubpart)
             else:
-                if direction == 'into':
+                if direction == 'from':
                     names.append(name)
                     paramlists.append(params)
 
