@@ -1,8 +1,14 @@
+from collections import OrderedDict
+from copy import copy
+from glob import glob
 import logging
-from subprocess import Popen, PIPE
 import os
+from pkg_resources import resource_filename
+from subprocess import Popen, PIPE
 
+import numpy as np
 from six import string_types
+
 
 ENGINES = ['gromacs', 'lammps', 'desmond']
 
@@ -10,22 +16,10 @@ ENGINES = ['gromacs', 'lammps', 'desmond']
 INFO_LOG = 'info.log'
 DEBUG_LOG = 'debug.log'
 
-# Get reference to loggers used in convert.py.
-logger = logging.getLogger('InterMolLog')
-logger.setLevel(logging.DEBUG)
-logging.captureWarnings(True)
-warning_logger = logging.getLogger('py.warnings')
-
-# Make a logger for unit and system tests.
-testing_logger = logging.getLogger('testing')
-if not testing_logger.handlers:
-    testing_logger.setLevel(logging.DEBUG)
-    h = logging.StreamHandler()
-    h.setLevel(logging.INFO)  # ignores DEBUG level for now
-    f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
-                          "%Y-%m-%d %H:%M:%S")
-    h.setFormatter(f)
-    testing_logger.addHandler(h)
+# Get reference to various loggers.
+logger = logging.getLogger('InterMolLog')   # From convert.py
+warning_logger = logging.getLogger('py.warnings')  # From convert.py
+testing_logger = logging.getLogger('testing')  # From test_all.py
 
 
 def add_handler(directory):
@@ -145,3 +139,127 @@ def run_subprocess(cmd, engine, stdout_path, stderr_path, stdin=None):
         stdout.write(out)
         stderr.write(err)
     return proc
+
+
+def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
+    """Convert all tests of a type from one engine to all others. """
+    flags = {'energy': energy,
+             input_engine: True}
+
+    testing_logger.info('Running {} {} tests'.format(input_engine.upper(), test_type))
+    output_dir = resource_filename('intermol', 'tests/{}_test_outputs'.format(test_type))
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        if not os.path.isdir(output_dir):
+            raise
+
+    results = _convert_from_engine(input_engine, flags, test_type=test_type)
+    for output_engine, tests in results.items():
+        # All non-numeric results are assumed to be intended error messages such
+        # as unconvertible functional forms for specific packages.
+        tests = list()
+        for val in tests.values():
+            try:
+                float_val = float(val)
+            except ValueError:
+                pass
+            else:
+                tests.append(float_val)
+        zeros = np.zeros(shape=(len(tests)))
+        if np.allclose(tests, zeros, atol=test_tolerance):
+            print('All {0} tests for {1} to {2} match within {2:.1e} kJ/mol.'.format(
+                test_type, input_engine.upper(), output_engine.upper(), test_tolerance))
+        else:
+            raise Exception('{0} tests do not match within {1:.1e} kJ/mol.'.format(
+                test_type, test_tolerance))
+
+
+def _convert_from_engine(engine, flags, test_type='unit'):
+    """Run all tests of a particular type from one engine to all others.
+
+    Args:
+        engine (str): The input engine.
+        flags (dict): Flags passed to `convert.py`.
+        test_type (str, optional): The test suite to run. Defaults to 'unit'.
+    Returns:
+        results (dict of dicts): The results of all conversions.
+            {'gromacs': {'bond1: result, 'bond2: results...},
+            'lammps': {'bond1: result, 'bond2: results...},
+            ...}
+
+    """
+    from intermol import convert
+    engine = engine.lower()
+    test_dir = resource_filename('intermol', 'tests/{0}/{1}_tests'.format(
+        engine, test_type))
+
+    get_test_files = eval('_get_{}_test_files'.format(engine))
+    test_files, names = get_test_files(test_dir)
+    # The results of all conversions are stored in nested dictionaries:
+    # results = {'gromacs': {'bond1: result, 'bond2: result...},
+    #            'lammps': {'bond1: result, 'bond2: result...},
+    #            ...}
+    per_file_results = OrderedDict((k, None) for k in names)
+    results = {engine: copy(per_file_results) for engine in ENGINES}
+
+    base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_{1}'.format(test_type, engine))
+    try:
+        os.makedirs(base_output_dir)
+    except OSError:
+        if not os.path.isdir(base_output_dir):
+            raise
+
+    for test_file, name in zip(test_files, names):
+        testing_logger.info('Converting {0}'.format(name))
+        odir = '{0}/{1}'.format(base_output_dir, name)
+        try:
+            os.makedirs(odir)
+        except OSError:
+            if not os.path.isdir(odir):
+                raise
+
+        if engine == 'gromacs':
+            gro, top = test_file
+            flags['gro_in'] = [gro, top]
+        elif engine == 'lammps':
+            flags['lmp_in'] = test_file
+
+        flags['odir'] = odir
+        for engine in ENGINES:
+            flags[engine] = True
+
+        h1, h2 = add_handler(odir)
+        cmd_line_equivalent = command_line_flags(flags)
+
+        logger.info('Converting {0} with command:\n'.format(test_file))
+        logger.info('    python convert.py {0}'.format(
+            ' '.join(cmd_line_equivalent)))
+        diff = convert.main(flags)
+        for engine, result in diff.items():
+            results[engine][name] = result
+        remove_handler(h1, h2)
+
+    summarize_results(engine, results, base_output_dir)
+    return results
+
+
+def _get_gromacs_test_files(test_dir):
+    gro_files = sorted(glob(os.path.join(test_dir, '*/*.gro')))
+    gro_files = [x for x in gro_files if not x.endswith('out.gro')]
+    top_files = sorted(glob(os.path.join(test_dir, '*/*.top')))
+    names = [os.path.splitext(os.path.basename(gro))[0] for gro in gro_files]
+    return zip(gro_files, top_files), names
+
+
+def _get_lammps_test_files(test_dir):
+    input_files = sorted(glob(os.path.join(test_dir, '*/*.input')))
+    names = [os.path.splitext(os.path.basename(inp))[0] for inp in input_files]
+    return input_files, names
+
+
+def _get_desmond_test_files(test_dir):
+    cms_files = sorted(glob(os.path.join(test_dir, '*/*.cms')))
+    names = [os.path.splitext(os.path.basename(cms))[0] for cms in cms_files]
+    return cms_files, names
+
