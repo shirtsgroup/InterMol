@@ -7,6 +7,12 @@ import simtk.unit as units
 from intermol.lammps.lammps_parser import load_lammps, write_lammps
 from intermol.tests.testing_tools import run_subprocess
 
+# Python 2/3 compatibility.
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 logger = logging.getLogger('InterMolLog')
 
 

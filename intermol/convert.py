@@ -15,6 +15,9 @@ from intermol.tests.testing_tools import which
 
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
+logger.setLevel(logging.DEBUG)
+logging.captureWarnings(True)
+warning_logger = logging.getLogger('py.warnings')
 
 
 def parse_args(args):
