@@ -22,6 +22,11 @@ warning_logger = logging.getLogger('py.warnings')  # From convert.py
 testing_logger = logging.getLogger('testing')  # From test_all.py
 
 
+class MultipleValidationErrors(Exception):
+    def __str__(self):
+        return '\n\n{0}\n\n'.format('\n'.join(self.args))
+
+
 def add_handler(directory):
     """Adds two FileHandlers to the global logger object.
 
@@ -158,6 +163,7 @@ def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
     if not energy:
         return  # No need to compare energies.
 
+    exceptions = list()
     for output_engine, tests in results.items():
         # All non-numeric results are assumed to be intended error messages such
         # as unconvertible functional forms for specific packages.
@@ -169,13 +175,21 @@ def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
                 continue
             else:
                 numeric_results.append(float_val)
+        if not numeric_results:
+            exceptions.append('No {0} tests were successfully converted from {1} to {2}'.format(
+                test_type, input_engine.upper(), output_engine.upper()))
+            continue
         zeros = np.zeros(shape=(len(numeric_results)))
         if np.allclose(numeric_results, zeros, atol=test_tolerance):
-            print('All {0} tests for {1} to {2} match within {3:.1e} kJ/mol.'.format(
+            print('All successfully converted {0} tests for {1} to {2} match within {3:.1e} kJ/mol.'.format(
                 test_type, input_engine.upper(), output_engine.upper(), test_tolerance))
         else:
-            raise Exception('{0} to {1} {2} tests do not match within {3:.1e} kJ/mol.'.format(
+            # Continue making all the comparisons before throwing the error.
+            exceptions.append('{0} to {1} {2} tests do not match within {3:.1e} kJ/mol.'.format(
                 input_engine.upper(), output_engine.upper(), test_type, test_tolerance))
+
+    if exceptions:
+        raise MultipleValidationErrors(*exceptions)
 
 
 def _convert_from_engine(input_engine, flags, test_type='unit'):
