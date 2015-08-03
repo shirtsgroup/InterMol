@@ -1787,7 +1787,7 @@ class DesmondParser(object):
 
         solute = True
         endline = ''
-        resName = ''
+        resname = ''
 
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
@@ -1814,7 +1814,7 @@ class DesmondParser(object):
                 del lines[bpos]
             else:
                 for atom in molecule.atoms:
-                    resName = atom.residue_name
+                    resname = atom.residue_name
                     break
                 if resname == "T3P" or resname == "WAT":
                     lines.append('  "TIP3P water box"\n')
