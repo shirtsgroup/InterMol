@@ -230,6 +230,9 @@ class GromacsParser(object):
             elif dihedral == FourierDihedral:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
+            elif dihedral == TrigDihedral:  # already converted
+                convertfunc =  convert_nothing
+                converted_dihedral = TrigDihedral
             else:
                 logger.warning('Did not convert dihedral: {0}'.format(dihedral))
             params = convertfunc(params)
@@ -926,8 +929,7 @@ class GromacsParser(object):
 
             # Use the returned btypes that we get a match with!
             dihedral_types = self.find_dihedraltype(btypes, improper=improper)
-            # Overwrite the actual dihedral if converted!
-            # These all got converted.
+            # this dihedraltype has been found before, and already converted
             if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
                 gromacs_dihedral = TrigDihedral
             else:
