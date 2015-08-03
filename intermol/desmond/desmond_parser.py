@@ -301,13 +301,12 @@ class DesmondParser(object):
             else:
                 names = []
                 paramlists = []
-                if dihedral in [ImproperHarmonicDihedral]:
+
+                if dihedral.__class__ in [ImproperHarmonicDihedral]:
                     params['k'] = params['k'] * canonical_force_scale
                     name = 'IMPROPER_HARM'
-                    names.append(name)
-                    params.append(params)
 
-                elif dihedral in [TrigDihedral]:
+                elif dihedral.__class__ in [TrigDihedral]:
                     optkwds = ff.optparamlookup(dihedral.__class__)
                     if optkwds['improper']:
                         name = 'IMPROPER_TRIG'
