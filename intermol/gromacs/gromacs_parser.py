@@ -206,7 +206,6 @@ class GromacsParser(object):
             elif dihedral == ProperPeriodicDihedral:
                 convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedral
-
             elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 # Sign convention from psi to phi.
