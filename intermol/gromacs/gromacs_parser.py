@@ -200,16 +200,13 @@ class GromacsParser(object):
         Returns:
         """
         if direction == 'into':
-            converted_dihedral = dihedral
-            convertfunc = convert_nothing
             if dihedral == ProperPeriodicDihedralType:
                 convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedralType
             elif dihedral == ProperPeriodicDihedral:
                 convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedral
-            elif dihedral in (ImproperHarmonicDihedralType, ImproperHarmonicDihedral):
-                convertfunc = convert_nothing
+
             elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 # Sign convention from psi to phi.
@@ -230,8 +227,12 @@ class GromacsParser(object):
             elif dihedral == FourierDihedral:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
+            elif dihedral in (ImproperHarmonicDihedralType, ImproperHarmonicDihedral,
+                              TrigDihedralType, TrigDihedral):
+                convertfunc = convert_nothing
+                converted_dihedral = dihedral
             else:
-                logger.warning('Did not convert dihedral: {0}'.format(dihedral))
+                raise ValueError('Unable to convert dihedral: {0}'.format(dihedral))
             params = convertfunc(params)
             return converted_dihedral, params
         else:
@@ -926,8 +927,7 @@ class GromacsParser(object):
 
             # Use the returned btypes that we get a match with!
             dihedral_types = self.find_dihedraltype(btypes, improper=improper)
-            # Overwrite the actual dihedral if converted!
-            # These all got converted.
+            # This dihedraltype has been found before and already converted.
             if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
                 gromacs_dihedral = TrigDihedral
             else:
