@@ -158,24 +158,24 @@ def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
     for output_engine, tests in results.items():
         # All non-numeric results are assumed to be intended error messages such
         # as unconvertible functional forms for specific packages.
-        tests = list()
+        numeric_results = list()
         for val in tests.values():
             try:
                 float_val = float(val)
-            except ValueError:
-                pass
+            except (ValueError, TypeError):
+                continue
             else:
-                tests.append(float_val)
-        zeros = np.zeros(shape=(len(tests)))
-        if np.allclose(tests, zeros, atol=test_tolerance):
-            print('All {0} tests for {1} to {2} match within {2:.1e} kJ/mol.'.format(
+                numeric_results.append(float_val)
+        zeros = np.zeros(shape=(len(numeric_results)))
+        if np.allclose(numeric_results, zeros, atol=test_tolerance):
+            print('All {0} tests for {1} to {2} match within {3:.1e} kJ/mol.'.format(
                 test_type, input_engine.upper(), output_engine.upper(), test_tolerance))
         else:
-            raise Exception('{0} tests do not match within {1:.1e} kJ/mol.'.format(
-                test_type, test_tolerance))
+            raise Exception('{0} to {1} {2} tests do not match within {3:.1e} kJ/mol.'.format(
+                input_engine.upper(), output_engine.upper(), test_type, test_tolerance))
 
 
-def _convert_from_engine(engine, flags, test_type='unit'):
+def _convert_from_engine(input_engine, flags, test_type='unit'):
     """Run all tests of a particular type from one engine to all others.
 
     Args:
@@ -190,20 +190,19 @@ def _convert_from_engine(engine, flags, test_type='unit'):
 
     """
     from intermol import convert
-    engine = engine.lower()
     test_dir = resource_filename('intermol', 'tests/{0}/{1}_tests'.format(
-        engine, test_type))
+        input_engine, test_type))
 
-    get_test_files = eval('_get_{}_test_files'.format(engine))
+    get_test_files = eval('_get_{}_test_files'.format(input_engine))
     test_files, names = get_test_files(test_dir)
     # The results of all conversions are stored in nested dictionaries:
     # results = {'gromacs': {'bond1: result, 'bond2: result...},
     #            'lammps': {'bond1: result, 'bond2: result...},
     #            ...}
     per_file_results = OrderedDict((k, None) for k in names)
-    results = {engine: copy(per_file_results) for engine in ENGINES}
+    results = OrderedDict((engine, copy(per_file_results)) for engine in ENGINES)
 
-    base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_{1}'.format(test_type, engine))
+    base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_{1}'.format(test_type, input_engine))
     try:
         os.makedirs(base_output_dir)
     except OSError:
@@ -219,11 +218,13 @@ def _convert_from_engine(engine, flags, test_type='unit'):
             if not os.path.isdir(odir):
                 raise
 
-        if engine == 'gromacs':
+        if input_engine == 'gromacs':
             gro, top = test_file
             flags['gro_in'] = [gro, top]
-        elif engine == 'lammps':
+        elif input_engine == 'lammps':
             flags['lmp_in'] = test_file
+        elif input_engine == 'desmond':
+            flags['des_in'] = test_file
 
         flags['odir'] = odir
         for engine in ENGINES:
@@ -240,7 +241,7 @@ def _convert_from_engine(engine, flags, test_type='unit'):
             results[engine][name] = result
         remove_handler(h1, h2)
 
-    summarize_results(engine, results, base_output_dir)
+    summarize_results(input_engine, results, base_output_dir)
     return results
 
 
