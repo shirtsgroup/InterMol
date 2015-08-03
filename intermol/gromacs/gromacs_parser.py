@@ -59,7 +59,7 @@ def default_gromacs_include_dir():
     if 'GMXBIN' in os.environ:
         return os.path.abspath(os.path.join(
             os.environ['GMXBIN'], '..', 'share', 'gromacs', 'top'))
-    return '/usr/local/gromacs/share/gromacs/top'
+    return '/usr/local/share/gromacs/top'
 
 
 class GromacsParser(object):
