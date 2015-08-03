@@ -155,6 +155,9 @@ def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
             raise
 
     results = _convert_from_engine(input_engine, flags, test_type=test_type)
+    if not energy:
+        return  # No need to compare energies.
+
     for output_engine, tests in results.items():
         # All non-numeric results are assumed to be intended error messages such
         # as unconvertible functional forms for specific packages.
