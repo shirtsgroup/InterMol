@@ -228,7 +228,7 @@ def main(args=None):
             output_type.append('desmond')
             try:
                 out, outfile = desmond_driver.desmond_energies(
-                    '{0}.input'.format(oname), cfg_path, despath)
+                    '{0}.cms'.format(oname), cfg_path, despath)
             except Exception as e:
                 output_status['desmond'] = e
                 logger.exception(e)
