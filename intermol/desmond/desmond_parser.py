@@ -125,18 +125,18 @@ class DesmondParser(object):
 
         if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
 
-            params['k'] = canonical_force_scale * params['k']
-
             if direction == 'into':
+                bond.k *= canonical_force_scale
                 if name == 'HARM_CONSTRAINED':
-                    params['c'] = True
+                    bond.c = True
                 elif name == 'HARM':
-                    params['c'] = False
+                    bond.c = False
                 else:
                     warn("ReadError: Found unsupported bond in Desmond %s" % name)
                 return bond
 
             else:
+                params['k'] *= canonical_force_scale
                 # harmonic potentials in Gromacs should be constrained (??: check what this means)
                 optkwds = ff.optparamlookup(bond.__class__)
                 if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
@@ -188,9 +188,9 @@ class DesmondParser(object):
 
             if direction == 'into':
                 if angle.__class__ in [UreyBradleyAngle, UreyBradleyNoharmAngle]:
-                    angle.kUB *=  canonical_force_scale * angle.kUB
+                    angle.kUB *=  canonical_force_scale
                 if angle.__class__ in [UreyBradleyAngle, HarmonicAngle]:
-                    angle.k *=  canonical_force_scale * angle.k
+                    angle.k *=  canonical_force_scale
 
                 if name == 'HARM_CONSTRAINED':  # this needs to go first because HARM is a substring
                     angle.c = True
@@ -221,20 +221,22 @@ class DesmondParser(object):
                 elif angle.__class__ == HarmonicAngle:
                     matched_angle = molecule_type.match_angles(angle)
                     if matched_angle and matched_angle.__class__ == UreyBradleyAngle:
-                        angle.r = matched_angle.r
-                        angle.kUB = matched_angle.kUB
-                        molecule_type.angle_forces.remove(matched_angle)
+                        # just copy over the information into the old angle.
+                        matched_angle.k = angle.k
+                        matched_angle.theta = angle.theta
+                        angle = None
+
             elif direction == 'from' and angle.__class__ in [UreyBradleyAngle]:
                 params_harmpart = {k:v for (k,v) in params.items() if k in ['theta','k','c'] }
                 names.append(name)
                 paramlists.append(params_harmpart)
                 name = 'UB'
-                params['kUB'] = canonical_force_scale * params['kUB']
+                params['kUB'] *= canonical_force_scale
                 params_ubpart = {k:v for (k,v) in params.items() if k in ['r','kUB'] }
                 names.append(name)
                 paramlists.append(params_ubpart)
             else:
-                if direction == 'into':
+                if direction == 'from':
                     names.append(name)
                     paramlists.append(params)
 
@@ -301,13 +303,12 @@ class DesmondParser(object):
             else:
                 names = []
                 paramlists = []
-                if dihedral in [ImproperHarmonicDihedral]:
+
+                if dihedral.__class__ in [ImproperHarmonicDihedral]:
                     params['k'] = params['k'] * canonical_force_scale
                     name = 'IMPROPER_HARM'
-                    names.append(name)
-                    params.append(params)
 
-                elif dihedral in [TrigDihedral]:
+                elif dihedral.__class__ in [TrigDihedral]:
                     optkwds = ff.optparamlookup(dihedral.__class__)
                     if optkwds['improper']:
                         name = 'IMPROPER_TRIG'
@@ -572,14 +573,12 @@ class DesmondParser(object):
             kwds = self.get_parameter_kwds_from_force(new_bond)
             new_bond = self.canonical_bond(new_bond, kwds, direction = 'into', name = key)
 
-            #not clear what this code was doing . . .
-            #if new_bond in current_molecule_type.bond_forces:
-            #    #MRS: questionable lookup on next line?
-            #    old_bond = current_molecule_type.bond_forces.get(new_bond)
-            #    current_molecule_type.bond_forces.remove(new_bond)
-            #    new_bond.order = old_bond.order
-
+            # removing the placeholder from matoms (should be a better way to do this?)
             if new_bond:
+                old_bond = current_molecule_type.match_bonds(new_bond)
+                if old_bond:
+                    new_bond.order = old_bond.order
+                    current_molecule_type.bond_forces.remove(old_bond)
                 current_molecule_type.bond_forces.add(new_bond)
 
     def parse_pairs(self, type, current_molecule_type):
@@ -600,21 +599,16 @@ class DesmondParser(object):
                 newpair_force = self.create_forcetype(LjSigepsPair, params, map(float, split[4:6]))
             elif key == "LJ" or key == "COULOMB":
                 # I think we just need LjSigepsPair, not LjPair
-                new_pair =  self.create_forcetype(LjDefaultPair, params, [0, 0])
-                #MRS: review below logic
-                pairmatch = new_pair in current_molecule_type.pair_forces
+                new_pair = self.create_forcetype(LjDefaultPair, params, [0, 0])
+                pair_match = current_molecule_type.match_pairs(new_pair)
+                if pair_match:
+                    new_pair = pair_match # replace the new one with the old one we pulled back up
                 if key == "LJ":
                     ljcorr = float(split[4])
-                    if pairmatch:
-                        new_pair.scaleLJ = ljcorr   # should be the old pair . . . but equality is now full?
-                    else:
-                        new_pair.scaleLJ = ljcorr
+                    new_pair.scaleLJ = ljcorr
                 if key == "COULOMB":
-                    coulcorr = float(split[4])  # we need this for the system, since it's not stored anywhere
-                    if pairmatch:
-                        new_pair.scaleQQ = coulcorr # should be the old pair . . . but equality is now full?
-                    else:
-                        new_pair.scaleQQ = coulcorr
+                    coulcorr = float(split[4])
+                    new_pair.scaleQQ = coulcorr
             else:
                 warn("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
@@ -627,6 +621,7 @@ class DesmondParser(object):
                 #If we have difference between global and local, catch in gromacs.
 
             if new_pair:
+
                 current_molecule_type.pair_forces.add(new_pair)
                 # IMPORTANT: we are going to assume that all pairs are both LJ and COUL.
                 # if COUL is not included, then it is because the charges are zero, and they will give the
@@ -696,8 +691,8 @@ class DesmondParser(object):
                 # next 4 lines definitely not the right way to do it.
                 opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), map(lambda s: units.kilocalorie_per_mole*float(s), split[7:11]))}
                 kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
-                kwds.update({'phi': 0 * units.degrees})
                 kwds = map(lambda x: x._value,kwds.values())
+                kwds.insert(0,0) # insert phi into the first section
                 # ^^^^^ will need to put this into canonical form, can't until we can pass in either arrays, or keywords ^^^^
 
             new_dihedral = self.create_forcetype(self.desmond_dihedrals[key], atoms, kwds)
@@ -791,7 +786,7 @@ class DesmondParser(object):
                 else:
                     for t in range(3,templen):
                         params.extend([tempatom[t-1],templength[t-2]])
-                new_constraint = constraint(*params)
+                new_constraint = Constraint(*params)
                 #if templen == 1:
                 #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
                 #elif templen == 2:
@@ -1256,7 +1251,7 @@ class DesmondParser(object):
                 bond_params = self.get_parameter_list_from_force(converted_bond)
                 param_units = self.unitvars[converted_bond.__class__.__name__]
                 for param, param_unit in zip(bond_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'
                 dlines.append(line)
         header = "    ffio_bonds[%d] {\n" % (i)
@@ -1296,7 +1291,7 @@ class DesmondParser(object):
                 angle_params = self.get_parameter_list_from_force(converted_angle)
                 param_units = self.unitvars[converted_angle.__class__.__name__]
                 for param, param_unit in zip(angle_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'
                 dlines.append(line)
 
@@ -1342,9 +1337,9 @@ class DesmondParser(object):
                 dihedral_params = self.get_parameter_list_from_force(converted_dihedral)
                 param_units = self.unitvars[converted_dihedral.__class__.__name__]
                 for param, param_unit in zip(dihedral_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 for j in range(8-len(dihedral_params)):
-                    line += "%6.3f" % (0.0)
+                    line += " %6.3f" % (0.0)
                 line += '\n'
                 dlines.append(line)
 
@@ -1427,6 +1422,7 @@ class DesmondParser(object):
             # for Desmond to Desmond conversion, where nrexcl is not
             # determined.  Probably should switch eventually.
 
+            exclusionlist = sorted(list(moleculetype.exclusions), key=lambda x: (x[0], x[1]))
             for exclusion in moleculetype.exclusions:
                 i+=1
                 dlines.append('      %d %d %d\n'%(i, int(exclusion[0]), int(exclusion[1])))
@@ -1787,7 +1783,7 @@ class DesmondParser(object):
 
         solute = True
         endline = ''
-        resName = ''
+        resname = ''
 
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
@@ -1814,7 +1810,7 @@ class DesmondParser(object):
                 del lines[bpos]
             else:
                 for atom in molecule.atoms:
-                    resName = atom.residue_name
+                    resname = atom.residue_name
                     break
                 if resname == "T3P" or resname == "WAT":
                     lines.append('  "TIP3P water box"\n')

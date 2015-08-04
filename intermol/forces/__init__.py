@@ -10,6 +10,8 @@ from intermol.forces.atom_sigeps_type import AtomSigepsType
 
 from intermol.forces.settles import Settles
 
+from intermol.forces.constraint import Constraint
+
 from intermol.forces.torsion_torsion_cmap import TorsionTorsionCMAP
 
 # what is below here really should be written automatically

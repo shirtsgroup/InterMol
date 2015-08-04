@@ -15,6 +15,9 @@ from intermol.tests.testing_tools import which
 
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
+logger.setLevel(logging.DEBUG)
+logging.captureWarnings(True)
+warning_logger = logging.getLogger('py.warnings')
 
 
 def parse_args(args):
@@ -225,7 +228,7 @@ def main(args=None):
             output_type.append('desmond')
             try:
                 out, outfile = desmond_driver.desmond_energies(
-                    '{0}.input'.format(oname), cfg_path, despath)
+                    '{0}.cms'.format(oname), cfg_path, despath)
             except Exception as e:
                 output_status['desmond'] = e
                 logger.exception(e)
