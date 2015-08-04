@@ -571,14 +571,12 @@ class DesmondParser(object):
             kwds = self.get_parameter_kwds_from_force(new_bond)
             new_bond = self.canonical_bond(new_bond, kwds, direction = 'into', name = key)
 
-            #not clear what this code was doing . . .
-            #if new_bond in current_molecule_type.bond_forces:
-            #    #MRS: questionable lookup on next line?
-            #    old_bond = current_molecule_type.bond_forces.get(new_bond)
-            #    current_molecule_type.bond_forces.remove(new_bond)
-            #    new_bond.order = old_bond.order
-
+            # removing the placeholder from matoms (should be a better way to do this?)
             if new_bond:
+                old_bond = current_molecule_type.match_bonds(new_bond)
+                if old_bond:
+                    new_bond.order = old_bond.order
+                    current_molecule_type.bond_forces.remove(old_bond)
                 current_molecule_type.bond_forces.add(new_bond)
 
     def parse_pairs(self, type, current_molecule_type):
@@ -599,21 +597,16 @@ class DesmondParser(object):
                 newpair_force = self.create_forcetype(LjSigepsPair, params, map(float, split[4:6]))
             elif key == "LJ" or key == "COULOMB":
                 # I think we just need LjSigepsPair, not LjPair
-                new_pair =  self.create_forcetype(LjDefaultPair, params, [0, 0])
-                #MRS: review below logic
-                pairmatch = new_pair in current_molecule_type.pair_forces
+                new_pair = self.create_forcetype(LjDefaultPair, params, [0, 0])
+                pair_match = current_molecule_type.match_pairs(new_pair)
+                if pair_match:
+                    new_pair = pair_match # replace the new one with the old one we pulled back up
                 if key == "LJ":
                     ljcorr = float(split[4])
-                    if pairmatch:
-                        new_pair.scaleLJ = ljcorr   # should be the old pair . . . but equality is now full?
-                    else:
-                        new_pair.scaleLJ = ljcorr
+                    new_pair.scaleLJ = ljcorr
                 if key == "COULOMB":
-                    coulcorr = float(split[4])  # we need this for the system, since it's not stored anywhere
-                    if pairmatch:
-                        new_pair.scaleQQ = coulcorr # should be the old pair . . . but equality is now full?
-                    else:
-                        new_pair.scaleQQ = coulcorr
+                    coulcorr = float(split[4])
+                    new_pair.scaleQQ = coulcorr
             else:
                 warn("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
 
@@ -626,6 +619,7 @@ class DesmondParser(object):
                 #If we have difference between global and local, catch in gromacs.
 
             if new_pair:
+
                 current_molecule_type.pair_forces.add(new_pair)
                 # IMPORTANT: we are going to assume that all pairs are both LJ and COUL.
                 # if COUL is not included, then it is because the charges are zero, and they will give the
@@ -1426,6 +1420,7 @@ class DesmondParser(object):
             # for Desmond to Desmond conversion, where nrexcl is not
             # determined.  Probably should switch eventually.
 
+            exclusionlist = sorted(list(moleculetype.exclusions), key=lambda x: (x[0], x[1]))
             for exclusion in moleculetype.exclusions:
                 i+=1
                 dlines.append('      %d %d %d\n'%(i, int(exclusion[0]), int(exclusion[1])))
