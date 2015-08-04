@@ -12,9 +12,6 @@ addons:
     packages:
       - gromacs
 
-virtualenv:
-  system_site_packages: true
-
 before_install:
   # Build LAMMPS
   - wget http://lammps.sandia.gov/tars/lammps-9Dec14.tar.gz
