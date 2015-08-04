@@ -1,39 +1,30 @@
 language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "pypy"
 
 sudo: false
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-
-python:
-  - "2.7"
+    packages:
+      - gromacs
 
 virtualenv:
   system_site_packages: true
 
 before_install:
-  # Build GROMACS
-  - wget ftp://ftp.gromacs.org/pub/gromacs/gromacs-4.6.7.tar.gz
-  - tar xfz gromacs-4.6.7.tar.gz
-  - cd gromacs-4.6.7
-  - mkdir build
-  - cd build
-  - cmake .. -DGMX_BUILD_OWN_FFTW=ON -DGMX_DOUBLE=ON
-  - make -j 2
-  - make install
-  - source /usr/local/gromacs/bin/GMXRC
-  - cd ../..
   # Build LAMMPS
   - wget http://lammps.sandia.gov/tars/lammps-9Dec14.tar.gz
-  - tar xfz lammps-9Dec14.tar.gz
-  - cd lammps-9Dec14/src
+  - tar xfz lammps-15May15.tar.gz
+  - cd lammps-15May15/src
   - make serial -j 2
   - mkdir $HOME/bin
   - mv lmp_serial $HOME/bin
   - export PATH=$PATH:$HOME/bin
   - cd ../..
-
 
 install:
   - pip install coverage
