@@ -221,9 +221,11 @@ class DesmondParser(object):
                 elif angle.__class__ == HarmonicAngle:
                     matched_angle = molecule_type.match_angles(angle)
                     if matched_angle and matched_angle.__class__ == UreyBradleyAngle:
-                        angle.r = matched_angle.r
-                        angle.kUB = matched_angle.kUB
-                        molecule_type.angle_forces.remove(matched_angle)
+                        # just copy over the information into the old angle.
+                        matched_angle.k = angle.k
+                        matched_angle.theta = angle.theta
+                        angle = None
+
             elif direction == 'from' and angle.__class__ in [UreyBradleyAngle]:
                 params_harmpart = {k:v for (k,v) in params.items() if k in ['theta','k','c'] }
                 names.append(name)
