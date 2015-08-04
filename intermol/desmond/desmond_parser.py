@@ -301,13 +301,12 @@ class DesmondParser(object):
             else:
                 names = []
                 paramlists = []
-                if dihedral in [ImproperHarmonicDihedral]:
+
+                if dihedral.__class__ in [ImproperHarmonicDihedral]:
                     params['k'] = params['k'] * canonical_force_scale
                     name = 'IMPROPER_HARM'
-                    names.append(name)
-                    params.append(params)
 
-                elif dihedral in [TrigDihedral]:
+                elif dihedral.__class__ in [TrigDihedral]:
                     optkwds = ff.optparamlookup(dihedral.__class__)
                     if optkwds['improper']:
                         name = 'IMPROPER_TRIG'
@@ -1256,7 +1255,7 @@ class DesmondParser(object):
                 bond_params = self.get_parameter_list_from_force(converted_bond)
                 param_units = self.unitvars[converted_bond.__class__.__name__]
                 for param, param_unit in zip(bond_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'
                 dlines.append(line)
         header = "    ffio_bonds[%d] {\n" % (i)
@@ -1296,7 +1295,7 @@ class DesmondParser(object):
                 angle_params = self.get_parameter_list_from_force(converted_angle)
                 param_units = self.unitvars[converted_angle.__class__.__name__]
                 for param, param_unit in zip(angle_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 line += '\n'
                 dlines.append(line)
 
@@ -1342,9 +1341,9 @@ class DesmondParser(object):
                 dihedral_params = self.get_parameter_list_from_force(converted_dihedral)
                 param_units = self.unitvars[converted_dihedral.__class__.__name__]
                 for param, param_unit in zip(dihedral_params, param_units):
-                    line += "%15.8f" % (param.value_in_unit(param_unit))
+                    line += " %15.8f" % (param.value_in_unit(param_unit))
                 for j in range(8-len(dihedral_params)):
-                    line += "%6.3f" % (0.0)
+                    line += " %6.3f" % (0.0)
                 line += '\n'
                 dlines.append(line)
 
