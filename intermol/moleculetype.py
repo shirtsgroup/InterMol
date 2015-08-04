@@ -60,7 +60,7 @@ class MoleculeType(object):
         return False
 
     def match_bonds(self, bond):
-        self._match_two_atoms(bond, self.bond_forces)
+        return self._match_two_atoms(bond, self.bond_forces)
 
     def match_pairs(self, pair):
         return self._match_two_atoms(pair, self.pair_forces)
