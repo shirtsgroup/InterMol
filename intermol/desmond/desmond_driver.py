@@ -125,5 +125,8 @@ def desmond_energies(cms, cfg, despath):
     else:
         raise Exception('Desmond binary not found')
     tot_energy = get_desmond_energy_from_file(energy_file)
+    # for now, remove the desmond '-out.cms' file.
+    outcms = cms[:-4] + '-out' + cms[-4:]
+    os.remove(outcms)
     os.chdir(cwd) # return directory up a level again
     return tot_energy, energy_file
