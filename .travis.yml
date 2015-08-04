@@ -2,7 +2,6 @@ language: python
 python:
   - "2.7"
   - "3.4"
-  - "pypy"
 
 sudo: false
 addons:
@@ -11,6 +10,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - gromacs
+      - gromacs-data
 
 before_install:
   # Build LAMMPS
