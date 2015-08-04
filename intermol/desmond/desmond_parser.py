@@ -125,18 +125,18 @@ class DesmondParser(object):
 
         if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
 
-            params['k'] *= canonical_force_scale
-
             if direction == 'into':
+                bond.k *= canonical_force_scale
                 if name == 'HARM_CONSTRAINED':
-                    params['c'] = True
+                    bond.c = True
                 elif name == 'HARM':
-                    params['c'] = False
+                    bond.c = False
                 else:
                     warn("ReadError: Found unsupported bond in Desmond %s" % name)
                 return bond
 
             else:
+                params['k'] *= canonical_force_scale
                 # harmonic potentials in Gromacs should be constrained (??: check what this means)
                 optkwds = ff.optparamlookup(bond.__class__)
                 if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
