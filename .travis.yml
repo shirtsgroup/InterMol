@@ -14,7 +14,7 @@ addons:
 
 before_install:
   # Build LAMMPS
-  - wget http://lammps.sandia.gov/tars/lammps-9Dec14.tar.gz
+  - wget http://lammps.sandia.gov/tars/lammps-15May15.tar.gz
   - tar xfz lammps-15May15.tar.gz
   - cd lammps-15May15/src
   - make serial -j 2
