@@ -585,32 +585,60 @@ class DesmondParser(object):
         ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Parsing [ pairs ] ...")
 
-        ljcorr = False
-        coulcorr = False
-
         for j in range(ff_number):
+            ljcorr = False
+            coulcorr = False
+            new_pair = None
             split = entry_values[j].split()
-            newpair_force = None
             atoms = map(int,split[1:3])
             bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
             params = atoms + bondingtypes
             key = split[3].upper()
             if key == "LJ12_6_SIG_EPSILON":
-                newpair_force = self.create_forcetype(LjSigepsPair, params, map(float, split[4:6]))
+                new_pair = self.create_forcetype(LjSigepsPair, params, map(float, split[4:6]))
             elif key == "LJ" or key == "COULOMB":
-                # I think we just need LjSigepsPair, not LjPair
+                # I think we just need LjSigepsPair, not LjPair?
                 new_pair = self.create_forcetype(LjDefaultPair, params, [0, 0])
-                pair_match = current_molecule_type.match_pairs(new_pair)
-                if pair_match:
-                    new_pair = pair_match # replace the new one with the old one we pulled back up
                 if key == "LJ":
                     ljcorr = float(split[4])
                     new_pair.scaleLJ = ljcorr
-                if key == "COULOMB":
+                elif key == "COULOMB":
                     coulcorr = float(split[4])
                     new_pair.scaleQQ = coulcorr
             else:
                 warn("ReadError: didn't recognize type %s in line %s", split[3], entry_values[j])
+
+            # now, we catch the matches and read them into a single potential
+            pair_match = current_molecule_type.match_pairs(new_pair)
+            if pair_match:  # we found a pair with the same atoms; let's insert or delete information as needed.
+                remove_old = False
+                remove_new = False
+                if isinstance(new_pair, LjSigepsPair) and isinstance(pair_match, LjDefaultPair) and pair_match.scaleQQ:
+                    #Need to add old scaleQQ to this new pair
+                    new_pair.scaleQQ = pair_match.scaleQQ
+                    remove_old = True
+                elif isinstance(pair_match, LjSigepsPair) and isinstance(new_pair, LjDefaultPair) and new_pair.scaleQQ:
+                    #Need to add the scaleQQ to the old pair
+                    pair_match.scaleQQ = new_pair.scaleQQ
+                    remove_new = True
+                elif isinstance(new_pair,LjDefaultPair) and isinstance(pair_match,LjDefaultPair):
+                    if pair_match.scaleQQ and not new_pair.scaleQQ:
+                        new_pair.scaleQQ = pair_match.scaleQQ
+                        remove_old = True
+                    elif not pair_match.scaleQQ and new_pair.scaleQQ:
+                        pair_match.scaleQQ = new_pair.scaleQQ
+                        remove_new = True
+                    if pair_match.scaleLJ and not new_pair.scaleLJ:
+                        new_pair.scaleLJ = pair_match.scaleLJ
+                        remove_new = True
+                    elif not pair_match.scaleLJ and new_pair.scaleLJ:
+                        pair_match.scaleLJ = new_pair.scaleLJ
+                        remove_old = True
+
+                if remove_old:
+                    current_molecule_type.pair_forces.remove(pair_match)
+                if remove_new:
+                    new_pair = None
 
             if coulcorr:
                 self.system.coulomb_correction = coulcorr  # need this for gromacs to have the global declared
@@ -621,7 +649,6 @@ class DesmondParser(object):
                 #If we have difference between global and local, catch in gromacs.
 
             if new_pair:
-
                 current_molecule_type.pair_forces.add(new_pair)
                 # IMPORTANT: we are going to assume that all pairs are both LJ and COUL.
                 # if COUL is not included, then it is because the charges are zero, and they will give the
@@ -1501,47 +1528,46 @@ class DesmondParser(object):
         hlines.append("      r_ffio_c2\n")
         hlines.append("      :::\n")
         i = 0
+
         for pair in sorted(list(moleculetype.pair_forces), key=lambda x: (x.atom1, x.atom2)):
-            i += 2
-            atom = '      %d %d ' % (pair.atom1, pair.atom2)
-            if isinstance(pair,LjDefaultPair) or isinstance(pair,LjqDefaultPair):
-                dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, self.system.lj_correction)
-                dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i, pair.atom1, pair.atom2, self.system.coulomb_correction)
-            elif isinstance(pair, LjSigepsPair) or isinstance(pair, LjCPair) or isinstance(pair, LjqCPair) or isinstance(pair, LjqSigepsPair):
+            atoms = ' %d %d ' % (pair.atom1, pair.atom2)
+            # first, the COUL part.
+            if pair.__class__ in (LjDefaultPair, LjqDefaultPair, LjSigepsPair, LjCPair):
+                                 # the first two appear to be duplicates: consider merging.
+                if pair.scaleQQ:
+                    scaleQQ = pair.scaleQQ
+                else:
+                    scaleQQ = self.system.coulomb_correction
+                i += 1
+                dlines += '       %d %s Coulomb %10.8f <>\n' % (i, atoms, scaleQQ)
+            elif pair._class in (LjqSigepsPair, LjqCPair):
+                warn("Desmond does not support pairtype %s!",pair.__class__.__name__ )  # may not be true?
+            else:
+                warn("Unknown pair type %s!",pair.__class__.__name__ )
+
+            # now the LJ part.
+            if pair.__class__ in (LjDefaultPair,LjqDefaultPair):
+                if pair.scaleLJ:
+                    scaleLJ = pair.scaleLJ
+                else:
+                    scaleLJ = self.system.lj_correction
+                i += 1
+                dlines += '       %d %s LJ %10.8f <>\n' % (i, atoms, scaleLJ)
+            elif pair.__class__ in (LjSigepsPair, LjqSigepsPair, LjCPair, LjqCPair):
                 # Check logic here -- not clear that we can correctly determine which type it is.
                 # Basically, I think it's whether scaleLJ is defined or not.
-                if pair.scaleLJ:
-                    dlines += '       %d %d %d LJ %10.8f <>\n' % (i-1, pair.atom1, pair.atom2, pair.scaleLJ)
-                    i -= 1
-                else:
-                    if isinstance(pair, LjCPair) or isinstance(pair, LjqCPair):
-                        #if isinstance(pair, LjqCPair):
-                        epsilon = 0.25 * (pair.C6**2) / pair.C12    # (16*eps^2*sig^12 / 4 eps*sig^12) = 4 eps
-                        sigma = (0.25 * pair.C6 / epsilon)**(1.0/6.0)  # (0.25 * 4 eps sig^6 / eps)^(1/6)
-                        #else:
-                        #    epsilon = pair.epsilon
-                        #    sigma = pair.sigma
-
-                        dlines += '       %d %d %d LJ12_6_sig_epsilon %10.8f %10.8f\n' % (i-1,
-                                                                          pair.atom1,
-                                                                          pair.atom2,
-                                                                          sigma.value_in_unit(units.angstroms),
-                                                                          epsilon.value_in_unit(units.kilocalorie_per_mole))
-                        i -= 1
-
-                if isinstance(pair, LjSigepsPair) or isinstance(pair, LjqCPair):
-                    if pair.scaleQQ:
-                        dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i-1, pair.atom1, pair.atom2,
-                                                                            pair.scaleQQ.value_in_unit(units.dimensionless))
-                        i -= 1
-                    else:
-                        dlines += '       %d %d %d Coulomb %10.8f <>\n' % (i-1, pair.atom1, pair.atom2,
-                                                                                self.system.coulomb_correction)
-                        i -= 1
-
+                if pair.__class__ in (LjCPair, LjqCPair):
+                    epsilon = 0.25 * (pair.C6**2) / pair.C12    # (16*eps^2*sig^12 / 4 eps*sig^12) = 4 eps
+                    sigma = (0.25 * pair.C6 / epsilon)**(1.0/6.0)  # (0.25 * 4 eps sig^6 / eps)^(1/6)
+                elif pair.__class__ in (LjSigepsPair, LjqCPair):
+                    epsilon = pair.epsilon
+                    sigma = pair.sigma
+                i += 1
+                dlines += '       %d %s LJ12_6_sig_epsilon %10.8f %10.8f\n' % (i, atoms,
+                                                                               sigma.value_in_unit(units.angstroms),
+                                                                               epsilon.value_in_unit(units.kilocalorie_per_mole))
             else:
-                warn("Unknown pair type!")
-
+                warn("Unknown pair type %s!",pair.__class__.__name__ )
 
         header = "    ffio_pairs[%d] {\n"%(i)
         hlines = end_header_section(i==0,header,hlines)
