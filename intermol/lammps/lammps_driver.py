@@ -11,7 +11,7 @@ from intermol.tests.testing_tools import run_subprocess
 try:
     FileNotFoundError
 except NameError:
-    FileNotFoundError = IOError
+    FileNotFoundError = OSError
 
 logger = logging.getLogger('InterMolLog')
 
