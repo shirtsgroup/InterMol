@@ -17,15 +17,15 @@ f_m_ct {
   s_ffio_ct_type
   :::
   "full system"
-               30.1061
+               50.1061
                    0.0
                    0.0
                    0.0
-               30.1061
+               50.1061
                    0.0
                    0.0
                    0.0
-               30.1061
+               50.1061
   full_system
   m_atom[9] {
     # First column is atom index #
@@ -84,15 +84,15 @@ f_m_ct {
   s_ffio_ct_type
   :::
   solute
-               30.1061
+               50.1061
                    0.0
                    0.0
                    0.0
-               30.1061
+               50.1061
                    0.0
                    0.0
                    0.0
-               30.1061
+               50.1061
   solute
   m_atom[9] {
     # First column is atom index #
