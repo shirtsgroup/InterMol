@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 import numpy as np
 from six import string_types
 
+from intermol.exceptions import MultipleValidationErrors
 
 ENGINES = ['gromacs', 'lammps', 'desmond']
 
@@ -22,9 +23,6 @@ warning_logger = logging.getLogger('py.warnings')  # From convert.py
 testing_logger = logging.getLogger('testing')  # From test_all.py
 
 
-class MultipleValidationErrors(Exception):
-    def __str__(self):
-        return '\n\n{0}\n\n'.format('\n'.join(self.args))
 
 
 def add_handler(directory):
