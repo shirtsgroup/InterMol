@@ -25,11 +25,11 @@ def parse_args(args):
 
     # Input arguments.
     group_in = parser.add_argument_group('Choose input conversion format')
-    group_in.add_argument('--des_in', nargs=1, metavar='file',
+    group_in.add_argument('--des_in', metavar='file',
             help='.cms file for conversion from DESMOND file format')
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
             help='.gro and .top file for conversion from GROMACS file format')
-    group_in.add_argument('--lmp_in', nargs=1, metavar='file',
+    group_in.add_argument('--lmp_in', metavar='file',
             help='input file for conversion from LAMMPS file format (expects'
                  ' data file in same directory and a read_data call)')
 
