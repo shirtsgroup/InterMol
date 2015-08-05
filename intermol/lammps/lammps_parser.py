@@ -1166,17 +1166,9 @@ class LammpsParser(object):
 
             # non-bonded
             if atom_charges:
-                # TODO: match mdp
-                #f.write('pair_style lj/cut/coul/long 9.999 9.999\n')
-                #f.write('pair_style lj/cut/coul/long 15 15\n')
-                #f.write('kspace_style pppm 1.0e-6\n')
-                #f.write('kspace_style ewald 1.0e-6\n')
-                #f.write('kspace_style pppm/stagger 1.0e-6\n')
-                f.write('pair_style lj/cut/coul/cut 19.99999 19.99999\n')  # TODO: match mdp
-                #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
-                #f.write('kspace_style none\n')  # if there are no charges
+                f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')  # TODO: auto-match mdp
             else:
-                f.write('pair_style lj/cut 19.99999\n')  # TODO: match mdp
+                f.write('pair_style lj/cut 9.99999\n')  # TODO: auto-match mdp
 
             if self.system.combination_rule == 'Lorentz-Berthelot':
                 f.write('pair_modify mix arithmetic\n')
