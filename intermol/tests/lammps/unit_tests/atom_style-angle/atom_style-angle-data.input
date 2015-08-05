@@ -1,5 +1,5 @@
 units real
-atom_style atomic
+atom_style angle
 
 dimension 3
 boundary p p p
@@ -7,7 +7,11 @@ boundary p p p
 pair_style lj/cut 15.0
 pair_modify mix geometric
 
-read_data atom_style-atomic-data.lmp
+bond_style hybrid harmonic morse
+angle_style harmonic
+special_bonds lj 0.0 0.0 0.5 coul 0.0 0.0 0.5
+
+read_data atom_style-angle-data.lmp
 
 thermo_style custom ebond eangle edihed eimp epair evdwl ecoul elong etail pe
 

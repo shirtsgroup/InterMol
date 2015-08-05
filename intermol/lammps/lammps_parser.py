@@ -472,6 +472,28 @@ class LammpsParser(object):
         if len(line) > 2:
             raise ValueError('Unsupported atom_style in input file.')
 
+        # TODO: Add remaining atom_styles
+        # http://lammps.sandia.gov/doc/atom_style.html
+        # See issue:
+        self.q_idx = None
+        self.res_idx = None
+        if self.atom_style == 'full':
+            self.res_idx = 1
+            self.type_idx = 2
+            self.q_idx = 3
+            self.pos_idx = (4, 5, 6)
+        elif self.atom_style == 'molecular':
+            self.res_idx = 1
+            self.type_idx = 2
+            self.pos_idx = (3, 4, 5)
+        elif self.atom_style == 'charge':
+            self.type_idx = 1
+            self.q_idx = 2
+            self.pos_idx = (3, 4, 5)
+        elif self.atom_style in ('angle', 'atomic', 'bond'):
+            self.type_idx = 1
+            self.pos_idx = (2, 3, 4)
+
     def parse_dimension(self, line):
         """ """
         self.dimension = int(line[1])
@@ -491,7 +513,7 @@ class LammpsParser(object):
         self.pair_style = []
         if line[1] == 'hybrid':
             logger.warning('Hybrid pair styles not yet implemented.')
-        elif line[1] == 'lj/cut/coul/long':
+        elif line[1] in ('lj/cut/coul/long', 'lj/cut'):
             self.pair_style.append(line[1])
             self.system.nonbonded_function = 1
 
@@ -692,51 +714,56 @@ class LammpsParser(object):
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
         next(data_lines)  # toss out blank line
+
         for line in data_lines:
             if not line.strip():
                 break  # found another blank line
             fields = line.partition('#')[0].split()
 
-            if len(fields) in [7, 10]:
-                if len(fields) == 10:
-                    # TODO: store image flags?
-                    pass
-                new_atom_type = None
-                if self.system.combination_rule == "Multiply-C6C12":
-                    logger.warnings("Combination rule 'Multiply-C6C12' not yet implemented")
-                elif self.system.combination_rule in ['Multiply-Sigeps',
-                                                      'Lorentz-Berthelot']:
-                    atomtype = 'lmp_{:03d}'.format(int(fields[2]))
-                    bondtype = atomtype
-                    new_atom_type = AtomSigepsType(
-                        atomtype,  # atomtype
-                        bondtype,  # bondtype
-                        -1,  # atomic_number
-                        self.mass_dict[int(fields[2])],  # mass
-                        0 * self.CHARGE,  # charge (0 for atomtype)
-                        'A',  # ptype
-                        self.nb_types[int(fields[2])][1],  # sigma
-                        self.nb_types[int(fields[2])][0])  # epsilon
+            if len(fields) == 10:
+                # TODO: store image flags?
+                pass
+            new_atom_type = None
+            if self.system.combination_rule == "Multiply-C6C12":
+                logger.warnings("Combination rule 'Multiply-C6C12' not yet implemented")
+            elif self.system.combination_rule in ['Multiply-Sigeps',
+                                                  'Lorentz-Berthelot']:
+                atomtype = 'lmp_{:03d}'.format(int(fields[self.type_idx]))
+                bondtype = atomtype
+                new_atom_type = AtomSigepsType(
+                    atomtype,  # atomtype
+                    bondtype,  # bondtype
+                    -1,  # atomic_number
+                    self.mass_dict[int(fields[self.type_idx])],  # mass
+                    0 * self.CHARGE,  # charge (0 for atomtype)
+                    'A',  # ptype
+                    self.nb_types[int(fields[self.type_idx])][1],  # sigma
+                    self.nb_types[int(fields[self.type_idx])][0])  # epsilon
 
-                self.system.add_atomtype(new_atom_type)
+            self.system.add_atomtype(new_atom_type)
 
-                atom = Atom(int(fields[0]),  # index
-                            'A{:x}'.format(int(fields[0])),  # name (A + idx in hex)
-                            1,  # residue_index (lammps doesn't track this)
-                            'R{:02d}'.format(1))  # residue_name (R + moltype num)
-                atom.atomtype = (0, atomtype) 
-                atom.atomic_number = 0  #TODO: this must be defined for Desmond output; can we get this from LAMMPS?
-                atom.cgnr = 0  # TODO: look into alternatives
-                atom.charge = (0, float(fields[3]) * self.CHARGE)
-                atom.mass = (0, self.mass_dict[int(fields[2])])
-                atom.position = [float(fields[4]) * self.DIST,
-                                 float(fields[5]) * self.DIST,
-                                 float(fields[6]) * self.DIST]
-                atom.epsilon = (0, self.nb_types[int(fields[2])][0])
-                atom.sigma = (0, self.nb_types[int(fields[2])][1])
-                atom.bondingtype = bondtype
-                
-                self.current_mol.add_atom(atom)
+            atom = Atom(int(fields[0]),  # index
+                        'A{:x}'.format(int(fields[0])),  # name (A + idx in hex)
+                        1,  # residue_index (lammps doesn't track this)
+                        'R{:02d}'.format(1))  # residue_name (R + moltype num)
+            atom.atomtype = (0, atomtype)
+            atom.atomic_number = 0  #TODO: this must be defined for Desmond output; can we get this from LAMMPS?
+            atom.cgnr = 0  # TODO: look into alternatives
+            atom.mass = (0, self.mass_dict[int(fields[self.type_idx])])
+            atom.epsilon = (0, self.nb_types[int(fields[self.type_idx])][0])
+            atom.sigma = (0, self.nb_types[int(fields[self.type_idx])][1])
+            atom.bondingtype = bondtype
+
+            if self.q_idx:
+                atom.charge = (0, float(fields[self.q_idx]) * self.CHARGE)
+            else:
+                atom.charge = (0, 0.0 * self.CHARGE)
+
+            atom.position = [float(fields[self.pos_idx[0]]) * self.DIST,
+                             float(fields[self.pos_idx[1]]) * self.DIST,
+                             float(fields[self.pos_idx[2]]) * self.DIST]
+
+            self.current_mol.add_atom(atom)
             
     def parse_velocities(self, data_lines):
         """ """
@@ -1018,8 +1045,7 @@ class LammpsParser(object):
                     if z_coord < z_min:
                         z_min = z_coord
 
-                    atom_list.append(
-                        '{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
+                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
                             atom.index,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
@@ -1027,6 +1053,7 @@ class LammpsParser(object):
                             x_coord,
                             y_coord,
                             z_coord))
+
                     if atom.charge[0]._value != 0:
                         atom_charges = True
                     if atom.velocity:
@@ -1148,6 +1175,8 @@ class LammpsParser(object):
                 f.write('pair_style lj/cut/coul/cut 19.99999 19.99999\n')  # TODO: match mdp
                 #f.write('pair_style lj/cut/coul/cut 9.999 9.999\n')
                 #f.write('kspace_style none\n')  # if there are no charges
+            else:
+                f.write('pair_style lj/cut 19.99999\n')  # TODO: match mdp
 
             if self.system.combination_rule == 'Lorentz-Berthelot':
                 f.write('pair_modify mix arithmetic\n')
