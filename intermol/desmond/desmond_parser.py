@@ -1081,7 +1081,6 @@ class DesmondParser(object):
 #            end: ending position
 
         v = np.zeros([3, 3]) * units.angstroms
-        import pdb; pdb.set_trace()
         for i, line in enumerate(lines[start:end]):
             if self.atom_box_vars[0] in line:
                 startboxlabel = i
