@@ -715,14 +715,16 @@ class DesmondParser(object):
             elif key == "PROPER_TRIG" or key == "IMPROPER_TRIG":
                 kwds = [float(x) for x in split[6:14]]
             elif key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
-                # next 4 lines definitely not the right way to do it.
+                # next 3 lines definitely not the right way to do it.
                 opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), [units.kilocalorie_per_mole * float(s) for s in split[7:11]])}
-                kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
-                kwds = [x._value for x in kwds.values()]
-                kwds.insert(0,0) # insert phi into the first section
-                # ^^^^^ will need to put this into canonical form, can't until we can pass in either arrays, or keywords ^^^^
-
+                opls_kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
+                kwds = np.zeros(8) # will fill this in later.
             new_dihedral = self.create_forcetype(self.desmond_dihedrals[key], atoms, kwds)
+            # really should be some way to get rid of this code below
+            if key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
+                for key in opls_kwds.keys():
+                    setattr(new_dihedral,key,opls_kwds[key])
+            # really should be some way to get rid of this code above
             kwds = self.get_parameter_kwds_from_force(new_dihedral)
             new_dihedral = self.canonical_dihedral(new_dihedral, kwds, direction = 'into', name = key,
                                                    molecule_type = current_molecule_type)
