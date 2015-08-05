@@ -564,11 +564,11 @@ class DesmondParser(object):
         for j in range(ff_number):
             entries = entry_values[j].split()
             key = entries[3].upper()
-            atoms = map(int, entries[1:3])
-            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
+            atoms = [int(x) for x in entries[1:3]]
+            bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             atoms.extend(bondingtypes)
 
-            params = map(float, entries[4:6])
+            params = [float(x) for x in entries[4:6]]
             new_bond = self.create_forcetype(self.desmond_bonds[key], atoms, params)
             kwds = self.get_parameter_kwds_from_force(new_bond)
             new_bond = self.canonical_bond(new_bond, kwds, direction = 'into', name = key)
@@ -590,12 +590,12 @@ class DesmondParser(object):
             coulcorr = False
             new_pair = None
             split = entry_values[j].split()
-            atoms = map(int,split[1:3])
-            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
+            atoms = [int(x) for x in split[1:3]]
+            bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             params = atoms + bondingtypes
             key = split[3].upper()
             if key == "LJ12_6_SIG_EPSILON":
-                new_pair = self.create_forcetype(LjSigepsPair, params, map(float, split[4:6]))
+                new_pair = self.create_forcetype(LjSigepsPair, params, [float(x) for x in split[4:6]])
             elif key == "LJ" or key == "COULOMB":
                 # I think we just need LjSigepsPair, not LjPair?
                 new_pair = self.create_forcetype(LjDefaultPair, params, [0, 0])
@@ -661,10 +661,10 @@ class DesmondParser(object):
         for j in range(ff_number):
             split = entry_values[j].split()
             key = split[4].upper()
-            atoms = map(int, split[1:4])
-            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
+            atoms = [int(x) for x in split[1:4]]
+            bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             atoms.extend(bondingtypes)
-            kwds = map(float, split[5:7])
+            kwds = [float(x) for x in split[5:7]]
             new_angle = self.create_forcetype(self.desmond_angles[key], atoms, kwds)
             kwds = self.get_parameter_kwds_from_force(new_angle)
             new_angle = self.canonical_angle(new_angle, kwds, direction = 'into', name = key,
@@ -703,8 +703,8 @@ class DesmondParser(object):
             split = entry_values[j].split()
             new_dihedral = None
             dihedral_type = None
-            atoms = map(int, split[1:5])
-            bondingtypes = map(lambda atom: self.atomlist[atom-1].name, atoms)
+            atoms = [int(x) for x in split[1:5]]
+            bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             key = split[5].upper()
             atoms.extend(bondingtypes)
             # not sure how to put the following lines in canonical, since it expects keywords,
@@ -713,12 +713,12 @@ class DesmondParser(object):
             if key == "IMPROPER_HARM":
                 kwds = [float(split[6]), 2*float(split[7])]
             elif key == "PROPER_TRIG" or key == "IMPROPER_TRIG":
-                kwds = map(float, split[6:14])
+                kwds = [float(x) for x in split[6:14]]
             elif key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
                 # next 4 lines definitely not the right way to do it.
-                opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), map(lambda s: units.kilocalorie_per_mole*float(s), split[7:11]))}
+                opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), [units.kilocalorie_per_mole * float(s) for s in split[7:11]])}
                 kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
-                kwds = map(lambda x: x._value,kwds.values())
+                kwds = [x._value for x in kwds.values()]
                 kwds.insert(0,0) # insert phi into the first section
                 # ^^^^^ will need to put this into canonical form, can't until we can pass in either arrays, or keywords ^^^^
 
@@ -760,7 +760,7 @@ class DesmondParser(object):
         for j in range(ff_number):
             temp = entry_values[j].split()
             temp.remove(temp[0])
-            current_molecule_type.exclusions.add(tuple(map(int,temp)))
+            current_molecule_type.exclusions.add(tuple([int(x) for x in temp]))
 
     def parse_restraints(self, type, current_molecule_type):
         warn("Parsing [ restraints] not yet implemented")
@@ -1080,22 +1080,20 @@ class DesmondParser(object):
 #            start: starting position
 #            end: ending position
 
-        i = start
-        v = np.zeros([3,3])*units.angstroms
-        while (i<end):
-            if self.atom_box_vars[0] in lines[i]:
-                startboxlabel = i-start
-            if ':::' in lines[i]:
-                endlabel = i
+        v = np.zeros([3, 3]) * units.angstroms
+        import pdb; pdb.set_trace()
+        for i, line in enumerate(lines[start:end]):
+            if self.atom_box_vars[0] in line:
+                startboxlabel = i
+            if ':::' in line:
+                endlabel = i + start
                 break
-            i+=1
-        startbox = startboxlabel+endlabel
-        nvec = 0
-        for i in range(startbox,startbox+9):
-            j = (nvec)/3
-            k = (nvec)%3
-            v[j,k] = float(re.sub(r'\s', '', lines[i])) * units.angstrom
-            nvec += 1
+        startbox = startboxlabel + endlabel
+
+        for nvec, line in enumerate(lines[startbox:startbox + 9]):
+            j = nvec // 3
+            k = nvec % 3
+            v[j, k] = float(line.strip()) * units.angstrom
 
         self.system.box_vector = v
 

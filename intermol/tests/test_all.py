@@ -17,27 +17,27 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def test_gromacs_unit(energy=True):
+def test_gromacs_unit(energy=False):
     convert_one_to_all(input_engine='gromacs', test_type='unit', energy=energy)
 
 
-def test_gromacs_stress(energy=True):
+def test_gromacs_stress(energy=False):
     convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy)
 
 
-def test_lammps_unit(energy=True):
+def test_lammps_unit(energy=False):
     convert_one_to_all(input_engine='lammps', test_type='unit', energy=energy)
 
 
-def test_lammps_stress(energy=True):
+def test_lammps_stress(energy=False):
     convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy)
 
 
-def test_desmond_unit(energy=True):
+def test_desmond_unit(energy=False):
     convert_one_to_all(input_engine='desmond', test_type='unit', energy=energy)
 
 
-def test_desmond_stress(energy=True):
+def test_desmond_stress(energy=False):
     convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy)
 
 
