@@ -1803,7 +1803,7 @@ class DesmondParser(object):
             lines.extend(dlines)
             lines.append('    :::\n')
             lines.append('  }\n')
-            lines.append('}\n')
+        lines.append('}\n')
 
         solute = True
         endline = ''
