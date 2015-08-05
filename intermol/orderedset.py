@@ -41,10 +41,6 @@ class OrderedSet(collections.Set):
                 return False
         return True
 
-    ### General Methods
-    def __del__(self):
-        self.d.clear()                    # remove circular labels
-
     def __repr__(self):
         class_name = self.__class__.__name__
         if not self:
