@@ -1067,7 +1067,7 @@ class LammpsParser(object):
                         vel_list.append(
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index, 0, 0, 0))
-            import pdb; pdb.set_trace()
+
             for pair in mol_type.pair_forces:
                 if not isinstance(pair, (LjDefaultPairType, LjqDefaultPairType)):
                     atom1_type = int(atom_list[pair.atom1].split()[2])
