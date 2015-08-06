@@ -101,9 +101,10 @@ anglelist = ['harmonic',
              'cross_bond_bond',
              'cosine',
              'cosine_squared',
-             'quartic'
+             'quartic',
+             'restricted_bending'
              ]
-AbstractOptParams['angle'] = ['c']
+AbstractOptParams['angle'] = ['c']  # constrained
 AbstractOptParamsDefaults['angle'] = ['False']
 
 # defined by abstract_dihedral_type
@@ -111,7 +112,9 @@ dihedrallist = ['improper_harmonic',
                 'trig',
                 'fourier',
                 'proper_periodic',
-                'rb'
+                'rb',
+                'restricted_bending',
+                'bending_torsion'
                 ]
 AbstractOptParams['dihedral'] = ['improper']
 AbstractOptParamsDefaults['dihedral'] = ['False']
@@ -352,6 +355,10 @@ master_unitlist['quartic_angle'] = ['angleD',
                                     'energy * angleR ** (-4)'
 ]
 
+doclist['restricted_bending_angle'] = 'stub documentation\n'
+master_paramlist['restricted_bending_angle'] = ['theta', 'k']
+master_unitlist['restricted_bending_angle'] = ['angleD','energy']
+
 # ========
 # dihedrals
 # ========
@@ -411,6 +418,21 @@ master_unitlist['rb_dihedral'] = ['energy',
                                   'energy',
                                   'energy',
                                   'energy']
+
+
+doclist['restricted_bending_dihedral'] = 'stub documentation\n'
+master_paramlist['restricted_bending_dihedral'] = ['theta', 'k']
+master_unitlist['restricted_bending_dihedral'] = ['angleD',
+                                                  'energy']
+
+
+doclist['bending_torsion_dihedral'] = 'stub documentation\n'
+master_paramlist['bending_torsion_dihedral'] = ['a0', 'a1','a2','a3','a4']
+master_unitlist['bending_torsion_dihedral'] = ['energy',
+                                               'energy',
+                                               'energy',
+                                               'energy',
+                                               'energy']
 
 doclist['two_virtual'] = 'stub documentation\n'
 master_paramlist['two_virtual'] = ['a']
