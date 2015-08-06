@@ -8,9 +8,10 @@ InterMol: a conversion tool for molecular dynamics simulations
 
 We are currently in alpha testing phase, debugging Desmond<=>Gromacs<=>Lammps conversions.
 
+### Basic usage
 To check out how it works, use the ````convert.py```` script found in the ````intermol```` directory:
 
-````
+```bash
 $ python convert.py -h
 usage: convert.py [-h] [--des_in file] [--gro_in file file] [--lmp_in file]
                   [--desmond] [--gromacs] [--lammps] [--odir directory]
@@ -55,12 +56,18 @@ Other optional arguments:
 
 For example, to convert from desmond to gromacs and evalutate the energy of the input and output files:
 
-````
+```bash
 mkdir test_output
 python convert.py --des_in validation/inputs/Desmond/UnitTest/frag_opls2001/frag_opls2001.cms --gromacs --odir test_output -e
-````
+```
 
 Note that the program may not give the same ASCII output; the goal is to
 produce the same energy output, and there are frequently multiple ways to
 express the same molecular potential energy function using differently
 formatted files.
+
+### Running the test suiteest 
+We're also developing a comprehensive test suite to ensure that all InterMol
+conversions happen correctly. For instructions on how to run this check out
+the [testing README](tests/README.md).
+
