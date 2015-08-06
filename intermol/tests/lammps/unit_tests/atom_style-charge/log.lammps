@@ -10,7 +10,7 @@ pair_modify mix geometric
 kspace_style pppm 1.0e-5
 
 read_data atom_style-charge-data.lmp
-  orthogonal box = (26.16 28.47 26.03) to (56.2661 58.5761 56.1361)
+  orthogonal box = (26.16 28.47 26.03) to (66.2661 68.5761 66.1361)
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   9 atoms
@@ -22,28 +22,28 @@ thermo_style custom ebond eangle edihed eimp epair evdwl ecoul elong etail pe
 run 0
 WARNING: No fixes defined, atoms won't move (../verlet.cpp:55)
 PPPM initialization ...
-  G vector (1/distance) = 0.160616
+  G vector (1/distance) = 0.142844
   grid = 8 8 8
   stencil order = 5
-  estimated absolute RMS force accuracy = 0.0010503
-  estimated relative force accuracy = 3.16296e-06
+  estimated absolute RMS force accuracy = 0.00229937
+  estimated relative force accuracy = 6.92449e-06
   using double precision FFTs
   3d grid and FFT values/proc = 2197 512
 Neighbor list info ...
   1 neighbor list requests
   update every 1 steps, delay 10 steps, check yes
   master list distance cutoff = 17
-Memory usage per processor = 2.49854 Mbytes
+Memory usage per processor = 2.49957 Mbytes
 E_bond E_angle E_dihed E_impro E_pair E_vdwl E_coul E_long E_tail PotEng 
-           0            0            0            0    159837.92    159960.39    -101.1609   -21.303502            0    159837.92 
-Loop time of 1.90735e-06 on 1 procs for 0 steps with 9 atoms
+           0            0            0            0    159837.93    159960.39   -103.49005   -18.968444            0    159837.93 
+Loop time of 9.53674e-07 on 1 procs for 0 steps with 9 atoms
 
 Pair  time (%) = 0 (0)
 Kspce time (%) = 0 (0)
 Neigh time (%) = 0 (0)
 Comm  time (%) = 0 (0)
 Outpt time (%) = 0 (0)
-Other time (%) = 1.90735e-06 (100)
+Other time (%) = 9.53674e-07 (100)
 
 Nlocal:    9 ave 9 max 9 min
 Histogram: 1 0 0 0 0 0 0 0 0 0

@@ -13,7 +13,7 @@ angle_style harmonic
 special_bonds lj 0.0 0.0 0.5 coul 0.0 0.0 0.5
 
 read_data atom_style-angle-data.lmp
-  orthogonal box = (26.16 28.47 26.03) to (56.2661 58.5761 56.1361)
+  orthogonal box = (26.16 28.47 26.03) to (66.2661 68.5761 66.1361)
   1 by 1 by 1 MPI processor grid
   reading atoms ...
   9 atoms
@@ -40,17 +40,17 @@ Neighbor list info ...
   1 neighbor list requests
   update every 1 steps, delay 10 steps, check yes
   master list distance cutoff = 17
-Memory usage per processor = 5.76372 Mbytes
+Memory usage per processor = 5.76475 Mbytes
 E_bond E_angle E_dihed E_impro E_pair E_vdwl E_coul E_long E_tail PotEng 
    47.912249     4.808182            0            0 -0.086278353 -0.086278353            0            0            0    52.634153 
-Loop time of 2.14577e-06 on 1 procs for 0 steps with 9 atoms
+Loop time of 1.90735e-06 on 1 procs for 0 steps with 9 atoms
 
 Pair  time (%) = 0 (0)
 Bond  time (%) = 0 (0)
 Neigh time (%) = 0 (0)
 Comm  time (%) = 0 (0)
 Outpt time (%) = 0 (0)
-Other time (%) = 2.14577e-06 (100)
+Other time (%) = 1.90735e-06 (100)
 
 Nlocal:    9 ave 9 max 9 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
