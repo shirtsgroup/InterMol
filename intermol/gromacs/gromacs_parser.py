@@ -8,6 +8,8 @@ from intermol.atom import Atom
 
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
+from intermol.exceptions import (UnimplementedConversion, UnsupportedConversion,
+                                 GromacsError, InterMolError)
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
@@ -15,6 +17,8 @@ from intermol.gromacs.grofile_parser import GromacsGroParser
 
 
 logger = logging.getLogger('InterMolLog')
+
+ENGINE = 'gromacs'
 
 
 def load_gromacs(top_file, gro_file, include_dir=None, defines=None):
@@ -120,8 +124,7 @@ class GromacsParser(object):
             try:
                 b_type = self.lookup_gromacs_bonds[bond.__class__]
             except KeyError:
-                raise Exception('Found unsupported bond type {0}'.format(
-                    bond.__class__.__name__))
+                raise UnsupportedConversion(bond, ENGINE)
             return b_type, params
 
     gromacs_angles = {
@@ -151,8 +154,7 @@ class GromacsParser(object):
             try:
                 a_type = self.lookup_gromacs_angles[angle.__class__]
             except KeyError:
-                raise Exception('Found unsupported angle type {0}'.format(
-                    angle.__class__.__name__))
+                raise UnsupportedConversion(angle, ENGINE)
             return a_type, params
 
     gromacs_dihedrals = {
@@ -231,7 +233,7 @@ class GromacsParser(object):
                 convertfunc = convert_nothing
                 converted_dihedral = dihedral
             else:
-                raise ValueError('Unable to convert dihedral: {0}'.format(dihedral))
+                raise GromacsError('Unable to convert dihedral: {0}'.format(dihedral))
             params = convertfunc(params)
             return converted_dihedral, params
         else:
@@ -261,7 +263,7 @@ class GromacsParser(object):
                 d_type = '2'
                 paramlist = [params]
             else:
-                raise ValueError('A non-canonical dihedral was found in the system. '
+                raise InterMolError('A non-canonical dihedral was found in the system. '
                      'All dihedrals should have been converted to either '
                      'TrigDihedralType or ImproperHarmonicType so '
                      'something likely went wrong while reading in.')
@@ -390,7 +392,7 @@ class GromacsParser(object):
         self.n_atoms_added = 0
         for mol_name, mol_count in self.molecules:
             if mol_name not in self.molecule_types:
-                raise ValueError("Unknown molecule type: {0}".format(mol_name))
+                raise GromacsError("Unknown molecule type: {0}".format(mol_name))
             # Grab the relevent plain text molecule type.
             top_moltype = self.molecule_types[mol_name]
             self.create_moleculetype(top_moltype, mol_name, mol_count)
@@ -1060,7 +1062,7 @@ class GromacsParser(object):
         elif stripped.startswith('[') and not ignore:
             # The start of a category.
             if not stripped.endswith(']'):
-                raise ValueError('Illegal line in .top file: '+line)
+                raise GromacsError('Illegal line in .top file: '+line)
             self.current_directive = stripped[1:-1].strip()
             logger.debug("Parsing {0}...".format(self.current_directive))
 
@@ -1069,7 +1071,7 @@ class GromacsParser(object):
             fields = stripped.split()
             command = fields[0]
             if len(self.if_stack) != len(self.else_stack):
-                raise RuntimeError('#if/#else stack out of sync')
+                raise GromacsError('#if/#else stack out of sync')
 
             if command == '#include' and not ignore:
                 # Locate the file to include
@@ -1082,12 +1084,12 @@ class GromacsParser(object):
                         self.process_file(top_filename)
                         break
                 else:
-                    raise ValueError('Could not locate #include file: '+name)
+                    raise GromacsError('Could not locate #include file: '+name)
 
             elif command == '#define' and not ignore:
                 # Add a value to our list of defines.
                 if len(fields) < 2:
-                    raise ValueError('Illegal line in .top file: '+line)
+                    raise GromacsError('Illegal line in .top file: '+line)
                 name = fields[1]
                 value_start = stripped.find(name, len(command))+len(name)+1
                 value = line[value_start:].strip()
@@ -1095,29 +1097,29 @@ class GromacsParser(object):
             elif command == '#ifdef':
                 # See whether this block should be ignored.
                 if len(fields) < 2:
-                    raise ValueError('Illegal line in .top file: '+line)
+                    raise GromacsError('Illegal line in .top file: '+line)
                 name = fields[1]
                 self.if_stack.append(name in self.defines)
                 self.else_stack.append(False)
             elif command == '#ifndef':
                 # See whether this block should be ignored.
                 if len(fields) < 2:
-                    raise ValueError('Illegal line in .top file: '+line)
+                    raise GromacsError('Illegal line in .top file: '+line)
                 name = fields[1]
                 self.if_stack.append(name not in self.defines)
                 self.else_stack.append(False)
             elif command == '#endif':
                 # Pop an entry off the if stack
                 if len(self.if_stack) == 0:
-                    raise ValueError('Unexpected line in .top file: '+line)
+                    raise GromacsError('Unexpected line in .top file: '+line)
                 del(self.if_stack[-1])
                 del(self.else_stack[-1])
             elif command == '#else':
                 # Reverse the last entry on the if stack
                 if len(self.if_stack) == 0:
-                    raise ValueError('Unexpected line in .top file: '+line)
+                    raise GromacsError('Unexpected line in .top file: '+line)
                 if self.else_stack[-1]:
-                    raise ValueError('Unexpected line in .top file: #else has'
+                    raise GromacsError('Unexpected line in .top file: #else has'
                                      ' already been used ' + line)
                 self.if_stack[-1] = (not self.if_stack[-1])
                 self.else_stack[-1] = True
@@ -1125,7 +1127,7 @@ class GromacsParser(object):
         elif not ignore:
             # A line of data for the current category
             if self.current_directive is None:
-                raise ValueError('Unexpected line in .top file: "{0}"'.format(line))
+                raise GromacsError('Unexpected line in .top file: "{0}"'.format(line))
             if self.current_directive == 'defaults':
                 self.process_defaults(line)
             elif self.current_directive == 'moleculetype':
@@ -1308,7 +1310,7 @@ class GromacsParser(object):
             lj_param2 = float(fields[7]) * units.kilojoules_per_mole  # epsilon
             AtomtypeClass = AtomSigepsType
         else:
-            raise ValueError("Unknown combination rule: {0}".format(self.system.combination_rule))
+            raise InterMolError("Unknown combination rule: {0}".format(self.system.combination_rule))
         new_atom_type = AtomtypeClass(atomtype, bondingtype, atomic_number,
                                       mass, charge, ptype, lj_param1, lj_param2)
         self.system.add_atomtype(new_atom_type)
@@ -1473,13 +1475,13 @@ class GromacsParser(object):
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):
-        raise ValueError('Too few fields in [ {0} ] line: {1}'.format(
+        raise GromacsError('Too few fields in [ {0} ] line: {1}'.format(
             self.current_directive, line))
 
     def invalid_line(self, line):
-        raise ValueError('Invalid format in [ {0} ] line: {1}'.format(
+        raise GromacsError('Invalid format in [ {0} ] line: {1}'.format(
             self.current_directive, line))
 
     def directive_before_moleculetype(self):
-        raise ValueError('Found [ {0} ] directive before [ moleculetype ]'.format(
+        raise GromacsError('Found [ {0} ] directive before [ moleculetype ]'.format(
             self.current_directive))

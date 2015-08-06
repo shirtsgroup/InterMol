@@ -8,7 +8,7 @@ import numpy as np
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
 from intermol.exceptions import (UnimplementedConversion, UnsupportedConversion,
-                                 LammpsError)
+                                 LammpsError, InterMolError)
 from intermol.atom import Atom
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
@@ -76,18 +76,19 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_bonds[bond]
+                typename = self.lookup_lammps_bonds[bond.__class__]
             except KeyError:
-                if bond.__name__ in ['FeneBond', 'ConnectionBond']:
+                if bond.__class__.__name__ in ['FeneBond', 'ConnectionBond']:
                     raise UnimplementedConversion(bond, ENGINE)
                 else:
+                    # import pdb; pdb.set_trace()
                     raise UnsupportedConversion(bond, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
-        if bond in [HarmonicBond, HarmonicPotentialBond]:
+        if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
             params['k'] *= canonical_force_scale
 
-        if bond == HarmonicPotentialBond:
+        if bond.__class__ == HarmonicPotentialBond:
             typename = 'harmonic'
 
         if direction == 'into':
@@ -111,15 +112,15 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_angles[angle]
+                typename = self.lookup_lammps_angles[angle.__class__]
             except KeyError:
                 raise UnsupportedConversion(angle, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
-        if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
+        if angle.__class__ in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
             params['k'] *= canonical_force_scale
 
-        if angle == UreyBradleyAngle:
+        if angle.__class__ == UreyBradleyAngle:
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
@@ -179,6 +180,7 @@ class LammpsParser(object):
             return converted_dihedral, params
 
         else:
+            dihedral = dihedral.__class__
             canonical_force_scale = self.SCALE_FROM
             if dihedral == TrigDihedral:
                 if False: #dihedral.improper:
@@ -203,7 +205,7 @@ class LammpsParser(object):
                 typename = 'harmonic'
                 paramlist = [params]
             else:
-                raise ValueError('A non-canonical dihedral was found in the '
+                raise InterMolError('A non-canonical dihedral was found in the '
                                  'system. All dihedrals should have been '
                                  'converted to either TrigDihedralType or '
                                  'ImproperHarmonicType so something likely '
@@ -633,9 +635,11 @@ class LammpsParser(object):
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    raise ValueError('Unsupported pair coeff formatting in data file!')
+                    raise UnimplementedConversion(
+                        'pair coeff formatting in data file is not yet supported in InterMol.')
             else:
-                raise ValueError('Unsupported pair coeff formatting in data file!')
+                raise UnimplementedConversion(
+                        'pair coeff formatting in data file is not yet supported in InterMol.')
 
     def parse_force_coeffs(self, data_lines, force_name, force_classes,
                            force_style, lammps_forces, canonical_force):
@@ -668,7 +672,7 @@ class LammpsParser(object):
                 if style not in force_style:
                     warn = True
             else:
-                raise ValueError("No entries found in '%s_style'." % (force_name))
+                raise LammpsError("No entries found in '%s_style'." % (force_name))
 
             if warn:
                 logger.warning('{0} type found in {1} Coeffs that was not '
@@ -868,7 +872,7 @@ class LammpsParser(object):
             kwds = self.get_parameter_kwds_from_force(force)
 
             # Convert keywords from canonical form.
-            style, kwdslist = canonical_force(kwds, force.__class__, direction='from')
+            style, kwdslist = canonical_force(kwds, force, direction='from')
             force_type = lammps_force_types[style]
             style_set.add(style)
 
