@@ -7,7 +7,7 @@ import simtk.unit as units
 from intermol.atom import Atom
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
-from intermol.exceptions import (UnimplementedConversion, UnsupportedConversion,
+from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
                                  DesmondError, InterMolError)
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
@@ -119,7 +119,7 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_bonds[bond.__class__]  # check to make sure this OK given the c
             except:
-                raise UnsupportedConversion(bond, ENGINE)
+                raise UnsupportedFunctional(bond, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
@@ -179,7 +179,7 @@ class DesmondParser(object):
         else:
             # we'd like to automate this, but currently have to state explicitly.
             if angle.__class__ not in [HarmonicAngle, UreyBradleyAngle]:
-               raise UnsupportedConversion(angle, ENGINE)
+               raise UnsupportedFunctional(angle, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
@@ -249,7 +249,7 @@ class DesmondParser(object):
                 return names, paramlists
 
         else:
-            raise UnsupportedConversion(angle, ENGINE)
+            raise UnsupportedFunctional(angle, ENGINE)
 
     desmond_dihedrals = {'IMPROPER_HARM': ImproperHarmonicDihedral,
                          'PROPER_TRIG': TrigDihedral,
@@ -273,7 +273,7 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_dihedrals[dihedral.__class__]
             except:
-                raise UnsupportedConversion(dihedral, ENGINE)
+                raise UnsupportedFunctional(dihedral, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'

@@ -8,7 +8,7 @@ from intermol.atom import Atom
 
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
-from intermol.exceptions import (UnimplementedConversion, UnsupportedConversion,
+from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
                                  GromacsError, InterMolError)
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
@@ -124,7 +124,7 @@ class GromacsParser(object):
             try:
                 b_type = self.lookup_gromacs_bonds[bond.__class__]
             except KeyError:
-                raise UnsupportedConversion(bond, ENGINE)
+                raise UnsupportedFunctional(bond, ENGINE)
             return b_type, params
 
     gromacs_angles = {
@@ -155,7 +155,7 @@ class GromacsParser(object):
             try:
                 a_type = self.lookup_gromacs_angles[angle.__class__]
             except KeyError:
-                raise UnsupportedConversion(angle, ENGINE)
+                raise UnsupportedFunctional(angle, ENGINE)
             return a_type, params
 
     gromacs_dihedrals = {
@@ -273,7 +273,7 @@ class GromacsParser(object):
                 try:
                     d_type = self.lookup_gromacs_dihedrals[dihedral.__class__]
                 except KeyError:
-                    raise UnsupportedConversion(dihedral, ENGINE)
+                    raise UnsupportedFunctional(dihedral, ENGINE)
                 paramlist = [params]
             return d_type, paramlist
 
