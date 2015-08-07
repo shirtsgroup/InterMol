@@ -203,11 +203,7 @@ class LammpsParser(object):
                 typename = 'harmonic'
                 paramlist = [params]
             else:
-                raise ValueError('A non-canonical dihedral was found in the '
-                                 'system. All dihedrals should have been '
-                                 'converted to either TrigDihedralType or '
-                                 'ImproperHarmonicType so something likely '
-                                 'went wrong while reading in.')
+                raise Exception('Found unsupported dihedral type {0}'.format(dihedral.__name__))
             return typename, paramlist
 
     def create_kwds_from_entries(self, entries, force_class, offset=0):
