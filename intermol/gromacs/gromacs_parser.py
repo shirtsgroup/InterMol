@@ -175,8 +175,8 @@ class GromacsParser(object):
         ImproperHarmonicDihedral: '2',
         RbDihedral: '3',
         FourierDihedral: '5',
-        RestrictedBendingDihedral: '10'
-        BendingTorsionDihedral: '11',
+        RestrictedBendingDihedral: '10',
+        BendingTorsionDihedral: '11'
         }
 
     gromacs_dihedral_types = dict(
