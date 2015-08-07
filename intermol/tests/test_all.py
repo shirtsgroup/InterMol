@@ -52,7 +52,7 @@ if __name__ == "__main__":
     engine = parser.add_argument('-p', '--program', metavar='engine',
             default='gromacs', help="The engine to convert from: {}".format(', '.join(ENGINES)))
     type_of_test = parser.add_argument('-t', '--type', metavar='test_type',
-            default='unit', help="The type of tests to run: 'unit' or 'stress'.")
+            default='unit', help="The type of tests to run: unit, stress.")
     compute_energies = parser.add_argument('-e', '--energy', dest='compute_energies',
             action='store_true', help="Compute and compare the input and output energies.")
 

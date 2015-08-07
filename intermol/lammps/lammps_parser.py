@@ -205,11 +205,7 @@ class LammpsParser(object):
                 typename = 'harmonic'
                 paramlist = [params]
             else:
-                raise InterMolError('A non-canonical dihedral was found in the '
-                                 'system. All dihedrals should have been '
-                                 'converted to either TrigDihedralType or '
-                                 'ImproperHarmonicType so something likely '
-                                 'went wrong while reading in.')
+                raise UnsupportedConversion(dihedral, ENGINE)
             return typename, paramlist
 
     def create_kwds_from_entries(self, entries, force_class, offset=0):
@@ -968,7 +964,6 @@ class LammpsParser(object):
         mass_list.append('\nMasses\n\n')
 
         pair_coeffs = list()
-        pair_coeffs.append('\nPair Coeffs\n\n')
 
         atom_list = list()
         atom_list.append('\nAtoms\n\n')
@@ -1013,6 +1008,7 @@ class LammpsParser(object):
             molecule = next(iter(mol_type.molecules))
             atoms_per_molecule = len(molecule.atoms)
 
+
             for i, molecule in enumerate(mol_type.molecules):
                 # Atom index offsets from 1 for each molecule.
                 offset = i * atoms_per_molecule
@@ -1035,7 +1031,7 @@ class LammpsParser(object):
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('{0:d} {1:8.4f} {2:8.4f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:8.4f} {2:8.4f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1075,6 +1071,18 @@ class LammpsParser(object):
                             '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
                                 atom.index, 0, 0, 0))
 
+            for pair in mol_type.pair_forces:
+                if not isinstance(pair, (LjDefaultPairType, LjqDefaultPairType)):
+                    atom1_type = int(atom_list[pair.atom1].split()[2])
+                    atom2_type = int(atom_list[pair.atom2].split()[2])
+                    if atom2_type < atom1_type:  # LAMMPS requires i < j
+                        atom1_type, atom2_type = atom2_type, atom1_type
+                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:8.4f} {2:8.4f}\n'.format(
+                                atom1_type,
+                                atom2_type,
+                                pair.epsilon.value_in_unit(self.ENERGY),
+                                pair.sigma.value_in_unit(self.DIST)))
+
         bond_list = self.force_dict['Bond']
         angle_list = self.force_dict['Angle']
         dihedral_list = self.force_dict['Dihedral']
@@ -1102,7 +1110,7 @@ class LammpsParser(object):
             n_dihedrals = len(dihedral_list) - 1
             n_impropers = len(improper_list) - 1
 
-            n_atom_types = len(pair_coeffs) - 1
+            n_atom_types = len(atom_type_dict)
             n_bond_types = len(bond_coeffs) - 1
             n_angle_types = len(angle_coeffs) - 1
             n_dihedral_types = len(dihedral_coeffs) - 1
@@ -1141,7 +1149,7 @@ class LammpsParser(object):
                 f.write(mass)
 
             # Forcefield coefficients.
-            coeff_types = [pair_coeffs, bond_coeffs, angle_coeffs,
+            coeff_types = [bond_coeffs, angle_coeffs,
                            dihedral_coeffs, improper_coeffs]
             for coefficients in coeff_types:
                 if len(coefficients) > 1:
@@ -1171,19 +1179,7 @@ class LammpsParser(object):
             f.write('boundary p p p\n')  # TODO
             f.write('\n')
 
-            # non-bonded
-            if atom_charges:
-                f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')  # TODO: match mdp
-            else:
-                f.write('pair_style lj/cut 9.99999\n')  # TODO: match mdp
 
-            if self.system.combination_rule == 'Lorentz-Berthelot':
-                f.write('pair_modify mix arithmetic\n')
-            elif self.system.combination_rule == 'Multiply-Sigeps':
-                f.write('pair_modify mix geometric\n')
-            else:
-                logger.warning("Unsupported pair combination rule on writing input file!")
-            f.write('\n')
 
             # bonded
             if len(bond_coeffs) > 1:
@@ -1206,6 +1202,24 @@ class LammpsParser(object):
 
             # Specify the path to the corresponding data file that we just wrote.
             f.write('read_data {0}\n'.format(os.path.basename(self.data_file)))
+            f.write('\n')
+
+            # non-bonded
+            if atom_charges:
+                f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')  # TODO: match mdp
+            else:
+                f.write('pair_style lj/cut 9.99999\n')  # TODO: match mdp
+
+            for line in pair_coeffs:
+                f.write(line)
+            f.write('\n')
+
+            if self.system.combination_rule == 'Lorentz-Berthelot':
+                f.write('pair_modify mix arithmetic\n')
+            elif self.system.combination_rule == 'Multiply-Sigeps':
+                f.write('pair_modify mix geometric\n')
+            else:
+                logger.warning("Unsupported pair combination rule on writing input file!")
             f.write('\n')
 
             # Specify the output energies that we are interested in.

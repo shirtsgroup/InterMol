@@ -52,6 +52,7 @@ from intermol.forces.harmonic_angle_type import HarmonicAngleType, HarmonicAngle
 from intermol.forces.quartic_angle_type import QuarticAngleType, QuarticAngle
 from intermol.forces.urey_bradley_angle_type import UreyBradleyAngleType, UreyBradleyAngle
 from intermol.forces.urey_bradley_noharm_angle_type import UreyBradleyNoharmAngleType, UreyBradleyNoharmAngle
+from intermol.forces.restricted_bending_angle_type import RestrictedBendingAngleType, RestrictedBendingAngle
 
 #dihedrals
 from intermol.forces.fourier_dihedral_type import FourierDihedralType, FourierDihedral
@@ -59,6 +60,9 @@ from intermol.forces.improper_harmonic_dihedral_type import ImproperHarmonicDihe
 from intermol.forces.proper_periodic_dihedral_type import ProperPeriodicDihedralType, ProperPeriodicDihedral
 from intermol.forces.rb_dihedral_type import RbDihedralType, RbDihedral
 from intermol.forces.trig_dihedral_type import TrigDihedralType, TrigDihedral
+from intermol.forces.restricted_bending_dihedral_type import RestrictedBendingDihedralType, RestrictedBendingDihedral
+from intermol.forces.bending_torsion_dihedral_type import BendingTorsionDihedralType, BendingTorsionDihedral
+
 
 # virtual_sites
 from intermol.forces.two_virtual_type import TwoVirtualType, TwoVirtual

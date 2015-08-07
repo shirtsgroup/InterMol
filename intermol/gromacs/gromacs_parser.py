@@ -133,7 +133,8 @@ class GromacsParser(object):
         '3': CrossBondBondAngle,
         '4': CrossBondAngleAngle,
         '5': UreyBradleyAngle,
-        '6': QuarticAngle
+        '6': QuarticAngle,
+        '10': RestrictedBendingAngle
         }
     lookup_gromacs_angles = dict((v, k) for k, v in gromacs_angles.items())
 
@@ -165,13 +166,19 @@ class GromacsParser(object):
         '4': ProperPeriodicDihedral,
         '5': FourierDihedral,
         '9': ProperPeriodicDihedral,
+        '10': BendingTorsionDihedral,
+        '11': RestrictedBendingDihedral,
         'Trig': TrigDihedral
         }
+
+    # have to invert manually because of canonical conversion collapse of types.
     lookup_gromacs_dihedrals = {
         TrigDihedral: 'Trig',
         ImproperHarmonicDihedral: '2',
         RbDihedral: '3',
-        FourierDihedral: '5'
+        FourierDihedral: '5',
+        BendingTorsionDihedral: '10',
+        RestrictedBendingDihedral: '11'
         }
 
     gromacs_dihedral_types = dict(
@@ -229,7 +236,10 @@ class GromacsParser(object):
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
             elif dihedral in (ImproperHarmonicDihedralType, ImproperHarmonicDihedral,
-                              TrigDihedralType, TrigDihedral):
+                              TrigDihedralType, TrigDihedral,
+                              BendingTorsionDihedralType, BendingTorsionDihedral,
+                              RestrictedBendingDihedralType, RestrictedBendingDihedral
+                              ):
                 convertfunc = convert_nothing
                 converted_dihedral = dihedral
             else:
@@ -259,14 +269,12 @@ class GromacsParser(object):
                             d_type = '1'
                         else:
                             d_type = '9'
-            elif isinstance(dihedral, ImproperHarmonicDihedral):
-                d_type = '2'
-                paramlist = [params]
             else:
-                raise InterMolError('A non-canonical dihedral was found in the system. '
-                     'All dihedrals should have been converted to either '
-                     'TrigDihedralType or ImproperHarmonicType so '
-                     'something likely went wrong while reading in.')
+                try:
+                    d_type = self.lookup_gromacs_dihedrals[dihedral.__class__]
+                except KeyError:
+                    raise UnsupportedConversion(dihedral, ENGINE)
+                paramlist = [params]
             return d_type, paramlist
 
     def choose_parameter_kwds_from_forces(self, entries, n_atoms, force_type,
@@ -1351,7 +1359,7 @@ class GromacsParser(object):
         if fields[2].isdigit():
             btypes = ['X', fields[0], fields[1], 'X']
             n_atoms_specified = 2
-        elif len(fields[4]) == 1 and fields[4].isdigit():
+        elif fields[4].isdigit() and not fields[3].isdigit(): # assumes gromacs types are not all digits.
             btypes = fields[:4]
             n_atoms_specified = 4
         else:
