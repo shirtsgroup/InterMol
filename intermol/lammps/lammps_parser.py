@@ -9,7 +9,7 @@ from intermol.forces import *
 import intermol.forces.forcefunctions as ff
 from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
                                  UnimplementedSetting, UnsupportedSetting,
-                                 LammpsError)
+                                 LammpsError, InterMolError)
 from intermol.atom import Atom
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
