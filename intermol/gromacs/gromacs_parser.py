@@ -164,8 +164,8 @@ class GromacsParser(object):
         '4': ProperPeriodicDihedral,
         '5': FourierDihedral,
         '9': ProperPeriodicDihedral,
-        '10': BendingTorsionDihedral,
-        '11': RestrictedBendingDihedral,
+        '10': RestrictedBendingDihedral,
+        '11': BendingTorsionDihedral,
         'Trig': TrigDihedral
         }
 
@@ -175,8 +175,8 @@ class GromacsParser(object):
         ImproperHarmonicDihedral: '2',
         RbDihedral: '3',
         FourierDihedral: '5',
-        BendingTorsionDihedral: '10',
-        RestrictedBendingDihedral: '11'
+        RestrictedBendingDihedral: '10',
+        BendingTorsionDihedral: '11'
         }
 
     gromacs_dihedral_types = dict(
