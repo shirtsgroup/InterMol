@@ -1,7 +1,5 @@
 import os
 import logging
-import pdb
-import warnings
 import re
 
 import simtk.unit as units
@@ -9,12 +7,17 @@ import numpy as np
 
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
+from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
+                                 UnimplementedSetting, UnsupportedSetting,
+                                 LammpsError, InterMolError)
 from intermol.atom import Atom
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
 
 logger = logging.getLogger('InterMolLog')
+
+ENGINE = 'lammps'
 
 
 def load_lammps(in_file):
@@ -74,19 +77,19 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_bonds[bond]
+                typename = self.lookup_lammps_bonds[bond.__class__]
             except KeyError:
-                if bond.__name__ in ['FeneBond', 'ConnectionBond']:
-                    raise ValueError('{0} conversion has not yet been'
-                                     ' implemented in InterMol.'.format(bond.__name__))
+                if bond.__class__.__name__ in ['FeneBond', 'ConnectionBond']:
+                    raise UnimplementedFunctional(bond, ENGINE)
                 else:
-                    raise ValueError("{0} is not supported by LAMMPS!".format(bond.__name__))
+                    # import pdb; pdb.set_trace()
+                    raise UnsupportedFunctional(bond, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
-        if bond in [HarmonicBond, HarmonicPotentialBond]:
+        if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
             params['k'] *= canonical_force_scale
 
-        if bond == HarmonicPotentialBond:
+        if bond.__class__ == HarmonicPotentialBond:
             typename = 'harmonic'
 
         if direction == 'into':
@@ -110,16 +113,15 @@ class LammpsParser(object):
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_angles[angle]
+                typename = self.lookup_lammps_angles[angle.__class__]
             except KeyError:
-                raise ValueError("{0} is not supported by LAMMPS!".format(
-                    angle.__name__))
+                raise UnsupportedFunctional(angle, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
-        if angle in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
+        if angle.__class__ in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
             params['k'] *= canonical_force_scale
 
-        if angle == UreyBradleyAngle:
+        if angle.__class__ == UreyBradleyAngle:
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
@@ -179,8 +181,9 @@ class LammpsParser(object):
             return converted_dihedral, params
 
         else:
+            dihedral_class = dihedral.__class__
             canonical_force_scale = self.SCALE_FROM
-            if dihedral == TrigDihedral:
+            if dihedral_class == TrigDihedral:
                 if False: #dihedral.improper:
                     # TODO
                     d_type = '4'
@@ -198,12 +201,12 @@ class LammpsParser(object):
                         typename = 'charmm'
                         paramlist = convert_dihedral_from_trig_to_proper(params)
 
-            elif dihedral ==  ImproperHarmonicDihedral:
+            elif dihedral_class == ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
                 typename = 'harmonic'
                 paramlist = [params]
             else:
-                raise Exception('Found unsupported dihedral type {0}'.format(dihedral.__name__))
+                raise UnsupportedFunctional(dihedral, ENGINE)
             return typename, paramlist
 
     def create_kwds_from_entries(self, entries, force_class, offset=0):
@@ -287,8 +290,7 @@ class LammpsParser(object):
             self.MASS = units.amu
             self.CHARGE = units.elementary_charge
         else:
-            raise Exception(
-                "Unsupported unit set specified: {0}".format(unit_set))
+            raise LammpsError('Unsupported unit set specified: {0}'.format(unit_set))
 
         # Now create the dictionary of which units go in which order
         # for each command.  we need to pass 'self' so that we can
@@ -307,7 +309,7 @@ class LammpsParser(object):
         if self.data_file:
             self.read_data(self.data_file)
         else:
-            raise Exception("No data file found in input script")
+            raise LammpsError("No data file found in input script")
         return self.system
 
     def read_input(self):
@@ -466,7 +468,7 @@ class LammpsParser(object):
         """
         self.atom_style = line[1]
         if len(line) > 2:
-            raise ValueError('Unsupported atom_style in input file.')
+            raise UnimplementedSetting(line, ENGINE)
 
         # TODO: Add remaining atom_styles
         # http://lammps.sandia.gov/doc/atom_style.html
@@ -494,21 +496,21 @@ class LammpsParser(object):
         """ """
         self.dimension = int(line[1])
         if self.dimension not in [2, 3]:
-            raise ValueError("Invalid dimension specified in input file "
-                             "(must be 2 or 3).")
+            raise LammpsError("Invalid dimension specified in input file "
+                              "(must be 2 or 3).")
 
     def parse_boundary(self, line):
         """ """
         self.boundaries = [line[1], line[2], line[3]]
         if len(self.boundaries) != self.dimension:
-            raise ValueError("Boundaries do not match specified dimension "
-                             "in input file")
+            raise LammpsError("Boundaries do not match specified dimension "
+                              "in input file")
 
     def parse_pair_style(self, line):
         """ """
         self.pair_style = []
         if line[1] == 'hybrid':
-            logger.warning('Hybrid pair styles not yet implemented.')
+            raise UnimplementedSetting(line, ENGINE)
         elif line[1] in ('lj/cut/coul/long', 'lj/cut'):
             self.pair_style.append(line[1])
             self.system.nonbonded_function = 1
@@ -530,9 +532,9 @@ class LammpsParser(object):
             elif line[2] == 'arithmetic':
                 self.system.combination_rule = 'Lorentz-Berthelot'
             else:
-                raise ValueError('Unsupported pair_modify mix argument in input file!')
+                raise UnimplementedSetting(line, ENGINE)
         else:
-            raise ValueError('Unsupported pair_modify style in input file!')
+            raise UnimplementedSetting(line, ENGINE)
 
     def parse_bonded_style(self, line):
         """ """
@@ -543,7 +545,7 @@ class LammpsParser(object):
             for style in line[2:]:
                 style_set.add(style)
         else:
-            raise ValueError("Invalid style in input file!")
+            raise LammpsError("Invalid style in input file: {}!".format(line))
         return style_set
 
     def parse_bond_style(self, line):
@@ -579,14 +581,14 @@ class LammpsParser(object):
         elif 'coul' in line:
             self.system.coulomb_correction = float(line[line.index('coul') + 3])
         else:
-            raise ValueError('Unsupported special_bonds in input file.')
+            raise UnimplementedSetting(line, ENGINE)
 
     def parse_read_data(self, line):
         """ """
         if len(line) == 2:
             self.data_file = os.path.join(self.input_dir, line[1])
         else:
-            raise ValueError('Unsupported read_data arguments in input file.')
+            raise UnimplementedSetting(line, ENGINE)
 
     def parse_box(self, line, dim):
         """Read box information from data file.
@@ -600,7 +602,7 @@ class LammpsParser(object):
         if box_length > 0:
             self.system.box_vector[dim, dim] = box_length * self.DIST
         else:
-            raise ValueError("Negative box length specified in data file.")
+            raise LammpsError("Negative box length specified in data file.")
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -626,9 +628,11 @@ class LammpsParser(object):
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    raise ValueError('Unsupported pair coeff formatting in data file!')
+                    raise UnimplementedFunctional(
+                        'pair coeff formatting in data file is not yet supported in InterMol.')
             else:
-                raise ValueError('Unsupported pair coeff formatting in data file!')
+                raise UnimplementedFunctional(
+                        'pair coeff formatting in data file is not yet supported in InterMol.')
 
     def parse_force_coeffs(self, data_lines, force_name, force_classes,
                            force_style, lammps_forces, canonical_force):
@@ -661,7 +665,7 @@ class LammpsParser(object):
                 if style not in force_style:
                     warn = True
             else:
-                raise ValueError("No entries found in '%s_style'." % (force_name))
+                raise LammpsError("No entries found in '%s_style'." % (force_name))
 
             if warn:
                 logger.warning('{0} type found in {1} Coeffs that was not '
@@ -861,7 +865,7 @@ class LammpsParser(object):
             kwds = self.get_parameter_kwds_from_force(force)
 
             # Convert keywords from canonical form.
-            style, kwdslist = canonical_force(kwds, force.__class__, direction='from')
+            style, kwdslist = canonical_force(kwds, force, direction='from')
             force_type = lammps_force_types[style]
             style_set.add(style)
 

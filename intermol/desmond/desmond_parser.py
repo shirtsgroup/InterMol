@@ -7,6 +7,9 @@ import simtk.unit as units
 from intermol.atom import Atom
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff
+from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
+                                 UnimplementedSetting, UnsupportedSetting,
+                                 DesmondError, InterMolError)
 from intermol.molecule import Molecule
 from intermol.moleculetype import MoleculeType
 from intermol.system import System
@@ -18,6 +21,8 @@ import copy
 
 
 logger = logging.getLogger('InterMolLog')
+
+ENGINE = 'desmond'
 
 
 # driver helper functions
@@ -106,7 +111,7 @@ class DesmondParser(object):
     lookup_desmond_bonds = create_lookup(desmond_bonds)  # not unique
     desmond_bond_types = create_type(desmond_bonds)
 
-    def canonical_bond(self, bond, params, direction = 'into', name = None):
+    def canonical_bond(self, bond, params, direction='into', name=None):
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
@@ -115,7 +120,7 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_bonds[bond.__class__]  # check to make sure this OK given the c
             except:
-                raise Exception("WriteError: bond type %s is not supported by Desmond" % (bond.__class__.__name__))
+                raise UnsupportedFunctional(bond, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
@@ -155,8 +160,8 @@ class DesmondParser(object):
     lookup_desmond_angles = create_lookup(desmond_angles)
     desmond_angle_types = create_type(desmond_angles)
 
-    def canonical_angle(self, angle, params, direction = 'into', name = None,
-                        molecule_type = None):
+    def canonical_angle(self, angle, params, direction='into', name=None,
+                        molecule_type=None):
         """
         Args:
             name:
@@ -172,11 +177,10 @@ class DesmondParser(object):
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
-            phase = 'Read'
         else:
             # we'd like to automate this, but currently have to state explicitly.
             if angle.__class__ not in [HarmonicAngle, UreyBradleyAngle]:
-               raise Exception("WriteError: angletype %s is not supported by Desmond" % (angle.__class__.__name__))
+               raise UnsupportedFunctional(angle, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
@@ -246,7 +250,7 @@ class DesmondParser(object):
                 return names, paramlists
 
         else:
-            raise Exception("%sError: angletype %s is not supported by Desmond" % (phase, angle.__class__.__name__))
+            raise UnsupportedFunctional(angle, ENGINE)
 
     desmond_dihedrals = {'IMPROPER_HARM': ImproperHarmonicDihedral,
                          'PROPER_TRIG': TrigDihedral,
@@ -270,7 +274,7 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_dihedrals[dihedral.__class__]
             except:
-                raise Exception("WriteError: dihedraltype %s is not supported by Desmond" % (dihedral.__class__.__name__))
+                raise UnsupportedFunctional(dihedral, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
