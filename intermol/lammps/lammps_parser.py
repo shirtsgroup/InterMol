@@ -180,9 +180,9 @@ class LammpsParser(object):
             return converted_dihedral, params
 
         else:
-            dihedral = dihedral.__class__
+            dihedral_class = dihedral.__class__
             canonical_force_scale = self.SCALE_FROM
-            if dihedral == TrigDihedral:
+            if dihedral_class == TrigDihedral:
                 if False: #dihedral.improper:
                     # TODO
                     d_type = '4'
@@ -200,7 +200,7 @@ class LammpsParser(object):
                         typename = 'charmm'
                         paramlist = convert_dihedral_from_trig_to_proper(params)
 
-            elif dihedral == ImproperHarmonicDihedral:
+            elif dihedral_class == ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
                 typename = 'harmonic'
                 paramlist = [params]

@@ -273,7 +273,7 @@ class DesmondParser(object):
             try:
                 name = self.lookup_desmond_dihedrals[dihedral.__class__]
             except:
-                raise Exception("WriteError: dihedraltype %s is not supported by Desmond" % (dihedral.__class__.__name__))
+                raise UnsupportedConversion(dihedral, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
             phase = 'Write'
