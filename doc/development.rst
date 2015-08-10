@@ -31,55 +31,32 @@ notify you of PEP8 violations as you code.
 Running our tests
 -----------------
 
-InterMol uses `py.test <http://pytest.org/latest/>`_ for unit testing. To run
-them simply type run the following while in the base directory::
+In order to cover the large number of functional forms for different energy
+terms, we use a testing suite that converts unit tests, e.g. a tiny system with
+harmonic bonds between, and stress tests, e.g., a large solvated protein or
+micelle, between Gromacs, Lammps and Desmond.
 
-    $ py.test
+To run ALL tests (this may take a while), use::
 
-We need a LOT more tests so any help here is especially welcome!
+    $ py.test -v
 
-To debug failing tests, you typically get a clearer output by running a subset of
-the tests, e.g.::
+To run conversions from one package to all other packages, use `test_all.py`::
 
-    $ python test_gromacs.py --type unit
+    $ python test_all.py -h
+    usage: test_all.py [-h] [-p engine] [-t test_type] [-e]
 
-which prints out log files to
-``intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log``. Re-running
-a single test is best done directly via the `convert.py` script, e.g.::
+    Convert tests from one engine to all others.
 
-    $ python convert.py --gro_in tests/gromacs/unit_tests/[system name]/[system name].{top,gro} --gromacs -e
+    optional arguments:
+      -h, --help            show this help message and exit
+      -p engine, --program engine
+                            The engine to convert from: gromacs, lammps, desmond
+      -t test_type, --type test_type
+                        The type of tests to run: unit, stress.
+      -e, --energy          Compute and compare the input and output energies.
 
-.. note:: If you have any ideas or suggestions for streamlining the testing process
-          please let us know by filing an issue or opening a pull request!
+For example, to convert all unit tests from gromacs to all other packages and
+compare energies between the inputs and outputs, run::
 
-Git Flow
---------
-Because we are supporting multiple molecular dynamics engines that should all
-work independently, we try to keep development of each engine in a separate
-branch until the basics are working.
-
-To this end, we've started working with the `git flow branching model
-<http://nvie.com/posts/a-successful-git-branching-model/>`_. The basic things
-to know are:
-
-1. The ``master`` branch is strictly used for releases.
-2. The ``develop`` branch is where (!!!) development happens.
-3. When we start working on a new engine, we create a feature branch. E.g.,
-   at the time of this writing, there are branches called ``feature/lammps`` and
-   ``feature/desmond``. Once the overall structure in this branch is fairly
-   stable and has a good amounts of tests, we merge it into ``develop``.
-
-So what do you, the interested developer, need to know?
-
-1. Don't make pull requests against ``master``.
-2. Choose either ``develop`` or the appropriate ``feature/*`` branch to pull against.
-
-For more reading and a neat tool to help with branching see:
-
-http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/
-
-https://github.com/nvie/gitflow
-
-http://danielkummer.github.io/git-flow-cheatsheet/
-
+    $ python test_all.py --type unit --program gromacs --energy
 
