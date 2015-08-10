@@ -178,12 +178,16 @@ def main(args=None):
 
         # Evaluate input energies.
         if args.get('gro_in'):
+            if gro_in.endswith('_vacuum.gro'):
+                mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp_vacuum.mdp'))
             input_type = 'gromacs'
             e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_path, gropath, '')
         elif args.get('lmp_in'):
             input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmppath=lmppath)
         elif args.get('des_in'):
+            if cms_file.endswith('_vacuum.gro'):
+                cfg_path = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint_vacuum.cfg'))
             input_type = 'desmond'
             e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path,
                                                              despath=despath)

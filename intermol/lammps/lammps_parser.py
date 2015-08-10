@@ -1176,8 +1176,6 @@ class LammpsParser(object):
             f.write('boundary p p p\n')  # TODO
             f.write('\n')
 
-
-
             # bonded
             if len(bond_coeffs) > 1:
                 f.write('bond_style hybrid {0}\n'.format(
@@ -1203,9 +1201,13 @@ class LammpsParser(object):
 
             # non-bonded
             if atom_charges:
-                f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')  # TODO: match mdp
+                if self.in_file.endswith('_vacuum.input'):
+                    f.write('pair_style lj/cut/coul/long 9.99999 19.99999\n')
+                    f.write('kspace_style pppm 1e-6\n')
+                else:
+                    f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')
             else:
-                f.write('pair_style lj/cut 9.99999\n')  # TODO: match mdp
+                f.write('pair_style lj/cut 9.99999\n')
 
             for line in pair_coeffs:
                 f.write(line)
