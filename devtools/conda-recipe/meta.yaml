@@ -9,7 +9,7 @@ requirements:
   run:
     - python
     - numpy
-    - simtk.unit
+    - openmm
     - six
 
 test:
