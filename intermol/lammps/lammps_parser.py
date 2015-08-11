@@ -82,7 +82,6 @@ class LammpsParser(object):
                 if bond.__class__.__name__ in ['FeneBond', 'ConnectionBond']:
                     raise UnimplementedFunctional(bond, ENGINE)
                 else:
-                    # import pdb; pdb.set_trace()
                     raise UnsupportedFunctional(bond, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
@@ -111,17 +110,19 @@ class LammpsParser(object):
         """Convert from the canonical form of this interaction. """
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
+            angletest = angle
         else:
             try:
                 typename = self.lookup_lammps_angles[angle.__class__]
             except KeyError:
                 raise UnsupportedFunctional(angle, ENGINE)
+            angletest = angle.__class__
             canonical_force_scale = self.SCALE_FROM
 
-        if angle.__class__ in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
+        if angletest in [HarmonicAngle, CosineSquaredAngle, UreyBradleyAngle]:
             params['k'] *= canonical_force_scale
 
-        if angle.__class__ == UreyBradleyAngle:
+        if angletest == UreyBradleyAngle:
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
