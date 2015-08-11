@@ -41,11 +41,6 @@ class PyTest(TestCommand):
         errcode = pytest.main(['intermol'])
         sys.exit(errcode)
 
-
-with open('requirements.txt') as reqs:
-    requirements_lines = [line.strip() for line in reqs]
-reqs = list(filter(None, requirements_lines))
-
 readme = open('README.md').read()
 
 setup(
@@ -61,7 +56,6 @@ setup(
     packages=find_packages(),
     package_dir={'intermol': 'intermol'},
     include_package_data=True,
-    install_requires=reqs,
     license="MIT",
     zip_safe=False,
     keywords='intermol',

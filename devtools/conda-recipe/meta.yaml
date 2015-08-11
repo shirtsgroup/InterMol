@@ -9,7 +9,7 @@ requirements:
   run:
     - python
     - numpy
-    - simtk.units
+    - simtk.unit
     - six
 
 test:
