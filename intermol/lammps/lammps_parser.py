@@ -1200,12 +1200,18 @@ class LammpsParser(object):
             # non-bonded
             if atom_charges:
                 if self.in_file.endswith('_vacuum.input'):
-                    f.write('pair_style lj/cut/coul/long 9.99999 19.99999\n')
-                    f.write('kspace_style pppm 1e-6\n')
+                    f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
+                    f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')
+                    f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
+                    f.write('kspace_style pppm 1e-6\n')
             else:
-                f.write('pair_style lj/cut 9.99999\n')
+                if self.in_file.endswith('_vacuum.input'):
+                    f.write('pair_style lj/cut 25.0\n')
+                    f.write('kspace_style none\n')
+                else:
+                    f.write('pair_style lj/long 9.0\n')
+                    f.write('kspace_style pppm 1e-6\n')
 
             for line in pair_coeffs:
                 f.write(line)

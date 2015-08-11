@@ -20,7 +20,7 @@ ns_type                  = grid
 ; Periodic boundary conditions: xyz or no = 
 pbc                      = xyz
 ; nblist cut-off         = 
-rlist                    = 0.999999
+rlist                    = 2.0
 
 ; OUTPUT CONTROL OPTIONS
 ; Output frequency for coords (x), velocities (v) and forces (f)
@@ -37,53 +37,23 @@ compressed-x-precision   = 1000
 
 ; OPTIONS FOR ELECTROSTATICS AND VDW = 
 ; Method for doing electrostatics = 
-cutoff-scheme            = group
-;coulombtype              = PME
+cutoff-scheme            = verlet
 coulombtype              = cut-off
-rcoulomb                 = 1.999999
+rcoulomb                 = 2.0
+coulomb-modifier         = None
 ; Dielectric constant (DC) for cut-off or DC of reaction field = 
 epsilon-r                = 1
 ; Method for doing Van der Waals = 
 vdw-type                 = cutoff
+vdw-modifier             = None
 ; cut-off lengths        = 
-rvdw                     = 0.999999
+rvdw                     = 2.0
 ; Apply long range dispersion corrections for Energy and Pressure = 
-DispCorr                 = AllEnerPres
-; Spacing for the PME/PPPM FFT grid = 
-fourierspacing           = 0.12
-; FFT grid size, when a value is 0 fourierspacing will be used = 
-fourier_nx               = 0
-fourier_ny               = 0
-fourier_nz               = 0
-; EWALD/PME/PPPM parameters = 
-pme_order                = 4
-ewald_rtol               = 1e-06
-ewald_geometry           = 3d
-epsilon_surface          = 0
+DispCorr                 = No
 
 ; OPTIONS FOR BONDS     = 
 constraints              = none
 
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = no
-gen_temp                 = 300.0 ; K
-gen_seed                 = 4
-
-
-; OPTIONS FOR WEAK COUPLING ALGORITHMS = 
-
-Tcoupl                   = berendsen
-; Groups to couple separately = 
-tc-grps                  = System
-; Time constant (ps) and reference temperature (K) = 
-tau_t                    = 10.0
-ref_t                    = 300.0 ; K
-
 continuation             = yes
-; Pressure coupling      = 
-Pcoupl                   = berendsen
-Pcoupltype               = isotropic
-; Time constant (ps), compressibility (1/bar) and reference P (bar) = 
-tau_p                    = 10.0 ; ps
-compressibility          = 4.5e-5 ; 1/bar
-ref_p                    = 1.0 ; bar
