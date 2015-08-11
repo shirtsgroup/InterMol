@@ -509,11 +509,11 @@ class LammpsParser(object):
     def parse_pair_style(self, line):
         """ """
         self.pair_style = []
-        if line[1] == 'hybrid':
-            raise UnimplementedSetting(line, ENGINE)
-        elif line[1] in ('lj/cut/coul/long', 'lj/cut'):
+        if line[1] in ('lj/cut/coul/long', 'lj/cut', 'lj/cut/coul/cut'):
             self.pair_style.append(line[1])
             self.system.nonbonded_function = 1
+        else:
+            raise UnimplementedSetting(line, ENGINE)
 
     def parse_kspace_style(self, line):
         """
@@ -628,11 +628,9 @@ class LammpsParser(object):
                     self.nb_types[int(fields[0])] = [fields[1] * self.ENERGY,
                                                      fields[2] * self.DIST]
                 else:
-                    raise UnimplementedFunctional(
-                        'pair coeff formatting in data file is not yet supported in InterMol.')
+                    raise UnimplementedSetting(line, ENGINE)
             else:
-                raise UnimplementedFunctional(
-                        'pair coeff formatting in data file is not yet supported in InterMol.')
+                raise UnimplementedFunctional(line, ENGINE)
 
     def parse_force_coeffs(self, data_lines, force_name, force_classes,
                            force_style, lammps_forces, canonical_force):
@@ -1176,8 +1174,6 @@ class LammpsParser(object):
             f.write('boundary p p p\n')  # TODO
             f.write('\n')
 
-
-
             # bonded
             if len(bond_coeffs) > 1:
                 f.write('bond_style hybrid {0}\n'.format(
@@ -1203,9 +1199,13 @@ class LammpsParser(object):
 
             # non-bonded
             if atom_charges:
-                f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')  # TODO: match mdp
+                if self.in_file.endswith('_vacuum.input'):
+                    f.write('pair_style lj/cut/coul/long 9.99999 19.99999\n')
+                    f.write('kspace_style pppm 1e-6\n')
+                else:
+                    f.write('pair_style lj/cut/coul/cut 9.99999 19.99999\n')
             else:
-                f.write('pair_style lj/cut 9.99999\n')  # TODO: match mdp
+                f.write('pair_style lj/cut 9.99999\n')
 
             for line in pair_coeffs:
                 f.write(line)
