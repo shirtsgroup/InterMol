@@ -4,7 +4,7 @@ atom_style bond
 dimension 3
 boundary p p p
 
-pair_style lj/cut 19.99999
+pair_style lj/cut 20.0
 pair_modify mix geometric
 
 bond_style hybrid harmonic morse

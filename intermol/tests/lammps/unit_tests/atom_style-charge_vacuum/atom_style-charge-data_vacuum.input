@@ -4,7 +4,7 @@ atom_style charge
 dimension 3
 boundary p p p
 
-pair_style lj/cut/coul/cut 9.99999 19.99999
+pair_style lj/cut/coul/cut 20.0 20.0
 pair_modify mix geometric
 
 read_data atom_style-charge-data_vacuum.lmp
