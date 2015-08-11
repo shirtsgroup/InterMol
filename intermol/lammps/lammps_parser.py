@@ -1211,8 +1211,7 @@ class LammpsParser(object):
                     f.write('pair_style lj/cut 25.0\n')
                     f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/long 9.0\n')
-                    f.write('kspace_style pppm 1e-6\n')
+                    f.write('pair_style lj/cut 9.0\n')
 
             for line in pair_coeffs:
                 f.write(line)
