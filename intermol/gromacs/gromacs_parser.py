@@ -1287,7 +1287,7 @@ class GromacsParser(object):
             # Bonded type and atomic number are both missing.
             fields.insert(1, None)
             fields.insert(1, None)
-        elif len(fields[4]) == 1 and len(fields[5]) > 1:
+        elif len(fields[4]) == 1 and len(fields[5]) >= 1:
             if fields[1][0].isalpha():
                 # Atomic number is missing.
                 fields.insert(2, None)
