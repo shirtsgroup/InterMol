@@ -911,13 +911,16 @@ class LammpsParser(object):
             logger.warning("More than one {0} style found!".format(force_name))
 
     def write_bonds(self, mol_type, offset):
-        return self.write_forces(mol_type.bond_forces, offset, "Bond",
-                                 self.lookup_lammps_bonds,
-                                 self.lammps_bond_types,
-                                 self.canonical_bond)
+        bonds = sorted(mol_type.bond_forces, key=lambda x: (x.atom1, x.atom2))
+        self.write_forces(bonds, offset, "Bond",
+                          self.lookup_lammps_bonds,
+                          self.lammps_bond_types,
+                          self.canonical_bond)
+
 
     def write_angles(self, mol_type, offset):
-        return self.write_forces(mol_type.angle_forces, offset, "Angle",
+        angles = sorted(mol_type.angle_forces, key=lambda x: (x.atom1, x.atom2, x.atom3))
+        return self.write_forces(angles, offset, "Angle",
                                  self.lookup_lammps_angles,
                                  self.lammps_angle_types,
                                  self.canonical_angle)
@@ -926,7 +929,8 @@ class LammpsParser(object):
         """Separate dihedrals from impropers. """
         dihedral_forces = {force for force in mol_type.dihedral_forces
                            if force.__class__ != ImproperHarmonicDihedral}
-        return self.write_forces(dihedral_forces, offset, "Dihedral",
+        dihedrals = sorted(dihedral_forces, key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+        return self.write_forces(dihedrals, offset, "Dihedral",
                                  self.lookup_lammps_dihedrals,
                                  self.lammps_dihedral_types,
                                  self.canonical_dihedral)
@@ -935,7 +939,8 @@ class LammpsParser(object):
         """Separate dihedrals from impropers. """
         improper_forces = {force for force in mol_type.dihedral_forces
                            if force.__class__ == ImproperHarmonicDihedral}
-        return self.write_forces(improper_forces, offset, "Improper",
+        impropers = sorted(improper_forces, key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+        return self.write_forces(impropers, offset, "Improper",
                                  self.lookup_lammps_impropers,
                                  self.lammps_improper_types,
                                  self.canonical_dihedral)
