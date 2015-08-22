@@ -1001,6 +1001,7 @@ class LammpsParser(object):
                            }
 
         # Read all atom specific and FF information.
+        offset = 0
         for mol_name, mol_type in self.system.molecule_types.items():
             logger.debug(
                 "    Writing moleculetype {0}...".format(mol_name))
@@ -1009,16 +1010,15 @@ class LammpsParser(object):
             molecule = next(iter(mol_type.molecules))
             atoms_per_molecule = len(molecule.atoms)
 
-
-            for i, molecule in enumerate(mol_type.molecules):
+            for molecule in mol_type.molecules:
                 # Atom index offsets from 1 for each molecule.
-                offset = i * atoms_per_molecule
                 self.write_bonds(mol_type, offset)
                 self.write_angles(mol_type, offset)
                 self.write_dihedrals(mol_type, offset)
                 self.write_impropers(mol_type, offset)
                 # Only issues warning now.
                 self.write_virtuals(mol_type, offset)
+                offset += atoms_per_molecule
 
             # Atom specific information.
             x_min = y_min = z_min = np.inf

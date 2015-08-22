@@ -4,6 +4,9 @@ import math
 
 import simtk.unit as units
 
+from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
+                                 UnimplementedSetting, UnsupportedSetting,
+                                 GromacsError, InterMolError)
 
 def convert_nothing(x):
     """ useful utility for not converting anything"""
@@ -88,12 +91,24 @@ def convert_dihedral_from_trig_to_proper(fcs, convention='0'):
             p = dict()
             p['phi'] = fcs['phi']
             p['multiplicity'] = int(parameter_key[2]) * units.dimensionless
-            p['k'] = parameter_value
             p['weight'] = 0 * units.dimensionless
+            p['k'] = parameter_value
             plist.append(p)
-        else:  # TODO: What's the other case here? Error?
-            pass
+    # all parameters are zero, so the force constant is zero if fc0 is zero
+    # The other possibility is to just return no parameters here, since such
+    # a dihedral has no energy
 
+    if len(plist) == 0:
+        # all zeros; check if fc0 is 0. if so, the force_constant is zero.
+        if fcs['fc0']._value == 0.0:
+            p = dict()
+            p['phi'] = fcs['phi']
+            p['multiplicity'] = int(parameter_key[2]) * units.dimensionless
+            p['weight'] = 0 * units.dimensionless
+            p['k'] = fcs['fc0']
+            plist.append(p)
+        else:
+            raise InterMolError("Unable to convert dihedral from trig to proper")
     return plist
 
 

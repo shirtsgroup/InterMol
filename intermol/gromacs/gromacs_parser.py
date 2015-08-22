@@ -432,7 +432,7 @@ class GromacsParser(object):
     def write_defaults(self, top):
         top.write('[ defaults ]\n')
         top.write('; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ\n')
-        top.write('{0:6d} {1:6s} {2:6s} {3:8.4f} {4:8.4f}\n\n'.format(
+        top.write('{0:6d} {1:6s} {2:6s} {3:8.6f} {4:8.6f}\n\n'.format(
                    self.system.nonbonded_function,
                    self.lookup_gromacs_combination_rules[self.system.combination_rule],
                    self.system.genpairs,
