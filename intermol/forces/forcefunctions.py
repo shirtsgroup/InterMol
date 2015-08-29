@@ -157,6 +157,9 @@ def optforceparams(force_type, forcetype_object=None):
     If no object is given, we fill with blanks.
     """
     pvars = dict()
+    #MRS: should be able to get rid of the evals?  Apparently, no unit tests for this code yet, will get rid
+    #when they are added.
+
     for i, param in enumerate(forcedata.AbstractOptParams[force_type]):
         if forcetype_object:
             pvars[param] = eval(forcetype_object.__class__.__name__ + '.' + param)

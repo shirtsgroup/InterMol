@@ -1228,8 +1228,6 @@ class LammpsParser(object):
             f.write('\n')
 
             if mol_type.settles:
-                import pdb
-                pdb.set_trace()
                 f.write('fix settle all shake 0.000001 100 0 t')
                 # get the atom types of the first two molecules
                 molecules = list(mol_type.molecules)
