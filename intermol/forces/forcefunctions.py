@@ -140,16 +140,6 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0)
     return kwds
 
 
-def optparamkeylookup(force_type):
-    """Given a force_type object, determine the key associated with the
-    optional parameters.
-
-    """
-    name = force_type.__name__.lower()
-    for key, params in forcedata.AbstractOptParams.items():
-        if key in name:
-            return key
-
 
 def optforceparams(force_type, forcetype_object=None):
     """Return the dictionary of optional paramters of an abstract force type.
@@ -157,23 +147,15 @@ def optforceparams(force_type, forcetype_object=None):
     If no object is given, we fill with blanks.
     """
     pvars = dict()
+    #MRS: should be able to get rid of the evals?  Apparently, no unit tests for this code yet, will get rid
+    #when they are added.
+
     for i, param in enumerate(forcedata.AbstractOptParams[force_type]):
         if forcetype_object:
             pvars[param] = eval(forcetype_object.__class__.__name__ + '.' + param)
         else:
             pvars[param] = eval(forcedata.AbstractOptParamsDefaults[force_type][i])
     return pvars
-
-
-def optparamlookup(force_type_object, object_default=False):
-    """A wrapper for optforceparams that takes a force_type object and returns
-    the optional parameter dictionary.
-    """
-    force_type = optparamkeylookup(force_type_object)
-    if object_default:
-       return optforceparams(force_type, force_type_object)
-    else:
-       return optforceparams(force_type)
 
 
 def create_kwd_dict(unitvars, paramlist, force_type_object, values, optvalues=None):
