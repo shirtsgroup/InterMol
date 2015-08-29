@@ -907,6 +907,9 @@ class LammpsParser(object):
                 force_list.append(line)
                 force_count += 1
 
+        if len(style_set) > 1:
+            logger.warning("More than one {0} style found!".format(force_name))
+
     def write_bonds(self, mol_type, offset):
         bonds = sorted(mol_type.bond_forces, key=lambda x: (x.atom1, x.atom2))
         self.write_forces(bonds, offset, "Bond",
