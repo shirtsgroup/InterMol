@@ -14,7 +14,7 @@ class MoleculeType(object):
         self.name = name
         self.molecules = OrderedSet()
 
-        self.bond_forces = set()
+        self.bonds = set()
         self.pair_forces = set()
         self.angle_forces = set()
         self.dihedral_forces = set()
@@ -60,7 +60,7 @@ class MoleculeType(object):
         return False
 
     def match_bonds(self, bond):
-        return self._match_two_atoms(bond, self.bond_forces)
+        return self._match_two_atoms(bond, self.bonds)
 
     def match_pairs(self, pair):
         return self._match_two_atoms(pair, self.pair_forces)

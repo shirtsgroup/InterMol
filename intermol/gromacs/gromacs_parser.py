@@ -91,25 +91,21 @@ class GromacsParser(object):
         '2B': LjqSigepsPair,
         '2C': LjqDefaultPair
         }
-
     lookup_gromacs_pairs = dict((v, k) for k, v in gromacs_pairs.items())
 
     gromacs_pair_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in gromacs_pairs.items())
 
-    gromacs_bonds = {
-        '1': HarmonicBond,
-        '2': G96Bond,
-        '3': MorseBond,
-        '4': CubicBond,
-        '5': ConnectionBond,
-        '6': HarmonicPotentialBond,
-        '7': FeneBond
+    gromacs_bond_types = {
+        '1': HarmonicBondType,
+        '2': G96BondType,
+        '3': MorseBondType,
+        '4': CubicBondType,
+        '5': ConnectionBondType,
+        '6': HarmonicPotentialBondType,
+        '7': FeneBondType
         }
-    lookup_gromacs_bonds = dict((v, k) for k, v in gromacs_bonds.items())
-
-    gromacs_bond_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in gromacs_bonds.items())
+    lookup_gromacs_bond_types = {v: k for k, v in gromacs_bond_types.items()}
 
     def canonical_bond(self, params, bond, direction='into'):
         """
@@ -121,9 +117,9 @@ class GromacsParser(object):
         """
         if direction == 'into':
             return bond, params
-        else:  # currently, no bonds need to be de-canonicalized
+        else:  # Currently, no bonds need to be de-canonicalized.
             try:
-                b_type = self.lookup_gromacs_bonds[bond.__class__]
+                b_type = self.lookup_gromacs_bond_types[bond.forcetype.__class__]
             except KeyError:
                 raise UnsupportedFunctional(bond, ENGINE)
             return b_type, params
@@ -472,7 +468,7 @@ class GromacsParser(object):
         for nbtype in sorted(self.system.nonbonded_types.values(), key=lambda x: (x.atom1, x.atom2)):
             # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
-                    nbtype.atom1, nbtype.atom2, nbtype.type))
+                    nbtype.atom1, nbtype.atom2, nbtype.form))
             if self.system.combination_rule == 'Multiply-C6C12':
                 top.write('{0:18.8e} {1:18.8e}\n'.format(
                     nbtype.C6.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
@@ -497,7 +493,7 @@ class GromacsParser(object):
 
             if self.current_molecule_type.pair_forces:
                 self.write_pairs(top)
-            if self.current_molecule_type.bond_forces and not self.current_molecule_type.settles:
+            if self.current_molecule_type.bonds and not self.current_molecule_type.settles:
                 self.write_bonds(top)
             if self.current_molecule_type.angle_forces and not self.current_molecule_type.settles:
                 self.write_angles(top)
@@ -590,7 +586,7 @@ class GromacsParser(object):
     def write_bonds(self, top):
         top.write('[ bonds ]\n')
         top.write(';   ai     aj funct  r               k\n')
-        bondlist = sorted(self.current_molecule_type.bond_forces,
+        bondlist = sorted(self.current_molecule_type.bonds,
                           key=lambda x: (x.atom1, x.atom2))
         for bond in bondlist:
             bond_params = self.get_parameter_list_from_force(bond)
@@ -598,7 +594,7 @@ class GromacsParser(object):
             top.write('{0:7d} {1:7d} {2:4s}'.format(
                 bond.atom1, bond.atom2, b_type))
 
-            param_units = self.unitvars[bond.__class__.__name__]
+            param_units = self.unitvars[bond.forcetype.__class__.__name__]
             for param, param_unit in zip(bond_params, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -754,44 +750,27 @@ class GromacsParser(object):
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
 
-    def create_bond(self, bond):
+    def create_bond(self, bond_entry):
         n_atoms = 2
-        numeric_bondtype = bond[n_atoms]
-        atoms = [int(n) for n in bond[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x))
-                        for x in bond[:n_atoms]])
+        atoms = [int(n) for n in bond_entry[:n_atoms]]
+        bondingtypes = tuple([self.lookup_atom_bondingtype(int(x))
+                              for x in bond_entry[:n_atoms]])
 
         # Get forcefield parameters.
-        if len(bond) == n_atoms + 1:
-            bond_type = self.find_forcetype(btypes, self.bondtypes)
+        if bond_entry[2] == '5':
+             bondtype = ConnectionBondType(*bondingtypes)
+        elif len(bond_entry) == n_atoms + 1:
+             bondtype = self.find_forcetype(bondingtypes, self.system.bondtypes)
         else:
-            bond[0] = btypes[0]
-            bond[1] = btypes[1]
-            bond = " ".join(bond)
-            bond_type = self.process_forcetype(btypes, 'bond', bond, n_atoms,
-                self.gromacs_bond_types, self.canonical_bond)
-            bond = bond.split()
+            bond_entry[0] = bondingtypes[0]
+            bond_entry[1] = bondingtypes[1]
+            bond_entry = " ".join(bond_entry)
+            bondtype = self.process_forcetype(bondingtypes, 'bond', bond_entry,
+                                              n_atoms, self.gromacs_bond_types,
+                                              self.canonical_bond)
 
-        # Create the actual force.
-        if numeric_bondtype in self.gromacs_bonds:
-            gromacs_bond = self.gromacs_bonds[numeric_bondtype]
-            # Connection bonds don't have bondtypes.
-            if gromacs_bond == ConnectionBond:
-                kwds = dict()
-            else:
-                kwds = self.choose_parameter_kwds_from_forces(
-                    bond, n_atoms, bond_type, gromacs_bond)
-            # Give it canonical form parameters.
-            canonical_bond, kwds = self.canonical_bond(kwds, gromacs_bond,
-                                                        direction='into')
-            new_bond = canonical_bond(*atoms, **kwds)
-        else:
-            logger.warn("Unsupported Gromacs bondtype: {0}".format(numeric_bondtype))
-
-        if not new_bond:
-            logger.warn("Undefined bond formatting.")
-        else:
-            self.current_molecule_type.bond_forces.add(new_bond)
+        new_bond = Bond(*atoms, bondtype=bondtype)
+        self.current_molecule_type.bonds.add(new_bond)
 
     def create_pair(self, pair):
         """Create a pair force object based on a [ pairs ] entry"""
@@ -861,20 +840,21 @@ class GromacsParser(object):
 
     def create_settle(self, settle):
         new_settle = Settles(int(settle[0]),
-                            float(settle[2]) * units.nanometers,
-                            float(settle[3]) * units.nanometers)
+                             float(settle[2]) * units.nanometers,
+                             float(settle[3]) * units.nanometers)
         self.current_molecule_type.settles = new_settle
 
-        waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
-        wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
+        waterbondrefk = 900 * units.kilojoules_per_mole * units.nanometers**(-2)
+        wateranglerefk = 400 * units.kilojoules_per_mole * units.degrees**(-2)
         angle = 2.0 * math.asin(0.5 * float(settle[3]) / float(settle[2])) * units.radians
         dOH = float(settle[2]) * units.nanometers
 
-        new_bond = HarmonicBond(1, 2, None, None, dOH, waterbondrefk, c=True)
-        self.current_molecule_type.bond_forces.add(new_bond)
+        bond_type = HarmonicBondType(None, None, length=dOH, k=waterbondrefk, c=True)
+        new_bond = Bond(1, 2, bond_type)
+        self.current_molecule_type.bonds.add(new_bond)
 
-        new_bond = HarmonicBond(1, 3, None, None, dOH, waterbondrefk, c=True)
-        self.current_molecule_type.bond_forces.add(new_bond)
+        new_bond = Bond(1, 3, bond_type)
+        self.current_molecule_type.bonds.add(new_bond)
 
         new_angle = HarmonicAngle(3, 1, 2, None, None, None, angle, wateranglerefk, c=True)
         self.current_molecule_type.angle_forces.add(new_angle)
@@ -1327,13 +1307,14 @@ class GromacsParser(object):
     def process_bondtype(self, line):
         """Process a line in the [ bondtypes ] category."""
         fields = line.split()
-        if len(fields) < 5:
+        if len(fields) < 5 and int(fields[2]) != 5:
             self.too_few_fields(line)
 
-        btypes = fields[:2]
-        bond_type = self.process_forcetype(btypes, 'bond', line, 2,
-                self.gromacs_bond_types, self.canonical_bond)
-        self.bondtypes[tuple(fields[:2])] = bond_type
+        bonding_types = fields[:2]
+        bondtype = self.process_forcetype(bonding_types, 'bond', line, 2,
+                                           self.gromacs_bond_types,
+                                           self.canonical_bond)
+        self.system.bondtypes[tuple(fields[:2])] = bondtype
 
     def process_angletype(self, line):
         """Process a line in the [ angletypes ] category."""
@@ -1391,11 +1372,10 @@ class GromacsParser(object):
 
         numeric_forcetype = fields[n_atoms]
         gromacs_force_type = gromacs_force_types[numeric_forcetype]
-        kwds = self.create_kwds_from_entries(fields, gromacs_force_type, offset=n_atoms+1)
-        CanonicalForceType, kwds = canonical_force(
-            kwds, gromacs_force_type, direction='into')
+        params = self.create_kwds_from_entries(fields, gromacs_force_type, offset=n_atoms+1)
+        CanonicalForceType, params = canonical_force(params, gromacs_force_type, direction='into')
 
-        force_type = CanonicalForceType(*bondingtypes, **kwds)
+        force_type = CanonicalForceType(*bondingtypes, **params)
 
         if not force_type:
             logger.warn("{0} is not a supported {1} type".format(fields[2], forcename))
@@ -1459,8 +1439,6 @@ class GromacsParser(object):
     def process_nonbond_params(self, line):
         """Process a line in the [ nonbond_param ] category."""
         fields = line.split()
-        natoms = 2
-        nonbonded_type = None
         NonbondedFunc = None
         combination_rule = self.system.combination_rule
 
@@ -1479,7 +1457,7 @@ class GromacsParser(object):
         kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)
         nonbonded_type = NonbondedFunc(*nonbonded_vars, **kwds)
         # TODO: figure out what to do with the gromacs numeric type
-        nonbonded_type.type = int(fields[2])
+        nonbonded_type.form = int(fields[2])
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     # =========== Pre-processing errors =========== #

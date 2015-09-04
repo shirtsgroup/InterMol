@@ -32,6 +32,7 @@ class System(object):
         self._n_atoms = None
         self._molecule_types = OrderedDict()
         self._atomtypes = dict()
+        self.bondtypes = dict()
         self._nonbonded_types = dict()
 
         self._bondgraph = None

@@ -796,7 +796,7 @@ class LammpsParser(object):
 
     def parse_bonds(self, data_lines):
         self.parse_force(data_lines, self.bond_classes,
-                         self.current_mol_type.bond_forces, n=2)
+                         self.current_mol_type.bonds, n=2)
 
     def parse_angles(self, data_lines):
         self.parse_force(data_lines, self.angle_classes,
