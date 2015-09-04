@@ -143,11 +143,11 @@ class DesmondParser(object):
             else:
                 params['k'] *= canonical_force_scale
                 # harmonic potentials in Gromacs should be constrained (??: check what this means)
-                optkwds = ff.optparamlookup(bond.__class__)
-                if optkwds['c'] == True and not isinstance(bond, HarmonicPotentialBond):
-                    name = 'HARM_CONSTRAINED'
-                else:
-                    name = 'HARM'
+                name = 'HARM'
+                if hasattr(bond,'c'):
+                    if getattr(bond,'c') and not isinstance(bond, HarmonicPotentialBond):
+                        name = 'HARM_CONSTRAINED'
+
                 names.append(name)
                 paramlists.append(params)
             return names, paramlists
@@ -202,11 +202,10 @@ class DesmondParser(object):
                     angle.c = False
             else:
                 params['k'] = canonical_force_scale * params['k']
-                optkwds = ff.optparamlookup(angle.__class__)
-                if optkwds['c'] == True:
-                    name = 'HARM_CONSTRAINED'
-                else:
-                    name = 'HARM'
+                name = 'HARM'
+                if hasattr(angle,'c'):
+                    if getattr(angle,'c'):
+                        name = 'HARM_CONSTRAINED'
 
             if direction == 'into' and angle.__class__ in [UreyBradleyNoharmAngle,HarmonicAngle]:
                 if angle.__class__ == UreyBradleyNoharmAngle:
@@ -313,11 +312,11 @@ class DesmondParser(object):
                     name = 'IMPROPER_HARM'
 
                 elif dihedral.__class__ in [TrigDihedral]:
-                    optkwds = ff.optparamlookup(dihedral.__class__)
-                    if optkwds['improper']:
-                        name = 'IMPROPER_TRIG'
-                    else:
-                        name = 'PROPER_TRIG'
+                    name = 'PROPER_TRIG'
+                    if hasattr(dihedral,'improper'):
+                        if getattr(dihedral,'improper'):
+                            name = 'IMPROPER_TRIG'
+
                 names.append(name)
                 paramlists.append(params)
 
