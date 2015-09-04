@@ -33,6 +33,8 @@ class System(object):
         self._molecule_types = OrderedDict()
         self._atomtypes = dict()
         self.bondtypes = dict()
+        self.angletypes = dict()
+        self.dihedraltypes = dict()
         self._nonbonded_types = dict()
 
         self._bondgraph = None

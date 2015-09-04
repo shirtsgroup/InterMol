@@ -54,38 +54,37 @@ class LammpsParser(object):
     SCALE_INTO = 2.0
     SCALE_FROM = 0.5
 
-    lammps_bonds = {
-        'harmonic': HarmonicBond,
-        'morse': MorseBond,
-        'class2': QuarticBond,  # TODO: coefficients need special handling.
-        'fene': FeneExpandableBond,  # TODO: need special handling for LJ terms
-        'fene/expand': FeneExpandableBond,  # TODO: need special handling for LJ terms
-        'quartic': QuarticBreakableBond,
-        'nonlinear': NonlinearBond
+    lammps_bondtypes = {
+        'harmonic': HarmonicBondType,
+        'morse': MorseBondType,
+        'class2': QuarticBondType,  # TODO: coefficients need special handling.
+        'fene': FeneExpandableBondType,  # TODO: need special handling for LJ terms
+        'fene/expand': FeneExpandableBondType,  # TODO: need special handling for LJ terms
+        'quartic': QuarticBreakableBondType,
+        'nonlinear': NonlinearBondType
         }
-    lookup_lammps_bonds = {v: k for k, v in lammps_bonds.items()}
+    lookup_lammps_bondtypes = {v: k for k, v in lammps_bondtypes.items()}
     # Add some non 1-to-1 mappings.
-    lookup_lammps_bonds[HarmonicPotentialBond] = 'harmonic'
-    lammps_bond_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in lammps_bonds.items())
+    lookup_lammps_bondtypes[HarmonicPotentialBondType] = 'harmonic'
 
     def canonical_bond(self, params, bond, direction='into'):
         """Convert to/from the canonical form of this interaction. """
         # TODO: Gromacs says harmonic potential bonds do not have constraints or
         #       exclusions. Check that this logic is supported.
+        forcetype_class = bond.forcetype.__class__
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
             try:
-                typename = self.lookup_lammps_bonds[bond.__class__]
+                typename = self.lookup_lammps_bondtypes[forcetype_class]
             except KeyError:
-                if bond.__class__.__name__ in ['FeneBond', 'ConnectionBond']:
+                if isinstance(bond.forcetype, (FeneBondType, ConnectionBondType)):
                     raise UnimplementedFunctional(bond, ENGINE)
                 else:
                     raise UnsupportedFunctional(bond, ENGINE)
             canonical_force_scale = self.SCALE_FROM
 
-        if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
+        if isinstance(bond.forcetype, (HarmonicBondType, HarmonicPotentialBondType)):
             params['k'] *= canonical_force_scale
 
         if bond.__class__ == HarmonicPotentialBond:
@@ -434,7 +433,7 @@ class LammpsParser(object):
             onefour =  [set() for i in range(len(molecule.atoms) + 1)]
 
             # 1-2 neighbors
-            for bond in mol_type.bond_forces:
+            for bond in mol_type.bonds:
                 onetwo[bond.atom1].add(bond.atom2)
                 onetwo[bond.atom2].add(bond.atom1)
 
@@ -687,7 +686,7 @@ class LammpsParser(object):
         self.bond_classes = dict()
         self.parse_force_coeffs(data_lines, "Bond",
                                 self.bond_classes, self.bond_style,
-                                self.lammps_bonds, self.canonical_bond)
+                                self.lammps_bondtypes, self.canonical_bond)
 
     def parse_angle_coeffs(self, data_lines):
 
@@ -823,7 +822,13 @@ class LammpsParser(object):
 
     def get_force_bondingtypes(self, force, forceclass):
         """Return the atoms involved in a force. """
-        if forceclass in ['Bond', 'Pair']:
+        try:
+            forcetype = force.forcetype
+        except:
+            pass
+        if forceclass in ['Bond']:
+            return [forcetype.bondingtype1, forcetype.bondingtype2]
+        if forceclass in ['Pair']:
             return [force.bondingtype1, force.bondingtype2]
         elif forceclass in ['Angle']:
             return [force.bondingtype1, force.bondingtype2, force.bondingtype3]
@@ -833,8 +838,7 @@ class LammpsParser(object):
         else:
             logger.warning("No interaction type %s defined!" % (forceclass))
 
-    def write_forces(self, forces, offset, force_name,
-                     lookup_lammps_force, lammps_force_types, canonical_force):
+    def write_forces(self, forces, offset, force_name, lammps_forcetypes, canonical_force):
         """The general force writing function.
 
         Currently supports bonds, angles, dihedrals, impropers.
@@ -908,9 +912,9 @@ class LammpsParser(object):
                 force_count += 1
 
     def write_bonds(self, mol_type, offset):
-        bonds = sorted(mol_type.bond_forces, key=lambda x: (x.atom1, x.atom2))
+        bonds = sorted(mol_type.bonds, key=lambda x: (x.atom1, x.atom2))
         self.write_forces(bonds, offset, "Bond",
-                          self.lookup_lammps_bonds,
+                          self.lookup_lammps_bondtypes,
                           self.lammps_bond_types,
                           self.canonical_bond)
 
