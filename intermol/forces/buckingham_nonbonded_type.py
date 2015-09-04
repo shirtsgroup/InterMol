@@ -5,7 +5,7 @@ from intermol.forces.abstract_nonbonded_type import AbstractNonbondedType
 
 
 class BuckinghamNonbondedType(AbstractNonbondedType):
-    __slots__ = ['a', 'b', 'C6', 'type']
+    __slots__ = ['a', 'b', 'C6', 'form']
 
     @accepts_compatible_units(None, None, 
                               a=units.kilojoules_per_mole,

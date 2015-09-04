@@ -5,7 +5,7 @@ from intermol.forces.abstract_nonbonded_type import AbstractNonbondedType
 
 
 class LjSigepsNonbondedType(AbstractNonbondedType):
-    __slots__ = ['sigma', 'epsilon', 'type']
+    __slots__ = ['sigma', 'epsilon', 'form']
 
     @accepts_compatible_units(None, None, 
                               sigma=units.nanometers,

@@ -1,3 +1,7 @@
+from intermol.forces.bond import Bond
+from intermol.forces.angle import Angle
+from intermol.forces.dihedral import Dihedral
+
 from intermol.forces.abstract_atom_type import AbstractAtomType
 from intermol.forces.abstract_nonbonded_type import AbstractNonbondedType
 from intermol.forces.abstract_bond_type import AbstractBondType
