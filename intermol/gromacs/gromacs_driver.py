@@ -31,6 +31,38 @@ def write_file(system, top_out, gro_out):
     logger.info('...done.')
 
 
+def _find_gmx_binaries(gropath, grosuff):
+    """Locate the paths to the best available gromacs binaries. """
+    def gmx_path(binary_path):
+        return os.path.join(gropath, binary_path + grosuff)
+
+    if which('gmx_d'):
+        logger.debug("Using double precision binaries for gromacs")
+        main_binary = gmx_path('gmx_d')
+        grompp_bin = [main_binary, 'grompp']
+        mdrun_bin = [main_binary, 'mdrun']
+        genergy_bin = [main_binary, 'energy']
+    elif which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
+        logger.debug("Using double precision binaries")
+        grompp_bin = [gmx_path('grompp_d')]
+        mdrun_bin = [gmx_path('mdrun_d')]
+        genergy_bin = [gmx_path('g_energy_d')]
+    elif which('gmx'):
+        logger.debug("Using double precision binaries")
+        main_binary = gmx_path('gmx')
+        grompp_bin = [main_binary, 'grompp']
+        mdrun_bin = [main_binary, 'mdrun']
+        genergy_bin = [main_binary, 'energy']
+    elif which('grompp') and which('mdrun') and which('g_energy'):
+        logger.debug("Using single precision binaries")
+        grompp_bin = [gmx_path('grompp')]
+        mdrun_bin = [gmx_path('mdrun')]
+        genergy_bin = [gmx_path('g_energy')]
+    else:
+        raise IOError('Unable to find gromacs executables.')
+    return grompp_bin, mdrun_bin, genergy_bin
+
+
 def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
                      grompp_check=False):
     """Compute single-point energies using GROMACS.
@@ -67,38 +99,26 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     stdout_path = os.path.join(directory, 'gromacs_stdout.txt')
     stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
-    if which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
-        logger.debug("Using double precision binaries")
-        grompp_bin = os.path.join(gropath, 'grompp_d' + grosuff)
-        mdrun_bin = os.path.join(gropath, 'mdrun_d' + grosuff)
-        genergy_bin = os.path.join(gropath, 'g_energy_d' + grosuff)
-    elif which('grompp') and which('mdrun') and which('g_energy'):
-        logger.debug("Using single precision binaries")
-        grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
-        mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
-        genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
-    else:
-        raise IOError('Unable to find gromacs executables.')
+    grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gropath, grosuff)
 
     # Run grompp.
-    cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
-    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
+    grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
+    proc = run_subprocess(grompp_bin, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('grompp failed. See %s' % stderr_path)
     if grompp_check:
         return
 
     # Run single-point calculation with mdrun.
-    cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
-        conf, '-e', ener, '-g', log]
-    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
+    mdrun_bin.extend(['-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', conf, '-e', ener, '-g', log])
+    proc = run_subprocess(mdrun_bin, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('mdrun failed. See %s' % stderr_path)
 
     # Extract energies using g_energy
     select = " ".join(map(str, range(1, 20))) + " 0 "
-    cmd = [genergy_bin, '-f', ener, '-o', ener_xvg, '-dp']
-    proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path, stdin=select)
+    genergy_bin.extend(['-f', ener, '-o', ener_xvg, '-dp'])
+    proc = run_subprocess(genergy_bin, 'gromacs', stdout_path, stderr_path, stdin=select)
     if proc.returncode != 0:
         logger.error('g_energy failed. See %s' % stderr_path)
 
