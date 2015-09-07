@@ -830,7 +830,8 @@ class GromacsParser(object):
         new_bond = Bond(1, 3, bond_type)
         self.current_molecule_type.bonds.add(new_bond)
 
-        new_angle = HarmonicAngle(3, 1, 2, None, None, None, angle, wateranglerefk, c=True)
+        angle_type = HarmonicAngleType(None, None, None, theta=angle, k=wateranglerefk, c=True)
+        new_angle = Angle(3, 1, 2, angle_type)
         self.current_molecule_type.angles.add(new_angle)
 
     def create_exclusion(self, exclusion):
