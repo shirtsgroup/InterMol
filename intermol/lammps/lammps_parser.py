@@ -1033,7 +1033,7 @@ class LammpsParser(object):
                     if z_coord < z_min:
                         z_min = z_coord
 
-                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
+                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.7f} {5:12.7f} {6:12.7f}\n'.format(
                             atom.index,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
