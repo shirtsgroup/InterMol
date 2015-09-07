@@ -95,7 +95,8 @@ def main(args=None):
     # LAMMPS
     lmppath = args.get('lmppath')
     if not lmppath:
-        for exe in ['lmp_mpi', 'lmp_serial', 'lmp_openmpi']:
+        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
+                    'lmp_mac_mpi']:
             if which(exe):
                 lmppath = exe
                 break
