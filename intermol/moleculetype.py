@@ -66,10 +66,10 @@ class MoleculeType(object):
         return self._match_two_atoms(pair, self.pair_forces)
 
     def match_angles(self, angle):
-        return self._match_three_atoms(angle, self.angle_forces)
+        return self._match_three_atoms(angle, self.angles)
 
     def match_dihedrals(self, dihedral):
-        return self._match_four_atoms(dihedral, self.dihedral_forces)
+        return self._match_four_atoms(dihedral, self.dihedrals)
 
     def __repr__(self):
         return "MoleculeType '{}' with {} molecules".format(
