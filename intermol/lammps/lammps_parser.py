@@ -1029,7 +1029,7 @@ class LammpsParser(object):
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:8.4f} {2:8.4f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:11.7f} {2:11.7f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1046,7 +1046,7 @@ class LammpsParser(object):
                     if z_coord < z_min:
                         z_min = z_coord
 
-                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.6f} {5:12.6f} {6:12.6f}\n'.format(
+                    atom_list.append('{0:-6d} {1:-6d} {2:-6d} {3:5.8f} {4:12.7f} {5:12.7f} {6:12.7f}\n'.format(
                             atom.index,
                             atom.residue_index,
                             atom_type_dict[atom.atomtype[0]],
@@ -1206,14 +1206,15 @@ class LammpsParser(object):
                     f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
                     f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
-                    f.write('kspace_style pppm 1e-6\n')
+                    f.write('pair_style lj/cut/coul/long 15.0 15.0\n')
+                    f.write('pair_modify tail yes\n')
+                    f.write('kspace_style pppm 1.0e-8\n')
             else:
                 if self.in_file.endswith('_vacuum.input'):
                     f.write('pair_style lj/cut 25.0\n')
                     f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/cut 9.0\n')
+                    f.write('pair_style lj/cut 15.0\n')
 
             for line in pair_coeffs:
                 f.write(line)
