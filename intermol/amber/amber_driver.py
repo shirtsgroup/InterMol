@@ -38,12 +38,14 @@ def amber_energies(ligandloc):
     #repetitive to keep opening the same file, but better than muddling convert.py
     """
 
+#    f = open('/Users/mrshirts/work/SAMPL5/new_simulation_inputs/simulation_inputs/Amber_energies.csv','r')
     f = open('/Users/mrshirts/work/SAMPL5/simulation_inputs/Amber_energies.csv','r')
     allline = f.readlines()
-    lines = allline[0].split('\r')
+    if len(allline) == 1:
+        lines = allline[0].split('\r')
     ligands = dict()
-
-    ligand = ligandloc.split('/')[8]
+    
+    ligand = ligandloc.split('/')[-2]
     for line in lines:
         if line[0:4] == 'name':
             things = line.split(',')
