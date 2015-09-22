@@ -108,19 +108,17 @@ class LammpsParser(object):
         forcetype_class = angle.forcetype.__class__
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
-            angletest = angle
         else:
+            canonical_force_scale = self.SCALE_FROM
             try:
                 typename = self.lookup_lammps_angle_types[forcetype_class]
             except KeyError:
                 raise UnsupportedFunctional(angle, ENGINE)
-            angletest = angle.__class__
-            canonical_force_scale = self.SCALE_FROM
 
-        if isinstance(angletest, (HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType)):
+        if isinstance(angle.forcetype, (HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType)):
             params['k'] *= canonical_force_scale
 
-        if isinstance(angletest, UreyBradleyAngleType):
+        if isinstance(angle.forcetype, UreyBradleyAngleType):
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
