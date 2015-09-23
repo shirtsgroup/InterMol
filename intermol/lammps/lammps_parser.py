@@ -1014,7 +1014,7 @@ class LammpsParser(object):
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:8.4f} {2:8.4f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:10.6f} {2:10.6f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1060,7 +1060,7 @@ class LammpsParser(object):
                     atom2_type = int(atom_list[pair.atom2].split()[2])
                     if atom2_type < atom1_type:  # LAMMPS requires i < j
                         atom1_type, atom2_type = atom2_type, atom1_type
-                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:8.4f} {2:8.4f}\n'.format(
+                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:10.6f} {2:10.6f}\n'.format(
                                 atom1_type,
                                 atom2_type,
                                 pair.epsilon.value_in_unit(self.ENERGY),
@@ -1233,10 +1233,10 @@ class LammpsParser(object):
                         break
 
                 # only one angle per settle
-                angle_range = np.arange(angle_i+1,angle_i+len(mol_type.molecules)+1)
+                angle_range = np.arange(angle_i+1, angle_i + len(mol_type.molecules)+1)
                 for a in angle_range:
                     f.write(' {0:d}'.format(a))
-                    if (a-angle_i)%10 == 0:
+                    if (a - angle_i) % 10 == 0:
                         f.write(' &\n')
                 f.write('\n')
 
