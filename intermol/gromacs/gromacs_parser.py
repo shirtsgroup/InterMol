@@ -670,57 +670,64 @@ class GromacsParser(object):
         for atom in top_moltype.atoms:
             self.create_atom(atom)
 
-    def create_atom(self, temp_atom):
+    def create_atom(self, atom_entry):
         index = self.n_atoms_added + 1
-        atomtype = temp_atom[1]
-        #res_id = int(temp_atom[2])
+        atomtype_str = atom_entry[1]
         res_id = self.gro.residue_ids[self.n_atoms_added]
-        #res_name = temp_atom[3]
         res_name = self.gro.residue_names[self.n_atoms_added]
-        atom_name = temp_atom[4]
-        cgnr = int(temp_atom[5])
-        charge = float(temp_atom[6]) * units.elementary_charge
-        if len(temp_atom) in [8, 11]:
-            mass = float(temp_atom[7]) * units.amu
+        atom_name = atom_entry[4]
+        cgnr = int(atom_entry[5])
+
+        if len(atom_entry) in [8, 11]:
+            mass = float(atom_entry[7]) * units.amu
         else:
             mass = -1 * units.amu
+        if len(atom_entry) < 7:
+            charge = None
+        else:
+            charge = float(atom_entry[6]) * units.elementary_charge
 
         atom = Atom(index, atom_name, res_id, res_name)
         atom.cgnr = cgnr
 
-        atom.atomtype = (0, atomtype)
+        atom.atomtype = (0, atomtype_str)
         atom.charge = (0, charge)
         atom.mass = (0, mass)
-        if len(temp_atom) == 11:
-            atomtype = temp_atom[8]
-            charge = float(temp_atom[9]) * units.elementary_charge
-            mass = float(temp_atom[10]) * units.amu
-            atom.atomtype = (1, atomtype)
+        if len(atom_entry) == 11:
+            atomtype_str = atom_entry[8]
+            charge = float(atom_entry[9]) * units.elementary_charge
+            mass = float(atom_entry[10]) * units.amu
+            atom.atomtype = (1, atomtype_str)
             atom.charge = (1, charge)
             atom.mass = (1, mass)
 
         atom.position = self.gro.positions[self.n_atoms_added]
 
-        for state, atomtype in atom.atomtype.items():
-            intermol_atomtype = self.system.atomtypes.get(atomtype)
-            if not intermol_atomtype:
+        for state, atomtype_str in atom.atomtype.items():
+            atomtype = self.system.atomtypes.get(atomtype_str)
+            if not atomtype:
                 logger.warn('A corresponding AtomType for {0} was not'
                             ' found.'.format(atom))
                 continue
-            atom.atomic_number = intermol_atomtype.atomic_number
-            if not atom.bondingtype:
-                if intermol_atomtype.bondtype:
-                    atom.bondingtype = intermol_atomtype.bondtype
-                else:
-                    atom.bondingtype = atomtype
+            atom.atomic_number = atomtype.atomic_number
+            if atomtype.bondtype:
+                atom.bondingtype = atomtype.bondtype
+            else:
+                atom.bondingtype = atomtype_str
             if atom.mass.get(state)._value < 0:
-                if intermol_atomtype.mass._value >= 0:
-                    atom.mass = (state, intermol_atomtype.mass)
+                if atomtype.mass._value >= 0:
+                    atom.mass = (state, atomtype.mass)
                 else:
                     logger.warn("Suspicious mass parameter found for atom "
                                 "{0}. Visually inspect before using.".format(atom))
-            atom.sigma = (state, intermol_atomtype.sigma)
-            atom.epsilon = (state, intermol_atomtype.epsilon)
+            if atom.charge[state] is None:
+                if atomtype.charge is None:
+                    atom.charge = (state, 0.0 * units.elementary_charge)
+                else:
+                    atom.charge = (state, atomtype.charge)
+
+            atom.sigma = (state, atomtype.sigma)
+            atom.epsilon = (state, atomtype.epsilon)
 
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
@@ -1138,7 +1145,7 @@ class GromacsParser(object):
         fields = line.split()
         if len(fields) < 5:
             self.too_few_fields(line)
-        if len(fields) not in [7, 8, 11]:
+        if len(fields) not in [6, 7, 8, 11]:
             self.invalid_line(line)
         self.current_molecule_type.atoms.append(fields)
 
