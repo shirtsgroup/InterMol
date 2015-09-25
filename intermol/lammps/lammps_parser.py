@@ -71,23 +71,28 @@ class LammpsParser(object):
         """Convert to/from the canonical form of this interaction. """
         # TODO: Gromacs says harmonic potential bonds do not have constraints or
         #       exclusions. Check that this logic is supported.
-        forcetype_class = bond.forcetype.__class__
+        if not hasattr(bond, 'forcetype'):
+            bond_type = bond
+        else:
+            bond_type = bond.forcetype
+
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
             canonical_force_scale = self.SCALE_FROM
             try:
-                typename = self.lookup_lammps_bondtypes[forcetype_class]
+                typename = self.lookup_lammps_bondtypes[bond_type.__class__]
             except KeyError:
-                if isinstance(bond.forcetype, (FeneBondType, ConnectionBondType)):
+                if isinstance(bond_type, (FeneBondType, ConnectionBondType)):
                     raise UnimplementedFunctional(bond, ENGINE)
                 else:
                     raise UnsupportedFunctional(bond, ENGINE)
 
-        if isinstance(bond.forcetype, (HarmonicBondType, HarmonicPotentialBondType)):
+        with_k = (HarmonicBondType, HarmonicPotentialBondType)
+        if isinstance(bond_type, with_k) or bond_type in with_k:
             params['k'] *= canonical_force_scale
 
-        if isinstance(bond.forcetype, HarmonicPotentialBondType):
+        if isinstance(bond_type, HarmonicPotentialBondType) or bond_type == HarmonicPotentialBondType:
             typename = 'harmonic'
 
         if direction == 'into':
@@ -105,20 +110,26 @@ class LammpsParser(object):
 
     def canonical_angle(self, params, angle, direction):
         """Convert from the canonical form of this interaction. """
-        forcetype_class = angle.forcetype.__class__
+        if not hasattr(angle, 'forcetype'):
+            angle_type = angle
+        else:
+            angle_type = angle.forcetype
+
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
         else:
             canonical_force_scale = self.SCALE_FROM
             try:
-                typename = self.lookup_lammps_angle_types[forcetype_class]
+                typename = self.lookup_lammps_angle_types[angle_type.__class__]
             except KeyError:
                 raise UnsupportedFunctional(angle, ENGINE)
 
-        if isinstance(angle.forcetype, (HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType)):
+        with_k = (HarmonicAngleType, CosineSquaredAngleType, UreyBradleyAngleType)
+        if (isinstance(angle_type, with_k) or angle_type in with_k):
             params['k'] *= canonical_force_scale
 
-        if isinstance(angle.forcetype, UreyBradleyAngleType):
+        with_kUB = (UreyBradleyAngleType,)
+        if isinstance(angle_type, with_kUB) or angle_type in with_kUB:
             params['kUB'] *= canonical_force_scale
 
         if direction == 'into':
@@ -421,9 +432,9 @@ class LammpsParser(object):
         # Indentify 1-2, 1-3, and 1-4 neighbors and create pair forces
         for mol_type in self.system.molecule_types.values():
             molecule = list(mol_type.molecules)[0]
-            onetwo =   [set() for i in range(len(molecule.atoms) + 1)]
-            onethree = [set() for i in range(len(molecule.atoms) + 1)]
-            onefour =  [set() for i in range(len(molecule.atoms) + 1)]
+            onetwo =   [set() for _ in range(molecule.n_atoms + 1)]
+            onethree = [set() for _ in range(molecule.n_atoms + 1)]
+            onefour =  [set() for _ in range(molecule.n_atoms + 1)]
 
             # 1-2 neighbors
             for bond in mol_type.bonds:
@@ -637,7 +648,7 @@ class LammpsParser(object):
 
             warn = False
             if len(force_style) == 1:
-                style = list(force_style)[0]  # awkward to have to translate to list to get the only member!
+                style = next(iter(force_style))  # There's only one entry.
                 if style == fields[1]:
                     field_offset = 2
                 else:
@@ -668,6 +679,7 @@ class LammpsParser(object):
             # Get the parameters from the line and translate into keywords
             kwds = self.create_kwds_from_entries(fields, force_class,
                                                  offset=field_offset)
+
             # translate the force into canonical form
             force_class, kwds = canonical_force(kwds, force_class,
                                                 direction='into')
@@ -686,21 +698,21 @@ class LammpsParser(object):
         self.angle_classes = dict()
         self.parse_force_coeffs(data_lines, "Angle",
                                 self.angle_classes, self.angle_style,
-                                self.lammps_angles, self.canonical_angle)
+                                self.lammps_angle_types, self.canonical_angle)
 
     def parse_dihedral_coeffs(self, data_lines):
 
         self.dihedral_classes = dict()
         self.parse_force_coeffs(data_lines, "Dihedral",
                                 self.dihedral_classes, self.dihedral_style,
-                                self.lammps_dihedrals, self.canonical_dihedral)
+                                self.lammps_dihedral_types, self.canonical_dihedral)
 
     def parse_improper_coeffs(self, data_lines):
 
         self.improper_classes = dict()
         self.parse_force_coeffs(data_lines, "Improper",
                                 self.improper_classes, self.improper_style,
-                                self.lammps_impropers, self.canonical_dihedral)
+                                self.lammps_improper_types, self.canonical_dihedral)
 
     def parse_atoms(self, data_lines):
         """Read atoms from data file."""
@@ -770,7 +782,8 @@ class LammpsParser(object):
             atom._velocity = [float(vel) * self.VEL for vel in
                               vel_dict[atom.index]]
 
-    def parse_force(self, data_lines, force_classes, forceSet, n=0):
+    def parse_force(self, data_lines, force_classes, current_mol_forces,
+                    Force, n=0):
         """Read bonds, angles, dihedrals, impropers from data file."""
         next(data_lines)  # toss out blank line
         for line in data_lines:
@@ -778,29 +791,32 @@ class LammpsParser(object):
                 break  # found another blank line
             fields = [int(field) for field in line.partition('#')[0].split()]
 
-            new_force = None
             coeff_num = fields[1]
             atom_nums = fields[2:n + 2]
-            paraminfo = force_classes[coeff_num]
-            kwds = paraminfo[1]
-            new_force = paraminfo[0](*atom_nums, **kwds)
-            forceSet.add(new_force)
+            bondingtypes = [self.current_mol.atoms[n-1].bondingtype
+                            for n in atom_nums]
+
+            ForceType, params = force_classes[coeff_num]
+            new_force_type = ForceType(*bondingtypes, **params)
+
+            new_force = Force(*atom_nums, forcetype=new_force_type)
+            current_mol_forces.add(new_force)
 
     def parse_bonds(self, data_lines):
         self.parse_force(data_lines, self.bond_classes,
-                         self.current_mol_type.bonds, n=2)
+                         self.current_mol_type.bonds, Bond, n=2)
 
     def parse_angles(self, data_lines):
         self.parse_force(data_lines, self.angle_classes,
-                         self.current_mol_type.angles, n=3)
+                         self.current_mol_type.angles, Angle, n=3)
 
     def parse_dihedrals(self, data_lines):
         self.parse_force(data_lines, self.dihedral_classes,
-                         self.current_mol_type.dihedrals, n=4)
+                         self.current_mol_type.dihedrals, Dihedral, n=4)
 
     def parse_impropers(self, data_lines):
         self.parse_force(data_lines, self.improper_classes,
-                         self.current_mol_type.dihedrals, n=4)
+                         self.current_mol_type.dihedrals, Dihedral, n=4)
 
     def get_force_atoms(self, force, forceclass):
         """Return the atoms involved in a force. """
@@ -901,7 +917,6 @@ class LammpsParser(object):
         self.write_forces(bonds, offset, "Bond",
                           self.lammps_bond_types,
                           self.canonical_bond)
-
 
     def write_angles(self, mol_type, offset):
         angles = sorted(mol_type.angles, key=lambda x: (x.atom1, x.atom2, x.atom3))
