@@ -739,9 +739,9 @@ class GromacsParser(object):
 
         # Get forcefield parameters.
         if bond_entry[2] == '5':
-             bondtype = ConnectionBondType(*bondingtypes)
+            bondtype = ConnectionBondType(*bondingtypes)
         elif len(bond_entry) == n_atoms + 1:
-             bondtype = self.find_forcetype(bondingtypes, self.system.bondtypes)
+            bondtype = self.find_forcetype(bondingtypes, self.system.bondtypes)
         else:
             bond_entry[0] = bondingtypes[0]
             bond_entry[1] = bondingtypes[1]
@@ -750,7 +750,7 @@ class GromacsParser(object):
                                               n_atoms, self.gromacs_bond_types,
                                               self.canonical_bond)
 
-        new_bond = Bond(*atoms, bondtype=bondtype)
+        new_bond = Bond(*atoms, forcetype=bondtype)
         self.current_molecule_type.bonds.add(new_bond)
 
     def create_pair(self, pair):
@@ -864,7 +864,7 @@ class GromacsParser(object):
                 self.gromacs_angle_types, self.canonical_angle)
             angle_entry = angle_entry.split()
 
-        new_angle = Angle(*atoms, angletype=angle_type)
+        new_angle = Angle(*atoms, forcetype=angle_type)
         self.current_molecule_type.angles.add(new_angle)
 
     def create_dihedral(self, dihedral_entry):
@@ -893,12 +893,12 @@ class GromacsParser(object):
                                                    self.gromacs_dihedral_types,
                                                    self.canonical_dihedral)
 
-            new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
+            new_dihedral = Dihedral(*atoms, forcetype=dihedral_type)
             self.current_molecule_type.dihedrals.add(new_dihedral)
         else:  # Lookup all dihedraltypes that match.
             dihedral_types = self.find_dihedraltype(bondingtypes, improper=improper)
             for dihedral_type in dihedral_types:
-                new_dihedral = Dihedral(*atoms, dihedraltype=dihedral_type)
+                new_dihedral = Dihedral(*atoms, forcetype=dihedral_type)
                 self.current_molecule_type.dihedrals.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
