@@ -9,6 +9,7 @@ import numpy as np
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
 from intermol.desmond import desmond_driver
+from intermol.amber import amber_driver
 import intermol.tests
 from intermol.tests.testing_tools import which
 
@@ -242,6 +243,14 @@ def main(args=None):
                 output_status['desmond'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
+
+        # Amber
+        if 1:
+            output_type.append('amber')
+            outfile = None
+            out = amber_driver.amber_energies(oname)
+            e_out.append(out)
+            e_outfile.append(outfile)            
 
         # Display energy comparison results.
         out = ['InterMol Conversion Energy Comparison Results', '',
