@@ -786,17 +786,19 @@ class DesmondParser(object):
                             templength.append(float(split[l])*units.angstroms) # Check units?
                     else:
                         templength.append(None*units.angstroms)
-                if 'AH' in split[funct_pos]:
-                    templen = int(list(split[funct_pos])[-1])
-                elif 'HOH' in split[funct_pos]:
-                    templen = 2    # Different desmond files have different options here.
 
-                params = [tempatom[0], tempatom[1], templength[0], split[funct_pos]]
-                # should verify the templen = 2 is correct.
+                type = split[funct_pos]
+                params = [tempatom[0], tempatom[1], templength[0], type]
+                if 'AH' in type:
+                    templen = int(list(type)[-1])
+                elif 'HOH' in type:
+                    templen = 2    # Different desmond files have different options here.
                 if templen == 2:
-                    params.extend([tempatom[2], templength[1], None, templength[2]])
+                    params.extend([tempatom[2], templength[1]])
+                if 'HOH' in type:
+                    params.extend([None,templength[2]])
                 else:
-                    for t in range(2,templen+1):
+                    for t in range(1,templen+1):
                         params.extend([tempatom[t],templength[t-1]])
                 new_constraint = Constraint(*params)
             else:
