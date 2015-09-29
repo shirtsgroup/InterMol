@@ -1227,13 +1227,13 @@ class LammpsParser(object):
                 logger.warning("Unsupported pair combination rule on writing input file!")
             f.write('\n')
 
-            if mol_type.settles:
+            if mol_type.rigidwaters:
                 f.write('fix settle all shake 0.000001 100 0 t')
                 # get the atom types of the first two molecules
                 molecules = list(mol_type.molecules)
                 # settles should be numbered from 0, not 1?
-                a1 = atom_type_dict[molecules[0].atoms[mol_type.settles.atom1-1].atomtype[0]]
-                a2 = atom_type_dict[molecules[0].atoms[mol_type.settles.atom1].atomtype[0]]
+                a1 = atom_type_dict[molecules[0].atoms[mol_type.rigidwaters.atom1-1].atomtype[0]]
+                a2 = atom_type_dict[molecules[0].atoms[mol_type.rigidwaters.atom1].atomtype[0]]
                 # first, write out all the atom types involved: should be the first two in the molecule.
                 #atom_type_dict[atom.atomtype[0]] = a_type_i
                 f.write(' {0:d} {1:d} a'.format(a1,a2))

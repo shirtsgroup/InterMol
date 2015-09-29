@@ -1551,7 +1551,7 @@ class DesmondParser(object):
         logger.debug("   -Writing constraints...")
         isHOH = False
 
-        if (moleculetype.settles):
+        if (moleculetype.rigidwaters):
             alen = 2
             clen = 3
         else:
@@ -1586,9 +1586,9 @@ class DesmondParser(object):
                 for j in range(alen_max-3):
                     cline += '0 '
                 cline += constraint.type
-                cline += ' %10.8f' % (float(constraint.length1.in_units_of(units.degrees)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
+                cline += ' %10.8f' % (float(constraint.length1.value_in_unit(units.degrees)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in(units.angstroms)))
                 for j in range(clen_max-3):
                     cline += ' <>'
             elif constraint.type[0:2] == 'AH':
@@ -1609,7 +1609,7 @@ class DesmondParser(object):
                     cline += ' <> '
                 cline += constraint.type
                 for j in range(clen):
-                    cline += ' %10.8f' % (float(clengths[j].in_units_of(units.angstroms)._value))
+                    cline += ' %10.8f' % (float(clengths[j].value_in_unit(units.angstroms)))
                 for j in range(clen,clen_max):
                     cline += ' <>'
             cline += '\n'
@@ -1617,19 +1617,18 @@ class DesmondParser(object):
             dlines.append(cline)
 
         # now need to add the constraints specified through settles.  Only one settles per molecule
-        if (moleculetype.settles):
+        if (moleculetype.rigidwaters):
             i += 1
-
-            settles = moleculetype.settles
+            rigidwater = moleculetype.rigidwaters
             # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
-            cline = '      %d %d %d %d ' % (i,1,3,2)
+            cline = '      %d %d %d %d ' % (i, rigidwater.atom1, rigidwater.atom2, rigidwater.atom3)
             for j in range(alen_max-3):
                 cline += '0 '
             cline += ' HOH '
-            dOH = settles.dOH._value
-            dHH = settles.dHH._value
+            dOH = rigidwater.dOH.value_in_unit(units.angstroms)
+            dHH = rigidwater.dHH.value_in_unit(units.angstroms)
             angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.3f %.5f %.5f " % (angle,dOH,dOH)
+            cline += " %.6f %.6f %.6f " % (angle,dOH,dOH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
@@ -1813,9 +1812,9 @@ class DesmondParser(object):
                 for atom in molecule.atoms:
                     resname = atom.residue_name
                     break
-                if resname == "T3P" or resname == "WAT":
-                    lines.append('  "TIP3P water box"\n')
-                    lines.append('  "TIP3P water box"\n')
+                if resname == "T3P" or resname == "WAT" or resname == "SOL":
+                    lines.append('  "water box"\n')
+                    lines.append('  "water box"\n')
                     lines.append('  1\n')
                     endline = '  solvent\n'
                 else:

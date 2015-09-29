@@ -8,8 +8,7 @@ from intermol.forces.abstract_dihedral_type import AbstractDihedralType
 from intermol.forces.atom_c_type import AtomCType
 from intermol.forces.atom_sigeps_type import AtomSigepsType
 
-from intermol.forces.settles import Settles
-
+from intermol.forces.rigidwater import RigidWater
 from intermol.forces.constraint import Constraint
 
 from intermol.forces.torsion_torsion_cmap import TorsionTorsionCMAP
