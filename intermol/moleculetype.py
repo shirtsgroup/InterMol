@@ -22,7 +22,7 @@ class MoleculeType(object):
         self.torsiontorsion_forces = set()
         self.constraints = set()
         self.exclusions = set()
-        self.rigidwaters = None
+        self.rigidwaters = set()
         self.nrexcl = None
 
     def add_molecule(self, molecule):

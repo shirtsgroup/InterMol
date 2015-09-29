@@ -769,6 +769,8 @@ class DesmondParser(object):
             ctype+=1
 
         for j in range(ff_number):
+            # water constraints actually get written to rigidwater (i.e. settles) constraints.
+
             if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
                 split = entry_values[j].split()
                 tempatom = []
@@ -780,32 +782,33 @@ class DesmondParser(object):
                         tempatom.append(None)
                 for l in lenpos:
                     if not '<>' in split[l]:
-                        if 'HOH' in entry_values[j] and l == lenpos[0]:
-                            templength.append(float(split[l])*units.degrees) # Check units?
-                        else:
+                        if 'AH' in entry_values[j]:
                             templength.append(float(split[l])*units.angstroms) # Check units?
                     else:
                         templength.append(None*units.angstroms)
 
                 type = split[funct_pos]
-                params = [tempatom[0], tempatom[1], templength[0], type]
-                if 'AH' in type:
-                    templen = int(list(type)[-1])
-                elif 'HOH' in type:
-                    templen = 2    # Different desmond files have different options here.
-                if templen == 2:
-                    params.extend([tempatom[2], templength[1]])
                 if 'HOH' in type:
-                    params.extend([None,templength[2]])
-                else:
-                    for t in range(1,templen+1):
-                        params.extend([tempatom[t],templength[t-1]])
-                new_constraint = Constraint(*params)
-            else:
-                warn("ReadError: found unsupported constraint")
-            if new_constraint:
-                current_molecule_type.constraints.add(new_constraint)
+                    dHH = float(split[6])
+                    if dHH != float(split[7]):
+                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[6],split[7]))
+                    angle = float(split[5])/(180/math.pi)
+                    dOH = 2*dHH*math.sin(angle/2)
+                    params = [int(split[1]), int(split[2]), int(split[3]), dOH*units.angstroms, dHH*units.angstroms]
+                    new_rigidwater = RigidWater(*params)
+                    if new_rigidwater:
+                        current_molecule_type.rigidwaters.add(new_rigidwater)
 
+                elif 'AH' in type:
+                    templen = int(list(type)[-1])
+                    params = [tempatom[0], tempatom[1], templength[0], type]
+                    for t in range(2,templen+1):
+                        params.extend([tempatom[t],templength[t-1]])
+                    new_constraint = Constraint(*params)
+                    if new_constraint:
+                        current_molecule_type.constraints.add(new_constraint)
+            else:
+                warn("ReadError: found unsupported constraint type %s" % (entry_values[j]))
 
     def load_ffio_block(self, molname, start, end):
 
@@ -1551,7 +1554,7 @@ class DesmondParser(object):
         logger.debug("   -Writing constraints...")
         isHOH = False
 
-        if (moleculetype.rigidwaters):
+        if len(moleculetype.rigidwaters) > 0:
             alen = 2
             clen = 3
         else:
@@ -1565,9 +1568,6 @@ class DesmondParser(object):
             if constraint.type[0:2] == 'AH':
                 alen = constraint.n+1
                 clen = alen-1
-            elif constraint.type == 'HOH':
-                alen = 2
-                clen = 3
             if alen_max < alen:
                 alen_max = alen
                 clen_max = clen
@@ -1617,9 +1617,8 @@ class DesmondParser(object):
             dlines.append(cline)
 
         # now need to add the constraints specified through settles.  Only one settles per molecule
-        if (moleculetype.rigidwaters):
+        for rigidwater in moleculetype.rigidwaters:
             i += 1
-            rigidwater = moleculetype.rigidwaters
             # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
             cline = '      %d %d %d %d ' % (i, rigidwater.atom1, rigidwater.atom2, rigidwater.atom3)
             for j in range(alen_max-3):
