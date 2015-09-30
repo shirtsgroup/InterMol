@@ -1685,7 +1685,7 @@ class DesmondParser(object):
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
-                lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms))
+                lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
         lines.append('  full_system\n')
 
         #M_ATOM
@@ -1824,7 +1824,7 @@ class DesmondParser(object):
 
             for bi in range(3):
                 for bj in range(3):
-                    lines.append('%22s\n'%float(bv[bi][bj].value_in_units(units.angstroms))
+                    lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
             lines.append(endline)
 
             #M_ATOMS
