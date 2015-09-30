@@ -769,6 +769,8 @@ class DesmondParser(object):
             ctype+=1
 
         for j in range(ff_number):
+            # water constraints actually get written to rigidwater (i.e. settles) constraints.
+
             if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
                 split = entry_values[j].split()
                 tempatom = []
@@ -780,32 +782,33 @@ class DesmondParser(object):
                         tempatom.append(None)
                 for l in lenpos:
                     if not '<>' in split[l]:
-                        if 'HOH' in entry_values[j] and l == lenpos[0]:
-                            templength.append(float(split[l])*units.degrees) # Check units?
-                        else:
+                        if 'AH' in entry_values[j]:
                             templength.append(float(split[l])*units.angstroms) # Check units?
                     else:
                         templength.append(None*units.angstroms)
 
                 type = split[funct_pos]
-                params = [tempatom[0], tempatom[1], templength[0], type]
-                if 'AH' in type:
-                    templen = int(list(type)[-1])
-                elif 'HOH' in type:
-                    templen = 2    # Different desmond files have different options here.
-                if templen == 2:
-                    params.extend([tempatom[2], templength[1]])
                 if 'HOH' in type:
-                    params.extend([None,templength[2]])
-                else:
-                    for t in range(1,templen+1):
-                        params.extend([tempatom[t],templength[t-1]])
-                new_constraint = Constraint(*params)
-            else:
-                warn("ReadError: found unsupported constraint")
-            if new_constraint:
-                current_molecule_type.constraints.add(new_constraint)
+                    dHH = float(split[6])
+                    if dHH != float(split[7]):
+                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[6],split[7]))
+                    angle = float(split[5])/(180/math.pi)
+                    dOH = 2*dHH*math.sin(angle/2)
+                    params = [int(split[1]), int(split[2]), int(split[3]), dOH*units.angstroms, dHH*units.angstroms]
+                    new_rigidwater = RigidWater(*params)
+                    if new_rigidwater:
+                        current_molecule_type.rigidwaters.add(new_rigidwater)
 
+                elif 'AH' in type:
+                    templen = int(list(type)[-1])
+                    params = [tempatom[0], tempatom[1], templength[0], type]
+                    for t in range(2,templen+1):
+                        params.extend([tempatom[t],templength[t-1]])
+                    new_constraint = Constraint(*params)
+                    if new_constraint:
+                        current_molecule_type.constraints.add(new_constraint)
+            else:
+                warn("ReadError: found unsupported constraint type %s" % (entry_values[j]))
 
     def load_ffio_block(self, molname, start, end):
 
@@ -1163,18 +1166,18 @@ class DesmondParser(object):
             if atom.residue_index:
                 sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0], atom.residue_index, atom.residue_name))
             else:
                 sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0]))
 
-            sig = float(atom.sigma[0].in_units_of(units.angstroms)._value)
-            ep = float(atom.epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
+            sig = float(atom.sigma[0].value_in_unit(units.angstroms))
+            ep = float(atom.epsilon[0].value_in_unit(units.kilocalorie_per_mole))
             if combrule == 'Multiply-C6C12':   #MRS: seems like this should be automated more?
                 stemp = ep * (4 * (sig**6))
                 etemp = stemp * (sig**6)
@@ -1551,7 +1554,7 @@ class DesmondParser(object):
         logger.debug("   -Writing constraints...")
         isHOH = False
 
-        if (moleculetype.settles):
+        if len(moleculetype.rigidwaters) > 0:
             alen = 2
             clen = 3
         else:
@@ -1565,9 +1568,6 @@ class DesmondParser(object):
             if constraint.type[0:2] == 'AH':
                 alen = constraint.n+1
                 clen = alen-1
-            elif constraint.type == 'HOH':
-                alen = 2
-                clen = 3
             if alen_max < alen:
                 alen_max = alen
                 clen_max = clen
@@ -1586,9 +1586,9 @@ class DesmondParser(object):
                 for j in range(alen_max-3):
                     cline += '0 '
                 cline += constraint.type
-                cline += ' %10.8f' % (float(constraint.length1.in_units_of(units.degrees)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
+                cline += ' %10.8f' % (float(constraint.length1.value_in_unit(units.degrees)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
                 for j in range(clen_max-3):
                     cline += ' <>'
             elif constraint.type[0:2] == 'AH':
@@ -1609,7 +1609,7 @@ class DesmondParser(object):
                     cline += ' <> '
                 cline += constraint.type
                 for j in range(clen):
-                    cline += ' %10.8f' % (float(clengths[j].in_units_of(units.angstroms)._value))
+                    cline += ' %10.8f' % (float(clengths[j].value_in_unit(units.angstroms)))
                 for j in range(clen,clen_max):
                     cline += ' <>'
             cline += '\n'
@@ -1617,19 +1617,17 @@ class DesmondParser(object):
             dlines.append(cline)
 
         # now need to add the constraints specified through settles.  Only one settles per molecule
-        if (moleculetype.settles):
+        for rigidwater in moleculetype.rigidwaters:
             i += 1
-
-            settles = moleculetype.settles
             # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
-            cline = '      %d %d %d %d ' % (i,1,3,2)
+            cline = '      %d %d %d %d ' % (i, rigidwater.atom1, rigidwater.atom2, rigidwater.atom3)
             for j in range(alen_max-3):
                 cline += '0 '
             cline += ' HOH '
-            dOH = settles.dOH._value
-            dHH = settles.dHH._value
+            dOH = rigidwater.dOH.value_in_unit(units.angstroms)
+            dHH = rigidwater.dHH.value_in_unit(units.angstroms)
             angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.3f %.5f %.5f " % (angle,dOH,dOH)
+            cline += " %.6f %.6f %.6f " % (angle,dOH,dOH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
@@ -1687,7 +1685,7 @@ class DesmondParser(object):
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
-                lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
         lines.append('  full_system\n')
 
         #M_ATOM
@@ -1813,9 +1811,9 @@ class DesmondParser(object):
                 for atom in molecule.atoms:
                     resname = atom.residue_name
                     break
-                if resname == "T3P" or resname == "WAT":
-                    lines.append('  "TIP3P water box"\n')
-                    lines.append('  "TIP3P water box"\n')
+                if resname == "T3P" or resname == "WAT" or resname == "SOL":
+                    lines.append('  "water box"\n')
+                    lines.append('  "water box"\n')
                     lines.append('  1\n')
                     endline = '  solvent\n'
                 else:
@@ -1826,7 +1824,7 @@ class DesmondParser(object):
 
             for bi in range(3):
                 for bj in range(3):
-                    lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                    lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
             lines.append(endline)
 
             #M_ATOMS
