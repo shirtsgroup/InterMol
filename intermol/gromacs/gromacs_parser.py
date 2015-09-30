@@ -335,7 +335,7 @@ class GromacsParser(object):
             self.bonds = []
             self.angles = []
             self.dihedrals = []
-            self.settles = None
+            self.rigidwaters = []
             self.exclusions = []
             self.pairs = []
             self.cmaps = []
@@ -497,9 +497,9 @@ class GromacsParser(object):
 
             if self.current_molecule_type.pair_forces:
                 self.write_pairs(top)
-            if self.current_molecule_type.bond_forces and not self.current_molecule_type.settles:
+            if self.current_molecule_type.bond_forces and not self.current_molecule_type.rigidwaters:
                 self.write_bonds(top)
-            if self.current_molecule_type.angle_forces and not self.current_molecule_type.settles:
+            if self.current_molecule_type.angle_forces and not self.current_molecule_type.rigidwaters:
                 self.write_angles(top)
             if self.current_molecule_type.dihedral_forces:
                 self.write_dihedrals(top)
@@ -507,8 +507,8 @@ class GromacsParser(object):
             # if moleculeType.virtualForceSet:
             #     lines += self.write_virtuals(moleculeType.virtualForceSet)
             #
-            if self.current_molecule_type.settles:
-                self.write_settles(top)
+            if self.current_molecule_type.rigidwaters:
+                self.write_rigidwaters(top)
             if self.current_molecule_type.exclusions:
                 self.write_exclusions(top)
 
@@ -644,17 +644,18 @@ class GromacsParser(object):
             top.write('\n')
         top.write('\n')
 
-    def write_settles(self, top):
-        top.write('[ settles ]\n')
-        top.write('; i  funct   dOH  dHH\n')
-        settles = self.current_molecule_type.settles
-        s_type = 1
-        top.write('{0:6d} {1:6d} {2:18.8f} {3:18.8f}\n'.format(
-                settles.atom1,
-                s_type,
-                settles.dOH.value_in_unit(units.nanometers),
-                settles.dHH.value_in_unit(units.nanometers)))
-        top.write('\n')
+    def write_rigidwaters(self, top):
+        for rigidwater in self.current_molecule_type.rigidwaters:
+            top.write('[ settles ]\n')
+            top.write('; i  funct   dOH  dHH\n')
+            s_type = 1
+            # gromacs only uses the first atom of the rigid waters as the O, expects the others follow in sequence
+            top.write('{0:6d} {1:6d} {2:18.8f} {3:18.8f}\n'.format(
+                    rigidwater.atom1,
+                    s_type,
+                    rigidwater.dOH.value_in_unit(units.nanometers),
+                    rigidwater.dHH.value_in_unit(units.nanometers)))
+            top.write('\n')
 
     def write_exclusions(self, top):
         top.write('[ exclusions ]\n')
@@ -687,8 +688,8 @@ class GromacsParser(object):
             self.create_angle(angle)
         for dihedral in top_moltype.dihedrals:
             self.create_dihedral(dihedral)
-        if top_moltype.settles:
-            self.create_settle(top_moltype.settles)
+        for rigidwater in top_moltype.rigidwaters:
+            self.create_rigidwater(rigidwater)
         for exclusion in top_moltype.exclusions:
             self.create_exclusion(exclusion)
 
@@ -859,24 +860,28 @@ class GromacsParser(object):
         else:
             self.current_molecule_type.pair_forces.add(new_pair)
 
-    def create_settle(self, settle):
-        new_settle = Settles(int(settle[0]),
-                            float(settle[2]) * units.nanometers,
-                            float(settle[3]) * units.nanometers)
-        self.current_molecule_type.settles = new_settle
+    def create_rigidwater(self, rigidwater):
+        # gromacs just assumes the first atom is the oxygen.
+        atom1 = int(rigidwater[0])
+        atom2 = atom1 + 1
+        atom3 = atom1 + 2
+        new_rigidwater = RigidWater(atom1, atom2, atom3,
+                            float(rigidwater[2]) * units.nanometers,
+                            float(rigidwater[3]) * units.nanometers)
+        self.current_molecule_type.rigidwaters.add(new_rigidwater)
 
         waterbondrefk = 900*units.kilojoules_per_mole * units.nanometers**(-2)
         wateranglerefk = 400*units.kilojoules_per_mole * units.degrees**(-2)
-        angle = 2.0 * math.asin(0.5 * float(settle[3]) / float(settle[2])) * units.radians
-        dOH = float(settle[2]) * units.nanometers
+        angle = 2.0 * math.asin(0.5 * float(rigidwater[3]) / float(rigidwater[2])) * units.radians
+        dOH = float(rigidwater[2]) * units.nanometers
 
-        new_bond = HarmonicBond(1, 2, None, None, dOH, waterbondrefk, c=True)
+        new_bond = HarmonicBond(atom1, atom2, None, None, dOH, waterbondrefk, c=True)
         self.current_molecule_type.bond_forces.add(new_bond)
 
-        new_bond = HarmonicBond(1, 3, None, None, dOH, waterbondrefk, c=True)
+        new_bond = HarmonicBond(atom1, atom3, None, None, dOH, waterbondrefk, c=True)
         self.current_molecule_type.bond_forces.add(new_bond)
 
-        new_angle = HarmonicAngle(3, 1, 2, None, None, None, angle, wateranglerefk, c=True)
+        new_angle = HarmonicAngle(atom2, atom1, atom3, None, None, None, angle, wateranglerefk, c=True)
         self.current_molecule_type.angle_forces.add(new_angle)
 
     def create_exclusion(self, exclusion):
@@ -1249,7 +1254,7 @@ class GromacsParser(object):
         fields = line.split()
         if len(fields) < 4:
             self.too_few_fields(line)
-        self.current_molecule_type.settles = fields
+        self.current_molecule_type.rigidwaters.append(fields)
 
     def process_exclusion(self, line):
         """Process a line in the [ exclusions ] category."""
