@@ -1166,18 +1166,18 @@ class DesmondParser(object):
             if atom.residue_index:
                 sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0], atom.residue_index, atom.residue_name))
             else:
                 sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0]))
 
-            sig = float(atom.sigma[0].in_units_of(units.angstroms)._value)
-            ep = float(atom.epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
+            sig = float(atom.sigma[0].value_in_unit(units.angstroms))
+            ep = float(atom.epsilon[0].value_in_unit(units.kilocalorie_per_mole))
             if combrule == 'Multiply-C6C12':   #MRS: seems like this should be automated more?
                 stemp = ep * (4 * (sig**6))
                 etemp = stemp * (sig**6)
@@ -1588,7 +1588,7 @@ class DesmondParser(object):
                 cline += constraint.type
                 cline += ' %10.8f' % (float(constraint.length1.value_in_unit(units.degrees)))
                 cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
-                cline += ' %10.8f' % (float(constraint.length2.value_in(units.angstroms)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
                 for j in range(clen_max-3):
                     cline += ' <>'
             elif constraint.type[0:2] == 'AH':
@@ -1685,7 +1685,7 @@ class DesmondParser(object):
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
-                lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms))
         lines.append('  full_system\n')
 
         #M_ATOM
@@ -1824,7 +1824,7 @@ class DesmondParser(object):
 
             for bi in range(3):
                 for bj in range(3):
-                    lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                    lines.append('%22s\n'%float(bv[bi][bj].value_in_units(units.angstroms))
             lines.append(endline)
 
             #M_ATOMS
