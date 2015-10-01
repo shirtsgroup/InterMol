@@ -333,9 +333,9 @@ class DesmondParser(object):
         self.vdwtypes = []
 
         self.viparr = 1
-        self.fblockpos = []
-        self.a_blockpos = []
-        self.b_blockpos = []
+        self.fmct_blockpos = []
+        self.atom_blockpos = []
+        self.bond_blockpos = []
         self.ffio_blockpos = []
 
         self.paramlist = ff.build_paramlist('desmond')
@@ -525,12 +525,12 @@ class DesmondParser(object):
                                       etemp)
                     self.system.add_atomtype(newAtomType)
 
-        if len(self.a_blockpos) > 1:  #LOADING M_ATOMS
-            if self.a_blockpos[0] < start:
+        if len(self.atom_blockpos) > 1:  #LOADING M_ATOMS
+            if self.atom_blockpos[0] < start:
                 # generate the new molecules for this block; the number of molecules depends on
                 # The number of molecules depends on the number of entries in ffio_sites (ff_number)
-                new_molecules = self.loadMAtoms(self.lines, self.a_blockpos[0], i, current_molecule, ff_number)
-                self.a_blockpos.pop(0)
+                new_molecules = self.loadMAtoms(self.lines, self.atom_blockpos[0], i, current_molecule, ff_number)
+                self.atom_blockpos.pop(0)
 
         index = 0
         for molecule in new_molecules:
@@ -549,14 +549,14 @@ class DesmondParser(object):
     def parse_bonds(self, type, current_molecule_type, i, start):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
 
-        if len(self.b_blockpos) > 1:  #LOADING M_BONDS
-            if self.b_blockpos[0] < start:
+        if len(self.bond_blockpos) > 1:  #LOADING M_BONDS
+            if self.bond_blockpos[0] < start:
                 for molecule in iter(current_molecule_type.molecules):
                     npermol = len(molecule.atoms)
                     break
                 # of the parsers, this is the only one that uses 'lines'. Can we remove?
-                current_molecule_type.bonds = self.loadMBonds(self.lines, self.b_blockpos[0], i, npermol)
-                self.b_blockpos.pop(0)
+                current_molecule_type.bonds = self.loadMBonds(self.lines, self.bond_blockpos[0], i, npermol)
+                self.bond_blockpos.pop(0)
 
         logger.debug("Parsing [ bonds ]...")
 
@@ -674,28 +674,6 @@ class DesmondParser(object):
             if new_angle:
                 current_molecule_type.angles.add(new_angle)
 
-            # old code
-            #if new_angle:
-            #    # check to see if this angle already has terms associated with it; have to merge urey bradley.
-            #    old_angle = current_molecule_type.match_angles(new_angle)
-            #    if old_angle:
-            #        # OK, we have two values.  One of them is the desmond UB.  add it on.
-            #        if (old_angle.k._value == 0):
-            #            # the old one is the UB term.  Copy the new angle parameters into it.
-            #            old_angle.k = new_angle.k
-            #            old_angle.theta = new_angle.theta
-            #            # overwrite the old one with the new one
-            #            new_angle = old_angle
-            #        elif (new_angle.k._value == 0):
-            #            # the new one is the UB term.  Copy the old angle parameters into it
-            #            new_angle.k = old_angle.k
-            #            new_angle.theta = old_angle.theta
-            #        else:
-            #            warn("Duplicate angle type! Shouldn't reach this point of code!")
-            #    else:
-            #        # add it on
-            #        current_molecule_type.angle_forces.add(new_angle)
-
     def parse_dihedrals(self, type, current_molecule_type):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
         logger.debug("Parsing [ dihedrals ] ...")
@@ -766,7 +744,8 @@ class DesmondParser(object):
             current_molecule_type.exclusions.add(tuple([int(x) for x in temp]))
 
     def parse_restraints(self, type, current_molecule_type):
-        warn("Parsing [ restraints] not yet implemented")
+        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
+        logger.debug("Warning: Parsing [ restraints] not yet implemented")
 
     def parse_constraints(self, type, current_molecule_type):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
@@ -788,6 +767,8 @@ class DesmondParser(object):
             ctype+=1
 
         for j in range(ff_number):
+            # water constraints actually get written to rigidwater (i.e. settles) constraints.
+
             if 'HOH' in entry_values[j] or 'AH' in entry_values[j]:
                 split = entry_values[j].split()
                 tempatom = []
@@ -799,45 +780,33 @@ class DesmondParser(object):
                         tempatom.append(None)
                 for l in lenpos:
                     if not '<>' in split[l]:
-                        if 'HOH' in entry_values[j] and l == lenpos[0]:
-                            templength.append(float(split[l])*units.degrees) # Check units?
-                        else:
+                        if 'AH' in entry_values[j]:
                             templength.append(float(split[l])*units.angstroms) # Check units?
                     else:
                         templength.append(None*units.angstroms)
-                if 'AH' in split[funct_pos]:
-                    templen = int(list(split[funct_pos])[-1])
-                elif 'HOH' in split[funct_pos]:
-                    templen = 2    # Different desmond files have different options here.
-                params = [tempatom[0], tempatom[0],templength[0],split[funct_pos]]
-                # should verify the templen = 2 is correct.
-                if templen == 2:
-                    params.extend([tempatom[2],templength[1],None,templength[2]])
-                else:
-                    for t in range(3,templen):
-                        params.extend([tempatom[t-1],templength[t-2]])
-                new_constraint = Constraint(*params)
-                #if templen == 1:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos])
-                #elif templen == 2:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],None,templength[2])
-                #elif templen == 3:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2])
-                #elif templen == 4:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3])
-                #elif templen == 5:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4])
-                #elif templen == 6:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5])
-                #elif templen == 7:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6])
-                #elif templen == 8:
-                #    newConstraint = Constraint(tempatom[0],tempatom[1],templength[0],split[funct_pos],tempatom[2],templength[1],tempatom[3],templength[2],tempatom[4],templength[3],tempatom[5],templength[4],tempatom[6],templength[5],tempatom[7],templength[6],tempatom[8],templength[7])
-            else:
-                warn("ReadError: found unsupported constraint")
-            if new_constraint:
-                current_molecule_type.constraints.add(new_constraint)
 
+                type = split[funct_pos]
+                if 'HOH' in type:
+                    dHH = float(split[6])
+                    if dHH != float(split[7]):
+                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[6],split[7]))
+                    angle = float(split[5])/(180/math.pi)
+                    dOH = 2*dHH*math.sin(angle/2)
+                    params = [int(split[1]), int(split[2]), int(split[3]), dOH*units.angstroms, dHH*units.angstroms]
+                    new_rigidwater = RigidWater(*params)
+                    if new_rigidwater:
+                        current_molecule_type.rigidwaters.add(new_rigidwater)
+
+                elif 'AH' in type:
+                    templen = int(list(type)[-1])
+                    params = [tempatom[0], tempatom[1], templength[0], type]
+                    for t in range(2,templen+1):
+                        params.extend([tempatom[t],templength[t-1]])
+                    new_constraint = Constraint(*params)
+                    if new_constraint:
+                        current_molecule_type.constraints.add(new_constraint)
+            else:
+                warn("ReadError: found unsupported constraint type %s" % (entry_values[j]))
 
     def load_ffio_block(self, molname, start, end):
 
@@ -1000,8 +969,8 @@ class DesmondParser(object):
         i = start
 
         bg = False
-        pdbaline = ""
-        aline = ""
+        pdbaname = ""
+        aname = ""
 
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
@@ -1055,27 +1024,27 @@ class DesmondParser(object):
                         atom.velocity[2] = float(aline[cols['r_ffio_z_vel']]) * units.angstroms * units.picoseconds**(-1)
 
                     if 's_m_pdb_atom_name' in cols:
-                        pdbaline = aline[cols['s_m_pdb_atom_name']].strip()
+                        pdbaname = aline[cols['s_m_pdb_atom_name']].strip()
                     if 's_m_atom_name' in cols:
-                        aline = aline[cols['s_m_atom_name']].strip()
-                    if re.match('$^',pdbaline) and not re.match('$^',aline):
-                        atom.name = aline
-                    elif re.match('$^',aline) and not re.match('$^',pdbaline):
-                        atom.name = pdbaline
-                    elif re.search("\d+",pdbaline) and not re.search("\d+",aline):
-                        if re.search("\D+",pdbaline) and re.search("\w+",pdbaline):
-                            atom.name = pdbaline
+                        aname = aline[cols['s_m_atom_name']].strip()
+                    if re.match('$^',pdbaname) and not re.match('$^',aname):
+                        atom.name = aname
+                    elif re.match('$^',aname) and not re.match('$^',pdbaname):
+                        atom.name = pdbaname
+                    elif re.search("\d+",pdbaname) and not re.search("\d+",aname):
+                        if re.search("\D+",pdbaname) and re.search("\w+",pdbaname):
+                            atom.name = pdbaname
                         else:
-                            atom.name = aline
-                    elif re.search("\d+",aline) and not re.search("\d+",pdbaline):
-                        if re.search("\D+",aline) and re.search("\w+",aline):
-                            atom.name = aline
+                            atom.name = aname
+                    elif re.search("\d+",aname) and not re.search("\d+",pdbaname):
+                        if re.search("\D+",aname) and re.search("\w+",aname):
+                            atom.name = aname
                         else:
-                            atom.name = pdbaline
-                    elif re.match('$^',pdbaline) and re.match('$^',aline):
+                            atom.name = pdbaname
+                    elif re.match('$^',pdbaname) and re.match('$^',aname):
                         atom.name = "None"
                     else:
-                        atom.name = aline  #doesn't matter which we choose, so we'll go with atom name instead of pdb
+                        atom.name = aname  #doesn't matter which we choose, so we'll go with atom name instead of pdb
                     i+=1
 
             molecules.append(newMolecule)
@@ -1130,15 +1099,15 @@ class DesmondParser(object):
         for line in self.lines:
             if 'f_m_ct' in line:
                 if j > 0:
-                    self.fblockpos.append(i)
+                    self.fmct_blockpos.append(i)
                 j+=1
             if 'm_atom' in line and not (('i_m' in line) or ('s_m' in line)):
                 if j > 1:
-                    self.a_blockpos.append(i)
+                    self.atom_blockpos.append(i)
                 j+=1
             if 'm_bond' in line:
                 if j > 2:
-                    self.b_blockpos.append(i)
+                    self.bond_blockpos.append(i)
                 j+=1
             if 'ffio_ff' in line:
                 if j > 2:
@@ -1147,9 +1116,9 @@ class DesmondParser(object):
             i+=1
         i-=1
 
-        self.fblockpos.append(i)
-        self.a_blockpos.append(i)
-        self.b_blockpos.append(i)
+        self.fmct_blockpos.append(i)
+        self.atom_blockpos.append(i)
+        self.bond_blockpos.append(i)
         self.ffio_blockpos.append(i)
 
         self.sysDirective = {'ffio_vdwtypes': self.parse_vdwtypes,
@@ -1170,7 +1139,7 @@ class DesmondParser(object):
         i = 0
         j = 0
         while i < (len(self.ffio_blockpos)-1):
-            j = self.fblockpos[i]
+            j = self.fmct_blockpos[i]
             while ':::' not in self.lines[j]:
                 j+=1
             # make sure we have reasonable molecular names.
@@ -1179,14 +1148,14 @@ class DesmondParser(object):
             if molname == "":
                 molname = "Molecule_"+str(len(molnames)+1)
             molnames.append(molname)
-            self.load_ffio_block(molname, self.ffio_blockpos[i], self.fblockpos[i+1]-1)
+            self.load_ffio_block(molname, self.ffio_blockpos[i], self.fmct_blockpos[i+1]-1)
             i+=1
         i = 0
 
         #LOAD RAW BOX VECTOR-Same throughout cms
 
         logger.debug("Reading Box Vector...")
-        self.load_box_vector(self.lines, self.fblockpos[0], self.a_blockpos[0])
+        self.load_box_vector(self.lines, self.fmct_blockpos[0], self.atom_blockpos[0])
 
         return self.system
 
@@ -1205,18 +1174,18 @@ class DesmondParser(object):
             if atom.residue_index:
                 sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0], atom.residue_index, atom.residue_name))
             else:
                 sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (
                         i, 'atom',
-                        atom._charge[0].in_units_of(units.elementary_charge)._value,
-                        atom._mass[0].in_units_of(units.atomic_mass_unit)._value,
+                        atom._charge[0].value_in_unit(units.elementary_charge),
+                        atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0]))
 
-            sig = float(atom.sigma[0].in_units_of(units.angstroms)._value)
-            ep = float(atom.epsilon[0].in_units_of(units.kilocalorie_per_mole)._value)
+            sig = float(atom.sigma[0].value_in_unit(units.angstroms))
+            ep = float(atom.epsilon[0].value_in_unit(units.kilocalorie_per_mole))
             if combrule == 'Multiply-C6C12':   #MRS: seems like this should be automated more?
                 stemp = ep * (4 * (sig**6))
                 etemp = stemp * (sig**6)
@@ -1582,10 +1551,11 @@ class DesmondParser(object):
         return hlines
 
     def write_constraints(self, moleculetype):
+
         #ADDING CONSTRAINTS
         logger.debug("   -Writing constraints...")
 
-        if moleculetype.settles:
+        if len(moleculetype.rigidwaters) > 0:
             alen = 2
             clen = 3
         else:
@@ -1596,12 +1566,9 @@ class DesmondParser(object):
         clen_max = clen
 
         for constraint in moleculetype.constraints:
-            if re.search('AH',constraint.type):
-                alen = int(list(constraint.type)[-1])
-                clen = alen
-            elif re.match('HOH',constraint.type):
-                alen = 2
-                clen = 3
+            if constraint.type[0:2] == 'AH':
+                alen = constraint.n+1
+                clen = alen-1
             if alen_max < alen:
                 alen_max = alen
                 clen_max = clen
@@ -1620,44 +1587,48 @@ class DesmondParser(object):
                 for j in range(alen_max-3):
                     cline += '0 '
                 cline += constraint.type
-                cline += ' %10.8f' % (float(constraint.length1.in_units_of(units.degrees)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
-                cline += ' %10.8f' % (float(constraint.length2.in_units_of(units.angstroms)._value))
+                cline += ' %10.8f' % (float(constraint.length1.value_in_unit(units.degrees)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
+                cline += ' %10.8f' % (float(constraint.length2.value_in_unit(units.angstroms)))
                 for j in range(clen_max-3):
                     cline += ' <>'
-            elif constraint.type == 'AH':
-                catoms = [constraint.atom1,constraint.atom2,constraint.atom3,constraint.atom4,
-                         constraint.atom5,constraint.atom6,constraint.atom7,constraint.atom8]
-                clengths = [constraint.length1,constraint.length2,constraint.length3,constraint.length4,
-                             constraint.length5,constraint.length6,constraint.length7,constraint.length8]
-                alen = int(list(constraint.type)[-1])+2
+            elif constraint.type[0:2] == 'AH':
+                alen = constraint.n+1
+                clen = alen-1
+                catoms = [constraint.atom1]
+                clengths = []
+                for j in range(1,alen+1):
+                    atomname = 'atom'+str(j+1)
+                    lengthname = 'length'+str(j)
+                    if hasattr(constraint,atomname):
+                        catoms.append(getattr(constraint,atomname))
+                        clengths.append(getattr(constraint,lengthname))
                 cline = '      %d ' % i
                 for j in range(alen):
-                    cline += ' %d ' % int(catoms[i])
+                    cline += ' %d ' % int(catoms[j])
                 for j in range(alen,alen_max):
-                    cline += ' 0 '
+                    cline += ' <> '
                 cline += constraint.type
-                for j in range(alen):
-                    cline += ' %10.8f' % (float(clengths[i].in_units_of(units.angstroms)._value))
-                for j in range(alen,alen_max):
-                    cline += ' 0.0'
+                for j in range(clen):
+                    cline += ' %10.8f' % (float(clengths[j].value_in_unit(units.angstroms)))
+                for j in range(clen,clen_max):
+                    cline += ' <>'
             cline += '\n'
+
             dlines.append(cline)
 
         # now need to add the constraints specified through settles.  Only one settles per molecule
-        if (moleculetype.settles):
+        for rigidwater in moleculetype.rigidwaters:
             i += 1
-
-            settles = moleculetype.settles
             # Assumes the water arrangement O, H, H, which might not always be the case.  Consider adding detection.
-            cline = '      %d %d %d %d ' % (i,1,3,2)
+            cline = '      %d %d %d %d ' % (i, rigidwater.atom1, rigidwater.atom2, rigidwater.atom3)
             for j in range(alen_max-3):
                 cline += '0 '
             cline += ' HOH '
-            dOH = settles.dOH._value
-            dHH = settles.dHH._value
+            dOH = rigidwater.dOH.value_in_unit(units.angstroms)
+            dHH = rigidwater.dHH.value_in_unit(units.angstroms)
             angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.3f %.5f %.5f " % (angle,dOH,dOH)
+            cline += " %.6f %.6f %.6f " % (angle,dOH,dOH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
@@ -1668,7 +1639,7 @@ class DesmondParser(object):
             hlines.append("      :::\n")
         else:
             letters = ['i','j','k','l','m','n','o','p','q']
-            for j in range(alen_max+1):
+            for j in range(alen_max):
                 hlines.append('      i_ffio_a%s\n'%letters[j])
             hlines.append('      s_ffio_funct\n')
             for j in range(clen_max):
@@ -1713,7 +1684,7 @@ class DesmondParser(object):
         lines.append('  "full system"\n')
         for bi in range(3):
             for bj in range(3):
-                lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
         lines.append('  full_system\n')
 
         #M_ATOM
@@ -1835,9 +1806,9 @@ class DesmondParser(object):
                 for atom in molecule.atoms:
                     resname = atom.residue_name
                     break
-                if resname == "T3P" or resname == "WAT":
-                    lines.append('  "TIP3P water box"\n')
-                    lines.append('  "TIP3P water box"\n')
+                if resname == "T3P" or resname == "WAT" or resname == "SOL":
+                    lines.append('  "water box"\n')
+                    lines.append('  "water box"\n')
                     lines.append('  1\n')
                     endline = '  solvent\n'
                 else:
@@ -1848,7 +1819,7 @@ class DesmondParser(object):
 
             for bi in range(3):
                 for bj in range(3):
-                    lines.append('%22s\n'%float(bv[bi][bj].in_units_of(units.angstroms)._value))
+                    lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
             lines.append(endline)
 
             #M_ATOMS

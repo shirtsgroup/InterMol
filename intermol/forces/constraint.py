@@ -19,7 +19,7 @@ class Constraint(object):
             self.length1 = length1
             self.length2 = length2
             self.length3 = length3
-        elif str(list(type)[0:2])=='AH':
+        elif str(type)[0:2]=='AH':
             self.n = int(list(type)[-1])
             if self.n >= 1:
                 self.atom1 = atom1

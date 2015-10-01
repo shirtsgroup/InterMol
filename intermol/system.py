@@ -96,7 +96,12 @@ class System(object):
         if v.shape != (3, 3):
             e = ValueError("Box vector with incorrect format: {0}".format(v))
             logger.exception(e)
-        self._box_vector = np.array(v) * v[0, 0].unit
+
+        # Handle two different 'unit' module behaviors.
+        if hasattr(v,'unit'):    
+            self._box_vector = np.array(v)*v[0,0].unit
+        else:
+            self._box_vector = np.array(v)
 
     @property
     def connected_pairs(self):

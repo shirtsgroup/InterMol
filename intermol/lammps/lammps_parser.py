@@ -1230,25 +1230,27 @@ class LammpsParser(object):
                 logger.warning("Unsupported pair combination rule on writing input file!")
             f.write('\n')
 
-            if mol_type.settles:
+            if len(mol_type.rigidwaters) > 0:
                 f.write('fix settle all shake 0.000001 100 0 t')
-                # get the atom types of the first two molecules
-                molecules = list(mol_type.molecules)
-                # settles should be numbered from 0, not 1?
-                a1 = atom_type_dict[molecules[0].atoms[mol_type.settles.atom1-1].atomtype[0]]
-                a2 = atom_type_dict[molecules[0].atoms[mol_type.settles.atom1].atomtype[0]]
-                # first, write out all the atom types involved: should be the first two in the molecule.
-                #atom_type_dict[atom.atomtype[0]] = a_type_i
-                f.write(' {0:d} {1:d} a'.format(a1,a2))
-                angle_i = 0
-                # add up the angles until the settle.  I think this is problematic because
-                # it doesn't take into account any transformation to the number of
-                # angles when lammps writes out.
-                for mol_name_j, mol_type_j in self.system.molecule_types.items():
-                    if mol_name_j != mol_name:
-                        angle_i += len(mol_type_j.angles)*len(mol_type_j.molecules)
-                    elif mol_name_j == mol_name:
-                        break
+                for rigidwater in mol_type.rigidwaters:
+                    molecules = list(mol_type.molecules)
+                    a1 = atom_type_dict[molecules[0].atoms[rigidwater.atom1-1].atomtype[0]]
+                    a2 = atom_type_dict[molecules[0].atoms[rigidwater.atom1].atomtype[0]]
+                    # get the atom types of the first two molecules
+
+                    # settles should be numbered from 0, not 1?
+
+                    # first, write out all the atom types involved: should be the first two in the molecule.
+                    f.write(' {0:d} {1:d} a'.format(a1,a2))
+                    angle_i = 0
+                    # add up the angles until the settle.  I think this is problematic because
+                    # it doesn't take into account any transformation to the number of
+                    # angles when lammps writes out.
+                    for mol_name_j, mol_type_j in self.system.molecule_types.items():
+                        if mol_name_j != mol_name:
+                            angle_i += len(mol_type_j.angle_forces)*len(mol_type_j.molecules)
+                        elif mol_name_j == mol_name:
+                            break
 
                 # only one angle per settle
                 angle_range = np.arange(angle_i+1, angle_i + len(mol_type.molecules)+1)
