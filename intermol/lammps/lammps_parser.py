@@ -492,7 +492,10 @@ class LammpsParser(object):
             self.type_idx = 1
             self.q_idx = 2
             self.pos_idx = (3, 4, 5)
-        elif self.atom_style in ('angle', 'atomic', 'bond'):
+        elif self.atom_style in ('angle', 'bond'):
+            self.type_idx = 2
+            self.pos_idx = (3, 4, 5)
+        elif self.atom_style == 'atomic':
             self.type_idx = 1
             self.pos_idx = (2, 3, 4)
 
@@ -1213,7 +1216,7 @@ class LammpsParser(object):
                     f.write('pair_style lj/cut 25.0\n')
                     f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/cut 9.0\n')
+                    f.write('pair_style lj/cut 20.0\n')
 
             for line in pair_coeffs:
                 f.write(line)
