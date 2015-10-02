@@ -1555,7 +1555,7 @@ class DesmondParser(object):
         isHOH = False
 
         if len(moleculetype.rigidwaters) > 0:
-            alen = 2
+            alen = 3
             clen = 3
         else:
             alen = 0
