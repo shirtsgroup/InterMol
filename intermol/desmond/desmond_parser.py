@@ -1686,7 +1686,7 @@ class DesmondParser(object):
         for bi in range(3):
             for bj in range(3):
                 lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
-        lines.append('   full_system\n')       
+        lines.append('  full_system\n')       
 
         #M_ATOM
         apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
@@ -1793,7 +1793,7 @@ class DesmondParser(object):
                 lines.append('  %s\n' % c)
             lines.append('  :::\n')
 
-            lines.append(molecule_name + '\n')        
+            lines.append('  ' + molecule_name + '\n')        
             for bi in range(3):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
