@@ -1794,7 +1794,7 @@ class DesmondParser(object):
             lines.append('  s_ffio_ct_type\n')
             lines.append('  :::\n')
 
-            lines.append('  ' + molecule_name + '\n')        
+            lines.append('  "' + molecule_name + '"\n')
             for bi in range(3):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
