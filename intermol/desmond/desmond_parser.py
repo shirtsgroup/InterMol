@@ -1780,10 +1780,6 @@ class DesmondParser(object):
             lines.append('  }\n')
         lines.append('}\n')
 
-        solute = True
-        endline = ''
-        resname = ''
-
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
         for molecule_name, moleculetype in self.system.molecule_types.items():
@@ -1802,7 +1798,6 @@ class DesmondParser(object):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
 
-            lines.append('   solute\n')        
             #M_ATOMS
 
             logger.debug("  Writing m_atoms...")
