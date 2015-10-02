@@ -337,6 +337,7 @@ class DesmondParser(object):
         self.system = system
 
         self.vdwtypes = []
+        self.vdwtypeskeys = []
 
         self.viparr = 1
         self.fmct_blockpos = []
@@ -825,8 +826,6 @@ class DesmondParser(object):
                               # of the ordering later
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
-        self.vdwtypeskeys = []
-
         split = []
         constraints = []
         temp = []
@@ -1156,6 +1155,7 @@ class DesmondParser(object):
         #-ADDING VDWTYPES AND SITES
         i = 0
         sites = []
+        vdwtypes = []
         sig = None
         ep = None
         stemp = None
@@ -1184,19 +1184,19 @@ class DesmondParser(object):
             elif combrule in ['Lorentz-Berthelot','Multiply-Sigeps']:
                 stemp = sig
                 etemp = ep
-            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in self.vdwtypes:
-                self.vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)))
+            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in vdwtypes:
+                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)))
 
         lines = []
         logger.debug("   -Writing vdwtypes...")
-        lines.append("    ffio_vdwtypes[%d] {\n"%(len(self.vdwtypes)))
+        lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
         lines.append("      s_ffio_name\n")
         lines.append("      s_ffio_funct\n")
         lines.append("      r_ffio_c1\n")
         lines.append("      r_ffio_c2\n")
         lines.append("      :::\n")
         i = 0
-        for v in self.vdwtypes:
+        for v in vdwtypes:
             i+=1
             lines.append('      %d%2s'%(i,v))
         lines.append("      :::\n")
