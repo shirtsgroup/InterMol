@@ -1677,7 +1677,7 @@ class DesmondParser(object):
         lines.append('  s_m_title\n')
         for c in self.atom_box_vars:
             lines.append('  %s\n' % c)
-        lines.append('s_ffio_ct_type')
+        lines.append('  s_ffio_ct_type\n')
         lines.append('  :::\n')
 
         #box vector
