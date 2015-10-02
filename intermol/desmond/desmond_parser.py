@@ -1626,8 +1626,8 @@ class DesmondParser(object):
             cline += ' HOH '
             dOH = rigidwater.dOH.value_in_unit(units.angstroms)
             dHH = rigidwater.dHH.value_in_unit(units.angstroms)
-            angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.6f %.6f %.6f " % (angle,dOH,dOH)
+            angle = 2.0*math.asin(0.5*dOH/dHH)*(180/math.pi)    # could automate conversion. . .
+            cline += " %.6f %.6f %.6f " % (angle,dHH,dHH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
