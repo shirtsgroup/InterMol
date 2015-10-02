@@ -1682,7 +1682,7 @@ class DesmondParser(object):
 
         #box vector
         bv = self.system.box_vector
-        lines.append('  Desmond file converted by InterMol\n')
+        lines.append('  "Desmond file converted by InterMol"\n')
         for bi in range(3):
             for bj in range(3):
                 lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
