@@ -1677,16 +1677,14 @@ class DesmondParser(object):
         lines.append('  s_m_title\n')
         for c in self.atom_box_vars:
             lines.append('  %s\n' % c)
-        lines.append('  s_ffio_ct_type\n')
         lines.append('  :::\n')
 
         #box vector
         bv = self.system.box_vector
-        lines.append('  "full system"\n')
+        lines.append('  Desmond file converted by InterMol\n')
         for bi in range(3):
             for bj in range(3):
                 lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
-        lines.append('  full_system\n')
 
         #M_ATOM
         apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
@@ -1793,39 +1791,13 @@ class DesmondParser(object):
             logger.debug("  Writing f_m_ct...")
             lines.append('f_m_ct {\n')
             lines.append('  s_m_title\n')
-            bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
-            lines.append('  s_m_entry_name\n')
-            lines.append('  i_ffio_num_component\n')
             for c in self.atom_box_vars:
                 lines.append('  %s\n' % c)
-            lines.append('  s_ffio_ct_type\n')
             lines.append('  :::\n')
-
-            if solute:
-                lines.append('  solute\n')
-                endline = '  solute\n'
-                solute = False
-                del lines[bpos]
-                del lines[bpos]
-            else:
-                for atom in molecule.atoms:
-                    resname = atom.residue_name
-                    break
-                if resname == "T3P" or resname == "WAT" or resname == "SOL":
-                    lines.append('  "water box"\n')
-                    lines.append('  "water box"\n')
-                    lines.append('  1\n')
-                    endline = '  solvent\n'
-                else:
-                    lines.append('  %s\n' % (molecule_name))
-                    endline = '  ion\n'
-                    del lines[bpos]
-                    del lines[bpos] #deletes line for num component (only in TIP3)
 
             for bi in range(3):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
-            lines.append(endline)
 
             #M_ATOMS
 
