@@ -337,6 +337,7 @@ class DesmondParser(object):
         self.system = system
 
         self.vdwtypes = []
+        self.vdwtypeskeys = []
 
         self.viparr = 1
         self.fmct_blockpos = []
@@ -825,8 +826,6 @@ class DesmondParser(object):
                               # of the ordering later
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
-        self.vdwtypeskeys = []
-
         split = []
         constraints = []
         temp = []
@@ -1156,6 +1155,7 @@ class DesmondParser(object):
         #-ADDING VDWTYPES AND SITES
         i = 0
         sites = []
+        vdwtypes = []
         sig = None
         ep = None
         stemp = None
@@ -1184,19 +1184,19 @@ class DesmondParser(object):
             elif combrule in ['Lorentz-Berthelot','Multiply-Sigeps']:
                 stemp = sig
                 etemp = ep
-            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in self.vdwtypes:
-                self.vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)))
+            if ' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)) not in vdwtypes:
+                vdwtypes.append(' %2s %18s %8.8f %8.8f\n' % (atom.atomtype[0], "LJ12_6_sig_epsilon", float(stemp), float(etemp)))
 
         lines = []
         logger.debug("   -Writing vdwtypes...")
-        lines.append("    ffio_vdwtypes[%d] {\n"%(len(self.vdwtypes)))
+        lines.append("    ffio_vdwtypes[%d] {\n"%(len(vdwtypes)))
         lines.append("      s_ffio_name\n")
         lines.append("      s_ffio_funct\n")
         lines.append("      r_ffio_c1\n")
         lines.append("      r_ffio_c2\n")
         lines.append("      :::\n")
         i = 0
-        for v in self.vdwtypes:
+        for v in vdwtypes:
             i+=1
             lines.append('      %d%2s'%(i,v))
         lines.append("      :::\n")
@@ -1555,7 +1555,7 @@ class DesmondParser(object):
         isHOH = False
 
         if len(moleculetype.rigidwaters) > 0:
-            alen = 2
+            alen = 3
             clen = 3
         else:
             alen = 0
@@ -1626,8 +1626,8 @@ class DesmondParser(object):
             cline += ' HOH '
             dOH = rigidwater.dOH.value_in_unit(units.angstroms)
             dHH = rigidwater.dHH.value_in_unit(units.angstroms)
-            angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.6f %.6f %.6f " % (angle,dOH,dOH)
+            angle = 2.0*math.asin(0.5*dOH/dHH)*(180/math.pi)    # could automate conversion. . .
+            cline += " %.6f %.6f %.6f " % (angle,dHH,dHH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
@@ -1682,11 +1682,11 @@ class DesmondParser(object):
 
         #box vector
         bv = self.system.box_vector
-        lines.append('  "full system"\n')
+        lines.append('  "Desmond file converted by InterMol"\n')
         for bi in range(3):
             for bj in range(3):
                 lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
-        lines.append('  full_system\n')
+        lines.append('  full_system\n')       
 
         #M_ATOM
         apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
@@ -1780,10 +1780,6 @@ class DesmondParser(object):
             lines.append('  }\n')
         lines.append('}\n')
 
-        solute = True
-        endline = ''
-        resname = ''
-
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
         for molecule_name, moleculetype in self.system.molecule_types.items():
@@ -1793,40 +1789,16 @@ class DesmondParser(object):
             logger.debug("  Writing f_m_ct...")
             lines.append('f_m_ct {\n')
             lines.append('  s_m_title\n')
-            bpos = len(lines) #bpos temporarily used for position of s_m_entry_name (for TIP3)
-            lines.append('  s_m_entry_name\n')
-            lines.append('  i_ffio_num_component\n')
             for c in self.atom_box_vars:
                 lines.append('  %s\n' % c)
             lines.append('  s_ffio_ct_type\n')
             lines.append('  :::\n')
 
-            if solute:
-                lines.append('  solute\n')
-                endline = '  solute\n'
-                solute = False
-                del lines[bpos]
-                del lines[bpos]
-            else:
-                for atom in molecule.atoms:
-                    resname = atom.residue_name
-                    break
-                if resname == "T3P" or resname == "WAT" or resname == "SOL":
-                    lines.append('  "water box"\n')
-                    lines.append('  "water box"\n')
-                    lines.append('  1\n')
-                    endline = '  solvent\n'
-                else:
-                    lines.append('  %s\n' % (molecule_name))
-                    endline = '  ion\n'
-                    del lines[bpos]
-                    del lines[bpos] #deletes line for num component (only in TIP3)
-
+            lines.append('  "' + molecule_name + '"\n')
             for bi in range(3):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
-            lines.append(endline)
-
+            lines.append('  solute\n')
             #M_ATOMS
 
             logger.debug("  Writing m_atoms...")
@@ -1927,7 +1899,7 @@ class DesmondParser(object):
             if "Viparr" in molecule_name:
                 lines.append('    Generated by Viparr\n')
             else:
-                lines.append('    %s\n' % molecule_name)
+                lines.append('    "%s"\n' % molecule_name)
 
             #Adding Combination Rule
             if self.system.combination_rule == 'Multiply-C6C12':
