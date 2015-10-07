@@ -1,0 +1,24 @@
+package:
+  name: intermol
+  version: !!str 0.2.0.dev0
+
+requirements:
+  build:
+    - python
+
+  run:
+    - python
+    - numpy
+    - openmm
+    - six
+
+test:
+  requires:
+    - pytest
+  commands:
+    - py.test --pyargs intermol
+
+about:
+  home: http://github.com/shirtsgroup/intermol
+  license: MIT
+  summary: A conversion tool for molecular dynamics simulations.

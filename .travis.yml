@@ -1,14 +1,29 @@
-language: python
-
-python:
-  - "2.7"
-  - "3.4"
+language: c
 
 sudo: false
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+
+install:
+  - source devtools/travis-ci/install.sh
+
+script:
+  - conda build devtools/conda-recipe
+
+env:
+  matrix:
+    - python=2.7  CONDA_PY=27
+    - python=3.4  CONDA_PY=34
+
+  global:
+    # BINSTAR
+    - secure: "UGmEljhTf6mQxjhj6We2PPNaNsaYONoFgH30SEofJDNIqXSM6zNQzSVOm5RBxfvVdw+TSYwmyZ/XmMio+yIWMDBXXW8MbGHWYIGqevSkgqCT9qqZv2475MCyPFpmyucQzN+0/3+b7JxAR/VC2N6CLPGohsUe1Up/xU3MfY5DcJY="
+
+after_success:
+  - source devtools/travis-ci/post_binstar.sh
+
 
 #before_install:
 #  # # Build LAMMPS
@@ -21,15 +36,15 @@ addons:
 #  - export PATH=$PATH:$HOME/bin
 #  - cd ../..
 
-install:
-  - pip install coverage
-  - pip install coveralls
-  - pip install pytest
-  - pip install -r requirements.txt
-  - pip install .
-
-script:
-  - coverage run --rcfile=.coveragerc --source=intermol setup.py tests
-
-after_script:
-  - coveralls
+#install:
+#  - pip install coverage
+#  - pip install coveralls
+#  - pip install pytest
+#  - pip install -r requirements.txt
+#  - pip install .
+#
+#script:
+#  - coverage run --rcfile=.coveragerc --source=intermol setup.py tests
+#
+#after_script:
+#  - coveralls
