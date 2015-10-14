@@ -61,7 +61,7 @@ def amber_energies(prmtop=None, crd=None, ambin=None, amb_path=None):
 
     amber_bin = os.path.join(amb_path, 'sander')
     if not which(amber_bin):
-        raise IOError('Unable to find gromacs executables.')
+        raise IOError('Unable to find AMBER executable (sander).')
 
     # Run grompp.
     cmd = [amber_bin, '-i', ambin, '-c', crd, '-p', parmtop, '-o', mdout, '-O']

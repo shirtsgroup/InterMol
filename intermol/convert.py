@@ -287,7 +287,7 @@ def main(args=None):
 
         mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
         cfg_path = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint.cfg'))
-        lmp_path = os.path.abspath(os.path.join(tests_path, 'lammps', 'lammps.input_include'))
+        lmpimp_path = os.path.abspath(os.path.join(tests_path, 'lammps', 'lammps.input_include'))
         amb_path = os.path.abspath(os.path.join(tests_path, 'amber', 'amber.in'))
 
         # Evaluate input energies.

@@ -37,7 +37,6 @@ def lammps_energies(input_file, lmp_path='lmp_openmpi'):
         lmp_path = path to LAMMPS binaries
     """
     logger.info('Evaluating energy of {0}'.format(input_file))
-
     directory, input_file = os.path.split(os.path.abspath(input_file))
     stdout_path = os.path.join(directory, 'lammps_stdout.txt')
     stderr_path = os.path.join(directory, 'lammps_stderr.txt')
