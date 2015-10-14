@@ -29,12 +29,12 @@ def write_file(in_file, system, unit_set='real'):
     logger.info('...done.')
 
 
-def lammps_energies(input_file, lmppath='lmp_openmpi'):
+def lammps_energies(input_file, lmp_path='lmp_openmpi'):
     """Evaluate energies of LAMMPS files
 
     Args:
         input_file = path to input file (expects data file in same folder)
-        lmppath = path to LAMMPS binaries
+        lmp_path = path to LAMMPS binaries
     """
     logger.info('Evaluating energy of {0}'.format(input_file))
 
@@ -55,7 +55,7 @@ def lammps_energies(input_file, lmppath='lmp_openmpi'):
     saved_path = os.getcwd()
     os.chdir(directory)
 
-    cmd = [lmppath, '-in', input_file]
+    cmd = [lmp_path, '-in', input_file]
     proc = run_subprocess(cmd, 'lammps', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('LAMMPS failed. See %s/lammps_stderr.txt' % directory)

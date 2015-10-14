@@ -20,8 +20,7 @@ logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
-def record_exception(runtype, logger, e_out, e_outfile, e):
-    output_status[runtype] = e
+def record_exception(logger, e_out, e_outfile, e):
     logger.exception(e)
     e_out.append(-1)
     e_outfile.append(-1)
@@ -69,7 +68,7 @@ def parse_args(args):
     group_misc.add_argument('-dp', '--despath', dest='des_path',
             metavar='path', default='',
             help='path for DESMOND binary, needed for energy evaluation')
-    group_misc.add_argument('-ds', '--desmondsettings', dest='desset',
+    group_misc.add_argument('-ds', '--desmondsettings', dest='des_set',
             metavar='settings', default='',
             help='Desmond .cfg settings file used for energy evaluation')
 
@@ -85,7 +84,7 @@ def parse_args(args):
     group_misc.add_argument('-lp', '--lmppath', dest='lmp_path',
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
-    group_misc.add_argument('-ls', '--lammpssettings', dest='lmpset',
+    group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_set',
             metavar='settings', default='',
             help='LAMMPS .input settings file used for energy evaluation. This is simply the pair_style and long range coulomb type to use')
 
@@ -93,7 +92,7 @@ def parse_args(args):
     group_misc.add_argument('-ap', '--amberpath', dest='amberpath',
             metavar='path', default='',
             help='path for AMBER binary, needed for energy evaluation')
-    group_misc.add_argument('-as', '--ambersettings', dest='ambset',
+    group_misc.add_argument('-as', '--ambersettings', dest='amb_set',
             metavar='settings', default='',
             help='Amber .in settings file used for energy evaluation')
 
@@ -127,11 +126,11 @@ def main(args=None):
     if not gro_path:
         gro_path = ''
     # LAMMPS
-    lpm_path = args.get('lpm_path')
-    if not lpm_path:
+    lmp_path = args.get('lmp_path')
+    if not lmp_path:
         for exe in ['lmp_mpi', 'lmp_serial', 'lmp_openmpi']:
             if which(exe):
-                lpm_path = exe
+                lmp_path = exe
                 break
         else:
             logger.exception('Found no LAMMPS executable.')
@@ -186,7 +185,8 @@ def main(args=None):
         try:
             import parmed
         except Exception as e:
-            record_exception('amber',logger, e_out, e_outfile, e)
+            record_exception(logger, e_out, e_outfile, e)
+            output_status['amber'] = e
 
         structure = parmed.amber.AmberParm(prmtop_in,crd_in)
         #Make GROMACS topology
@@ -245,7 +245,8 @@ def main(args=None):
         try:
             import parmed
         except Exception as e:
-            record_exception('amber', logger, e_out, e_outfile, e)
+            record_exception(logger, e_out, e_outfile, e)
+            output_status['amber'] = e
 
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
@@ -303,7 +304,7 @@ def main(args=None):
                 lmp_path = args['lmp_set']
             input_type = 'lammps'
             # add the insertion of pair types
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lpm_path=lpm_path)
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmp_path=lmp_path)
 
         elif args.get('des_in'):
             if args.get('des_set'):
@@ -334,7 +335,8 @@ def main(args=None):
                 out, outfile = gromacs_driver.gromacs_energies(
                     '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp_path, gro_path, '')
             except Exception as e:
-                record_exception('gromacs',logger, e_out, e_outfile, e)
+                record_exception(logger, e_out, e_outfile, e)
+                output_status['gromacs'] = e
             else:
                 output_status['gromacs'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -344,9 +346,10 @@ def main(args=None):
             output_type.append('lammps')
             try:
                 out, outfile = lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), lpm_path=lpm_path)
+                    '{0}.input'.format(oname), lmp_path=lmp_path)
             except Exception as e:
-                record_exception('lammps',logger, e_out, e_outfile, e)
+                record_exception(logger, e_out, e_outfile, e)
+                output_status['lammps'] = e
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -358,7 +361,8 @@ def main(args=None):
                 out, outfile = desmond_driver.desmond_energies(
                     '{0}.cms'.format(oname), cfg_path, des_path)
             except Exception as e:
-                record_exception('desmond',logger, e_out, e_outfile, e)
+                record_exception(logger, e_out, e_outfile, e)
+                output_status['desmond'] = e
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -370,7 +374,8 @@ def main(args=None):
                 out, outfile = amber_driver.amber_energies(
                     '{0}.cms'.format(oname), amb_path, ambpath)
             except Exception as e:
-                record_exception('amber',logger, e_out, e_outfile, e)
+                record_exception(logger, e_out, e_outfile, e)
+                output_status['amber'] = e
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
