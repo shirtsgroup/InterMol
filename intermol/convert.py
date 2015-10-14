@@ -321,7 +321,7 @@ def main(args=None):
             else:
                 ambin_path = os.path.abspath(os.path.join(tests_path, 'amber', 'min.in'))
             input_type = 'amber'
-            e_in = amber_driver.amber_energies(prmtop_in, crd_in, ambin_path, gro_path, '')
+            e_in = amber_driver.amber_energies(prmtop_in, crd_in, ambin_path)
         else:
             logger.warn('Code should have never made it here!')
 
@@ -372,7 +372,7 @@ def main(args=None):
             output_type.append('amber')
             try:
                 out, outfile = amber_driver.amber_energies(
-                    '{0}.cms'.format(oname), amb_path, ambpath)
+                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), amb_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['amber'] = e
