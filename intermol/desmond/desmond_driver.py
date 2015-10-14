@@ -79,13 +79,13 @@ def get_desmond_energy_from_file(energy_file):
     return e_out
 
 
-def desmond_energies(cms, cfg, despath):
+def desmond_energies(cms, cfg, des_path):
     """Evalutes energies of DESMOND files
 
     Args:
         cms (str): Path to .cms file.
         cfg (str): Path to .cfg file.
-        despath (str): Path to DESMOND binaries.
+        des_path (str): Path to DESMOND binaries.
     Returns:
         tot_energy:
         energy_file:
@@ -99,8 +99,8 @@ def desmond_energies(cms, cfg, despath):
     cwd = os.getcwd()
     name = os.path.splitext(cms_filename)[0]
     energy_file = '%s/%s.enegrp.dat' % (direc, name)
-    if despath and not (despath == ''):
-        desmond_bin = os.path.join(despath,'desmond')
+    if des_path and not (des_path == ''):
+        desmond_bin = os.path.join(des_path,'desmond')
     elif os.environ.get('SCHRODINGER'):
         desmond_bin = os.path.join(os.environ.get('SCHRODINGER'),'desmond')
     else:

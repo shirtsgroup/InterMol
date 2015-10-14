@@ -12,18 +12,17 @@ from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 logger = logging.getLogger('InterMolLog')
 
 
-def read_file(top_in, gro_in, gropath):
+def read_file(top_in, gro_in, gro_path):
     # Run grompp to ensure .gro and .top are a valid match.
     tests_path = os.path.dirname(intermol.tests.__file__)
     mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
     if not bool(os.getenv('CI')):
-        gromacs_energies(top_in, gro_in, mdp_path, gropath, '', grompp_check=True)
+        gromacs_energies(top_in, gro_in, mdp_path, gro_path, '', grompp_check=True)
 
     logger.info("Reading Gromacs files '{0}', '{1}'.".format(top_in, gro_in))
     system = load_gromacs(top_in, gro_in)
     logger.info('...loaded.')
     return system
-
 
 def write_file(system, top_out, gro_out):
     logger.info("Writing Gromacs files '{0}', '{1}'.".format(top_out, gro_out))
@@ -31,7 +30,7 @@ def write_file(system, top_out, gro_out):
     logger.info('...done.')
 
 
-def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
+def gromacs_energies(top=None, gro=None, mdp=None, gro_path=None, grosuff=None,
                      grompp_check=False):
     """Compute single-point energies using GROMACS.
 
@@ -39,7 +38,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
         top (str):
         gro (str):
         mdp (str):
-        gropath (str):
+        gro_path (str):
         grosuff (str):
         grompp_check (bool):
 
@@ -49,8 +48,8 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     """
     if not grompp_check:
         logger.info('Evaluating energy of {0}'.format(gro))
-    if not gropath:
-        gropath = ''
+    if not gro_path:
+        gro_path = ''
     if not grosuff:
         grosuff = ''
 
@@ -69,14 +68,14 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
 
     if which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
         logger.debug("Using double precision binaries")
-        grompp_bin = os.path.join(gropath, 'grompp_d' + grosuff)
-        mdrun_bin = os.path.join(gropath, 'mdrun_d' + grosuff)
-        genergy_bin = os.path.join(gropath, 'g_energy_d' + grosuff)
+        grompp_bin = os.path.join(gro_path, 'grompp_d' + grosuff)
+        mdrun_bin = os.path.join(gro_path, 'mdrun_d' + grosuff)
+        genergy_bin = os.path.join(gro_path, 'g_energy_d' + grosuff)
     elif which('grompp') and which('mdrun') and which('g_energy'):
         logger.debug("Using single precision binaries")
-        grompp_bin = os.path.join(gropath, 'grompp' + grosuff)
-        mdrun_bin = os.path.join(gropath, 'mdrun' + grosuff)
-        genergy_bin = os.path.join(gropath, 'g_energy' + grosuff)
+        grompp_bin = os.path.join(gro_path, 'grompp' + grosuff)
+        mdrun_bin = os.path.join(gro_path, 'mdrun' + grosuff)
+        genergy_bin = os.path.join(gro_path, 'g_energy' + grosuff)
     else:
         raise IOError('Unable to find gromacs executables.')
 

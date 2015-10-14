@@ -11,7 +11,7 @@ from six import string_types
 
 from intermol.exceptions import MultipleValidationErrors
 
-ENGINES = ['gromacs', 'lammps', 'desmond']
+ENGINES = ['gromacs', 'lammps', 'desmond', 'amber']
 
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
@@ -240,6 +240,9 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
             flags['lmp_in'] = test_file
         elif input_engine == 'desmond':
             flags['des_in'] = test_file
+        elif input_engine == 'amber':
+            prmtop, rst = test_file
+            flags['amb_in'] = [prmtop, rst]
 
         flags['odir'] = odir
         for engine in ENGINES:
@@ -251,6 +254,7 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
         logger.info('Converting {0} with command:\n'.format(test_file))
         logger.info('    python convert.py {0}'.format(
             ' '.join(cmd_line_equivalent)))
+
         diff = convert.main(flags)
         for engine, result in diff.items():
             results[engine][name] = result
@@ -278,4 +282,16 @@ def _get_desmond_test_files(test_dir):
     cms_files = sorted(glob(os.path.join(test_dir, '*/*.cms')))
     names = [os.path.splitext(os.path.basename(cms))[0] for cms in cms_files]
     return cms_files, names
+
+
+def _get_amber_test_files(test_dir):
+    prmtop_files = sorted(glob(os.path.join(test_dir, '*/*.prmtop')))
+    prmtop_files = [x for x in prmtop_files if not x.endswith('out.prmtop')]
+    suffix = ['rst','rst7','crd','inpcrd']
+    crd_files = []
+    for s in suffix:
+        crd_files += glob(os.path.join(test_dir, '*/*.' + s))    # generalize to other coordinate files
+    crd_files = sorted(crd_files)    
+    names = [os.path.splitext(os.path.basename(prmtop))[0] for prmtop in prmtop_files]
+    return zip(prmtop_files, crd_files), names
 
