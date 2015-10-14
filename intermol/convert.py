@@ -168,6 +168,7 @@ def main(args=None):
         system = lammps_driver.read_file(in_file=lammps_file)
 
     elif args.get('amb_in'):
+
         amber_files = args['amb_in']
         prefix = os.path.splitext(os.path.basename(amber_files[0]))[0]
 
@@ -190,9 +191,11 @@ def main(args=None):
         structure = parmed.amber.AmberParm(prmtop_in,crd_in)
         #Make GROMACS topology
         parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(structure)
-        # write out the files
-        fromamber_top_in = prefix + '_from_amber.top'
-        fromamber_gro_in = prefix + '_from_amber.gro'
+
+        # write out the files.  Should write them out in the proper directory (the one reading in)
+        pathprefix = os.path.dirname(prmtop_in)
+        fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
+        fromamber_gro_in = os.path.join(pathprefix,prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
