@@ -508,7 +508,6 @@ class GromacsParser(object):
                 atom.name = "LMP_{0}".format(atom.name)
             if atom.atomtype[0].isdigit():
                 atom.atomtype[0] = "LMP_{0}".format(atom.atomtype[0])
-
             top.write('{0:6d} {1:18s} {2:6d} {3:8s} {4:8s} {5:6d} '
                       '{6:18.8f} {7:18.8f}'.format(
                         i + 1,
@@ -1118,13 +1117,20 @@ class GromacsParser(object):
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
         fields = line.split()
-        if len(fields) < 4:
+        if len(fields) < 3:
             self.too_few_fields(line)
         self.system.nonbonded_function = int(fields[0])
         self.system.combination_rule = self.gromacs_combination_rules[fields[1]]
         self.system.genpairs = fields[2]
-        self.system.lj_correction = float(fields[3])
-        self.system.coulomb_correction = float(fields[4])
+
+        if len(fields) == 3:
+            fudge_lj = 1.0
+            fudge_qq = 1.0
+        else:
+            fudge_lj = float(fields[3])
+            fudge_qq = float(fields[4])
+        self.system.lj_correction = fudge_lj
+        self.system.coulomb_correction = fudge_qq
 
     def process_moleculetype(self, line):
         """Process a line in the [ moleculetypes ] category."""
