@@ -744,7 +744,6 @@ class DesmondParser(object):
             current_molecule_type.exclusions.add(tuple([int(x) for x in temp]))
 
     def parse_restraints(self, type, current_molecule_type):
-        ff_number, entry_data, entry_values = self.retrive_ffio_data(type)
         logger.debug("Warning: Parsing [ restraints] not yet implemented")
 
     def parse_constraints(self, type, current_molecule_type):
@@ -754,9 +753,6 @@ class DesmondParser(object):
         funct_pos = 0
         atompos = [] #position of atoms in constraints; spread all over the place
         lenpos = [] #position of atom length; spread all over the place
-        tempatom = []
-        templength = []
-        templen = 0
         for j in range(len(entry_data)):
             if entry_data[j] == 's_ffio_funct':
                 funct_pos = ctype
@@ -809,25 +805,21 @@ class DesmondParser(object):
                 warn("ReadError: found unsupported constraint type %s" % (entry_values[j]))
 
     def load_ffio_block(self, molname, start, end):
-
-#        Loading in ffio blocks from Desmond format
-#        Args:
-#            molname: name of current molecule
-#            start: beginning of where ffio_ff starts for each molecule
-#            end: ending of where ffio_ff ends for each molecule
-
+        """
+        Loading in ffio blocks from Desmond format
+        Args:
+            molname: name of current molecule
+            start: beginning of where ffio_ff starts for each molecule
+            end: ending of where ffio_ff ends for each molecule
+        """
         i = start
         j = start
 
         self.stored_ffio_types = []  # a list of stored ffio_type to keep track
-                              # of the ordering later
+                                     # of the ordering later
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
         self.vdwtypeskeys = []
-
-        split = []
-        constraints = []
-        temp = []
 
         current_molecule_type = None
 
@@ -836,7 +828,6 @@ class DesmondParser(object):
         #we have seen the sites
         bPreambleRead = False
 
-        namecol = 0
         combrcol = 0
         vdwtypercol = 0
 
@@ -858,7 +849,7 @@ class DesmondParser(object):
                     elif 's_ffio_vdw_func' in self.lines[i]:
                         vdwtypercol = i-start-1
                     i += 1
-                i += 1 # skip the ':::'
+                i += 1  # skip the ':::'
                 # figure out combination rule
                 combrule = self.lines[i+combrcol].upper()
                 if "ARITHMETIC/GEOMETRIC" in combrule:
@@ -968,8 +959,6 @@ class DesmondParser(object):
         logger.debug("Parsing [ m_atom ] ...")
         i = start
 
-        bg = False
-        pdbaname = ""
         aname = ""
 
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
@@ -987,11 +976,8 @@ class DesmondParser(object):
                         logger.debug("   Parsing [ %s ] ..." % c)
                         cols[c] = i - start
                         break
-            i+=1
+            i += 1
 
-        atom = None
-
-        newMoleculeAtoms = []
         j = 0
         logger.debug("   Parsing atoms...")
 
@@ -1052,16 +1038,15 @@ class DesmondParser(object):
 
         return molecules
 
-
     def load_box_vector(self, lines, start, end):
-
-#       Loading Box Vector
-#       Create a Box Vector to load into the System
-#        Args:
-#            lines: all the lines of the file stored in an array
-#            start: starting position
-#            end: ending position
-
+        """
+        Loading Box Vector
+        Create a Box Vector to load into the System
+        Args:
+            lines: all the lines of the file stored in an array
+            start: starting position
+            end: ending position
+        """
         v = np.zeros([3, 3]) * units.angstroms
         for i, line in enumerate(lines[start:end]):
             if self.atom_box_vars[0] in line:
@@ -1079,11 +1064,11 @@ class DesmondParser(object):
         self.system.box_vector = v
 
     def read(self):
-
-#        Load in data from file
-#       Read data in Desmond format
-#        Args:
-
+        """
+        Load in data from file
+        Read data in Desmond format
+        Args:
+        """
         molnames = []
         fl = open(self.cms_file, 'r')
         self.lines = list(fl)
