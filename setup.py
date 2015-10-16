@@ -73,5 +73,4 @@ setup(
     test_suite='tests',
     cmdclass={'test': PyTest},
     extras_require={'utils': ['pytest']},
-    },
 )
