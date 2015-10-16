@@ -1,2 +1,2 @@
 include requirements.txt
-include intermol/tests/*
+recursive-include intermol/tests/*
