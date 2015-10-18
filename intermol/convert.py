@@ -61,15 +61,15 @@ def parse_args(args):
 
     group_misc.add_argument('-e', '--energy', dest='energy', action='store_true',
             help='evaluate energy of input and output files for comparison')
-    group_misc.add_argument('--inefile', default='',
-            help='optional run file for input energy evaluation (e.g. .cfg, .mdp, .input)')
+    group_misc.add_argument('--inefile', dest='inefile', default='',
+            help='optional run settings file for input energy evaluation (e.g. .cfg, .mdp, .input)')
 
     # desmond settings 
     group_misc.add_argument('-dp', '--despath', dest='des_path',
             metavar='path', default='',
             help='path for DESMOND binary, needed for energy evaluation')
     group_misc.add_argument('-ds', '--desmondsettings', dest='des_set',
-            metavar='settings', default='',
+            metavar='settings', default=None,
             help='Desmond .cfg settings file used for energy evaluation')
 
     # gromacs settings
@@ -77,23 +77,23 @@ def parse_args(args):
             metavar='path', default='',
             help='path for GROMACS binary, needed for energy evaluation')
     group_misc.add_argument('-gs', '--gromacssettings', dest='gro_set',
-            metavar='settings', default='',
+            metavar='settings', default=None,
             help='Gromacs .mdp settings file used for energy evaluation')
 
     # lammps settings
     group_misc.add_argument('-lp', '--lmppath', dest='lmp_path',
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
-    group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_set',
-            metavar='settings', default='',
-            help='LAMMPS .input settings file used for energy evaluation. This is simply the pair_style and long range coulomb type to use')
+    group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_style',
+            metavar='settings', default='pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n\n',
+            help='pair_style string to use in the output file. Default is a periodic Ewald simulation')
 
     # amber settings
-    group_misc.add_argument('-ap', '--amberpath', dest='amberpath',
+    group_misc.add_argument('-ap', '--amberpath', dest='amber_path',
             metavar='path', default='',
             help='path for AMBER binary, needed for energy evaluation')
     group_misc.add_argument('-as', '--ambersettings', dest='amb_set',
-            metavar='settings', default='',
+            metavar='settings', default=None,
             help='Amber .in settings file used for energy evaluation')
 
     group_misc.add_argument('-f', '--force', dest='force', action='store_true',
@@ -112,33 +112,37 @@ def main(args=None):
     if not args:
         args = vars(parse_args(args))
 
+    # annoyingly, have to define the path variables here, since they
+    # aren't defined by the argument defaults if we call convert as a
+    # function instead of from the command line.
+
+    if not args.get('gro_path'):
+        gro_path = ''
+    else:
+        gro_path = args['gro_path']
+    if not args.get('lmp_path'):
+        lmp_path = ''
+    else:
+        lmp_path = args['lmp_path']
+
+    if not args.get('des_path'):
+        des_path = ''
+    else:
+        des_path = args['des_path']
+
+    if not args.get('amb_path'):
+        amb_path = ''
+    else:
+        amb_path = args['amb_path']
+
     if args.get('verbose'):
         h.setLevel(logging.DEBUG)
+
     # Print warnings.
     warnings.simplefilter("always")
     if not args.get('force'):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
-
-    # Paths to simulator executables.
-    # GROMACS
-    gro_path = args.get('gro_path')
-    if not gro_path:
-        gro_path = ''
-    # LAMMPS
-    lmp_path = args.get('lmp_path')
-    if not lmp_path:
-        for exe in ['lmp_mpi', 'lmp_serial', 'lmp_openmpi']:
-            if which(exe):
-                lmp_path = exe
-                break
-        else:
-            logger.exception('Found no LAMMPS executable.')
-    # DESMOND
-    des_path = args.get('des_path')
-
-    #AMBERPATH
-    amberpath = args.get('amberpath')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -154,7 +158,7 @@ def main(args=None):
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = os.path.abspath(gro_in[0])
-        system = gromacs_driver.read_file(top_in, gro_in, gro_path)
+        system = gromacs_driver.read_file(top_in, gro_in)
 
     elif args.get('des_in'):
         cms_file = args['des_in']
@@ -176,7 +180,7 @@ def main(args=None):
         assert(len(prmtop_in) == 1)
         prmtop_in = os.path.abspath(prmtop_in[0])
 
-        # Find the crd file since order of inputs is not enforced.
+        # Find the crd file since order of inputs is not enforced, not is suffix
         crd_in = [x for x in amber_files if (x.endswith('.rst7') or x.endswith('.crd') or x.endswith('.rst') or x.endswith('.inpcrd'))]
         assert(len(crd_in) == 1)
         crd_in = os.path.abspath(crd_in[0])
@@ -200,7 +204,7 @@ def main(args=None):
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
         # now, read in using gromacs
-        system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in, gro_path)
+        system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -225,7 +229,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file('{0}.input'.format(oname), system)
+            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -281,49 +285,55 @@ def main(args=None):
 
 
     # --------------- ENERGY EVALUATION ----------------- #
+
     if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.abspath(os.path.dirname(intermol.tests.__file__))
 
-        mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
-        cfg_path = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint.cfg'))
-        lmpimp_path = os.path.abspath(os.path.join(tests_path, 'lammps', 'lammps.input_include'))
-        amb_path = os.path.abspath(os.path.join(tests_path, 'amber', 'amber.in'))
+        # default locations of setting control files
 
+        mdp_in_default = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
+        cfg_in_default = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint.cfg'))
+        in_in_default = os.path.abspath(os.path.join(tests_path, 'amber', 'amber.in'))
+
+        # this hardcoding of which input energy files to use should not be here; it should be in the testing files.
         # Evaluate input energies.
         if args.get('gro_in'):
-            if args.get('gro_set'):
-                mdp_path = args['gro_set']
+            if args.get('inefile'):
+                if os.path.splitext(args.get('inefile'))[-1] != '.mdp':
+                    logger.warn("GROMACS energy settings file does not end with .mdp")
+                mdp_in = args['inefile']
             else:
-                if gro_in.endswith('_vacuum.gro'):
-                    mdp_path = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp_vacuum.mdp'))
+                mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_path, gro_path, '')
+            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, gro_path)
+
         elif args.get('lmp_in'):
-            if args.get('lmp_set'):
-                lmp_path = args['lmp_set']
-            input_type = 'lammps'
-            # add the insertion of pair types
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmp_path=lmp_path)
+            if args.get('inefile'):
+                logger.warn("LAMMPS energy settings should not require a separate infile")
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_, lmp_path)
 
         elif args.get('des_in'):
-            if args.get('des_set'):
-                cfg_path = args['des_set']
+            if args.get('inefile'):
+                if os.path.splitext(args.get('inefile'))[-1] != '.cfg':
+                    logger.warn("DESMOND energy settings file does not end with .cfg")
+                cfg_in = args['inefile']
             else:
-                if cms_file.endswith('_vacuum.cms'):
-                    cfg_path = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint_vacuum.cfg'))
+                cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_path, des_path=des_path)
+            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_in, des_path)
 
         if args.get('amb_in'):
-            if args.get('amb_set'):
-                ambin_path = args['amb_set']
+            if args.get('inefile'):
+                if os.path.splitext(args.get('inefile'))[-1] != '.in':
+                    logger.warn("AMBER energy settings file does not end with .in")
+                in_in = args['inefile']
             else:
-                ambin_path = os.path.abspath(os.path.join(tests_path, 'amber', 'min.in'))
+                in_in = in_in_default
             input_type = 'amber'
-            e_in = amber_driver.amber_energies(prmtop_in, crd_in, ambin_path)
+            e_in = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
         else:
-            logger.warn('Code should have never made it here!')
+            logger.warn('No format for input files identified! Code should have never made it here!')
 
         # Evaluate output energies.
         output_type = []
@@ -331,9 +341,13 @@ def main(args=None):
         e_out = []
         if args.get('gromacs') and output_status['gromacs'] == 'Converted':
             output_type.append('gromacs')
+            if args.get('gro_set'):
+                mdp = args.get('gro_set')
+            else:
+                mdp = mdp_in_default
             try:
                 out, outfile = gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp_path, gro_path, '')
+                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gro_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['gromacs'] = e
@@ -343,10 +357,15 @@ def main(args=None):
                 e_outfile.append(outfile)
 
         if args.get('lammps') and output_status['lammps'] == 'Converted':
+            # TODO: decide how to handle lammps input
             output_type.append('lammps')
+            if args.get('lmp_set'):
+                input = args.get('lmp_set')
+            else:
+                input = input_in_default
             try:
                 out, outfile = lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), lmp_path=lmp_path)
+                    '{0}.input'.format(oname), lmp_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['lammps'] = e
@@ -357,9 +376,13 @@ def main(args=None):
 
         if args.get('desmond') and output_status['desmond'] == 'Converted':
             output_type.append('desmond')
+            if args.get('des_set'):
+                cfg = args.get('des_set')
+            else:
+                cfg = cfg_in_default
             try:
                 out, outfile = desmond_driver.desmond_energies(
-                    '{0}.cms'.format(oname), cfg_path, des_path)
+                    '{0}.cms'.format(oname), cfg, des_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['desmond'] = e
@@ -370,9 +393,13 @@ def main(args=None):
 
         if args.get('amber') and output_status['amber'] == 'Converted':
             output_type.append('amber')
+            if args.get('amb_set'):
+                in_amber = args.get('amb_set')
+            else:
+                in_amber = in_in_default
             try:
                 out, outfile = amber_driver.amber_energies(
-                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), amb_path)
+                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['amber'] = e

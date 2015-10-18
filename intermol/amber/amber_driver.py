@@ -30,7 +30,7 @@ def standardize_key(in_key):
     return out_key
 
 
-def amber_energies(prmtop=None, crd=None, ambin=None, amb_path=None):
+def amber_energies(prmtop, crd, input, amb_path):
     """Compute single-point energies using AMBER.
 
     Args:
@@ -46,8 +46,6 @@ def amber_energies(prmtop=None, crd=None, ambin=None, amb_path=None):
     """
 
     logger.info('Evaluating energy of {0}'.format(crd))
-    if not amb_path:
-        amb_path = ''
 
     directory, _ = os.path.split(os.path.abspath(prmtop))
 
@@ -63,7 +61,7 @@ def amber_energies(prmtop=None, crd=None, ambin=None, amb_path=None):
     if not which(amber_bin):
         raise IOError('Unable to find AMBER executable (sander).')
 
-    # Run grompp.
+    # run sander
     cmd = [amber_bin, '-i', ambin, '-c', crd, '-p', parmtop, '-o', mdout, '-O']
     proc = run_subprocess(cmd, 'amber', stdout_path, stderr_path)
     if proc.returncode != 0:

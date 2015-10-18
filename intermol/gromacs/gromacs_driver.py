@@ -12,13 +12,8 @@ from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 logger = logging.getLogger('InterMolLog')
 
 
-def read_file(top_in, gro_in, gro_path):
+def read_file(top_in, gro_in):
     # Run grompp to ensure .gro and .top are a valid match.
-    tests_path = os.path.dirname(intermol.tests.__file__)
-    mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
-    if not bool(os.getenv('CI')):
-        gromacs_energies(top_in, gro_in, mdp_path, gro_path, '', grompp_check=True)
-
     logger.info("Reading Gromacs files '{0}', '{1}'.".format(top_in, gro_in))
     system = load_gromacs(top_in, gro_in)
     logger.info('...loaded.')
@@ -30,8 +25,7 @@ def write_file(system, top_out, gro_out):
     logger.info('...done.')
 
 
-def gromacs_energies(top=None, gro=None, mdp=None, gro_path=None, grosuff=None,
-                     grompp_check=False):
+def gromacs_energies(top, gro, mdp, gro_path):
     """Compute single-point energies using GROMACS.
 
     Args:
@@ -46,12 +40,10 @@ def gromacs_energies(top=None, gro=None, mdp=None, gro_path=None, grosuff=None,
         e_out:
         ener_xvg:
     """
-    if not grompp_check:
-        logger.info('Evaluating energy of {0}'.format(gro))
-    if not gro_path:
-        gro_path = ''
-    if not grosuff:
-        grosuff = ''
+
+    if not os.path.isfile(mdp):
+        logger.error("Can't find mdp file %s to compute energies" % (mdp))
+    mdp = os.path.abspath(mdp)
 
     directory, _ = os.path.split(os.path.abspath(top))
 
@@ -66,26 +58,30 @@ def gromacs_energies(top=None, gro=None, mdp=None, gro_path=None, grosuff=None,
     stdout_path = os.path.join(directory, 'gromacs_stdout.txt')
     stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
-    if which('grompp_d') and which('mdrun_d') and which('g_energy_d'):
-        logger.debug("Using double precision binaries")
-        grompp_bin = os.path.join(gro_path, 'grompp_d' + grosuff)
-        mdrun_bin = os.path.join(gro_path, 'mdrun_d' + grosuff)
-        genergy_bin = os.path.join(gro_path, 'g_energy_d' + grosuff)
-    elif which('grompp') and which('mdrun') and which('g_energy'):
-        logger.debug("Using single precision binaries")
-        grompp_bin = os.path.join(gro_path, 'grompp' + grosuff)
-        mdrun_bin = os.path.join(gro_path, 'mdrun' + grosuff)
-        genergy_bin = os.path.join(gro_path, 'g_energy' + grosuff)
-    else:
-        raise IOError('Unable to find gromacs executables.')
+    # right now, to force single precision energies, use a path that does not have the double binaries.
+
+    suff = ['','_d']
+    found_binaries = False
+    for s in suff:
+        grompp_bin = os.path.join(gro_path, 'grompp' + suff)
+        mdrun_bin = os.path.join(gro_path, 'mdrun' + suff)
+        genergy_bin = os.path.join(gro_path, 'g_energy' + suff)
+        if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
+            if s == '_d':
+                logger.debug("Using double precision binaries")
+                found_binaries = True
+                break
+            elif s == '':
+                logger.debug("Can't find double precision; using single precision binaries")
+                found_binaries = True
+    if not found_binaries:
+        raise IOError('Unable to find GROMACS executables.')
 
     # Run grompp.
     cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
     proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('grompp failed. See %s' % stderr_path)
-    if grompp_check:
-        return
 
     # Run single-point calculation with mdrun.
     cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
@@ -115,7 +111,7 @@ def _group_energy_terms(ener_xvg):
     # Discard non-energy terms.
     unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
                 'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
-                'Pres. DC', 'Vir-XY', 'Vir-XX', 'pV', 'Density', 'Enthalpy']
+                'Pres. DC', 'Vir-XY', 'Vir-XX', 'VIR-XZ', 'VIR-YY', 'VIR-YZ', 'VIR-ZZ', 'pV', 'Density', 'Enthalpy']
     for group in unwanted:
         if group in e_out:
             del e_out[group]
