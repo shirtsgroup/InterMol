@@ -78,8 +78,6 @@ def _group_energy_terms(mdout):
         all_lines = f.readlines()
 
     i = 0
-    import pdb
-    pdb.set_trace()
     for line in all_lines:
         if line[0:8] == '   NSTEP':
             startline = i
