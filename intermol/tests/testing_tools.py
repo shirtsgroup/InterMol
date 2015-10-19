@@ -230,13 +230,14 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
             if not os.path.isdir(odir):
                 raise
 
+        test_input_dir = os.path.abspath('')
         if input_engine == 'gromacs':
             gro, top = test_file
             flags['gro_in'] = [gro, top]
             if gro.endswith('_vacuum.gro'):
-                mdp = os.path.abspath(os.path.join(test_dir, 'gromacs', 'grompp_vacuum.mdp'))
+                mdp = os.path.join(test_input_dir, 'gromacs', 'grompp_vacuum.mdp')
             else:
-                mdp = os.path.abspath(os.path.join(test_dir, 'gromacs', 'grompp.mdp'))
+                mdp = os.path.join(test_input_dir, 'gromacs', 'grompp.mdp')
             flags['gro_set'] = flags['inefile'] = mdp
 
         elif input_engine == 'lammps':
@@ -245,28 +246,32 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
         elif input_engine == 'desmond':
             flags['des_in'] = test_file
             if test_file.endswith('_vacuum.cms'):
-                cfg = os.path.abspath(os.path.join(test_dir, 'desmond', 'onepoint_vacuum.cfg'))
+                cfg = os.path.join(test_input_dir, 'desmond', 'onepoint_vacuum.cfg')
             else:
-                cfg = os.path.abspath(os.path.join(test_dir, 'desmond', 'onepoint.cfg'))
+                cfg = os.path.join(test_input_dir, 'desmond', 'onepoint.cfg')
             flags['des_set'] = flags['inefile'] = cfg
 
         elif input_engine == 'amber':
             prmtop, rst = test_file
             flags['amb_in'] = [prmtop, rst]
             if prmtop.endswith('_vacuum.prmtop'):
-                in_amber = os.path.abspath(os.path.join(test_dir, 'amber', 'min_vacuum.in'))
+                in_amber = os.path.join(test_input_dir, 'amber', 'min_vacuum.in')
             else:
-                in_amber = os.path.abspath(os.path.join(test_dir, 'amber', 'min.in'))
+                in_amber = os.path.join(test_input_dir, 'amber', 'min.in')
             flags['amb_set'] = flags['inefile'] = in_amber
 
         flags['odir'] = odir
         for engine in ENGINES:
             flags[engine] = True
 
-        if flags['lammps'] and '_vacuum' in test_file[0]:
-            warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS imput file." % (test_file[0]))
-            flags['lmp_style'] = 'pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n'
-
+        if flags['lammps']:
+            if '_vacuum' in test_file[0]:
+                warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS imput file." % (test_file[0]))
+                flags['lmp_style'] = "pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n"
+            elif 'lj3_bulk' in test_file[0]:  # annoying workaround since kspace won't work with zero charges.
+                flags['lmp_style'] = "pair_style lj/cut 9.0 \nkspace_style none\n\n"
+            else:
+                flags['lmp_style'] = "pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n\n"  # Ewald defaults
         h1, h2 = add_handler(odir)
         cmd_line_equivalent = command_line_flags(flags)
 

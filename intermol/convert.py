@@ -323,7 +323,7 @@ def main(args=None):
             input_type = 'desmond'
             e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_in, des_path)
 
-        if args.get('amb_in'):
+        elif args.get('amb_in'):
             if args.get('inefile'):
                 if os.path.splitext(args.get('inefile'))[-1] != '.in':
                     logger.warn("AMBER energy settings file does not end with .in")
@@ -357,12 +357,7 @@ def main(args=None):
                 e_outfile.append(outfile)
 
         if args.get('lammps') and output_status['lammps'] == 'Converted':
-            # TODO: decide how to handle lammps input
             output_type.append('lammps')
-            if args.get('lmp_set'):
-                input = args.get('lmp_set')
-            else:
-                input = input_in_default
             try:
                 out, outfile = lammps_driver.lammps_energies(
                     '{0}.input'.format(oname), lmp_path)

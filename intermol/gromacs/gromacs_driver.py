@@ -60,12 +60,12 @@ def gromacs_energies(top, gro, mdp, gro_path):
 
     # right now, to force single precision energies, use a path that does not have the double binaries.
 
-    suff = ['','_d']
+    suff = ['_d','']
     found_binaries = False
     for s in suff:
-        grompp_bin = os.path.join(gro_path, 'grompp' + suff)
-        mdrun_bin = os.path.join(gro_path, 'mdrun' + suff)
-        genergy_bin = os.path.join(gro_path, 'g_energy' + suff)
+        grompp_bin = os.path.join(gro_path, 'grompp' + s)
+        mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
+        genergy_bin = os.path.join(gro_path, 'g_energy' + s)
         if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
             if s == '_d':
                 logger.debug("Using double precision binaries")

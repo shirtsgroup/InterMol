@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 
 import simtk.unit as units
 from intermol.lammps.lammps_parser import load_lammps, write_lammps
-from intermol.tests.testing_tools import run_subprocess
+from intermol.tests.testing_tools import run_subprocess, which
 
 # Python 2/3 compatibility.
 try:
