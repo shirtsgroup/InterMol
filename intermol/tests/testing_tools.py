@@ -211,7 +211,7 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
     print('LOOKING FOR TEST FILES IN {}'.format(test_dir))
     get_test_files = eval('_get_{}_test_files'.format(input_engine))
     test_files, names = get_test_files(test_dir)
-    print('FOUND {} TESTFILES FOR ENGINE {}'.format(len(test_files, input_engine)))
+    print('FOUND {} TESTFILES FOR ENGINE {}'.format(len(test_files), input_engine))
     # The results of all conversions are stored in nested dictionaries:
     # results = {'gromacs': {'bond1: result, 'bond2: result...},
     #            'lammps': {'bond1: result, 'bond2: result...},
