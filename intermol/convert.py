@@ -294,7 +294,7 @@ def main(args=None):
 
         mdp_in_default = os.path.abspath(os.path.join(tests_path, 'gromacs', 'grompp.mdp'))
         cfg_in_default = os.path.abspath(os.path.join(tests_path, 'desmond', 'onepoint.cfg'))
-        in_in_default = os.path.abspath(os.path.join(tests_path, 'amber', 'amber.in'))
+        in_in_default = os.path.abspath(os.path.join(tests_path, 'amber', 'min.in'))
 
         # this hardcoding of which input energy files to use should not be here; it should be in the testing files.
         # Evaluate input energies.

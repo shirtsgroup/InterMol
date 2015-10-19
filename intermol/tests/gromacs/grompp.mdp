@@ -62,6 +62,7 @@ epsilon_surface          = 0
 
 ; OPTIONS FOR BONDS     = 
 constraints              = none
+;constraints              = h-bonds
 
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = no

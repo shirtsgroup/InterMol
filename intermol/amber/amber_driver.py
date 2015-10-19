@@ -36,9 +36,8 @@ def amber_energies(prmtop, crd, input, amb_path):
     Args:
         prmtop (str):
         crd (str):
-        ambin (str):
+        input (str)
         amb_path (str):
-        grosuff (str):
 
     Returns:
         e_out:
@@ -62,7 +61,9 @@ def amber_energies(prmtop, crd, input, amb_path):
         raise IOError('Unable to find AMBER executable (sander).')
 
     # run sander
-    cmd = [amber_bin, '-i', ambin, '-c', crd, '-p', parmtop, '-o', mdout, '-O']
+    import pdb
+    pdb.set_trace()
+    cmd = [amber_bin, '-i', input, '-c', crd, '-p', prmtop, '-o', mdout, '-O']
     proc = run_subprocess(cmd, 'amber', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('sander failed. See %s' % stderr_path)
@@ -79,6 +80,8 @@ def _group_energy_terms(mdout):
         all_lines = f.readlines()
 
     i = 0
+    import pdb
+    pdb.set_trace()
     for line in all_lines:
         if line[0:8] == '   NSTEP':
             startline = i
