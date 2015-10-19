@@ -13,6 +13,18 @@ from intermol.exceptions import MultipleValidationErrors
 
 ENGINES = ['gromacs', 'lammps', 'desmond', 'amber']
 
+set_suffix = {'gromacs':'.mdp',
+              'lammps': None,
+              'desmond': '.cfg',
+              'amber':'.in'
+              }
+
+set_prefix = {'gromacs':'grompp',
+              'lammps': None,
+              'desmond':'onepoint',
+              'amber':'min'
+            }
+
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
 DEBUG_LOG = 'debug.log'
@@ -231,42 +243,39 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
                 raise
 
         test_input_dir = os.path.abspath('')
+
+        # is it a vacuum file or not.
+        s = ''
+        vacstring = '_vacuum'
+        if vacstring in test_file[0]:
+            s = vacstring
+
         if input_engine == 'gromacs':
             gro, top = test_file
             flags['gro_in'] = [gro, top]
-            if gro.endswith('_vacuum.gro'):
-                mdp = os.path.join(test_input_dir, 'gromacs', 'grompp_vacuum.mdp')
-            else:
-                mdp = os.path.join(test_input_dir, 'gromacs', 'grompp.mdp')
-            flags['gro_set'] = flags['inefile'] = mdp
+            flags['inefile'] = os.path.join(test_input_dir, 'gromacs' , 'grompp' + s + '.mdp')
 
         elif input_engine == 'lammps':
             flags['lmp_in'] = test_file
 
         elif input_engine == 'desmond':
             flags['des_in'] = test_file
-            if test_file.endswith('_vacuum.cms'):
-                cfg = os.path.join(test_input_dir, 'desmond', 'onepoint_vacuum.cfg')
-            else:
-                cfg = os.path.join(test_input_dir, 'desmond', 'onepoint.cfg')
-            flags['des_set'] = flags['inefile'] = cfg
+            flags['inefile'] = os.path.join(test_input_dir, 'desmond', 'onepoint' + s + '.cfg')
 
         elif input_engine == 'amber':
             prmtop, rst = test_file
             flags['amb_in'] = [prmtop, rst]
-            if prmtop.endswith('_vacuum.prmtop'):
-                in_amber = os.path.join(test_input_dir, 'amber', 'min_vacuum.in')
-            else:
-                in_amber = os.path.join(test_input_dir, 'amber', 'min.in')
-            flags['amb_set'] = flags['inefile'] = in_amber
+            flags['inefile'] = os.path.join(test_input_dir, 'amber', 'min' + s + '.in')
 
         flags['odir'] = odir
         for engine in ENGINES:
             flags[engine] = True
+            if set_prefix[engine]:  # set the input file to use for the output
+                flags[engine+'_set'] = os.path.join(test_input_dir, engine, set_prefix[engine] + s + set_suffix[engine])
 
         if flags['lammps']:
             if '_vacuum' in test_file[0]:
-                warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS imput file." % (test_file[0]))
+                warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS input file." % (test_file[0]))
                 flags['lmp_style'] = "pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n"
             elif 'lj3_bulk' in test_file[0]:  # annoying workaround since kspace won't work with zero charges.
                 flags['lmp_style'] = "pair_style lj/cut 9.0 \nkspace_style none\n\n"

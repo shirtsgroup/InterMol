@@ -65,23 +65,23 @@ def parse_args(args):
             help='optional run settings file for input energy evaluation (e.g. .cfg, .mdp, .input)')
 
     # desmond settings 
-    group_misc.add_argument('-dp', '--despath', dest='des_path',
+    group_misc.add_argument('-dp', '--despath', dest='desmond_path',
             metavar='path', default='',
             help='path for DESMOND binary, needed for energy evaluation')
-    group_misc.add_argument('-ds', '--desmondsettings', dest='des_set',
+    group_misc.add_argument('-ds', '--desmondsettings', dest='desmond_set',
             metavar='settings', default=None,
             help='Desmond .cfg settings file used for energy evaluation')
 
     # gromacs settings
-    group_misc.add_argument('-gp', '--gropath', dest='gro_path',
+    group_misc.add_argument('-gp', '--gropath', dest='gromacs_path',
             metavar='path', default='',
             help='path for GROMACS binary, needed for energy evaluation')
-    group_misc.add_argument('-gs', '--gromacssettings', dest='gro_set',
+    group_misc.add_argument('-gs', '--gromacssettings', dest='gromacs_set',
             metavar='settings', default=None,
             help='Gromacs .mdp settings file used for energy evaluation')
 
     # lammps settings
-    group_misc.add_argument('-lp', '--lmppath', dest='lmp_path',
+    group_misc.add_argument('-lp', '--lmppath', dest='lammps_path',
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_style',
@@ -92,7 +92,7 @@ def parse_args(args):
     group_misc.add_argument('-ap', '--amberpath', dest='amber_path',
             metavar='path', default='',
             help='path for AMBER binary, needed for energy evaluation')
-    group_misc.add_argument('-as', '--ambersettings', dest='amb_set',
+    group_misc.add_argument('-as', '--ambersettings', dest='amber_set',
             metavar='settings', default=None,
             help='Amber .in settings file used for energy evaluation')
 
@@ -116,24 +116,24 @@ def main(args=None):
     # aren't defined by the argument defaults if we call convert as a
     # function instead of from the command line.
 
-    if not args.get('gro_path'):
+    if not args.get('gromacs_path'):
         gro_path = ''
     else:
-        gro_path = args['gro_path']
-    if not args.get('lmp_path'):
+        gro_path = args['gromacs_path']
+    if not args.get('lammps_path'):
         lmp_path = ''
     else:
-        lmp_path = args['lmp_path']
+        lmp_path = args['lammps_path']
 
-    if not args.get('des_path'):
+    if not args.get('desmond_path'):
         des_path = ''
     else:
-        des_path = args['des_path']
+        des_path = args['desmond_path']
 
-    if not args.get('amb_path'):
+    if not args.get('amber_path'):
         amb_path = ''
     else:
-        amb_path = args['amb_path']
+        amb_path = args['amber_path']
 
     if args.get('verbose'):
         h.setLevel(logging.DEBUG)
@@ -341,8 +341,8 @@ def main(args=None):
         e_out = []
         if args.get('gromacs') and output_status['gromacs'] == 'Converted':
             output_type.append('gromacs')
-            if args.get('gro_set'):
-                mdp = args.get('gro_set')
+            if args.get('gromacs_set'):
+                mdp = args.get('gromacs_set')
             else:
                 mdp = mdp_in_default
             try:
@@ -371,8 +371,8 @@ def main(args=None):
 
         if args.get('desmond') and output_status['desmond'] == 'Converted':
             output_type.append('desmond')
-            if args.get('des_set'):
-                cfg = args.get('des_set')
+            if args.get('desmond_set'):
+                cfg = args.get('desmond_set')
             else:
                 cfg = cfg_in_default
             try:
@@ -388,8 +388,8 @@ def main(args=None):
 
         if args.get('amber') and output_status['amber'] == 'Converted':
             output_type.append('amber')
-            if args.get('amb_set'):
-                in_amber = args.get('amb_set')
+            if args.get('amber_set'):
+                in_amber = args.get('amber_set')
             else:
                 in_amber = in_in_default
             try:
