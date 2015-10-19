@@ -34,18 +34,22 @@ def load_lammps(in_file):
     return parser.read()
 
 
-def write_lammps(in_file, system, unit_set='real'):
-    """Load a LAMMPS input file into a `System`.
+def write_lammps(in_file, system, unit_set='real',
+                 nonbonded_style='pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n'):
+
+    """write a `System` into LAMMPS input file.
 
     Args:
         in_file:
-        include_dir:
-        defines:
+        system:
+        unit_set:
+        nonbonded_style: default is for a periodic system
+
     Returns:
         system:
     """
     parser = LammpsParser(in_file, system)
-    return parser.write(unit_set=unit_set)
+    return parser.write(unit_set=unit_set, nonbonded_style=nonbonded_style)
 
 
 class LammpsParser(object):
@@ -947,7 +951,7 @@ class LammpsParser(object):
             logger.warning('Virtuals not currently supported: will need to be '
                            'implemeneted from shake and rigid')
 
-    def write(self, unit_set='real'):
+    def write(self, unit_set='real',nonbonded_style=None):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
@@ -1200,20 +1204,8 @@ class LammpsParser(object):
             f.write('read_data {0}\n'.format(os.path.basename(self.data_file)))
             f.write('\n')
 
-            # non-bonded
-            if atom_charges:
-                if self.in_file.endswith('_vacuum.input'):
-                    f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
-                    f.write('kspace_style none\n')
-                else:
-                    f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
-                    f.write('kspace_style pppm 1e-6\n')
-            else:
-                if self.in_file.endswith('_vacuum.input'):
-                    f.write('pair_style lj/cut 25.0\n')
-                    f.write('kspace_style none\n')
-                else:
-                    f.write('pair_style lj/cut 9.0\n')
+            # non-bonded: either defaults, or specified by user
+            f.write(nonbonded_style)
 
             for line in pair_coeffs:
                 f.write(line)
