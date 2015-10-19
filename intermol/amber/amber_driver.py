@@ -61,8 +61,6 @@ def amber_energies(prmtop, crd, input, amb_path):
         raise IOError('Unable to find AMBER executable (sander).')
 
     # run sander
-    import pdb
-    pdb.set_trace()
     cmd = [amber_bin, '-i', input, '-c', crd, '-p', prmtop, '-o', mdout, '-O']
     proc = run_subprocess(cmd, 'amber', stdout_path, stderr_path)
     if proc.returncode != 0:
