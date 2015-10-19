@@ -9,16 +9,9 @@ InterMol: a conversion tool for molecular dynamics simulations
         :target: https://travis-ci.org/shirtsgroup/InterMol
         :alt: Build Status
 
-.. image:: https://coveralls.io/repos/shirtsgroup/InterMol/badge.png?branch=develop
-        :target: https://coveralls.io/r/shirtsgroup/InterMol?branch=develop
-        :alt: Test Coverage
-
 .. image:: https://readthedocs.org/projects/intermol/badge/?version=develop
         :target: http://intermol.readthedocs.org/en/develop/
         :alt: Documentation Status
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-        :target: https://gitter.im/shirtsgroup/InterMol?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-        :alt: Gitter
 
 Installation
 ---------
