@@ -13,6 +13,7 @@ fi
 if [[ "2.7 3.4" =~ "$python" ]]; then
     anaconda -t "$BINSTAR_TOKEN"  upload --force --user shirtsgroup --package intermol-dev $HOME/miniconda/conda-bld/linux-64/intermol-*
     conda convert $HOME/miniconda/conda-bld/linux-64/intermol-* -p all
+    pwd
     ls *-64/*
     anaconda -t "$BINSTAR_TOKEN"  upload --force --user shirtsgroup --package intermol-dev linux-32/intermol-*
     anaconda -t "$BINSTAR_TOKEN"  upload --force --user shirtsgroup --package intermol-dev win-32/intermol-*
