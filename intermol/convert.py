@@ -260,29 +260,21 @@ def main(args=None):
         if (os.path.isfile(gro_out) and os.path.isfile(top_out)):
             # if so, use these files.  Load them into ParmEd
             try:
-                if 'lj3' in gro_out:
-                    import pdb
-                    pdb.set_trace()
                 top = parmed.load_file(top_out, xyz=gro_out)
-            except Exception as e:
-                output_status['amber'] = e
-            if top:
+                prmtop_out = oname + '.prmtop'
+                crd_out = oname + '.rst7'
                 try:
-                    parm = parmed.amber.AmberParm.from_structure(top)
-                    prmtop_out = oname + '.prmtop'
-                    crd_out = oname + '.rst7'
-                    try:
-                        parm.write_parm(prmtop_out)
-                    except Exception as e:
-                        output_status['amber'] = e
-                    try:
-                        parm.write_rst7(crd_out)
-                    except Exception as e:
-                        output_status['amber'] = e
-                    if e == None:
-                        output_status['amber'] = 'Converted'
+                    top.save(oname + '.prmtop', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
+                try:        
+                    top.save(oname + '.rst7', overwrite=True)
+                except Exception as e:
+                    output_status['amber'] = e
+                if e == None:
+                    output_status['amber'] = 'Converted'
+            except Exception as e:
+                output_status['amber'] = e
         else:
             print "Can't convert to AMBER unless gromacs is also selected"
 
