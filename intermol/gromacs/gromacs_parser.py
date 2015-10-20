@@ -661,8 +661,10 @@ class GromacsParser(object):
         top.write('[ exclusions ]\n')
         exclusionlist = sorted(self.current_molecule_type.exclusions,
                                key=lambda x: (x[0], x[1]))
+        i = 0
         for exclusion in exclusionlist:
-            top.write('{0:6d} {1:6d}\n'.format(exclusion[0], exclusion[1]))
+            i += 1
+            top.write('{0:7d} {1:7d} {2:7d}\n'.format(i, exclusion[0], exclusion[1]))
         top.write('\n')
 
     # =========== System creation =========== #
