@@ -5,6 +5,3 @@ maxcyc = 1,
 ntb=1,
 cut=9.0 
 /
- &ewald
-  order=4
- /

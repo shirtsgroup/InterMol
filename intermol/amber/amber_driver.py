@@ -77,53 +77,55 @@ def _group_energy_terms(mdout):
     with open(mdout) as f:
         all_lines = f.readlines()
 
+    # find where the energy information starts
     i = 0
     for line in all_lines:
         if line[0:8] == '   NSTEP':
             startline = i
             break
-    sp = 24
+        i+=1
+
     energy_types = []
     energy_values = []
+
+    ranges = [[1,24],[26,49],[51,77]]  # strange ranges for amber file data.
+
     potential = 0*units.kilocalories_per_mole
-    for line in all_lines[startline+3,:]:
+    for line in all_lines[startline+3:]:
         if '=' in line:
             for i in range(3):
-                term = line[sp*i,sp*(i+1)]
+                r = ranges[i]
+                term = line[r[0]:r[1]]
                 if '=' in term:
-                    energy_type, energy_value = line.split('=')
+                    energy_type, energy_value = term.split('=')
                     energy_value = float(energy_value)*units.kilocalories_per_mole
                     potential += energy_value
-                    energy_values.append(energy_value)
-                    if energy_type in key_dict.keys():
-                        energy_types.append(key_dict[energy_type])
+                    energy_type = energy_type.rstrip()
+                    if energy_type in key_dict.keys():# remove the whitespace before storing as key.
+                        energy_values.append(energy_value)
+                        energy_types.append(key_dict[energy_type])  
+        else:
+            break
     energy_types.append('Potential')
     energy_values.append(potential)
     
+    e_out = OrderedDict(zip(energy_types, energy_values))
+    # now total up other terms.
     # Dispersive energies.
-    dispersive = ['1-4 VDW', 'VDWAALS']
+    dispersive = ['LJ-14', 'LJ']
     e_out['Dispersive'] = 0 * units.kilocalories_per_mole
     for group in dispersive:
         if group in e_out:
             e_out['Dispersive'] += e_out[group]
 
     # Electrostatic energies.
-    electrostatic = ['1-4 EEL', 'EEL']
+    electrostatic = ['Coulomb-14', 'Coulomb']
     e_out['Electrostatic'] = 0 * units.kilocalories_per_mole
+
     for group in electrostatic:
         if group in e_out:
             e_out['Electrostatic'] += e_out[group]
 
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
-
-    # All the various dihedral energies.
-    # TODO: What else goes in here?
-    all_dihedrals = ['DIHED']
-    e_out['All dihedrals'] = 0 * units.kilocalories_per_mole
-    for group in all_dihedrals:
-        if group in e_out:
-            e_out['All dihedrals'] += e_out[group]
-
-    e_out = OrderedDict(zip(energy_types, energy_values))
 
     return e_out, mdout

@@ -111,7 +111,8 @@ def _group_energy_terms(ener_xvg):
     # Discard non-energy terms.
     unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
                 'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
-                'Pres. DC', 'Vir-XY', 'Vir-XX', 'VIR-XZ', 'VIR-YY', 'VIR-YZ', 'VIR-ZZ', 'pV', 'Density', 'Enthalpy']
+                'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
+                'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
     for group in unwanted:
         if group in e_out:
             del e_out[group]

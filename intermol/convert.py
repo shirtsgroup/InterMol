@@ -260,6 +260,9 @@ def main(args=None):
         if (os.path.isfile(gro_out) and os.path.isfile(top_out)):
             # if so, use these files.  Load them into ParmEd
             try:
+                if 'lj3' in gro_out:
+                    import pdb
+                    pdb.set_trace()
                 top = parmed.load_file(top_out, xyz=gro_out)
             except Exception as e:
                 output_status['amber'] = e

@@ -26,17 +26,21 @@ def write_file(cms_file, system):
     logger.info('...done')
 
 
-# --------- energy evaluation methods ---------- #
-key_dict = {'en': 'Raw Potential',
-            'E_p': 'Potential',
-            'E_k': 'Kinetic En.',
-            'E_x': 'Extended En.',
-            'stretch': 'Bond',
-            'angle': 'Angle',
-            'dihedral': 'All dihedrals',
-            'pair_vdw': 'LJ-14',
-            'pair_elec': 'Coulomb-14',
-            }
+# --------- energy evaluation methods ----------
+
+# three terms we are ignoring for now.
+#'en': 'Raw Potential',
+#'E_k': 'Kinetic En.',
+#'E_x': 'Extended En.',
+
+key_dict = {
+    'E_p': 'Potential',
+    'stretch': 'Bond',
+    'angle': 'Angle',
+    'dihedral': 'All dihedrals',
+    'pair_vdw': 'LJ-14',
+    'pair_elec': 'Coulomb-14',
+    }
 
 
 def standardize_key(in_key):
