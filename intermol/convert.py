@@ -326,7 +326,7 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
+            e_in, e_infile = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
 
@@ -480,7 +480,14 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         line = '%20s ' % labels[i]
         line += '%18.8f ' % data[i][0]
         for j in range(1, len(data[i])):
-            line += '%18.8f %18.8f' % (data[i][j], data[i][j]-data[i][0])
+            if np.isnan(data[i][j]):
+                line += '%18s' % 'n/a'
+            else:
+                line += '%18.8f' % (data[i][j])
+            if np.isnan(data[i][j]) or np.isnan(data[i][0]):
+                line += '%18s' % 'n/a'
+            else:
+                line += '%18.8f' % (data[i][j]-data[i][0])
         out.append(line)
     out.append('')
     # get differences in potential energy
