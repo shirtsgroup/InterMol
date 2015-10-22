@@ -1030,10 +1030,10 @@ class LammpsParser(object):
                     # Type, mass and pair coeffs.
                     if atom.atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom.atomtype[0]] = a_type_i
-                        mass_list.append('{0:d} {1:8.4f}\n'.format(
+                        mass_list.append('{0:d} {1:11.7f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:8.4f} {2:8.4f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:11.7f} {2:11.7f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1063,14 +1063,14 @@ class LammpsParser(object):
                         atom_charges = True
                     if atom.velocity:
                         vel_list.append(
-                            '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
+                            '{0:-6d} {1:11.7f} {2:11.7f} {3:11.7f}\n'.format(
                                 atom.index,
                                 atom.velocity[0].value_in_unit(self.VEL),
                                 atom.velocity[1].value_in_unit(self.VEL),
                                 atom.velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
-                            '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
+                            '{0:-6d} {1:11.7f} {2:11.7f} {3:11.7f}\n'.format(
                                 atom.index, 0, 0, 0))
 
             for pair in mol_type.pair_forces:
@@ -1079,7 +1079,7 @@ class LammpsParser(object):
                     atom2_type = int(atom_list[pair.atom2].split()[2])
                     if atom2_type < atom1_type:  # LAMMPS requires i < j
                         atom1_type, atom2_type = atom2_type, atom1_type
-                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:8.4f} {2:8.4f}\n'.format(
+                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:11.7f} {2:11.7f}\n'.format(
                                 atom1_type,
                                 atom2_type,
                                 pair.epsilon.value_in_unit(self.ENERGY),
@@ -1137,13 +1137,13 @@ class LammpsParser(object):
             f.write('\n')
 
             # Shifting of box dimensions.
-            f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} xlo xhi\n'.format(
                     x_min, x_min + self.system.box_vector[0][0].value_in_unit(
                             self.DIST)))
-            f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} ylo yhi\n'.format(
                     y_min, y_min + self.system.box_vector[1][1].value_in_unit(
                             self.DIST)))
-            f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} zlo zhi\n'.format(
                     z_min, z_min + self.system.box_vector[2][2].value_in_unit(
                             self.DIST)))
 
