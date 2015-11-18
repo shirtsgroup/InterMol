@@ -999,6 +999,7 @@ class LammpsParser(object):
 
         # Read all atom specific and FF information.
         offset = 0
+        x_min = y_min = z_min = np.inf
         for mol_name, mol_type in self.system.molecule_types.items():
             logger.debug(
                 "    Writing moleculetype {0}...".format(mol_name))
@@ -1018,7 +1019,6 @@ class LammpsParser(object):
                 offset += atoms_per_molecule
 
             # Atom specific information.
-            x_min = y_min = z_min = np.inf
             logger.debug("    Writing atoms...")
             atom_charges = False
             for molecule in mol_type.molecules:
