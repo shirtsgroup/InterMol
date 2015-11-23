@@ -1032,7 +1032,7 @@ class LammpsParser(object):
                         mass_list.append('{0:d} {1:8.4f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:10.6f} {2:10.6f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:10.8f} {2:10.8f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1209,8 +1209,11 @@ class LammpsParser(object):
                     f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
                     f.write('kspace_style none\n')
                 else:
-                    f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
-                    f.write('kspace_style pppm 1e-6\n')
+                    f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
+                    f.write('kspace_style none\n')
+                    #f.write('pair_style lj/long/coul/long long long 20.0\n')
+                    #f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
+                    #f.write('kspace_style pppm 1e-6\n')
             else:
                 if self.in_file.endswith('_vacuum.input'):
                     f.write('pair_style lj/cut 25.0\n')
