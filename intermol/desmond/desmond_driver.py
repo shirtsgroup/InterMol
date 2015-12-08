@@ -28,10 +28,10 @@ def write_file(cms_file, system):
 
 # --------- energy evaluation methods ----------
 
-# three terms we are ignoring for now.
+# terms we are ignoring for now.
 #'en': 'Raw Potential',
-#'E_k': 'Kinetic En.',
 #'E_x': 'Extended En.',
+unwanted = ['E_x','E_n','E_k','constraints',]
 
 key_dict = {
     'E_p': 'Potential',
@@ -40,6 +40,7 @@ key_dict = {
     'dihedral': 'All dihedrals',
     'pair_vdw': 'LJ-14',
     'pair_elec': 'Coulomb-14',
+    'nonbonded_vdw': 'LJ (SR)',
     }
 
 
@@ -80,6 +81,12 @@ def get_desmond_energy_from_file(energy_file):
                     data.append(words[-1])
     data = [float(value) * units.kilocalories_per_mole for value in data]
     e_out = OrderedDict(zip(types, data))
+
+    # Discard non-energy terms.
+    for group in unwanted:
+        if group in e_out:
+            del e_out[group]
+
     return e_out
 
 

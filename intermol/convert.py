@@ -85,7 +85,8 @@ def parse_args(args):
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_style',
-            metavar='settings', default='pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n\n',
+            #metavar='settings', default="pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
+            metavar='settings', default="pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
             help='pair_style string to use in the output file. Default is a periodic Ewald simulation')
 
     # amber settings
@@ -478,7 +479,10 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     out.append(header)
     for i in range(len(data)):
         line = '%20s ' % labels[i]
-        line += '%18.8f ' % data[i][0]
+        if np.isnan(data[i][0]):
+            line += '%18s' % 'n/a'
+        else:
+            line += '%18.8f' % (data[i][0])
         for j in range(1, len(data[i])):
             if np.isnan(data[i][j]):
                 line += '%18s' % 'n/a'

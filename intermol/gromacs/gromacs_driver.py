@@ -24,6 +24,11 @@ def write_file(system, top_out, gro_out):
     write_gromacs(top_out, gro_out, system)
     logger.info('...done.')
 
+# energy terms we are ignoring
+unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
+            'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
+            'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
+            'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
 
 def gromacs_energies(top, gro, mdp, gro_path):
     """Compute single-point energies using GROMACS.
@@ -109,17 +114,13 @@ def _group_energy_terms(ener_xvg):
     e_out = OrderedDict(zip(energy_types, energy_values))
 
     # Discard non-energy terms.
-    unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-                'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
-                'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
-                'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
     for group in unwanted:
         if group in e_out:
             del e_out[group]
 
     # Dispersive energies.
     # TODO: Do buckingham energies also get dumped here?
-    dispersive = ['LJ (SR)', 'LJ-14', 'Disper.corr.']
+    dispersive = ['LJ (SR)', 'LJ-14', 'Disper. corr.']
     e_out['Dispersive'] = 0 * units.kilojoules_per_mole
     for group in dispersive:
         if group in e_out:
