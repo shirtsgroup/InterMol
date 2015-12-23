@@ -147,21 +147,21 @@ def main(args=None):
 
     # Paths to simulator executables.
     # GROMACS
-    # gropath = args.get('gropath')
-    # if not gropath:
-    #     gropath = ''
-    # # LAMMPS
-    # lmppath = args.get('lmppath')
-    # if not lmppath:
-    #     for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
-    #                 'lmp_mac_mpi']:
-    #         if which(exe):
-    #             lmppath = exe
-    #             break
-    #     else:
-    #         logger.exception('Found no LAMMPS executable.')
-    # # DESMOND
-    # despath = args.get('despath')
+    gropath = args.get('gropath')
+    if not gropath:
+        gropath = ''
+    # LAMMPS
+    lmppath = args.get('lmppath')
+    if not lmppath:
+        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
+                    'lmp_mac_mpi']:
+            if which(exe):
+                lmppath = exe
+                break
+        else:
+            logger.exception('Found no LAMMPS executable.')
+    # DESMOND
+    despath = args.get('despath')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -208,7 +208,8 @@ def main(args=None):
         try:
             import parmed
         except Exception as e:
-            record_exception(logger, e_out, e_outfile, e)
+            record_exception(e)
+            #record_exception(logger, e_out, e_outfile, e)
             output_status['amber'] = e
 
         structure = parmed.amber.AmberParm(prmtop_in,crd_in)

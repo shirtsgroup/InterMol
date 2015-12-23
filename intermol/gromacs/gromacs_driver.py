@@ -100,9 +100,9 @@ def gromacs_energies(top, gro, mdp, gro_path=None, grosuff=None,
     suff = ['_d','']
     found_binaries = False
     for s in suff:
-        grompp_bin = list(os.path.join(gro_path, 'grompp' + s))
-        mdrun_bin = list(os.path.join(gro_path, 'mdrun' + s))
-        genergy_bin = list(os.path.join(gro_path, 'g_energy' + s))
+        grompp_bin = os.path.join(gro_path, 'grompp' + s)
+        mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
+        genergy_bin = os.path.join(gro_path, 'g_energy' + s)
         if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
             if s == '_d':
                 logger.debug("Using double precision binaries")
@@ -113,6 +113,9 @@ def gromacs_energies(top, gro, mdp, gro_path=None, grosuff=None,
                 found_binaries = True
     if not found_binaries:
         raise IOError('Unable to find GROMACS executables.')
+    grompp_bin = [grompp_bin]
+    mdrun_bin = [mdrun_bin]
+    genergy_bin = [genergy_bin]
 
     # Run grompp.
     grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
