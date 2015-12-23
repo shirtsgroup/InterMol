@@ -4,7 +4,6 @@ import os
 
 import simtk.unit as units
 
-import intermol.tests
 from intermol.tests.testing_tools import which, run_subprocess
 from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 
@@ -12,24 +11,23 @@ from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 logger = logging.getLogger('InterMolLog')
 
 
-def read_file(top_in, gro_in, gropath):
+def read_file(top_in, gro_in):
     # Run grompp to ensure .gro and .top are a valid match.
-    tests_path = os.path.dirname(intermol.tests.__file__)
-    mdp_path = os.path.join(tests_path, 'gromacs', 'grompp.mdp')
-    if not bool(os.getenv('CI')):
-        gromacs_energies(top_in, gro_in, mdp_path, gropath, '', grompp_check=True)
-
     logger.info("Reading Gromacs files '{0}', '{1}'.".format(top_in, gro_in))
     system = load_gromacs(top_in, gro_in)
     logger.info('...loaded.')
     return system
-
 
 def write_file(system, top_out, gro_out):
     logger.info("Writing Gromacs files '{0}', '{1}'.".format(top_out, gro_out))
     write_gromacs(top_out, gro_out, system)
     logger.info('...done.')
 
+# energy terms we are ignoring
+unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
+            'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
+            'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
+            'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
 
 def _find_gmx_binaries(gropath, grosuff):
     """Locate the paths to the best available gromacs binaries. """
@@ -63,7 +61,7 @@ def _find_gmx_binaries(gropath, grosuff):
     return grompp_bin, mdrun_bin, genergy_bin
 
 
-def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
+def gromacs_energies(top, gro, mdp, gro_path=None, grosuff=None,
                      grompp_check=False):
     """Compute single-point energies using GROMACS.
 
@@ -71,7 +69,7 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
         top (str):
         gro (str):
         mdp (str):
-        gropath (str):
+        gro_path (str):
         grosuff (str):
         grompp_check (bool):
 
@@ -79,12 +77,10 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
         e_out:
         ener_xvg:
     """
-    if not grompp_check:
-        logger.info('Evaluating energy of {0}'.format(gro))
-    if not gropath:
-        gropath = ''
-    if not grosuff:
-        grosuff = ''
+
+    if not os.path.isfile(mdp):
+        logger.error("Can't find mdp file %s to compute energies" % (mdp))
+    mdp = os.path.abspath(mdp)
 
     directory, _ = os.path.split(os.path.abspath(top))
 
@@ -99,15 +95,30 @@ def gromacs_energies(top=None, gro=None, mdp=None, gropath=None, grosuff=None,
     stdout_path = os.path.join(directory, 'gromacs_stdout.txt')
     stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
-    grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gropath, grosuff)
+    # grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gropath, grosuff)
+    # # right now, to force single precision energies, use a path that does not have the double binaries.
+    suff = ['_d','']
+    found_binaries = False
+    for s in suff:
+        grompp_bin = list(os.path.join(gro_path, 'grompp' + s))
+        mdrun_bin = list(os.path.join(gro_path, 'mdrun' + s))
+        genergy_bin = list(os.path.join(gro_path, 'g_energy' + s))
+        if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
+            if s == '_d':
+                logger.debug("Using double precision binaries")
+                found_binaries = True
+                break
+            elif s == '':
+                logger.debug("Can't find double precision; using single precision binaries")
+                found_binaries = True
+    if not found_binaries:
+        raise IOError('Unable to find GROMACS executables.')
 
     # Run grompp.
     grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
     proc = run_subprocess(grompp_bin, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('grompp failed. See %s' % stderr_path)
-    if grompp_check:
-        return
 
     # Run single-point calculation with mdrun.
     mdrun_bin.extend(['-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', conf, '-e', ener, '-g', log])
@@ -134,16 +145,13 @@ def _group_energy_terms(ener_xvg):
     e_out = OrderedDict(zip(energy_types, energy_values))
 
     # Discard non-energy terms.
-    unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-                'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
-                'Pres. DC', 'Vir-XY', 'Vir-XX', 'pV', 'Density', 'Enthalpy']
     for group in unwanted:
         if group in e_out:
             del e_out[group]
 
     # Dispersive energies.
     # TODO: Do buckingham energies also get dumped here?
-    dispersive = ['LJ (SR)', 'LJ-14', 'Disper.corr.']
+    dispersive = ['LJ (SR)', 'LJ-14', 'Disper. corr.']
     e_out['Dispersive'] = 0 * units.kilojoules_per_mole
     for group in dispersive:
         if group in e_out:

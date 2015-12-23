@@ -11,7 +11,19 @@ from six import string_types
 
 from intermol.exceptions import MultipleValidationErrors
 
-ENGINES = ['gromacs', 'lammps', 'desmond']
+ENGINES = ['gromacs', 'lammps', 'desmond', 'amber']
+
+set_suffix = {'gromacs':'.mdp',
+              'lammps': None,
+              'desmond': '.cfg',
+              'amber':'.in'
+              }
+
+set_prefix = {'gromacs':'grompp',
+              'lammps': None,
+              'desmond':'onepoint',
+              'amber':'min'
+            }
 
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
@@ -21,9 +33,6 @@ DEBUG_LOG = 'debug.log'
 logger = logging.getLogger('InterMolLog')   # From convert.py
 warning_logger = logging.getLogger('py.warnings')  # From convert.py
 testing_logger = logging.getLogger('testing')  # From test_all.py
-
-
-
 
 def add_handler(directory):
     """Adds two FileHandlers to the global logger object.
@@ -233,24 +242,53 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
             if not os.path.isdir(odir):
                 raise
 
+        test_input_dir = os.path.abspath('')
+
+        # is it a vacuum file or not.
+        s = ''
+        vacstring = '_vacuum'
+        if vacstring in test_file[0]:
+            s = vacstring
+
         if input_engine == 'gromacs':
             gro, top = test_file
             flags['gro_in'] = [gro, top]
+            flags['inefile'] = os.path.join(test_input_dir, 'gromacs' , 'grompp' + s + '.mdp')
+
         elif input_engine == 'lammps':
             flags['lmp_in'] = test_file
+
         elif input_engine == 'desmond':
             flags['des_in'] = test_file
+            flags['inefile'] = os.path.join(test_input_dir, 'desmond', 'onepoint' + s + '.cfg')
+
+        elif input_engine == 'amber':
+            prmtop, rst = test_file
+            flags['amb_in'] = [prmtop, rst]
+            flags['inefile'] = os.path.join(test_input_dir, 'amber', 'min' + s + '.in')
 
         flags['odir'] = odir
         for engine in ENGINES:
             flags[engine] = True
+            if set_prefix[engine]:  # set the input file to use for the output
+                flags[engine+'_set'] = os.path.join(test_input_dir, engine, set_prefix[engine] + s + set_suffix[engine])
 
+        if flags['lammps']:
+            if '_vacuum' in test_file[0]:
+                warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS input file." % (test_file[0]))
+                flags['lmp_style'] = "pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n"
+            elif 'lj3_bulk' in test_file[0]:  # annoying workaround since kspace won't work with zero charges.
+                flags['lmp_style'] = "pair_style lj/cut 9.0 \npair_modify tail yes\nkspace_style none\n\n"
+            else:
+                flags['lmp_style'] = "pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n"  # Ewald defaults
+                #flags['lmp_style'] = "pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-6\n\n"  # Ewald defaults
         h1, h2 = add_handler(odir)
         cmd_line_equivalent = command_line_flags(flags)
 
         logger.info('Converting {0} with command:\n'.format(test_file))
         logger.info('    python convert.py {0}'.format(
             ' '.join(cmd_line_equivalent)))
+
         diff = convert.main(flags)
         for engine, result in diff.items():
             results[engine][name] = result
@@ -278,4 +316,16 @@ def _get_desmond_test_files(test_dir):
     cms_files = sorted(glob(os.path.join(test_dir, '*/*.cms')))
     names = [os.path.splitext(os.path.basename(cms))[0] for cms in cms_files]
     return cms_files, names
+
+
+def _get_amber_test_files(test_dir):
+    prmtop_files = sorted(glob(os.path.join(test_dir, '*/*.prmtop')))
+    prmtop_files = [x for x in prmtop_files if not x.endswith('out.prmtop')]
+    suffix = ['rst','rst7','crd','inpcrd']
+    crd_files = []
+    for s in suffix:
+        crd_files += glob(os.path.join(test_dir, '*/*.' + s))    # generalize to other coordinate files
+    crd_files = sorted(crd_files)    
+    names = [os.path.splitext(os.path.basename(prmtop))[0] for prmtop in prmtop_files]
+    return zip(prmtop_files, crd_files), names
 

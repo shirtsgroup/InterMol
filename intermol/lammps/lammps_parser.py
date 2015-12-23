@@ -34,18 +34,22 @@ def load_lammps(in_file):
     return parser.read()
 
 
-def write_lammps(in_file, system, unit_set='real'):
-    """Load a LAMMPS input file into a `System`.
+def write_lammps(in_file, system, unit_set='real',
+                 nonbonded_style='pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n'):
+
+    """write a `System` into LAMMPS input file.
 
     Args:
         in_file:
-        include_dir:
-        defines:
+        system:
+        unit_set:
+        nonbonded_style: default is for a periodic system
+
     Returns:
         system:
     """
     parser = LammpsParser(in_file, system)
-    return parser.write(unit_set=unit_set)
+    return parser.write(unit_set=unit_set, nonbonded_style=nonbonded_style)
 
 
 class LammpsParser(object):
@@ -950,7 +954,7 @@ class LammpsParser(object):
             logger.warning('Virtuals not currently supported: will need to be '
                            'implemeneted from shake and rigid')
 
-    def write(self, unit_set='real'):
+    def write(self, unit_set='real',nonbonded_style=None):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:
@@ -1029,10 +1033,10 @@ class LammpsParser(object):
                     # Type, mass and pair coeffs.
                     if atom.atomtype[0] not in atom_type_dict:
                         atom_type_dict[atom.atomtype[0]] = a_type_i
-                        mass_list.append('{0:d} {1:8.4f}\n'.format(
+                        mass_list.append('{0:d} {1:11.7f}\n'.format(
                                 a_type_i,
                                 atom.mass[0].value_in_unit(self.MASS)))
-                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:10.8f} {2:10.8f}\n'.format(
+                        pair_coeffs.append('pair_coeff {0:d} {0:d} {1:11.7f} {2:11.7f}\n'.format(
                                 a_type_i,
                                 atom.epsilon[0].value_in_unit(self.ENERGY),
                                 atom.sigma[0].value_in_unit(self.DIST)))
@@ -1062,14 +1066,14 @@ class LammpsParser(object):
                         atom_charges = True
                     if atom.velocity:
                         vel_list.append(
-                            '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
+                            '{0:-6d} {1:11.7f} {2:11.7f} {3:11.7f}\n'.format(
                                 atom.index,
                                 atom.velocity[0].value_in_unit(self.VEL),
                                 atom.velocity[1].value_in_unit(self.VEL),
                                 atom.velocity[2].value_in_unit(self.VEL)))
                     else:
                         vel_list.append(
-                            '{0:-6d} {1:8.4f} {2:8.4f} {3:8.4f}\n'.format(
+                            '{0:-6d} {1:11.7f} {2:11.7f} {3:11.7f}\n'.format(
                                 atom.index, 0, 0, 0))
 
             for pair in mol_type.pair_forces:
@@ -1078,7 +1082,7 @@ class LammpsParser(object):
                     atom2_type = int(atom_list[pair.atom2].split()[2])
                     if atom2_type < atom1_type:  # LAMMPS requires i < j
                         atom1_type, atom2_type = atom2_type, atom1_type
-                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:10.6f} {2:10.6f}\n'.format(
+                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:11.7f} {2:11.7f}\n'.format(
                                 atom1_type,
                                 atom2_type,
                                 pair.epsilon.value_in_unit(self.ENERGY),
@@ -1136,13 +1140,13 @@ class LammpsParser(object):
             f.write('\n')
 
             # Shifting of box dimensions.
-            f.write('{0:10.6f} {1:10.6f} xlo xhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} xlo xhi\n'.format(
                     x_min, x_min + self.system.box_vector[0][0].value_in_unit(
                             self.DIST)))
-            f.write('{0:10.6f} {1:10.6f} ylo yhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} ylo yhi\n'.format(
                     y_min, y_min + self.system.box_vector[1][1].value_in_unit(
                             self.DIST)))
-            f.write('{0:10.6f} {1:10.6f} zlo zhi\n'.format(
+            f.write('{0:11.7f} {1:11.7f} zlo zhi\n'.format(
                     z_min, z_min + self.system.box_vector[2][2].value_in_unit(
                             self.DIST)))
 
@@ -1203,23 +1207,25 @@ class LammpsParser(object):
             f.write('read_data {0}\n'.format(os.path.basename(self.data_file)))
             f.write('\n')
 
-            # non-bonded
-            if atom_charges:
-                if self.in_file.endswith('_vacuum.input'):
-                    f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
-                    f.write('kspace_style none\n')
-                else:
-                    f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
-                    f.write('kspace_style none\n')
-                    #f.write('pair_style lj/long/coul/long long long 20.0\n')
-                    #f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
-                    #f.write('kspace_style pppm 1e-6\n')
-            else:
-                if self.in_file.endswith('_vacuum.input'):
-                    f.write('pair_style lj/cut 25.0\n')
-                    f.write('kspace_style none\n')
-                else:
-                    f.write('pair_style lj/cut 20.0\n')
+            # # non-bonded
+            # if atom_charges:
+            #     if self.in_file.endswith('_vacuum.input'):
+            #         f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
+            #         f.write('kspace_style none\n')
+            #     else:
+            #         f.write('pair_style lj/cut/coul/cut 20.0 20.0\n')
+            #         f.write('kspace_style none\n')
+            #         #f.write('pair_style lj/long/coul/long long long 20.0\n')
+            #         #f.write('pair_style lj/cut/coul/long 9.0 9.0\n')
+            #         #f.write('kspace_style pppm 1e-6\n')
+            # else:
+            #     if self.in_file.endswith('_vacuum.input'):
+            #         f.write('pair_style lj/cut 25.0\n')
+            #         f.write('kspace_style none\n')
+            #     else:
+            #         f.write('pair_style lj/cut 20.0\n')
+            # non-bonded: either defaults, or specified by user
+            f.write(nonbonded_style)
 
             for line in pair_coeffs:
                 f.write(line)
