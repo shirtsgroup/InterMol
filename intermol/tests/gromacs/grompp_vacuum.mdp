@@ -39,7 +39,7 @@ compressed-x-precision   = 1000
 ; Method for doing electrostatics = 
 cutoff-scheme            = verlet
 coulombtype              = cut-off
-rcoulomb                 = 2.0
+rcoulomb                 = 1.999
 coulomb-modifier         = None
 ; Dielectric constant (DC) for cut-off or DC of reaction field = 
 epsilon-r                = 1
@@ -47,7 +47,7 @@ epsilon-r                = 1
 vdw-type                 = cutoff
 vdw-modifier             = None
 ; cut-off lengths        = 
-rvdw                     = 2.0
+rvdw                     = 1.999
 ; Apply long range dispersion corrections for Energy and Pressure = 
 DispCorr                 = No
 

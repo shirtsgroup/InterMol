@@ -841,7 +841,7 @@ class LammpsParser(object):
         try:
             forcetype = force.forcetype
         except:
-            pass
+            pass # TODO
         if forceclass in ['Bond']:
             return [forcetype.bondingtype1, forcetype.bondingtype2]
         if forceclass in ['Pair']:  # TODO

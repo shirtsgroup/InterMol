@@ -838,7 +838,8 @@ class GromacsParser(object):
         new_bond = Bond(atom1, atom2, bond_type)
         self.current_molecule_type.bonds.add(new_bond)
 
-        new_bond = HarmonicBond(atom1, atom3, None, None, dOH, waterbondrefk, c=True)
+        bond_type = HarmonicBondType(None, None, length=dOH, k=waterbondrefk, c=True)
+        new_bond = Bond(atom1, atom3, bond_type)
         self.current_molecule_type.bonds.add(new_bond)
 
         angle_type = HarmonicAngleType(None, None, None, theta=angle, k=wateranglerefk, c=True)
