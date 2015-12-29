@@ -122,7 +122,13 @@ def main(args=None):
     else:
         gro_path = args['gromacs_path']
     if not args.get('lammps_path'):
-        lmp_path = ''
+        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
+                    'lmp_mac_mpi']:
+            if which(exe):
+                lmp_path = exe
+                break
+        else:
+            logger.exception('Found no LAMMPS executable.')
     else:
         lmp_path = args['lammps_path']
 
@@ -144,24 +150,6 @@ def main(args=None):
     if not args.get('force'):
         # Warnings will be treated as exceptions unless force flag is used.
         warnings.simplefilter("error")
-
-    # Paths to simulator executables.
-    # GROMACS
-    gropath = args.get('gropath')
-    if not gropath:
-        gropath = ''
-    # LAMMPS
-    lmppath = args.get('lmppath')
-    if not lmppath:
-        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
-                    'lmp_mac_mpi']:
-            if which(exe):
-                lmppath = exe
-                break
-        else:
-            logger.exception('Found no LAMMPS executable.')
-    # DESMOND
-    despath = args.get('despath')
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -327,7 +315,7 @@ def main(args=None):
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_, lmp_path)
+            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmp_path)
 
         elif args.get('des_in'):
             if args.get('inefile'):
