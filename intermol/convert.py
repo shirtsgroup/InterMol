@@ -108,6 +108,7 @@ def parse_args(args):
         sys.exit(1)
     return parser.parse_args(args)
 
+
 def main(args=None):
     logger.info('Beginning InterMol conversion')
     if not args:
@@ -315,6 +316,7 @@ def main(args=None):
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
+            input_type = 'lammps'
             e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmp_path)
 
         elif args.get('des_in'):

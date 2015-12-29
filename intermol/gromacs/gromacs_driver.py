@@ -18,6 +18,7 @@ def read_file(top_in, gro_in):
     logger.info('...loaded.')
     return system
 
+
 def write_file(system, top_out, gro_out):
     logger.info("Writing Gromacs files '{0}', '{1}'.".format(top_out, gro_out))
     write_gromacs(top_out, gro_out, system)
@@ -28,6 +29,7 @@ unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
             'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
             'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
             'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
+
 
 def _find_gmx_binaries(gropath, grosuff):
     """Locate the paths to the best available gromacs binaries. """
@@ -61,7 +63,7 @@ def _find_gmx_binaries(gropath, grosuff):
     return grompp_bin, mdrun_bin, genergy_bin
 
 
-def gromacs_energies(top, gro, mdp, gro_path=None, grosuff=None,
+def gromacs_energies(top, gro, mdp, gro_path='', grosuff='',
                      grompp_check=False):
     """Compute single-point energies using GROMACS.
 
@@ -95,27 +97,27 @@ def gromacs_energies(top, gro, mdp, gro_path=None, grosuff=None,
     stdout_path = os.path.join(directory, 'gromacs_stdout.txt')
     stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
-    # grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gropath, grosuff)
+    grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gro_path, grosuff)
     # # right now, to force single precision energies, use a path that does not have the double binaries.
-    suff = ['_d','']
-    found_binaries = False
-    for s in suff:
-        grompp_bin = os.path.join(gro_path, 'grompp' + s)
-        mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
-        genergy_bin = os.path.join(gro_path, 'g_energy' + s)
-        if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
-            if s == '_d':
-                logger.debug("Using double precision binaries")
-                found_binaries = True
-                break
-            elif s == '':
-                logger.debug("Can't find double precision; using single precision binaries")
-                found_binaries = True
-    if not found_binaries:
-        raise IOError('Unable to find GROMACS executables.')
-    grompp_bin = [grompp_bin]
-    mdrun_bin = [mdrun_bin]
-    genergy_bin = [genergy_bin]
+    #suff = ['_d','']
+    #found_binaries = False
+    #for s in suff:
+    #    grompp_bin = os.path.join(gro_path, 'grompp' + s)
+    #    mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
+    #    genergy_bin = os.path.join(gro_path, 'g_energy' + s)
+    #    if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
+    #        if s == '_d':
+    #            logger.debug("Using double precision binaries")
+    #            found_binaries = True
+    #            break
+    #        elif s == '':
+    #            logger.debug("Can't find double precision; using single precision binaries")
+    #            found_binaries = True
+    #if not found_binaries:
+    #    raise IOError('Unable to find GROMACS executables.')
+    #grompp_bin = [grompp_bin]
+    #mdrun_bin = [mdrun_bin]
+    #genergy_bin = [genergy_bin]
 
     # Run grompp.
     grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
