@@ -1257,7 +1257,7 @@ class LammpsParser(object):
                     # angles when lammps writes out.
                     for mol_name_j, mol_type_j in self.system.molecule_types.items():
                         if mol_name_j != mol_name:
-                            angle_i += len(mol_type_j.angle_forces)*len(mol_type_j.molecules)
+                            angle_i += len(mol_type_j.angles)*len(mol_type_j.molecules)
                         elif mol_name_j == mol_name:
                             break
 
