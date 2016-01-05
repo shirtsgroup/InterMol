@@ -23,9 +23,9 @@ def read_file(in_file):
     return system
 
 
-def write_file(in_file, system, unit_set='real', nonbonded_style = None):
+def write_file(in_file, system, unit_set='real', nonbonded_style=None):
     logger.info("Writing LAMMPS file '{0}'".format(in_file))
-    write_lammps(in_file, system, unit_set, nonbonded_style = nonbonded_style)
+    write_lammps(in_file, system, unit_set, nonbonded_style=nonbonded_style)
     logger.info('...done.')
 
 

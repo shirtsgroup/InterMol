@@ -954,7 +954,7 @@ class LammpsParser(object):
             logger.warning('Virtuals not currently supported: will need to be '
                            'implemeneted from shake and rigid')
 
-    def write(self, unit_set='real',nonbonded_style=None):
+    def write(self, unit_set='real', nonbonded_style=None):
         """Writes a LAMMPS data and corresponding input file.
 
         Args:

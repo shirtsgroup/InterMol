@@ -1,4 +1,5 @@
 import argparse
+from argparse import RawTextHelpFormatter
 import logging
 import os
 import sys
@@ -20,13 +21,16 @@ logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
+
 def record_exception(logger, e_out, e_outfile, e):
     logger.exception(e)
     e_out.append(-1)
     e_outfile.append(-1)
 
+
 def parse_args(args):
-    parser = argparse.ArgumentParser(description='Perform a file conversion')
+    parser = argparse.ArgumentParser(description='Perform a file conversion',
+                                     formatter_class=RawTextHelpFormatter)
 
     # Input arguments.
     group_in = parser.add_argument_group('Choose input conversion format')
