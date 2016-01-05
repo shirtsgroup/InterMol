@@ -105,12 +105,24 @@ class DesmondParser(object):
     desmond_pair_types = create_type(desmond_pairs)
      
     desmond_bond_types = {'HARM_CONSTRAINED': HarmonicBondType,
-                     'HARM': HarmonicBondType
-                     }
+                          'HARM': HarmonicBondType
+                          }
     lookup_desmond_bond_types = {v: k for k, v in desmond_bond_types.items()}
 
     def canonical_bond(self, bond, params, direction='into', name=None):
+        """
 
+        Parameters
+        ----------
+        bond
+        params
+        direction
+        name
+
+        Returns
+        -------
+
+        """
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
         else:
@@ -119,9 +131,6 @@ class DesmondParser(object):
                 name = self.lookup_desmond_bond_types[bond.forcetype.__class__]  # check to make sure this OK given the c
             except:
                 raise UnsupportedFunctional(bond, ENGINE)
-
-        names = []
-        paramlists = []
 
         if isinstance(bond.forcetype, (HarmonicBondType, HarmonicPotentialBondType)):
             if direction == 'into':
@@ -142,9 +151,7 @@ class DesmondParser(object):
                     if getattr(bond.forcetype, 'c') and not isinstance(bond.forcetype, HarmonicPotentialBondType):
                         name = 'HARM_CONSTRAINED'
 
-                names.append(name)
-                paramlists.append(params)
-            return names, paramlists
+            return [name], [params]
 
     desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
                       'HARM': HarmonicAngle,
@@ -157,18 +164,19 @@ class DesmondParser(object):
     def canonical_angle(self, angle, params, direction='into', name=None,
                         molecule_type=None):
         """
-        Args:
-            name:
-            kwds:
-            angle:
-            direction: 'into' means into the canonical form, 'from' means from the
-                        canonical form into Desmond
-            current molecule type (would like to be able to get rid of this, but need it to search angles for now
 
-        Returns:
-            modified list of keywords and names
+        Parameters
+        ----------
+        angle
+        params
+        direction
+        name
+        molecule_type
+
+        Returns
+        -------
+
         """
-
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
         else:
@@ -254,11 +262,24 @@ class DesmondParser(object):
     lookup_desmond_dihedrals = {TrigDihedral: 'PROPER_TRIG',
                                 ImproperHarmonicDihedral: 'IMPROPER_HARM'
                                 }
-
     lookup_desmond_dihedral = create_lookup(desmond_dihedrals)
     desmond_dihedral_types = create_type(desmond_dihedrals)
 
     def canonical_dihedral(self, dihedral, params, direction = 'into', name = None, molecule_type = None):
+        """
+
+        Parameters
+        ----------
+        dihedral
+        params
+        direction
+        name
+        molecule_type
+
+        Returns
+        -------
+
+        """
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
@@ -298,9 +319,6 @@ class DesmondParser(object):
                 return dihedral
 
             else:
-                names = []
-                paramlists = []
-
                 if dihedral.__class__ in [ImproperHarmonicDihedral]:
                     params['k'] = params['k'] * canonical_force_scale
                     name = 'IMPROPER_HARM'
@@ -311,10 +329,7 @@ class DesmondParser(object):
                         if getattr(dihedral,'improper'):
                             name = 'IMPROPER_TRIG'
 
-                names.append(name)
-                paramlists.append(params)
-
-            return names, paramlists
+            return [name], [params]
 
     def __init__(self, cms_file, system=None):
         """
