@@ -3,14 +3,14 @@ from argparse import RawTextHelpFormatter
 import logging
 import os
 import sys
-import warnings
 
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
 from intermol.desmond import desmond_driver
 from intermol.amber import amber_driver
 import intermol.tests
-from intermol.utils import which, potential_energy_diff, summarize_energy_results
+from intermol.utils import (which, potential_energy_diff,
+                            summarize_energy_results, record_exception)
 
 
 # Make a global logging object.
@@ -93,11 +93,6 @@ def parse_args(args):
             metavar='settings', default=None,
             help='Amber .in settings file used for energy evaluation')
 
-    group_misc.add_argument('-f', '--force', dest='force', action='store_true',
-            help='ignore warnings (NOTE: may lead to partially correct topologies)')
-    group_misc.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-            help='high verbosity, includes DEBUG level output')
-
     # Prints help if no arguments given.
     if len(sys.argv) == 1:
         parser.print_help()
@@ -138,15 +133,6 @@ def main(args=None):
         amb_path = ''
     else:
         amb_path = args['amber_path']
-
-    if args.get('verbose'):
-        h.setLevel(logging.DEBUG)
-
-    # Print warnings.
-    warnings.simplefilter("always")
-    if not args.get('force'):
-        # Warnings will be treated as exceptions unless force flag is used.
-        warnings.simplefilter("error")
 
     # --------------- PROCESS INPUTS ----------------- #
     if args.get('gro_in'):
@@ -193,8 +179,7 @@ def main(args=None):
         try:
             import parmed
         except Exception as e:
-            record_exception(e)
-            #record_exception(logger, e_out, e_outfile, e)
+            record_exception(logger, e)
             output_status['amber'] = e
 
         structure = parmed.amber.AmberParm(prmtop_in,crd_in)
@@ -254,8 +239,7 @@ def main(args=None):
         try:
             import parmed
         except Exception as e:
-            #record_exception(logger, e_out, e_outfile, e)
-            record_exception(e)
+            record_exception(logger, e)
             output_status['amber'] = e
 
         # first, check if the gro files exit from writing
@@ -351,7 +335,7 @@ def main(args=None):
                 out, outfile = gromacs_driver.gromacs_energies(
                     '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gro_path)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['gromacs'] = e
             else:
                 output_status['gromacs'] = potential_energy_diff(e_in, out)
@@ -364,7 +348,7 @@ def main(args=None):
                 out, outfile = lammps_driver.lammps_energies(
                     '{0}.input'.format(oname), lmp_path)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['lammps'] = e
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
@@ -381,7 +365,7 @@ def main(args=None):
                 out, outfile = desmond_driver.desmond_energies(
                     '{0}.cms'.format(oname), cfg, des_path)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['desmond'] = e
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
@@ -398,7 +382,7 @@ def main(args=None):
                 out, outfile = amber_driver.amber_energies(
                     '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb_path)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['amber'] = e
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)

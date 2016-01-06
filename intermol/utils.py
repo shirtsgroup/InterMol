@@ -61,6 +61,14 @@ def run_subprocess(cmd, engine, stdout_path, stderr_path, stdin=None):
     return proc
 
 
+def record_exception(logger, e, e_out=None, e_outfile=None):
+    logger.exception(e)
+    if e_out is not None:
+        e_out.append(-1)
+    if e_outfile is not None:
+        e_outfile.append(-1)
+
+
 def add_handler(directory):
     """Adds two FileHandlers to the global logger object.
 
