@@ -9,8 +9,7 @@ import intermol.lammps as lmp
 import intermol.desmond as des
 import intermol.amber as amb
 import intermol.tests
-from intermol.utils import (potential_energy_diff, summarize_energy_results,
-                            record_exception)
+from intermol.utils import potential_energy_diff, summarize_energy_results
 
 
 # Make a global logging object.
@@ -225,14 +224,11 @@ def main(args=None):
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
         top_out = oname + '.top'
-        top = None
-        e = None
-        if (os.path.isfile(gro_out) and os.path.isfile(top_out)):
+        output_status['amber'] = 'Converted'
+        if os.path.isfile(gro_out) and os.path.isfile(top_out):
             # if so, use these files.  Load them into ParmEd
             try:
                 top = parmed.load_file(top_out, xyz=gro_out)
-                prmtop_out = oname + '.prmtop'
-                crd_out = oname + '.rst7'
                 try:
                     top.save(oname + '.prmtop', overwrite=True)
                 except Exception as e:
@@ -241,16 +237,12 @@ def main(args=None):
                     top.save(oname + '.rst7', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
-                if e == None:
-                    output_status['amber'] = 'Converted'
             except Exception as e:
                 output_status['amber'] = e
         else:
             print("Can't convert to AMBER unless gromacs is also selected")
 
-
     # --------------- ENERGY EVALUATION ----------------- #
-
     if args.get('energy'):
         # Run control file paths.
         tests_path = os.path.abspath(os.path.dirname(intermol.tests.__file__))
@@ -271,13 +263,19 @@ def main(args=None):
             else:
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
+            try:
+                e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
+            except Exception as e:
+                logger.exception(e)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
             input_type = 'lammps'
-            e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
+            try:
+                e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
+            except Exception as e:
+                logger.exception(e)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -287,7 +285,10 @@ def main(args=None):
             else:
                 cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
+            try:
+                e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
+            except Exception as e:
+                logger.exception(e)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -297,7 +298,10 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
+            try:
+                e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
+            except Exception as e:
+                logger.exception(e)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
 
@@ -311,13 +315,13 @@ def main(args=None):
                 mdp = args.get('gromacs_set')
             else:
                 mdp = mdp_in_default
+
             try:
                 out, outfile = gmx.energies('{0}.top'.format(oname),
                                             '{0}.gro'.format(oname),
                                             mdp, gmx.GMX_PATH)
             except Exception as e:
-                record_exception(logger, e, e_out, e_outfile)
-                output_status['gromacs'] = e
+                logger.exception(e)
             else:
                 output_status['gromacs'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -325,11 +329,11 @@ def main(args=None):
 
         if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
+
             try:
                 out, outfile = lmp.energies('{0}.input'.format(oname), lmp.LMP_PATH)
             except Exception as e:
-                record_exception(logger, e, e_out, e_outfile)
-                output_status['lammps'] = e
+                logger.exception(e)
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -341,11 +345,11 @@ def main(args=None):
                 cfg = args.get('desmond_set')
             else:
                 cfg = cfg_in_default
+
             try:
                 out, outfile = des.energies('{0}.cms'.format(oname), cfg, des.DES_PATH)
             except Exception as e:
-                record_exception(logger, e, e_out, e_outfile)
-                output_status['desmond'] = e
+                logger.exception(e)
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
@@ -357,12 +361,13 @@ def main(args=None):
                 in_amber = args.get('amber_set')
             else:
                 in_amber = in_in_default
+
             try:
-                out, outfile = amb.energies(
-                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb.AMB_PATH)
+                out, outfile = amb.energies('{0}.prmtop'.format(oname),
+                                            '{0}.rst7'.format(oname),
+                                            in_amber, amb.AMB_PATH)
             except Exception as e:
-                record_exception(logger, e, e_out, e_outfile)
-                output_status['amber'] = e
+                logger.exception(e)
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
