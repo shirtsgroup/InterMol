@@ -31,6 +31,7 @@ def test_gromacs_stress(energy=False):
 def test_lammps_unit(energy=False):
     convert_one_to_all(input_engine='lammps', test_type='unit', energy=energy)
 
+
 @pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
 def test_lammps_stress(energy=False):
     convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy)
@@ -39,10 +40,19 @@ def test_lammps_stress(energy=False):
 def test_desmond_unit(energy=False):
     convert_one_to_all(input_engine='desmond', test_type='unit', energy=energy)
 
+
 @pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
 def test_desmond_stress(energy=False):
     convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy)
 
+
+def test_amber_unit(energy=False):
+    convert_one_to_all(input_engine='amber', test_type='unit', energy=energy)
+
+
+@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+def test_amber_stress(energy=False):
+    convert_one_to_all(input_engine='amber', test_type='stress', energy=energy)
 
 if __name__ == "__main__":
     import argparse

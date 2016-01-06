@@ -49,7 +49,7 @@ def capifyname(forcename):
     """
     Return name of the class in camelCase.
     """
-    return forcename.replace('_',' ').title().replace(' ','')
+    return forcename.replace('_', ' ').title().replace(' ', '')
 
 
 def build_unitvars(program, paramlist, dumself=None):
@@ -91,14 +91,28 @@ def get_parameter_list_from_force(force, paramlist):
     put the forces here as well.  We won't make this a function for now
     since it's needed in this module.
     """
+    # TODO: Check if this logic can be cleaned up.
 
     # We passed in an instance
-    name = force.__class__.__name__
-    pvars = []
-    for param in paramlist[name]:
-        paramstring = 'force.' + param
-        pvars.append(eval(paramstring))
-    return pvars
+    force_name = force.__class__.__name__
+    if force_name in ['Bond', 'Angle', 'Dihedral']:
+        name = force.forcetype.__class__.__name__
+        pvars = []
+        for param in paramlist[name]:
+            paramstring = 'force.forcetype.{1}'.format(force_name.lower(), param)
+            pvars.append(eval(paramstring))
+        return pvars
+    else:
+        pvars = []
+        try:
+            for param in paramlist[force_name]:
+                paramstring = 'force.' + param
+                pvars.append(eval(paramstring))
+        except KeyError:
+            for param in paramlist[force.__name__]:
+                paramstring = 'force.' + param
+                pvars.append(eval(paramstring))
+        return pvars
 
 
 def get_parameter_list_from_kwds(force, kwds, paramlist):
@@ -115,10 +129,18 @@ def get_parameter_kwds_from_force(force, forceparams, paramlist):
     """ """
     kwds = dict()
 
-    force_params = forceparams(force)
-    for i, p in enumerate(paramlist[force.__class__.__name__]):
-        kwds[p] = force_params[i]
-    return kwds
+    force_name = force.__class__.__name__
+    if force_name in ['Bond', 'Angle', 'Dihedral']:
+        name = force.forcetype.__class__.__name__
+        force_params = forceparams(force)
+        for i, p in enumerate(paramlist[name]):
+            kwds[p] = force_params[i]
+        return kwds
+    else:
+        force_params = forceparams(force)
+        for i, p in enumerate(paramlist[force.__class__.__name__]):
+            kwds[p] = force_params[i]
+        return kwds
 
 
 def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0):

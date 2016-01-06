@@ -91,25 +91,21 @@ class GromacsParser(object):
         '2B': LjqSigepsPair,
         '2C': LjqDefaultPair
         }
-
     lookup_gromacs_pairs = dict((v, k) for k, v in gromacs_pairs.items())
 
     gromacs_pair_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in gromacs_pairs.items())
 
-    gromacs_bonds = {
-        '1': HarmonicBond,
-        '2': G96Bond,
-        '3': MorseBond,
-        '4': CubicBond,
-        '5': ConnectionBond,
-        '6': HarmonicPotentialBond,
-        '7': FeneBond
+    gromacs_bond_types = {
+        '1': HarmonicBondType,
+        '2': G96BondType,
+        '3': MorseBondType,
+        '4': CubicBondType,
+        '5': ConnectionBondType,
+        '6': HarmonicPotentialBondType,
+        '7': FeneBondType
         }
-    lookup_gromacs_bonds = dict((v, k) for k, v in gromacs_bonds.items())
-
-    gromacs_bond_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in gromacs_bonds.items())
+    lookup_gromacs_bond_types = {v: k for k, v in gromacs_bond_types.items()}
 
     def canonical_bond(self, params, bond, direction='into'):
         """
@@ -121,26 +117,23 @@ class GromacsParser(object):
         """
         if direction == 'into':
             return bond, params
-        else:  # currently, no bonds need to be de-canonicalized
+        else:  # Currently, no bonds need to be de-canonicalized.
             try:
-                b_type = self.lookup_gromacs_bonds[bond.__class__]
+                b_type = self.lookup_gromacs_bond_types[bond.forcetype.__class__]
             except KeyError:
                 raise UnsupportedFunctional(bond, ENGINE)
             return b_type, params
 
-    gromacs_angles = {
-        '1': HarmonicAngle,
-        '2': CosineSquaredAngle,
-        '3': CrossBondBondAngle,
-        '4': CrossBondAngleAngle,
-        '5': UreyBradleyAngle,
-        '6': QuarticAngle,
-        '10': RestrictedBendingAngle
+    gromacs_angle_types = {
+        '1': HarmonicAngleType,
+        '2': CosineSquaredAngleType,
+        '3': CrossBondBondAngleType,
+        '4': CrossBondAngleAngleType,
+        '5': UreyBradleyAngleType,
+        '6': QuarticAngleType,
+        '10': RestrictedBendingAngleType
         }
-    lookup_gromacs_angles = dict((v, k) for k, v in gromacs_angles.items())
-
-    gromacs_angle_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in gromacs_angles.items())
+    lookup_gromacs_angle_types = {v: k for k, v in gromacs_angle_types.items()}
 
     def canonical_angle(self, params, angle, direction='into'):
         """
@@ -154,36 +147,24 @@ class GromacsParser(object):
             return angle, params
         else:  # currently, no angles need to be de-canonicalized
             try:
-                a_type = self.lookup_gromacs_angles[angle.__class__]
+                a_type = self.lookup_gromacs_angle_types[angle.forcetype.__class__]
             except KeyError:
                 raise UnsupportedFunctional(angle, ENGINE)
             return a_type, params
 
-    gromacs_dihedrals = {
+    gromacs_dihedral_types = {
         # TrigDihedrals are actually used for 1, 4, and 9.  Can't use lists as keys!
-        '1': ProperPeriodicDihedral,
-        '2': ImproperHarmonicDihedral,
-        '3': RbDihedral,
-        '4': ProperPeriodicDihedral,
-        '5': FourierDihedral,
-        '9': ProperPeriodicDihedral,
-        '10': RestrictedBendingDihedral,
-        '11': BendingTorsionDihedral,
-        'Trig': TrigDihedral
+        '1': ProperPeriodicDihedralType,
+        '2': ImproperHarmonicDihedralType,
+        '3': RbDihedralType,
+        '4': ProperPeriodicDihedralType,
+        '5': FourierDihedralType,
+        '9': ProperPeriodicDihedralType,
+        '10': RestrictedBendingDihedralType,
+        '11': BendingTorsionDihedralType,
+        'Trig': TrigDihedralType
         }
-
-    # have to invert manually because of canonical conversion collapse of types.
-    lookup_gromacs_dihedrals = {
-        TrigDihedral: 'Trig',
-        ImproperHarmonicDihedral: '2',
-        RbDihedral: '3',
-        FourierDihedral: '5',
-        RestrictedBendingDihedral: '10',
-        BendingTorsionDihedral: '11'
-        }
-
-    gromacs_dihedral_types = dict(
-        (k, eval(v.__name__ + 'Type')) for k, v in gromacs_dihedrals.items())
+    lookup_gromacs_dihedral_types = {v: k for k, v in gromacs_dihedral_types.items()}
 
     def canonical_dihedral(self, params, dihedral, direction='into'):
         """
@@ -213,9 +194,6 @@ class GromacsParser(object):
             if dihedral == ProperPeriodicDihedralType:
                 convertfunc = convert_dihedral_from_proper_to_trig
                 converted_dihedral = TrigDihedralType
-            elif dihedral == ProperPeriodicDihedral:
-                convertfunc = convert_dihedral_from_proper_to_trig
-                converted_dihedral = TrigDihedral
             elif dihedral == RbDihedralType:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 # Sign convention from psi to phi.
@@ -223,24 +201,13 @@ class GromacsParser(object):
                 params['C3'] *= -1
                 params['C5'] *= -1
                 converted_dihedral = TrigDihedralType
-            elif dihedral == RbDihedral:
-                convertfunc = convert_dihedral_from_RB_to_trig
-                # Sign convention from psi to phi.
-                params['C1'] *= -1
-                params['C3'] *= -1
-                params['C5'] *= -1
-                converted_dihedral = TrigDihedral
             elif dihedral == FourierDihedralType:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedralType
-            elif dihedral == FourierDihedral:
-                convertfunc = convert_dihedral_from_fourier_to_trig
-                converted_dihedral = TrigDihedral
-            elif dihedral in (ImproperHarmonicDihedralType, ImproperHarmonicDihedral,
-                              TrigDihedralType, TrigDihedral,
-                              BendingTorsionDihedralType, BendingTorsionDihedral,
-                              RestrictedBendingDihedralType, RestrictedBendingDihedral
-                              ):
+            elif dihedral in (ImproperHarmonicDihedralType,
+                              TrigDihedralType,
+                              BendingTorsionDihedralType,
+                              RestrictedBendingDihedralType):
                 convertfunc = convert_nothing
                 converted_dihedral = dihedral
             else:
@@ -248,8 +215,9 @@ class GromacsParser(object):
             params = convertfunc(params)
             return converted_dihedral, params
         else:
-            if isinstance(dihedral, TrigDihedral):
-                if dihedral.improper:
+            dihedraltype = dihedral.forcetype
+            if isinstance(dihedraltype, TrigDihedralType):
+                if dihedraltype.improper:
                     d_type = '4'
                     paramlist = convert_dihedral_from_trig_to_proper(params)
                 else:
@@ -272,7 +240,7 @@ class GromacsParser(object):
                             d_type = '9'
             else:
                 try:
-                    d_type = self.lookup_gromacs_dihedrals[dihedral.__class__]
+                    d_type = self.lookup_gromacs_dihedral_types[dihedraltype.__class__]
                 except KeyError:
                     raise UnsupportedFunctional(dihedral, ENGINE)
                 paramlist = [params]
@@ -386,6 +354,9 @@ class GromacsParser(object):
         self.cmaptypes = dict()
         self.nonbondedtypes = dict()
 
+        # Used for temporarily storing types read in from [ dihedral ] entries.
+        self.temp_dihedraltypes = dict()
+
         # Parse the top_filename into a set of plain text, intermediate
         # TopMoleculeType objects.
         self.process_file(self.top_filename)
@@ -472,7 +443,7 @@ class GromacsParser(object):
         for nbtype in sorted(self.system.nonbonded_types.values(), key=lambda x: (x.atom1, x.atom2)):
             # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
-                    nbtype.atom1, nbtype.atom2, nbtype.type))
+                    nbtype.atom1, nbtype.atom2, nbtype.form))
             if self.system.combination_rule == 'Multiply-C6C12':
                 top.write('{0:18.8e} {1:18.8e}\n'.format(
                     nbtype.C6.value_in_unit(units.kilojoules_per_mole * units.nanometers**(6)),
@@ -497,11 +468,11 @@ class GromacsParser(object):
 
             if self.current_molecule_type.pair_forces:
                 self.write_pairs(top)
-            if self.current_molecule_type.bond_forces and not self.current_molecule_type.rigidwaters:
+            if self.current_molecule_type.bonds and not self.current_molecule_type.rigidwaters:
                 self.write_bonds(top)
-            if self.current_molecule_type.angle_forces and not self.current_molecule_type.rigidwaters:
+            if self.current_molecule_type.angles and not self.current_molecule_type.rigidwaters:
                 self.write_angles(top)
-            if self.current_molecule_type.dihedral_forces:
+            if self.current_molecule_type.dihedrals:
                 self.write_dihedrals(top)
 
             # if moleculeType.virtualForceSet:
@@ -537,7 +508,6 @@ class GromacsParser(object):
                 atom.name = "LMP_{0}".format(atom.name)
             if atom.atomtype[0].isdigit():
                 atom.atomtype[0] = "LMP_{0}".format(atom.atomtype[0])
-
             top.write('{0:6d} {1:18s} {2:6d} {3:8s} {4:8s} {5:6d} '
                       '{6:18.8f} {7:18.8f}'.format(
                         i + 1,
@@ -590,7 +560,7 @@ class GromacsParser(object):
     def write_bonds(self, top):
         top.write('[ bonds ]\n')
         top.write(';   ai     aj funct  r               k\n')
-        bondlist = sorted(self.current_molecule_type.bond_forces,
+        bondlist = sorted(self.current_molecule_type.bonds,
                           key=lambda x: (x.atom1, x.atom2))
         for bond in bondlist:
             bond_params = self.get_parameter_list_from_force(bond)
@@ -598,7 +568,7 @@ class GromacsParser(object):
             top.write('{0:7d} {1:7d} {2:4s}'.format(
                 bond.atom1, bond.atom2, b_type))
 
-            param_units = self.unitvars[bond.__class__.__name__]
+            param_units = self.unitvars[bond.forcetype.__class__.__name__]
             for param, param_unit in zip(bond_params, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -607,7 +577,7 @@ class GromacsParser(object):
     def write_angles(self, top):
         top.write('[ angles ]\n')
         top.write(';   ai     aj     ak     funct  theta    cth\n')
-        anglelist = sorted(self.current_molecule_type.angle_forces,
+        anglelist = sorted(self.current_molecule_type.angles,
                            key=lambda x: (x.atom1, x.atom2, x.atom3))
         for angle in anglelist:
             angle_params = self.get_parameter_list_from_force(angle)
@@ -615,7 +585,7 @@ class GromacsParser(object):
             top.write('{0:7d} {1:7d} {2:7d} {3:4s}'.format(
                 angle.atom1, angle.atom2, angle.atom3, a_type))
 
-            param_units = self.unitvars[angle.__class__.__name__]
+            param_units = self.unitvars[angle.forcetype.__class__.__name__]
             for param, param_unit in zip(angle_params, param_units):
                 top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
             top.write('\n')
@@ -624,23 +594,23 @@ class GromacsParser(object):
     def write_dihedrals(self, top):
         top.write('[ dihedrals ]\n')
         top.write(';    i      j      k      l   func\n')
-        dihedrallist = sorted(self.current_molecule_type.dihedral_forces,
+        dihedrallist = sorted(self.current_molecule_type.dihedrals,
                               key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
         for dihedral in dihedrallist:
+            dihedral_params = self.get_parameter_kwds_from_force(dihedral)
+            d_type, dihedral_params = self.canonical_dihedral(dihedral_params, dihedral, direction='from')
+
             atoms = dihedral.atom1, dihedral.atom2, dihedral.atom3, dihedral.atom4
-            top.write("{0:7d} {1:7d} {2:7d} {3:7d}".format(
-                   atoms[0], atoms[1], atoms[2], atoms[3]))
+            top.write('{0:7d} {1:7d} {2:7d} {3:7d} {4:4s}'.format(
+            atoms[0], atoms[1], atoms[2], atoms[3], d_type))
 
-            kwds = self.get_parameter_kwds_from_force(dihedral)
-            d_type, paramlist = self.canonical_dihedral(kwds, dihedral, direction='from')
-            converted_dihedral = self.gromacs_dihedrals[d_type](*atoms, **paramlist[0])
+            converted_dihedraltype = self.gromacs_dihedral_types[d_type]
+            paramlist = self.get_parameter_list_from_force(converted_dihedraltype)
+            param_units = self.unitvars[converted_dihedraltype.__name__]
 
-            top.write("{0:6d}".format(int(d_type)))
-
-            paramlist = self.get_parameter_list_from_force(converted_dihedral)
-            param_units = self.unitvars[converted_dihedral.__class__.__name__]
             for param, param_unit in zip(paramlist, param_units):
-                top.write('{0:18.8e}'.format(param.value_in_unit(param_unit)))
+                value = dihedral_params[0][param.__name__].value_in_unit(param_unit)
+                top.write('{0:18.8e}'.format(value))
             top.write('\n')
         top.write('\n')
 
@@ -661,10 +631,8 @@ class GromacsParser(object):
         top.write('[ exclusions ]\n')
         exclusionlist = sorted(self.current_molecule_type.exclusions,
                                key=lambda x: (x[0], x[1]))
-        i = 0
         for exclusion in exclusionlist:
-            i += 1
-            top.write('{0:7d} {1:7d} {2:7d}\n'.format(i, exclusion[0], exclusion[1]))
+            top.write('{0:7d} {1:7d}\n'.format(exclusion[0], exclusion[1]))
         top.write('\n')
 
     # =========== System creation =========== #
@@ -702,99 +670,88 @@ class GromacsParser(object):
         for atom in top_moltype.atoms:
             self.create_atom(atom)
 
-    def create_atom(self, temp_atom):
+    def create_atom(self, atom_entry):
         index = self.n_atoms_added + 1
-        atomtype = temp_atom[1]
-        #res_id = int(temp_atom[2])
+        atomtype_str = atom_entry[1]
         res_id = self.gro.residue_ids[self.n_atoms_added]
-        #res_name = temp_atom[3]
         res_name = self.gro.residue_names[self.n_atoms_added]
-        atom_name = temp_atom[4]
-        cgnr = int(temp_atom[5])
-        charge = float(temp_atom[6]) * units.elementary_charge
-        if len(temp_atom) in [8, 11]:
-            mass = float(temp_atom[7]) * units.amu
+        atom_name = atom_entry[4]
+        cgnr = int(atom_entry[5])
+
+        if len(atom_entry) in [8, 11]:
+            mass = float(atom_entry[7]) * units.amu
         else:
             mass = -1 * units.amu
+        if len(atom_entry) < 7:
+            charge = None
+        else:
+            charge = float(atom_entry[6]) * units.elementary_charge
 
         atom = Atom(index, atom_name, res_id, res_name)
         atom.cgnr = cgnr
 
-        atom.atomtype = (0, atomtype)
+        atom.atomtype = (0, atomtype_str)
         atom.charge = (0, charge)
         atom.mass = (0, mass)
-        if len(temp_atom) == 11:
-            atomtype = temp_atom[8]
-            charge = float(temp_atom[9]) * units.elementary_charge
-            mass = float(temp_atom[10]) * units.amu
-            atom.atomtype = (1, atomtype)
+        if len(atom_entry) == 11:
+            atomtype_str = atom_entry[8]
+            charge = float(atom_entry[9]) * units.elementary_charge
+            mass = float(atom_entry[10]) * units.amu
+            atom.atomtype = (1, atomtype_str)
             atom.charge = (1, charge)
             atom.mass = (1, mass)
 
         atom.position = self.gro.positions[self.n_atoms_added]
 
-        for state, atomtype in atom.atomtype.items():
-            intermol_atomtype = self.system.atomtypes.get(atomtype)
-            if not intermol_atomtype:
+        for state, atomtype_str in atom.atomtype.items():
+            atomtype = self.system.atomtypes.get(atomtype_str)
+            if not atomtype:
                 logger.warn('A corresponding AtomType for {0} was not'
                             ' found.'.format(atom))
                 continue
-            atom.atomic_number = intermol_atomtype.atomic_number
-            if not atom.bondingtype:
-                if intermol_atomtype.bondtype:
-                    atom.bondingtype = intermol_atomtype.bondtype
-                else:
-                    atom.bondingtype = atomtype
+            atom.atomic_number = atomtype.atomic_number
+            if atomtype.bondtype:
+                atom.bondingtype = atomtype.bondtype
+            else:
+                atom.bondingtype = atomtype_str
             if atom.mass.get(state)._value < 0:
-                if intermol_atomtype.mass._value >= 0:
-                    atom.mass = (state, intermol_atomtype.mass)
+                if atomtype.mass._value >= 0:
+                    atom.mass = (state, atomtype.mass)
                 else:
                     logger.warn("Suspicious mass parameter found for atom "
                                 "{0}. Visually inspect before using.".format(atom))
-            atom.sigma = (state, intermol_atomtype.sigma)
-            atom.epsilon = (state, intermol_atomtype.epsilon)
+            if atom.charge[state] is None:
+                if atomtype.charge is None:
+                    atom.charge = (state, 0.0 * units.elementary_charge)
+                else:
+                    atom.charge = (state, atomtype.charge)
+
+            atom.sigma = (state, atomtype.sigma)
+            atom.epsilon = (state, atomtype.epsilon)
 
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
 
-    def create_bond(self, bond):
+    def create_bond(self, bond_entry):
         n_atoms = 2
-        numeric_bondtype = bond[n_atoms]
-        atoms = [int(n) for n in bond[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x))
-                        for x in bond[:n_atoms]])
+        atoms = [int(n) for n in bond_entry[:n_atoms]]
+        bondingtypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
 
         # Get forcefield parameters.
-        if len(bond) == n_atoms + 1:
-            bond_type = self.find_forcetype(btypes, self.bondtypes)
+        if bond_entry[2] == '5':
+            bondtype = ConnectionBondType(*bondingtypes)
+        elif len(bond_entry) == n_atoms + 1:
+            bondtype = self.find_forcetype(bondingtypes, self.system.bondtypes)
         else:
-            bond[0] = btypes[0]
-            bond[1] = btypes[1]
-            bond = " ".join(bond)
-            bond_type = self.process_forcetype(btypes, 'bond', bond, n_atoms,
-                self.gromacs_bond_types, self.canonical_bond)
-            bond = bond.split()
+            bond_entry[0] = bondingtypes[0]
+            bond_entry[1] = bondingtypes[1]
+            bond_entry = " ".join(bond_entry)
+            bondtype = self.process_forcetype(bondingtypes, 'bond', bond_entry,
+                                              n_atoms, self.gromacs_bond_types,
+                                              self.canonical_bond)
 
-        # Create the actual force.
-        if numeric_bondtype in self.gromacs_bonds:
-            gromacs_bond = self.gromacs_bonds[numeric_bondtype]
-            # Connection bonds don't have bondtypes.
-            if gromacs_bond == ConnectionBond:
-                kwds = dict()
-            else:
-                kwds = self.choose_parameter_kwds_from_forces(
-                    bond, n_atoms, bond_type, gromacs_bond)
-            # Give it canonical form parameters.
-            canonical_bond, kwds = self.canonical_bond(kwds, gromacs_bond,
-                                                        direction='into')
-            new_bond = canonical_bond(*atoms, **kwds)
-        else:
-            logger.warn("Unsupported Gromacs bondtype: {0}".format(numeric_bondtype))
-
-        if not new_bond:
-            logger.warn("Undefined bond formatting.")
-        else:
-            self.current_molecule_type.bond_forces.add(new_bond)
+        new_bond = Bond(*atoms, forcetype=bondtype)
+        self.current_molecule_type.bonds.add(new_bond)
 
     def create_pair(self, pair):
         """Create a pair force object based on a [ pairs ] entry"""
@@ -877,14 +834,17 @@ class GromacsParser(object):
         angle = 2.0 * math.asin(0.5 * float(rigidwater[3]) / float(rigidwater[2])) * units.radians
         dOH = float(rigidwater[2]) * units.nanometers
 
-        new_bond = HarmonicBond(atom1, atom2, None, None, dOH, waterbondrefk, c=True)
-        self.current_molecule_type.bond_forces.add(new_bond)
+        bond_type = HarmonicBondType(None, None, length=dOH, k=waterbondrefk, c=True)
+        new_bond = Bond(atom1, atom2, bond_type)
+        self.current_molecule_type.bonds.add(new_bond)
 
-        new_bond = HarmonicBond(atom1, atom3, None, None, dOH, waterbondrefk, c=True)
-        self.current_molecule_type.bond_forces.add(new_bond)
+        bond_type = HarmonicBondType(None, None, length=dOH, k=waterbondrefk, c=True)
+        new_bond = Bond(atom1, atom3, bond_type)
+        self.current_molecule_type.bonds.add(new_bond)
 
-        new_angle = HarmonicAngle(atom2, atom1, atom3, None, None, None, angle, wateranglerefk, c=True)
-        self.current_molecule_type.angle_forces.add(new_angle)
+        angle_type = HarmonicAngleType(None, None, None, theta=angle, k=wateranglerefk, c=True)
+        new_angle = Angle(atom2, atom1, atom3, angle_type)
+        self.current_molecule_type.angles.add(new_angle)
 
     def create_exclusion(self, exclusion):
         first = exclusion[0]
@@ -892,87 +852,59 @@ class GromacsParser(object):
             if first < index:
                 self.current_molecule_type.exclusions.add((int(first), int(index)))
 
-    def create_angle(self, angle):
+    def create_angle(self, angle_entry):
         n_atoms = 3
-        atoms = [int(n) for n in angle[:n_atoms]]
-        btypes = tuple([self.lookup_atom_bondingtype(int(x))
-                        for x in angle[:n_atoms]])
-        numeric_angletype = angle[n_atoms]
+        atoms = [int(n) for n in angle_entry[:n_atoms]]
+        btypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
 
         # Get forcefield parameters.
-        if len(angle) == n_atoms + 1:
-            angle_type = self.find_forcetype(btypes, self.angletypes)
+        if len(angle_entry) == n_atoms + 1:
+            angle_type = self.find_forcetype(btypes, self.system.angletypes)
         else:
-            angle[0] = btypes[0]
-            angle[1] = btypes[1]
-            angle[2] = btypes[2]
-            angle = " ".join(angle)
-            angle_type = self.process_forcetype(btypes, 'angle', angle, n_atoms,
+            angle_entry[0] = btypes[0]
+            angle_entry[1] = btypes[1]
+            angle_entry[2] = btypes[2]
+            angle_entry = " ".join(angle_entry)
+            angle_type = self.process_forcetype(btypes, 'angle', angle_entry, n_atoms,
                 self.gromacs_angle_types, self.canonical_angle)
-            angle = angle.split()
+            angle_entry = angle_entry.split()
 
-        # Create the actual force.
-        if numeric_angletype in self.gromacs_angles:
-            gromacs_angle = self.gromacs_angles[numeric_angletype]
-            kwds = self.choose_parameter_kwds_from_forces(
-                angle, n_atoms, angle_type, gromacs_angle)
-            # Give it canonical form parameters.
-            canonical_angle, kwds = self.canonical_angle(kwds, gromacs_angle,
-                                                         direction='into')
-            new_angle = canonical_angle(*atoms, **kwds)
-        else:
-            logger.warn("Unsupported Gromacs angletype: {0}".format(numeric_angletype))
+        new_angle = Angle(*atoms, forcetype=angle_type)
+        self.current_molecule_type.angles.add(new_angle)
 
-        if not new_angle:
-            logger.warn("Undefined angle formatting.")
-        else:
-            self.current_molecule_type.angle_forces.add(new_angle)
-
-    def create_dihedral(self, dihedral):
+    def create_dihedral(self, dihedral_entry):
         """Create a dihedral object based on a [ dihedrals ] entry. """
-        n_entries = len(dihedral)
+        n_entries = len(dihedral_entry)
         n_atoms = 4
-        atoms = [int(i) for i in dihedral[0:n_atoms]]
-        numeric_dihedraltype = dihedral[n_atoms]
-
+        atoms = [int(i) for i in dihedral_entry[0:n_atoms]]
+        bondingtypes = tuple(self.lookup_atom_bondingtype(x) for x in atoms)
+        numeric_dihedraltype = dihedral_entry[n_atoms]
         improper = numeric_dihedraltype in ['2', '4']
 
-        dihedral_types = [None]
-        if n_entries == n_atoms + 1:
-            btypes = [self.lookup_atom_bondingtype(int(x))
-                      for x in dihedral[:n_atoms]]
-
-            # Use the returned btypes that we get a match with!
-            dihedral_types = self.find_dihedraltype(btypes, improper=improper)
-            # This dihedraltype has been found before and already converted.
-            if numeric_dihedraltype in ['1', '3', '4', '5', '9']:
-                gromacs_dihedral = TrigDihedral
+        if n_entries != n_atoms + 1:
+            # We need to add a new dihedraltype.
+            if n_entries == n_atoms + 2:
+                # Handle special dihedrals given via a #define.
+                if self.defines.get(dihedral_entry[-1]):
+                    params = self.defines[dihedral_entry[-1]].split()
+                    dihedral_entry.pop()  # Remove the define and...
+                    dihedral_entry.extend(params)  # ...replace it with params.
             else:
-                gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
-        elif n_entries == n_atoms + 2:
-            # This case handles special dihedral given via a #define.
-            if self.defines.get(dihedral[-1]):
-                params = self.defines[dihedral[-1]].split()
-                dihedral = dihedral[:-1] + params
-            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
-        else:
-            # Some gromacs parameters don't include sufficient entries for all
-            # types, so add some zeros. A bit of a kludge...
-            dihedral += ['0.0'] * 3
-            gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
+                # Some gromacs parameters don't include sufficient entries for
+                # all types, so add some zeros. A bit of a kludge...
+                dihedral_entry.extend(['0.0'] * 3)
+            dihedral_entry = ' '.join(dihedral_entry)
+            dihedral_type = self.process_forcetype(bondingtypes, 'dihedral', dihedral_entry, n_atoms,
+                                                   self.gromacs_dihedral_types,
+                                                   self.canonical_dihedral)
 
-        for d_type in dihedral_types:
-            kwds = self.choose_parameter_kwds_from_forces(
-                    dihedral, n_atoms, d_type, gromacs_dihedral)
-            canonical_dihedral, kwds = self.canonical_dihedral(
-                    kwds, gromacs_dihedral, direction="into")
-
-            kwds['improper'] = improper
-            new_dihedral = canonical_dihedral(*atoms, **kwds)
-
-            if not new_dihedral:
-                logger.warn("Undefined dihedral formatting: {0}".format(dihedral))
-            self.current_molecule_type.dihedral_forces.add(new_dihedral)
+            new_dihedral = Dihedral(*atoms, forcetype=dihedral_type)
+            self.current_molecule_type.dihedrals.add(new_dihedral)
+        else:  # Lookup all dihedraltypes that match.
+            dihedral_types = self.find_dihedraltype(bondingtypes, improper=improper)
+            for dihedral_type in dihedral_types:
+                new_dihedral = Dihedral(*atoms, forcetype=dihedral_type)
+                self.current_molecule_type.dihedrals.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
         """Determine the type of dihedral interaction between four atoms. """
@@ -996,7 +928,7 @@ class GromacsParser(object):
         for i, atoms in enumerate(atom_orders):
             a1, a2, a3, a4 = atoms
             key = tuple([a1, a2, a3, a4, improper])
-            dihedral_type = self.dihedraltypes.get(key)
+            dihedral_type = self.system.dihedraltypes.get(key)
             if dihedral_type:
                 for to_be_added in dihedral_type:
                     for already_added in dihedral_types:
@@ -1186,13 +1118,20 @@ class GromacsParser(object):
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
         fields = line.split()
-        if len(fields) < 4:
+        if len(fields) < 3:
             self.too_few_fields(line)
         self.system.nonbonded_function = int(fields[0])
         self.system.combination_rule = self.gromacs_combination_rules[fields[1]]
         self.system.genpairs = fields[2]
-        self.system.lj_correction = float(fields[3])
-        self.system.coulomb_correction = float(fields[4])
+
+        if len(fields) == 3:
+            fudge_lj = 1.0
+            fudge_qq = 1.0
+        else:
+            fudge_lj = float(fields[3])
+            fudge_qq = float(fields[4])
+        self.system.lj_correction = fudge_lj
+        self.system.coulomb_correction = fudge_qq
 
     def process_moleculetype(self, line):
         """Process a line in the [ moleculetypes ] category."""
@@ -1218,7 +1157,7 @@ class GromacsParser(object):
         fields = line.split()
         if len(fields) < 5:
             self.too_few_fields(line)
-        if len(fields) not in [7, 8, 11]:
+        if len(fields) not in [6, 7, 8, 11]:
             self.invalid_line(line)
         self.current_molecule_type.atoms.append(fields)
 
@@ -1334,13 +1273,14 @@ class GromacsParser(object):
     def process_bondtype(self, line):
         """Process a line in the [ bondtypes ] category."""
         fields = line.split()
-        if len(fields) < 5:
+        if len(fields) < 5 and int(fields[2]) != 5:
             self.too_few_fields(line)
 
-        btypes = fields[:2]
-        bond_type = self.process_forcetype(btypes, 'bond', line, 2,
-                self.gromacs_bond_types, self.canonical_bond)
-        self.bondtypes[tuple(fields[:2])] = bond_type
+        bonding_types = fields[:2]
+        bondtype = self.process_forcetype(bonding_types, 'bond', line, 2,
+                                           self.gromacs_bond_types,
+                                           self.canonical_bond)
+        self.system.bondtypes[tuple(fields[:2])] = bondtype
 
     def process_angletype(self, line):
         """Process a line in the [ angletypes ] category."""
@@ -1349,8 +1289,9 @@ class GromacsParser(object):
             self.too_few_fields(line)
         btypes = fields[:3]
         angle_type = self.process_forcetype(btypes, 'angle', line, 3,
-                self.gromacs_angle_types, self.canonical_angle)
-        self.angletypes[tuple(fields[:3])] = angle_type
+                                            self.gromacs_angle_types,
+                                            self.canonical_angle)
+        self.system.angletypes[tuple(fields[:3])] = angle_type
 
     def process_dihedraltype(self, line):
         """Process a line in the [ dihedraltypes ] category."""
@@ -1365,31 +1306,33 @@ class GromacsParser(object):
 
         # Check whether they are using 2 or 4 atom types
         if fields[2].isdigit():
-            btypes = ['X', fields[0], fields[1], 'X']
+            bondingtypes = ['X', fields[0], fields[1], 'X']
             n_atoms_specified = 2
-        elif fields[4].isdigit() and not fields[3].isdigit(): # assumes gromacs types are not all digits.
-            btypes = fields[:4]
+        # assumes gromacs types are not all digits.
+        elif fields[4].isdigit() and not fields[3].isdigit():
+            bondingtypes = fields[:4]
             n_atoms_specified = 4
         else:
             # TODO: Come up with remaining cases (are there any?) and a proper
             #       failure case.
             logger.warn('Should never have gotten here.')
-        dihedral_type = self.process_forcetype(
-            btypes, 'dihedral', line, n_atoms_specified,
-            self.gromacs_dihedral_types, self.canonical_dihedral)
+        dihedral_type = self.process_forcetype(bondingtypes, 'dihedral', line,
+                                               n_atoms_specified,
+                                               self.gromacs_dihedral_types,
+                                               self.canonical_dihedral)
 
         # Still need a bit more information
         numeric_dihedraltype = fields[n_atoms_specified]
         dihedral_type.improper = numeric_dihedraltype in ['2', '4']
 
-        key = tuple([btypes[0], btypes[1], btypes[2], btypes[3],
-                     dihedral_type.improper])
+        key = tuple([bondingtypes[0], bondingtypes[1], bondingtypes[2],
+                     bondingtypes[3], dihedral_type.improper])
 
-        if key in self.dihedraltypes:
+        if key in self.system.dihedraltypes:
             # There are multiple dihedrals defined for these atom types.
-            self.dihedraltypes[key].add(dihedral_type)
+            self.system.dihedraltypes[key].add(dihedral_type)
         else:
-            self.dihedraltypes[key] = {dihedral_type}
+            self.system.dihedraltypes[key] = set([dihedral_type])
 
     def process_forcetype(self, bondingtypes, forcename, line, n_atoms,
                           gromacs_force_types, canonical_force):
@@ -1398,11 +1341,10 @@ class GromacsParser(object):
 
         numeric_forcetype = fields[n_atoms]
         gromacs_force_type = gromacs_force_types[numeric_forcetype]
-        kwds = self.create_kwds_from_entries(fields, gromacs_force_type, offset=n_atoms+1)
-        CanonicalForceType, kwds = canonical_force(
-            kwds, gromacs_force_type, direction='into')
+        params = self.create_kwds_from_entries(fields, gromacs_force_type, offset=n_atoms+1)
+        CanonicalForceType, params = canonical_force(params, gromacs_force_type, direction='into')
 
-        force_type = CanonicalForceType(*bondingtypes, **kwds)
+        force_type = CanonicalForceType(*bondingtypes, **params)
 
         if not force_type:
             logger.warn("{0} is not a supported {1} type".format(fields[2], forcename))
@@ -1426,7 +1368,7 @@ class GromacsParser(object):
         pair_type = None
         PairFunc = None
         combination_rule = self.system.combination_rule
-        kwds = dict()
+
         numeric_pairtype = fields[2]
         if numeric_pairtype == '1':
             # LJ/Coul. 1-4 (Type 1)
@@ -1466,8 +1408,6 @@ class GromacsParser(object):
     def process_nonbond_params(self, line):
         """Process a line in the [ nonbond_param ] category."""
         fields = line.split()
-        natoms = 2
-        nonbonded_type = None
         NonbondedFunc = None
         combination_rule = self.system.combination_rule
 
@@ -1486,7 +1426,7 @@ class GromacsParser(object):
         kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)
         nonbonded_type = NonbondedFunc(*nonbonded_vars, **kwds)
         # TODO: figure out what to do with the gromacs numeric type
-        nonbonded_type.type = int(fields[2])
+        nonbonded_type.form = int(fields[2])
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     # =========== Pre-processing errors =========== #

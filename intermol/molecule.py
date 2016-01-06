@@ -25,6 +25,10 @@ class Molecule(object):
         """Return an orderedset of atoms. """
         return self._atoms
 
+    @property
+    def n_atoms(self):
+        return len(self.atoms)
+
     def __repr__(self):
         return "Molecule '{}' with {} atoms".format(self.name, len(self.atoms))
 

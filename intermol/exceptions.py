@@ -12,7 +12,10 @@ class ConversionError(InterMolError):
     """"""
     def __init__(self, could_not_convert, engine):
         Exception.__init__(self)
-        self.could_not_convert = could_not_convert
+        if hasattr(could_not_convert, 'forcetype'):
+            self.could_not_convert = could_not_convert.forcetype
+        else:
+            self.could_not_convert = could_not_convert
         self.engine = engine
 
 

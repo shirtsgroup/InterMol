@@ -14,10 +14,10 @@ class MoleculeType(object):
         self.name = name
         self.molecules = OrderedSet()
 
-        self.bond_forces = set()
+        self.bonds = set()
         self.pair_forces = set()
-        self.angle_forces = set()
-        self.dihedral_forces = set()
+        self.angles = set()
+        self.dihedrals = set()
         self.virtual_forces = set()
         self.torsiontorsion_forces = set()
         self.constraints = set()
@@ -60,16 +60,16 @@ class MoleculeType(object):
         return False
 
     def match_bonds(self, bond):
-        return self._match_two_atoms(bond, self.bond_forces)
+        return self._match_two_atoms(bond, self.bonds)
 
     def match_pairs(self, pair):
         return self._match_two_atoms(pair, self.pair_forces)
 
     def match_angles(self, angle):
-        return self._match_three_atoms(angle, self.angle_forces)
+        return self._match_three_atoms(angle, self.angles)
 
     def match_dihedrals(self, dihedral):
-        return self._match_four_atoms(dihedral, self.dihedral_forces)
+        return self._match_four_atoms(dihedral, self.dihedrals)
 
     def __repr__(self):
         return "MoleculeType '{}' with {} molecules".format(

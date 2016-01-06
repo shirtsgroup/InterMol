@@ -5,7 +5,7 @@ from intermol.forces.abstract_nonbonded_type import AbstractNonbondedType
 
 
 class LjCNonbondedType(AbstractNonbondedType):
-    __slots__ = ['C6', 'C12', 'type']
+    __slots__ = ['C6', 'C12', 'form']
 
     @accepts_compatible_units(None, None, 
                               C6=units.kilojoules_per_mole * units.nanometers ** (6),

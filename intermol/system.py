@@ -32,9 +32,13 @@ class System(object):
         self._n_atoms = None
         self._molecule_types = OrderedDict()
         self._atomtypes = dict()
+        self.bondtypes = dict()
+        self.angletypes = dict()
+        self.dihedraltypes = dict()
         self._nonbonded_types = dict()
 
         self._bondgraph = None
+        self._bondgraph_per_moleculetype = None
 
     def add_molecule(self, molecule):
         """Add a molecule into the System. """
@@ -93,9 +97,10 @@ class System(object):
         if v.shape != (3, 3):
             e = ValueError("Box vector with incorrect format: {0}".format(v))
             logger.exception(e)
-        # handle two different 'unit' module behaviors   
-        if hasattr(v,'unit'):    
-            self._box_vector = np.array(v)*v[0,0].unit
+
+        # Handle two different 'unit' module behaviors.
+        if hasattr(v, 'unit'):
+            self._box_vector = np.array(v)*v[0, 0].unit
         else:
             self._box_vector = np.array(v)
 
@@ -107,6 +112,16 @@ class System(object):
                     atom1 = molecule.atoms[bond.atom1 - 1]
                     atom2 = molecule.atoms[bond.atom2 - 1]
                     yield atom1, atom2
+
+    @property
+    def connected_pairs_per_moleculetype(self):
+        for mol_type in self.molecule_types.values():
+            for i, molecule in enumerate(mol_type.molecules):
+                for j, bond in enumerate(mol_type.bonds):
+                    atom1 = molecule.atoms[bond.atom1 - 1]
+                    atom2 = molecule.atoms[bond.atom2 - 1]
+                    yield (atom1, mol_type), (atom2, mol_type)
+                break  # Only consider one molecule per moleculetype.
 
     @property
     def bondgraph(self):
@@ -133,6 +148,19 @@ class System(object):
             self._bondgraph = nx.Graph()
             self._bondgraph.add_edges_from(self.connected_pairs)
             return self._bondgraph
+
+    @property
+    def bondgraph_per_moleculetype(self):
+        """Create a NetworkX graph from the atoms and bonds in this system.
+        Only creates one unconnected subgraph per moleculetype.
+        """
+        if self._bondgraph_per_moleculetype is not None:
+            return self._bondgraph_per_moleculetype
+
+        import networkx as nx
+        self._bondgraph_per_moleculetype = nx.Graph()
+        self._bondgraph_per_moleculetype.add_edges_from(self.connected_pairs_per_moleculetype)
+        return self._bondgraph_per_moleculetype
 
     # def gen_pairs(self, n_excl=4):
     #
