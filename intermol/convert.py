@@ -9,8 +9,8 @@ import intermol.lammps as lmp
 import intermol.desmond as des
 import intermol.amber as amb
 import intermol.tests
-from intermol.utils import (which, potential_energy_diff,
-                            summarize_energy_results, record_exception)
+from intermol.utils import (potential_energy_diff, summarize_energy_results,
+                            record_exception)
 
 
 # Make a global logging object.
@@ -129,17 +129,17 @@ def main(args=None):
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = os.path.abspath(gro_in[0])
-        system = gmx.gromacs_driver.read_file(top_in, gro_in)
+        system = gmx.load(top_in, gro_in)
 
     elif args.get('des_in'):
         cms_file = args['des_in']
         prefix = os.path.splitext(os.path.basename(cms_file))[0]
-        system = des.desmond_driver.read_file(cms_file=cms_file)
+        system = des.load(cms_file)
 
     elif args.get('lmp_in'):
         lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
-        system = lmp.lammps_driver.read_file(in_file=lammps_file)
+        system = lmp.load(in_file=lammps_file)
 
     elif args.get('amb_in'):
 
@@ -175,7 +175,7 @@ def main(args=None):
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
         # now, read in using gromacs
-        system = gmx.gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
+        system = gmx.load(fromamber_top_in, fromamber_gro_in)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -190,7 +190,7 @@ def main(args=None):
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gmx.gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gmx.save('{0}.top'.format(oname), '{0}.gro'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
@@ -199,7 +199,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lmp.lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
+            lmp.save('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -208,7 +208,7 @@ def main(args=None):
 
     if args.get('desmond'):
         try:
-            des.desmond_driver.write_file('{0}.cms'.format(oname), system)
+            des.save('{0}.cms'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['desmond'] = e
@@ -378,8 +378,6 @@ def main(args=None):
         logger.info('\n'.join(out))
     logger.info('Finished!')
     return output_status
-
-
 
 
 if __name__ == '__main__':

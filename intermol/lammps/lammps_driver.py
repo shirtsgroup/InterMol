@@ -4,7 +4,6 @@ import os
 from subprocess import Popen, PIPE
 
 import simtk.unit as units
-from intermol.lammps.lammps_parser import load_lammps, write_lammps
 from intermol.utils import run_subprocess, which
 
 # Python 2/3 compatibility.
@@ -14,19 +13,6 @@ except NameError:
     FileNotFoundError = OSError
 
 logger = logging.getLogger('InterMolLog')
-
-
-def read_file(in_file):
-    logger.info('Reading LAMMPS files {0}'.format(in_file))
-    system = load_lammps(in_file)
-    logger.info('...loaded.')
-    return system
-
-
-def write_file(in_file, system, unit_set='real', nonbonded_style=None):
-    logger.info("Writing LAMMPS file '{0}'".format(in_file))
-    write_lammps(in_file, system, unit_set, nonbonded_style=nonbonded_style)
-    logger.info('...done.')
 
 
 def lammps_energies(input_file, lmp_path='lmp_openmpi'):

@@ -6,7 +6,8 @@ for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
     if which(exe):
         LMP_PATH = exe
         break
-    else:
-        warnings.warn('Found no LAMMPS executable.')
+else:
+    warnings.warn('Found no LAMMPS executable.')
 
 import intermol.lammps.lammps_driver
+from intermol.lammps.lammps_parser import load, save

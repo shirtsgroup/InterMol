@@ -5,26 +5,10 @@ import subprocess
 
 import simtk.unit as units
 
-from intermol.desmond.desmond_parser import load_desmond, write_desmond
 import shutil
 
 logger = logging.getLogger('InterMolLog')
 
-
-def read_file(cms_file):
-    logger.info('Reading DESMOND file {0}'.format(cms_file))
-    system = load_desmond(cms_file)
-    logger.info('...loaded')
-    return system
-
-
-def write_file(cms_file, system):
-    logger.info('Writing DESMOND file {0}'.format(cms_file))
-    write_desmond(cms_file, system)
-    logger.info('...done')
-
-
-# --------- energy evaluation methods ----------
 
 # terms we are ignoring for now.
 #'en': 'Raw Potential',

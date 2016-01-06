@@ -5,24 +5,8 @@ import os
 import simtk.unit as units
 
 from intermol.utils import which, run_subprocess
-from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
-
 
 logger = logging.getLogger('InterMolLog')
-
-
-def read_file(top_in, gro_in):
-    # Run grompp to ensure .gro and .top are a valid match.
-    logger.info("Reading Gromacs files '{0}', '{1}'.".format(top_in, gro_in))
-    system = load_gromacs(top_in, gro_in)
-    logger.info('...loaded.')
-    return system
-
-
-def write_file(system, top_out, gro_out):
-    logger.info("Writing Gromacs files '{0}', '{1}'.".format(top_out, gro_out))
-    write_gromacs(top_out, gro_out, system)
-    logger.info('...done.')
 
 # energy terms we are ignoring
 unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
@@ -98,26 +82,6 @@ def gromacs_energies(top, gro, mdp, gro_path='', grosuff='',
     stderr_path = os.path.join(directory, 'gromacs_stderr.txt')
 
     grompp_bin, mdrun_bin, genergy_bin = _find_gmx_binaries(gro_path, grosuff)
-    # # right now, to force single precision energies, use a path that does not have the double binaries.
-    #suff = ['_d','']
-    #found_binaries = False
-    #for s in suff:
-    #    grompp_bin = os.path.join(gro_path, 'grompp' + s)
-    #    mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
-    #    genergy_bin = os.path.join(gro_path, 'g_energy' + s)
-    #    if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
-    #        if s == '_d':
-    #            logger.debug("Using double precision binaries")
-    #            found_binaries = True
-    #            break
-    #        elif s == '':
-    #            logger.debug("Can't find double precision; using single precision binaries")
-    #            found_binaries = True
-    #if not found_binaries:
-    #    raise IOError('Unable to find GROMACS executables.')
-    #grompp_bin = [grompp_bin]
-    #mdrun_bin = [mdrun_bin]
-    #genergy_bin = [genergy_bin]
 
     # Run grompp.
     grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
