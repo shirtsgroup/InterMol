@@ -159,20 +159,20 @@ def main(args=None):
         # next, convert to gromacs with ParmEd
         try:
             import parmed
-        except Exception as e:
-            record_exception(logger, e)
+        except ImportError as e:
             output_status['amber'] = e
+            raise ImportError('ParmEd is required for AMBER conversions.')
 
-        structure = parmed.amber.AmberParm(prmtop_in,crd_in)
+        structure = parmed.amber.AmberParm(prmtop_in, crd_in)
         #Make GROMACS topology
         parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(structure)
 
         # write out the files.  Should write them out in the proper directory (the one reading in)
         pathprefix = os.path.dirname(prmtop_in)
         fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
-        fromamber_gro_in = os.path.join(pathprefix,prefix + '_from_amber.gro')
+        fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
-        parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
+        parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision=8)
 
         # now, read in using gromacs
         system = gmx.load(fromamber_top_in, fromamber_gro_in)
@@ -218,9 +218,9 @@ def main(args=None):
     if args.get('amber'):
         try:
             import parmed
-        except Exception as e:
-            record_exception(logger, e)
+        except ImportError as e:
             output_status['amber'] = e
+            raise ImportError('ParmEd is required for AMBER conversions.')
 
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
