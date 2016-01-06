@@ -3,16 +3,14 @@ from argparse import RawTextHelpFormatter
 import logging
 import os
 import sys
-import warnings
 
-import numpy as np
-
-from intermol.gromacs import gromacs_driver
-from intermol.lammps import lammps_driver
-from intermol.desmond import desmond_driver
-from intermol.amber import amber_driver
+import intermol.gromacs as gmx
+import intermol.lammps as lmp
+import intermol.desmond as des
+import intermol.amber as amb
 import intermol.tests
-from intermol.tests.testing_tools import which
+from intermol.utils import (potential_energy_diff, summarize_energy_results,
+                            record_exception)
 
 
 # Make a global logging object.
@@ -22,18 +20,12 @@ logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
 
-def record_exception(logger, e_out, e_outfile, e):
-    logger.exception(e)
-    e_out.append(-1)
-    e_outfile.append(-1)
-
-
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Perform a file conversion',
                                      formatter_class=RawTextHelpFormatter)
 
     # Input arguments.
-    group_in = parser.add_argument_group('Choose input conversion format')
+    group_in = parser.add_mutually_exclusive_group(required=True)
     group_in.add_argument('--des_in', metavar='file',
             help='.cms file for conversion from DESMOND file format')
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
@@ -101,11 +93,6 @@ def parse_args(args):
             metavar='settings', default=None,
             help='Amber .in settings file used for energy evaluation')
 
-    group_misc.add_argument('-f', '--force', dest='force', action='store_true',
-            help='ignore warnings (NOTE: may lead to partially correct topologies)')
-    group_misc.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-            help='high verbosity, includes DEBUG level output')
-
     # Prints help if no arguments given.
     if len(sys.argv) == 1:
         parser.print_help()
@@ -118,45 +105,17 @@ def main(args=None):
     if not args:
         args = vars(parse_args(args))
 
-    # annoyingly, have to define the path variables here, since they
-    # aren't defined by the argument defaults if we call convert as a
-    # function instead of from the command line.
-
-    if not args.get('gromacs_path'):
-        gro_path = ''
-    else:
-        gro_path = args['gromacs_path']
-    if not args.get('lammps_path'):
-        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
-                    'lmp_mac_mpi']:
-            if which(exe):
-                lmp_path = exe
-                break
-        else:
-            logger.exception('Found no LAMMPS executable.')
-    else:
-        lmp_path = args['lammps_path']
-
-    if not args.get('desmond_path'):
-        des_path = ''
-    else:
-        des_path = args['desmond_path']
-
-    if not args.get('amber_path'):
-        amb_path = ''
-    else:
-        amb_path = args['amber_path']
-
-    if args.get('verbose'):
-        h.setLevel(logging.DEBUG)
-
-    # Print warnings.
-    warnings.simplefilter("always")
-    if not args.get('force'):
-        # Warnings will be treated as exceptions unless force flag is used.
-        warnings.simplefilter("error")
+    if args.get('gromacs_path'):
+        gmx.GMX_PATH = args['gromacs_path']
+    if args.get('lammps_path'):
+        lmp.LMP_PATH = args['lammps_path']
+    if args.get('desmond_path'):
+        des.DES_PATH = args['desmond_path']
+    if args.get('amber_path'):
+        amb.AMB_PATH = args['amber_path']
 
     # --------------- PROCESS INPUTS ----------------- #
+    output_status = dict()
     if args.get('gro_in'):
         gromacs_files = args['gro_in']
 
@@ -170,17 +129,17 @@ def main(args=None):
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = os.path.abspath(gro_in[0])
-        system = gromacs_driver.read_file(top_in, gro_in)
+        system = gmx.load(top_in, gro_in)
 
     elif args.get('des_in'):
         cms_file = args['des_in']
         prefix = os.path.splitext(os.path.basename(cms_file))[0]
-        system = desmond_driver.read_file(cms_file=cms_file)
+        system = des.load(cms_file)
 
     elif args.get('lmp_in'):
         lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
-        system = lammps_driver.read_file(in_file=lammps_file)
+        system = lmp.load(in_file=lammps_file)
 
     elif args.get('amb_in'):
 
@@ -200,24 +159,23 @@ def main(args=None):
         # next, convert to gromacs with ParmEd
         try:
             import parmed
-        except Exception as e:
-            record_exception(e)
-            #record_exception(logger, e_out, e_outfile, e)
+        except ImportError as e:
             output_status['amber'] = e
+            raise ImportError('ParmEd is required for AMBER conversions.')
 
-        structure = parmed.amber.AmberParm(prmtop_in,crd_in)
+        structure = parmed.amber.AmberParm(prmtop_in, crd_in)
         #Make GROMACS topology
         parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(structure)
 
         # write out the files.  Should write them out in the proper directory (the one reading in)
         pathprefix = os.path.dirname(prmtop_in)
         fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
-        fromamber_gro_in = os.path.join(pathprefix,prefix + '_from_amber.gro')
+        fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
-        parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
+        parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision=8)
 
         # now, read in using gromacs
-        system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
+        system = gmx.load(fromamber_top_in, fromamber_gro_in)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -229,11 +187,10 @@ def main(args=None):
         oname = args['oname']
     oname = os.path.abspath(os.path.join(args['odir'], oname))  # Prepend output directory to oname.
 
-    output_status = dict()
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gmx.save('{0}.top'.format(oname), '{0}.gro'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
@@ -242,7 +199,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
+            lmp.save('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -251,7 +208,7 @@ def main(args=None):
 
     if args.get('desmond'):
         try:
-            desmond_driver.write_file('{0}.cms'.format(oname), system)
+            des.save('{0}.cms'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['desmond'] = e
@@ -261,10 +218,9 @@ def main(args=None):
     if args.get('amber'):
         try:
             import parmed
-        except Exception as e:
-            #record_exception(logger, e_out, e_outfile, e)
-            record_exception(e)
+        except ImportError as e:
             output_status['amber'] = e
+            raise ImportError('ParmEd is required for AMBER conversions.')
 
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
@@ -281,7 +237,7 @@ def main(args=None):
                     top.save(oname + '.prmtop', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
-                try:        
+                try:
                     top.save(oname + '.rst7', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
@@ -315,13 +271,13 @@ def main(args=None):
             else:
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, gro_path)
+            e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
             input_type = 'lammps'
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, lmp_path)
+            e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -331,7 +287,7 @@ def main(args=None):
             else:
                 cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_in, des_path)
+            e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -341,7 +297,7 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in, e_infile = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
+            e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
 
@@ -356,10 +312,11 @@ def main(args=None):
             else:
                 mdp = mdp_in_default
             try:
-                out, outfile = gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gro_path)
+                out, outfile = gmx.energies('{0}.top'.format(oname),
+                                            '{0}.gro'.format(oname),
+                                            mdp, gmx.GMX_PATH)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['gromacs'] = e
             else:
                 output_status['gromacs'] = potential_energy_diff(e_in, out)
@@ -369,10 +326,9 @@ def main(args=None):
         if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), lmp_path)
+                out, outfile = lmp.energies('{0}.input'.format(oname), lmp.LMP_PATH)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['lammps'] = e
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
@@ -386,10 +342,9 @@ def main(args=None):
             else:
                 cfg = cfg_in_default
             try:
-                out, outfile = desmond_driver.desmond_energies(
-                    '{0}.cms'.format(oname), cfg, des_path)
+                out, outfile = des.energies('{0}.cms'.format(oname), cfg, des.DES_PATH)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['desmond'] = e
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
@@ -403,10 +358,10 @@ def main(args=None):
             else:
                 in_amber = in_in_default
             try:
-                out, outfile = amber_driver.amber_energies(
-                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb_path)
+                out, outfile = amb.energies(
+                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb.AMB_PATH)
             except Exception as e:
-                record_exception(logger, e_out, e_outfile, e)
+                record_exception(logger, e, e_out, e_outfile)
                 output_status['amber'] = e
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)
@@ -422,102 +377,6 @@ def main(args=None):
         logger.info('\n'.join(out))
     logger.info('Finished!')
     return output_status
-
-
-def potential_energy_diff(e_in, e_out):
-    """Returns difference in potential energy.
-
-    arguments:
-        e_in  - dictionary of energy groups from input file
-        e_out - dictionary of energy groups from output file
-
-    returns:
-        potential energy difference in units of the input
-    """
-    energy_type = 'Potential'
-    input_energy = e_in[energy_type]
-    diff = e_out[energy_type].in_units_of(input_energy.unit) - input_energy
-    return diff._value
-
-
-def find_match(key, dictionary, unit):
-    """Helper function for `summarize_energy_results`. """
-    if key in dictionary:
-        return dictionary[key].value_in_unit(unit)
-    else:
-        return np.nan
-
-
-def summarize_energy_results(energy_input, energy_outputs, input_type, output_types):
-    """Creates a table comparing input and output energy groups.
-
-    Args:
-        energy_input (dict): energy groups from input file
-        energy_output(list): containing dictionary of energy groups or -1 for
-            each output file
-        input_type (str): input engine
-        output_types (list): containing output formats
-
-    Returns:
-        out (list of strings): which forms a summary table using "\n".join(out)
-    """
-    out = []
-    # Remove failed evaluations (-1 in energy_outputs)
-    failed_i = [i for i, x in enumerate(energy_outputs) if x == -1]
-    failed = [output_types[i] for i in failed_i]
-    output_types = [x for i, x in enumerate(output_types) if i not in failed_i]
-    energy_outputs = [x for x in energy_outputs if x != -1]
-
-    # Find all distinct labels
-    labels = set(energy_input.keys())
-    for e_out in energy_outputs:
-        for key, value in e_out.items():
-            labels.add(key)
-
-    # Set up energy comparison table
-    labels = list(labels)
-    unit = energy_input[list(energy_input.keys())[0]].unit
-    energy_all = [energy_input] + energy_outputs
-    data = np.empty((len(labels), len(energy_all)))
-    for i in range(len(data)):
-        for j in range(len(energy_all)):
-            data[i, j] = find_match(labels[i], energy_all[j], unit)
-
-    # TODO: sort table
-    out.append('')
-    out.append('Energy group summary')
-    out.append('=======================================================================')
-    header = '%20s %18s ' % ('type', 'input (%s)' % input_type)
-    for otype in output_types:
-        header += '%37s' % ('output (%s) diff (%s)' % (otype, otype))
-    out.append(header)
-    for i in range(len(data)):
-        line = '%20s ' % labels[i]
-        if np.isnan(data[i][0]):
-            line += '%18s' % 'n/a'
-        else:
-            line += '%18.8f' % (data[i][0])
-        for j in range(1, len(data[i])):
-            if np.isnan(data[i][j]):
-                line += '%18s' % 'n/a'
-            else:
-                line += '%18.8f' % (data[i][j])
-            if np.isnan(data[i][j]) or np.isnan(data[i][0]):
-                line += '%18s' % 'n/a'
-            else:
-                line += '%18.8f' % (data[i][j]-data[i][0])
-        out.append(line)
-    out.append('')
-    # get differences in potential energy
-    i = labels.index('Potential')
-    diff = data[i, 1::] - data[i, 0]
-    for d, otype in zip(diff, output_types):
-        out.append('difference in potential energy from %s=>%s conversion: %18.8f'
-                    % (input_type, otype, d))
-    for fail in failed:
-        out.append('energy comparison for {0} output failed'.format(fail))
-    out.append('=======================================================================')
-    return out
 
 
 if __name__ == '__main__':
