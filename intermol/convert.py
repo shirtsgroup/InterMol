@@ -4,10 +4,10 @@ import logging
 import os
 import sys
 
-from intermol.gromacs import gromacs_driver
-from intermol.lammps import lammps_driver
-from intermol.desmond import desmond_driver
-from intermol.amber import amber_driver
+import intermol.gromacs as gmx
+import intermol.lammps as lmp
+import intermol.desmond as des
+import intermol.amber as amb
 import intermol.tests
 from intermol.utils import (which, potential_energy_diff,
                             summarize_energy_results, record_exception)
@@ -18,7 +18,6 @@ logger = logging.getLogger('InterMolLog')
 logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
-
 
 
 def parse_args(args):
@@ -107,32 +106,16 @@ def main(args=None):
         args = vars(parse_args(args))
 
     if args.get('gromacs_path'):
-        GMX_PATH = args['gromacs_path']
-    else:
-        GMX_PATH = ''
-
+        gmx.GMX_PATH = args['gromacs_path']
     if args.get('lammps_path'):
-        LMP_PATH = args['lammps_path']
-    else:
-        for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
-                    'lmp_mac_mpi']:
-            if which(exe):
-                LMP_PATH = exe
-                break
-            else:
-                logger.exception('Found no LAMMPS executable.')
-
+        lmp.LMP_PATH = args['lammps_path']
     if args.get('desmond_path'):
-        DES_PATH = args['desmond_path']
-    else:
-        DES_PATH = ''
-
+        des.DES_PATH = args['desmond_path']
     if args.get('amber_path'):
-        AMB_PATH = args['amber_path']
-    else:
-        AMB_PATH = ''
+        amb.AMB_PATH = args['amber_path']
 
     # --------------- PROCESS INPUTS ----------------- #
+    output_status = dict()
     if args.get('gro_in'):
         gromacs_files = args['gro_in']
 
@@ -146,17 +129,17 @@ def main(args=None):
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = os.path.abspath(gro_in[0])
-        system = gromacs_driver.read_file(top_in, gro_in)
+        system = gmx.gromacs_driver.read_file(top_in, gro_in)
 
     elif args.get('des_in'):
         cms_file = args['des_in']
         prefix = os.path.splitext(os.path.basename(cms_file))[0]
-        system = desmond_driver.read_file(cms_file=cms_file)
+        system = des.desmond_driver.read_file(cms_file=cms_file)
 
     elif args.get('lmp_in'):
         lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
-        system = lammps_driver.read_file(in_file=lammps_file)
+        system = lmp.lammps_driver.read_file(in_file=lammps_file)
 
     elif args.get('amb_in'):
 
@@ -192,7 +175,7 @@ def main(args=None):
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
         # now, read in using gromacs
-        system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
+        system = gmx.gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -204,11 +187,10 @@ def main(args=None):
         oname = args['oname']
     oname = os.path.abspath(os.path.join(args['odir'], oname))  # Prepend output directory to oname.
 
-    output_status = dict()
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gmx.gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
@@ -217,7 +199,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
+            lmp.lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -226,7 +208,7 @@ def main(args=None):
 
     if args.get('desmond'):
         try:
-            desmond_driver.write_file('{0}.cms'.format(oname), system)
+            des.desmond_driver.write_file('{0}.cms'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['desmond'] = e
@@ -289,13 +271,13 @@ def main(args=None):
             else:
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, GMX_PATH)
+            e_in, e_infile = gmx.gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
             input_type = 'lammps'
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_file, LMP_PATH)
+            e_in, e_infile = lmp.lammps_driver.lammps_energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -305,7 +287,7 @@ def main(args=None):
             else:
                 cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_in, DES_PATH)
+            e_in, e_infile = des.desmond_driver.desmond_energies(cms_file, cfg_in, des.DES_PATH)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -315,7 +297,7 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in, e_infile = amber_driver.amber_energies(prmtop_in, crd_in, in_in, AMB_PATH)
+            e_in, e_infile = amb.amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
 
@@ -330,8 +312,8 @@ def main(args=None):
             else:
                 mdp = mdp_in_default
             try:
-                out, outfile = gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, GMX_PATH)
+                out, outfile = gmx.gromacs_driver.gromacs_energies(
+                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gmx.GMX_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['gromacs'] = e
@@ -343,8 +325,8 @@ def main(args=None):
         if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), LMP_PATH)
+                out, outfile = lmp.lammps_driver.lammps_energies(
+                    '{0}.input'.format(oname), lmp.LMP_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['lammps'] = e
@@ -360,8 +342,8 @@ def main(args=None):
             else:
                 cfg = cfg_in_default
             try:
-                out, outfile = desmond_driver.desmond_energies(
-                    '{0}.cms'.format(oname), cfg, DES_PATH)
+                out, outfile = des.desmond_driver.desmond_energies(
+                    '{0}.cms'.format(oname), cfg, des.DES_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['desmond'] = e
@@ -377,8 +359,8 @@ def main(args=None):
             else:
                 in_amber = in_in_default
             try:
-                out, outfile = amber_driver.amber_energies(
-                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, AMB_PATH)
+                out, outfile = amb.amber_driver.amber_energies(
+                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb.AMB_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['amber'] = e
