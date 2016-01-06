@@ -308,14 +308,14 @@ class DesmondParser(object):
                 elif name == "OPLS_PROPER" or name == "OPLS_IMPROPER":
                 # OPLS_IMPROPER actually isn't any different from OPLS_PROPER
                     dihedral.improper = False
-                try:
-                    # we can have multiple parameters with DESMOND, and append if we do
-                    dihedralmatch = molecule_type.match_dihedrals(dihedral)
-                    # this will fail if it's the wrong type of dihedral
-                    if dihedralmatch:
-                        dihedralmatch.sum_parameters(dihedral)
-                except Exception as e:
-                    logger.exception(e)
+
+                # we can have multiple parameters with DESMOND, and append if we do
+                dihedralmatch = molecule_type.match_dihedrals(dihedral)
+                # this will fail if it's the wrong type of dihedral
+                if dihedralmatch:
+                    # TODO: This line will fail. Not sure what it was intended
+                    # to do in the first place...
+                    dihedralmatch.sum_parameters(dihedral)
                 return dihedral
 
             else:
@@ -1010,10 +1010,7 @@ class DesmondParser(object):
                     aline = split_with_quotes(lines[i])
                     atom.residue_index = int(aline[cols['i_m_residue_number']])
                     atom.residue_name = aline[cols['s_m_pdb_residue_name']].strip()
-                    try:
-                        atom.atomic_number = int(aline[cols['i_m_atomic_number']])
-                    except Exception as e:
-                        logger.exception(e) # EDZ: just pass statement before, now exception is recorded, but supressed
+                    atom.atomic_number = int(aline[cols['i_m_atomic_number']])
 
                     atom.position = [float(aline[cols['r_m_x_coord']]) * units.angstroms,
                                      float(aline[cols['r_m_y_coord']]) * units.angstroms,

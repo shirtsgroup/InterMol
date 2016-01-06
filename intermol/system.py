@@ -95,8 +95,7 @@ class System(object):
             [[v1x,v2x,v3x],[v1y,v2y,v3y],[v1z,v2z,v3z]]
         """
         if v.shape != (3, 3):
-            e = ValueError("Box vector with incorrect format: {0}".format(v))
-            logger.exception(e)
+            raise ValueError("Box vector with incorrect format: {0}".format(v))
 
         # Handle two different 'unit' module behaviors.
         if hasattr(v, 'unit'):

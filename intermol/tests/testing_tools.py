@@ -206,6 +206,7 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
         diff = convert.main(flags)
         for engine, result in diff.items():
             results[engine][name] = result
+
         remove_handler(h1, h2)
 
     summarize_results(input_engine, results, base_output_dir)

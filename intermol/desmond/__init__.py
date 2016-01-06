@@ -98,7 +98,7 @@ def energies(cms, cfg, des_path):
     if des_path and not (des_path == ''):
         desmond_bin = os.path.join(des_path,'desmond')
     elif os.environ.get('SCHRODINGER'):
-        desmond_bin = os.path.join(os.environ.get('SCHRODINGER'),'desmond')
+        desmond_bin = os.path.join(os.environ.get('SCHRODINGER'), 'desmond')
     else:
         raise Exception('Desmond binary not found')
 
