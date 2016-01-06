@@ -5,14 +5,12 @@ import os
 import sys
 import warnings
 
-import numpy as np
-
 from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
 from intermol.desmond import desmond_driver
 from intermol.amber import amber_driver
 import intermol.tests
-from intermol.utils import which
+from intermol.utils import which, potential_energy_diff, summarize_energy_results
 
 
 # Make a global logging object.
@@ -418,100 +416,6 @@ def main(args=None):
     return output_status
 
 
-def potential_energy_diff(e_in, e_out):
-    """Returns difference in potential energy.
-
-    arguments:
-        e_in  - dictionary of energy groups from input file
-        e_out - dictionary of energy groups from output file
-
-    returns:
-        potential energy difference in units of the input
-    """
-    energy_type = 'Potential'
-    input_energy = e_in[energy_type]
-    diff = e_out[energy_type].in_units_of(input_energy.unit) - input_energy
-    return diff._value
-
-
-def find_match(key, dictionary, unit):
-    """Helper function for `summarize_energy_results`. """
-    if key in dictionary:
-        return dictionary[key].value_in_unit(unit)
-    else:
-        return np.nan
-
-
-def summarize_energy_results(energy_input, energy_outputs, input_type, output_types):
-    """Creates a table comparing input and output energy groups.
-
-    Args:
-        energy_input (dict): energy groups from input file
-        energy_output(list): containing dictionary of energy groups or -1 for
-            each output file
-        input_type (str): input engine
-        output_types (list): containing output formats
-
-    Returns:
-        out (list of strings): which forms a summary table using "\n".join(out)
-    """
-    out = []
-    # Remove failed evaluations (-1 in energy_outputs)
-    failed_i = [i for i, x in enumerate(energy_outputs) if x == -1]
-    failed = [output_types[i] for i in failed_i]
-    output_types = [x for i, x in enumerate(output_types) if i not in failed_i]
-    energy_outputs = [x for x in energy_outputs if x != -1]
-
-    # Find all distinct labels
-    labels = set(energy_input.keys())
-    for e_out in energy_outputs:
-        for key, value in e_out.items():
-            labels.add(key)
-
-    # Set up energy comparison table
-    labels = list(labels)
-    unit = energy_input[list(energy_input.keys())[0]].unit
-    energy_all = [energy_input] + energy_outputs
-    data = np.empty((len(labels), len(energy_all)))
-    for i in range(len(data)):
-        for j in range(len(energy_all)):
-            data[i, j] = find_match(labels[i], energy_all[j], unit)
-
-    # TODO: sort table
-    out.append('')
-    out.append('Energy group summary')
-    out.append('=======================================================================')
-    header = '%20s %18s ' % ('type', 'input (%s)' % input_type)
-    for otype in output_types:
-        header += '%37s' % ('output (%s) diff (%s)' % (otype, otype))
-    out.append(header)
-    for i in range(len(data)):
-        line = '%20s ' % labels[i]
-        if np.isnan(data[i][0]):
-            line += '%18s' % 'n/a'
-        else:
-            line += '%18.8f' % (data[i][0])
-        for j in range(1, len(data[i])):
-            if np.isnan(data[i][j]):
-                line += '%18s' % 'n/a'
-            else:
-                line += '%18.8f' % (data[i][j])
-            if np.isnan(data[i][j]) or np.isnan(data[i][0]):
-                line += '%18s' % 'n/a'
-            else:
-                line += '%18.8f' % (data[i][j]-data[i][0])
-        out.append(line)
-    out.append('')
-    # get differences in potential energy
-    i = labels.index('Potential')
-    diff = data[i, 1::] - data[i, 0]
-    for d, otype in zip(diff, output_types):
-        out.append('difference in potential energy from %s=>%s conversion: %18.8f'
-                    % (input_type, otype, d))
-    for fail in failed:
-        out.append('energy comparison for {0} output failed'.format(fail))
-    out.append('=======================================================================')
-    return out
 
 
 if __name__ == '__main__':
