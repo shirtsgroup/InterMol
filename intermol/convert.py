@@ -266,6 +266,7 @@ def main(args=None):
             try:
                 e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
             except Exception as e:
+                output_status['gromacs'] = e
                 logger.exception(e)
 
         elif args.get('lmp_in'):
@@ -275,6 +276,7 @@ def main(args=None):
             try:
                 e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
             except Exception as e:
+                output_status['lammps'] = e
                 logger.exception(e)
 
         elif args.get('des_in'):
@@ -288,6 +290,7 @@ def main(args=None):
             try:
                 e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
             except Exception as e:
+                output_status['desmond'] = e
                 logger.exception(e)
 
         elif args.get('amb_in'):
@@ -301,6 +304,7 @@ def main(args=None):
             try:
                 e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
             except Exception as e:
+                output_status['amber'] = e
                 logger.exception(e)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
@@ -321,6 +325,7 @@ def main(args=None):
                                             '{0}.gro'.format(oname),
                                             mdp, gmx.GMX_PATH)
             except Exception as e:
+                output_status['gromacs'] = e
                 logger.exception(e)
             else:
                 output_status['gromacs'] = potential_energy_diff(e_in, out)
@@ -333,6 +338,7 @@ def main(args=None):
             try:
                 out, outfile = lmp.energies('{0}.input'.format(oname), lmp.LMP_PATH)
             except Exception as e:
+                output_status['lammps'] = e
                 logger.exception(e)
             else:
                 output_status['lammps'] = potential_energy_diff(e_in, out)
@@ -349,6 +355,7 @@ def main(args=None):
             try:
                 out, outfile = des.energies('{0}.cms'.format(oname), cfg, des.DES_PATH)
             except Exception as e:
+                output_status['desmond'] = e
                 logger.exception(e)
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
@@ -367,6 +374,7 @@ def main(args=None):
                                             '{0}.rst7'.format(oname),
                                             in_amber, amb.AMB_PATH)
             except Exception as e:
+                output_status['amber'] = e
                 logger.exception(e)
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)
