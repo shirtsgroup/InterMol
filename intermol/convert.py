@@ -22,18 +22,12 @@ logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
 
-def record_exception(logger, e_out, e_outfile, e):
-    logger.exception(e)
-    e_out.append(-1)
-    e_outfile.append(-1)
-
-
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Perform a file conversion',
                                      formatter_class=RawTextHelpFormatter)
 
     # Input arguments.
-    group_in = parser.add_argument_group('Choose input conversion format')
+    group_in = parser.add_mutually_exclusive_group(required=True)
     group_in.add_argument('--des_in', metavar='file',
             help='.cms file for conversion from DESMOND file format')
     group_in.add_argument('--gro_in', nargs=2, metavar='file',
