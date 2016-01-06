@@ -6,7 +6,7 @@ import subprocess
 import simtk.unit as units
 
 import intermol.tests
-from intermol.tests.testing_tools import which, run_subprocess
+from intermol.utils import which, run_subprocess
 
 logger = logging.getLogger('InterMolLog')
 

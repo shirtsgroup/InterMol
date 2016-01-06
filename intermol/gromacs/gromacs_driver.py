@@ -4,7 +4,7 @@ import os
 
 import simtk.unit as units
 
-from intermol.tests.testing_tools import which, run_subprocess
+from intermol.utils import which, run_subprocess
 from intermol.gromacs.gromacs_parser import load_gromacs, write_gromacs
 
 

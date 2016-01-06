@@ -12,7 +12,7 @@ from intermol.lammps import lammps_driver
 from intermol.desmond import desmond_driver
 from intermol.amber import amber_driver
 import intermol.tests
-from intermol.tests.testing_tools import which
+from intermol.utils import which
 
 
 # Make a global logging object.
@@ -281,7 +281,7 @@ def main(args=None):
                     top.save(oname + '.prmtop', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
-                try:        
+                try:
                     top.save(oname + '.rst7', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
