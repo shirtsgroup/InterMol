@@ -271,13 +271,13 @@ def main(args=None):
             else:
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gmx.gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
+            e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
             input_type = 'lammps'
-            e_in, e_infile = lmp.lammps_driver.lammps_energies(lammps_file, lmp.LMP_PATH)
+            e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -287,7 +287,7 @@ def main(args=None):
             else:
                 cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = des.desmond_driver.desmond_energies(cms_file, cfg_in, des.DES_PATH)
+            e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -297,7 +297,7 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in, e_infile = amb.amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
+            e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
         else:
             logger.warn('No format for input files identified! Code should have never made it here!')
 
@@ -312,8 +312,9 @@ def main(args=None):
             else:
                 mdp = mdp_in_default
             try:
-                out, outfile = gmx.gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gmx.GMX_PATH)
+                out, outfile = gmx.energies('{0}.top'.format(oname),
+                                            '{0}.gro'.format(oname),
+                                            mdp, gmx.GMX_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['gromacs'] = e
@@ -325,8 +326,7 @@ def main(args=None):
         if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
-                out, outfile = lmp.lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), lmp.LMP_PATH)
+                out, outfile = lmp.energies('{0}.input'.format(oname), lmp.LMP_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['lammps'] = e
@@ -342,8 +342,7 @@ def main(args=None):
             else:
                 cfg = cfg_in_default
             try:
-                out, outfile = des.desmond_driver.desmond_energies(
-                    '{0}.cms'.format(oname), cfg, des.DES_PATH)
+                out, outfile = des.energies('{0}.cms'.format(oname), cfg, des.DES_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
                 output_status['desmond'] = e
@@ -359,7 +358,7 @@ def main(args=None):
             else:
                 in_amber = in_in_default
             try:
-                out, outfile = amb.amber_driver.amber_energies(
+                out, outfile = amb.energies(
                     '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb.AMB_PATH)
             except Exception as e:
                 record_exception(logger, e, e_out, e_outfile)
