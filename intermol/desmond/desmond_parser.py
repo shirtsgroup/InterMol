@@ -125,6 +125,14 @@ class DesmondParser(object):
         """
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
+            params['k'] *= canonical_force_scale
+            if name == 'HARM_CONSTRAINED':
+                params['c'] = True
+            elif name == 'HARM':
+                params['c'] = False
+            else:
+                warn("ReadError: Found unsupported bond in Desmond %s" % name)
+            return bond, params
         else:
             canonical_force_scale = self.canonical_force_scale_from
             try:
@@ -132,26 +140,17 @@ class DesmondParser(object):
             except:
                 raise UnsupportedFunctional(bond, ENGINE)
 
-        if isinstance(bond.forcetype, (HarmonicBondType, HarmonicPotentialBondType)):
-            if direction == 'into':
-                bond.forcetype.k *= canonical_force_scale
-                if name == 'HARM_CONSTRAINED':
-                    bond.forcetype.c = True
-                elif name == 'HARM':
-                    bond.forcetype.c = False
-                else:
-                    warn("ReadError: Found unsupported bond in Desmond %s" % name)
-                return bond
-
-            else:
-                params['k'] *= canonical_force_scale
-                # harmonic potentials in Gromacs should be constrained (??: check what this means)
-                name = 'HARM'
-                if hasattr(bond.forcetype, 'c'):
-                    if getattr(bond.forcetype, 'c') and not isinstance(bond.forcetype, HarmonicPotentialBondType):
-                        name = 'HARM_CONSTRAINED'
+            params['k'] *= canonical_force_scale
+            # harmonic potentials in Gromacs should be constrained (??: check what this means)
+            name = 'HARM'
+            if hasattr(bond.forcetype, 'c'):
+                if getattr(bond.forcetype, 'c') and not isinstance(bond.forcetype, HarmonicPotentialBondType):
+                    name = 'HARM_CONSTRAINED'
 
             return [name], [params]
+
+
+
 
     desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
                       'HARM': HarmonicAngle,
@@ -394,12 +393,13 @@ class DesmondParser(object):
     def get_parameter_kwds_from_force(self, force):
         return ff.get_parameter_kwds_from_force(force, self.get_parameter_list_from_force, self.paramlist)
 
-    def create_kwd_dict(self, forcetype_object, values, optvalues = None):
-        kwd = ff.create_kwd_dict(self.unitvars, self.paramlist, forcetype_object, values, optvalues = optvalues)
+    def create_kwd_dict(self, forcetype_object, values, optvalues=None):
+        kwd = ff.create_kwd_dict(self.unitvars, self.paramlist, forcetype_object, values, optvalues=optvalues)
         return kwd
 
-    def create_forcetype(self, forcetype_object, paramlist, values, optvalues = None):
-        return forcetype_object(*paramlist, **self.create_kwd_dict(forcetype_object, values, optvalues))
+    def create_forcetype(self, forcetype_object, paramlist, values, optvalues=None):
+        kwds = self.create_kwd_dict(forcetype_object, values, optvalues)
+        return forcetype_object(*paramlist, **kwds)
 
     #LOAD FFIO BLOCKS IN FIRST (CONTAINS TOPOLOGY)
     def parse_ffio_block(self, start, end):
@@ -562,6 +562,10 @@ class DesmondParser(object):
 
         return self.system._molecule_types[molname]
 
+    def create_kwds_from_entries(self, entries, force_class, offset=0):
+        return ff.create_kwds_from_entries(self.unitvars, self.paramlist,
+                                           entries, force_class, offset=offset)
+
     def parse_bonds(self, type, current_molecule_type, i, start):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
 
@@ -575,28 +579,30 @@ class DesmondParser(object):
                 self.bond_blockpos.pop(0)
 
         logger.debug("Parsing [ bonds ]...")
-
         for j in range(ff_number):
             entries = entry_values[j].split()
             key = entries[3].upper()
             atoms = [int(x) for x in entries[1:3]]
             bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
-            atoms.extend(bondingtypes)
-
             params = [float(x) for x in entries[4:6]]
-            new_bond = self.create_forcetype(self.desmond_bond_types[key], atoms, params)
-            kwds = self.get_parameter_kwds_from_force(new_bond)
-            new_bond = self.canonical_bond(new_bond, kwds, direction='into', name=key)
 
-            #bond_type = self.desmond_bond_types[key](*bondingtypes, *params)
+            kwds = self.create_kwds_from_entries(params, self.desmond_bond_types[key])
+            BondType, params = self.canonical_bond(self.desmond_bond_types[key],
+                                                   kwds, direction='into', name=key)
+
+            bond = Bond(*atoms)
+            bond_type = BondType(*bondingtypes, **params)
+            bond.forcetype = bond_type
 
             # removing the placeholder from matoms (should be a better way to do this?)
-            if new_bond:
-                old_bond = current_molecule_type.match_bonds(new_bond)
-                if old_bond:
-                    new_bond.forcetype.order = old_bond.forcetype.order
-                    current_molecule_type.bonds.remove(old_bond)
-                current_molecule_type.bonds.add(new_bond)
+            old_bond = current_molecule_type.match_bonds(bond)
+            if old_bond:
+                bond_type.order = old_bond.order
+                # Klugey: We're temporarily storing `order`
+                # in the Bond object because the value is
+                # read in from m_bonds.
+                current_molecule_type.bonds.remove(old_bond)
+            current_molecule_type.bonds.add(bond)
 
     def parse_pairs(self, type, current_molecule_type):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
@@ -919,7 +925,6 @@ class DesmondParser(object):
     def loadMBonds(self, lines, start, end, npermol):
         """Adds new bonds for each molecule in System.
 
-
         Parameters
         ----------
         lines: list
@@ -939,20 +944,16 @@ class DesmondParser(object):
                     break
                 else:
                     bg = True
-                    i+=1
+                    i += 1
             if bg:
                 split = lines[i].split()
                 atomi = int(split[1])
                 atomj = int(split[2])
-                bondingtypei = self.atomlist[atomi-1].name
-                bondingtypej = self.atomlist[atomj-1].name
-                params = [atomi, atomj, bondingtypei, bondingtypej]
-                if atomi > npermol:  # we've collected the number of atoms per molecule.  Exit.
+                if atomi > npermol:  # we've collected the number of atoms per molecule.
                     break
                 order = int(split[3])
-                kwd = [0, 0]
-                optkwd = {'order': order, 'c': False}
-                new_bond = self.create_forcetype(HarmonicBond, params, kwd, optkwd)
+                new_bond = Bond(atomi, atomj)
+                new_bond.order = order
                 bonds.add(new_bond)
             i += 1
 
@@ -985,7 +986,7 @@ class DesmondParser(object):
         cols = dict()
         while i < end:
             if ':::' in lines[i]:
-                i+=1
+                i += 1
                 break
             else:
                 if 'First column' in lines[i]:
@@ -1029,28 +1030,28 @@ class DesmondParser(object):
                         pdbaname = aline[cols['s_m_pdb_atom_name']].strip()
                     if 's_m_atom_name' in cols:
                         aname = aline[cols['s_m_atom_name']].strip()
-                    if re.match('$^',pdbaname) and not re.match('$^',aname):
+                    if re.match('$^', pdbaname) and not re.match('$^', aname):
                         atom.name = aname
-                    elif re.match('$^',aname) and not re.match('$^',pdbaname):
+                    elif re.match('$^', aname) and not re.match('$^', pdbaname):
                         atom.name = pdbaname
-                    elif re.search("\d+",pdbaname) and not re.search("\d+",aname):
-                        if re.search("\D+",pdbaname) and re.search("\w+",pdbaname):
+                    elif re.search("\d+", pdbaname) and not re.search("\d+", aname):
+                        if re.search("\D+", pdbaname) and re.search("\w+", pdbaname):
                             atom.name = pdbaname
                         else:
                             atom.name = aname
-                    elif re.search("\d+",aname) and not re.search("\d+",pdbaname):
-                        if re.search("\D+",aname) and re.search("\w+",aname):
+                    elif re.search("\d+", aname) and not re.search("\d+", pdbaname):
+                        if re.search("\D+", aname) and re.search("\w+", aname):
                             atom.name = aname
                         else:
                             atom.name = pdbaname
-                    elif re.match('$^',pdbaname) and re.match('$^',aname):
+                    elif re.match('$^', pdbaname) and re.match('$^', aname):
                         atom.name = "None"
                     else:
                         atom.name = aname  #doesn't matter which we choose, so we'll go with atom name instead of pdb
-                    i+=1
+                    i += 1
 
             molecules.append(newMolecule)
-            j+=1
+            j += 1
 
         return molecules
 

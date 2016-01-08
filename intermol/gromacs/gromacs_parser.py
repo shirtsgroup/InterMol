@@ -68,9 +68,7 @@ def default_gromacs_include_dir():
 
 
 class GromacsParser(object):
-    """
-    A class containing methods required to read in a Gromacs(4.5.4) Topology File
-    """
+    """Reads and writes Gromacs Topology (.top) files """
 
     # 'lookup_*' is the inverse dictionary typically used for writing
     gromacs_combination_rules = {
@@ -109,11 +107,16 @@ class GromacsParser(object):
 
     def canonical_bond(self, params, bond, direction='into'):
         """
-        Args:
-            params:
-            bond:
-            direction:
-        Returns:
+
+        Parameters
+        ----------
+        params
+        bond
+        direction
+
+        Returns
+        -------
+
         """
         if direction == 'into':
             return bond, params
@@ -137,11 +140,16 @@ class GromacsParser(object):
 
     def canonical_angle(self, params, angle, direction='into'):
         """
-        Args:
-            params:
-            angle:
-            direction:
-        Returns:
+
+        Parameters
+        ----------
+        params
+        angle
+        direction
+
+        Returns
+        -------
+
         """
         if direction == 'into':
             return angle, params
@@ -184,11 +192,14 @@ class GromacsParser(object):
         dihedral_trig, as long as they have the same phi angle (seems to be
         always the case).
 
-        Args:
-            params:
-            dihedral:
-            direction:
-        Returns:
+        Parameters
+        ----------
+        params
+        dihedral
+        direction
+
+        Returns
+        -------
         """
         if direction == 'into':
             if dihedral == ProperPeriodicDihedralType:
@@ -867,7 +878,6 @@ class GromacsParser(object):
             angle_entry = " ".join(angle_entry)
             angle_type = self.process_forcetype(btypes, 'angle', angle_entry, n_atoms,
                 self.gromacs_angle_types, self.canonical_angle)
-            angle_entry = angle_entry.split()
 
         new_angle = Angle(*atoms, forcetype=angle_type)
         self.current_molecule_type.angles.add(new_angle)
