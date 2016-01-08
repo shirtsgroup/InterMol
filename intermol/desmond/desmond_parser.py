@@ -1026,28 +1026,38 @@ class DesmondParser(object):
                     if 'r_ffio_z_vel' in cols:
                         atom.velocity[2] = float(aline[cols['r_ffio_z_vel']]) * units.angstroms * units.picoseconds**(-1)
 
+                    pdbname = aname = None
                     if 's_m_pdb_atom_name' in cols:
                         pdbaname = aline[cols['s_m_pdb_atom_name']].strip()
                     if 's_m_atom_name' in cols:
                         aname = aline[cols['s_m_atom_name']].strip()
-                    if re.match('$^', pdbaname) and not re.match('$^', aname):
+
+                    if pdbname and aname:
+                        if re.match('$^', pdbaname) and not re.match('$^', aname):
+                            atom.name = aname
+                        elif re.match('$^', aname) and not re.match('$^', pdbaname):
+                            atom.name = pdbaname
+                        elif re.search("\d+", pdbaname) and not re.search("\d+", aname):
+                            if re.search("\D+", pdbaname) and re.search("\w+", pdbaname):
+                                atom.name = pdbaname
+                            else:
+                                atom.name = aname
+                        elif re.search("\d+", aname) and not re.search("\d+", pdbaname):
+                            if re.search("\D+", aname) and re.search("\w+", aname):
+                                atom.name = aname
+                            else:
+                                atom.name = pdbaname
+                        elif re.match('$^', pdbaname) and re.match('$^', aname):
+                            atom.name = "None"
+                        else:
+                            atom.name = aname  #doesn't matter which we choose, so we'll go with atom name instead of pdb
+                    elif pdbname and not aname:
+                        atom.name = pdbname
+                    elif aname and not pdbname:
                         atom.name = aname
-                    elif re.match('$^', aname) and not re.match('$^', pdbaname):
-                        atom.name = pdbaname
-                    elif re.search("\d+", pdbaname) and not re.search("\d+", aname):
-                        if re.search("\D+", pdbaname) and re.search("\w+", pdbaname):
-                            atom.name = pdbaname
-                        else:
-                            atom.name = aname
-                    elif re.search("\d+", aname) and not re.search("\d+", pdbaname):
-                        if re.search("\D+", aname) and re.search("\w+", aname):
-                            atom.name = aname
-                        else:
-                            atom.name = pdbaname
-                    elif re.match('$^', pdbaname) and re.match('$^', aname):
-                        atom.name = "None"
                     else:
-                        atom.name = aname  #doesn't matter which we choose, so we'll go with atom name instead of pdb
+                        raise Exception('Found neither "{}" nor "{}" in atom entry: {}'.format(
+                            's_m_pdb_atom_name', 's_m_atom_name', lines[i]))
                     i += 1
 
             molecules.append(newMolecule)
