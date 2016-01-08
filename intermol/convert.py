@@ -171,7 +171,10 @@ def main(args=None):
         fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
         fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
-        parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision=8)
+        try:
+            parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision=8)
+        except OSError as e:
+            logger.exception(e)
 
         # now, read in using gromacs
         system = gmx.load(fromamber_top_in, fromamber_gro_in)
