@@ -150,8 +150,6 @@ class DesmondParser(object):
             return [name], [params]
 
 
-
-
     desmond_angles = {'HARM_CONSTRAINED': HarmonicAngle,
                       'HARM': HarmonicAngle,
                       'UB': UreyBradleyNoharmAngle
@@ -176,81 +174,69 @@ class DesmondParser(object):
         -------
 
         """
+
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
+            if params.get('kUB'):
+                params['kUB'] *= canonical_force_scale
+            if params.get('k'):
+                params['k'] *= canonical_force_scale
+
+            if name == 'HARM_CONSTRAINED':
+                params['c'] = True
+            elif name == 'HARM':
+                params['c'] = False
+
+            if angle.__class__ == UreyBradleyNoharmAngleType:
+                # Urey-Bradley is implemented in DESMOND differently, with the
+                # terms implemented in a new angle term independent of the harmonic term.
+                # Instead, we will add everything together afterwards into a single term
+                angle = self.create_forcetype(UreyBradleyAngle, [angle.atom1, angle.atom2, angle.atom3],
+                                              [0, 0, angle.r._value, angle.kUB._value]) # this seems kludgy
+                # next, find if we already have this angle somewhere
+                matched_angle = molecule_type.match_angles(angle)
+                if matched_angle:   # we found one, if false, we haven't seen it yet, we'll add later
+                    if matched_angle.__class__ == HarmonicAngle:
+                        angle.k = matched_angle.k
+                        angle.theta = matched_angle.theta
+                        molecule_type.angles.remove(matched_angle)
+            elif angle.__class__ == HarmonicAngleType:
+                matched_angle = molecule_type.match_angles(angle)
+                if matched_angle and matched_angle.__class__ == UreyBradleyAngleType:
+                    # just copy over the information into the old angle.
+                    matched_angle.k = angle.k
+                    matched_angle.theta = angle.theta
+                    angle = None
+            return angle, params
         else:
             # we'd like to automate this, but currently have to state explicitly.
-            if angle.__class__ not in [HarmonicAngle, UreyBradleyAngle]:
-               raise UnsupportedFunctional(angle, ENGINE)
-
+            if angle.__class__ not in [HarmonicAngleType, UreyBradleyAngleType, UreyBradleyNoharmAngleType]:
+                raise UnsupportedFunctional(angle, ENGINE)
             canonical_force_scale = self.canonical_force_scale_from
-            phase = 'Write'
 
-        names = []
-        paramlists = []
+            params['k'] = canonical_force_scale * params['k']
+            name = 'HARM'
+            if hasattr(angle, 'c'):
+                if getattr(angle, 'c'):
+                    name = 'HARM_CONSTRAINED'
 
-        if angle.__class__ in [HarmonicAngle, UreyBradleyAngle, UreyBradleyNoharmAngle]:
-
-            if direction == 'into':
-                if angle.__class__ in [UreyBradleyAngle, UreyBradleyNoharmAngle]:
-                    angle.kUB *=  canonical_force_scale
-                if angle.__class__ in [UreyBradleyAngle, HarmonicAngle]:
-                    angle.k *=  canonical_force_scale
-
-                if name == 'HARM_CONSTRAINED':  # this needs to go first because HARM is a substring
-                    angle.c = True
-                elif name == 'HARM':
-                    angle.c = False
-            else:
-                params['k'] = canonical_force_scale * params['k']
-                name = 'HARM'
-                if hasattr(angle,'c'):
-                    if getattr(angle,'c'):
-                        name = 'HARM_CONSTRAINED'
-
-            if direction == 'into' and angle.__class__ in [UreyBradleyNoharmAngle,HarmonicAngle]:
-                if angle.__class__ == UreyBradleyNoharmAngle:
-                    # Urey-Bradley is implemented in DESMOND differently, with the
-                    # terms implemented in a new angle term independent of the harmonic term.
-                    # Instead, we will add everything together afterwards into a single term
-                    angle = self.create_forcetype(UreyBradleyAngle,[angle.atom1,angle.atom2,angle.atom3],
-                                                  [0,0,angle.r._value,angle.kUB._value]) # this seems kludgy
-                    # next, find if we already have this angle somewhere
-                    matched_angle = molecule_type.match_angles(angle)
-                    if matched_angle:   # we found one, if false, we haven't seen it yet, we'll add later
-                        if matched_angle.__class__ == HarmonicAngle:
-                            angle.k = matched_angle.k
-                            angle.theta = matched_angle.theta
-                            molecule_type.angles.remove(matched_angle)
-                elif angle.__class__ == HarmonicAngle:
-                    matched_angle = molecule_type.match_angles(angle)
-                    if matched_angle and matched_angle.__class__ == UreyBradleyAngle:
-                        # just copy over the information into the old angle.
-                        matched_angle.k = angle.k
-                        matched_angle.theta = angle.theta
-                        angle = None
-
-            elif direction == 'from' and angle.__class__ in [UreyBradleyAngle]:
-                params_harmpart = {k:v for (k,v) in params.items() if k in ['theta','k','c'] }
+            names = []
+            paramlists = []
+            if angle.__class__ in [UreyBradleyAngleType]:
+                params_harmpart = {k: v for (k, v) in params.items() if k in ['theta', 'k', 'c']}
                 names.append(name)
                 paramlists.append(params_harmpart)
                 name = 'UB'
                 params['kUB'] *= canonical_force_scale
-                params_ubpart = {k:v for (k,v) in params.items() if k in ['r','kUB'] }
+                params_ubpart = {k: v for (k, v) in params.items() if k in ['r', 'kUB']}
                 names.append(name)
                 paramlists.append(params_ubpart)
             else:
-                if direction == 'from':
-                    names.append(name)
-                    paramlists.append(params)
+                names.append(name)
+                paramlists.append(params)
 
-            if direction == 'into':
-                return angle
-            elif direction == 'from':
-                return names, paramlists
+            return names, paramlists
 
-        else:
-            raise UnsupportedFunctional(angle, ENGINE)
 
     desmond_dihedrals = {'IMPROPER_HARM': ImproperHarmonicDihedral,
                          'PROPER_TRIG': TrigDihedral,
@@ -282,7 +268,28 @@ class DesmondParser(object):
 
         if direction == 'into':
             canonical_force_scale = self.canonical_force_scale_into
-            phase = 'Read'
+
+            #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
+            if name == "IMPROPER_HARM":
+                params['improper'] = True
+            elif name == "PROPER_TRIG" or name == "IMPROPER_TRIG":
+                if name == "IMPROPER_TRIG":
+                    params['improper'] = True
+                else:
+                    params['improper'] = False
+            elif name == "OPLS_PROPER" or name == "OPLS_IMPROPER":
+                # OPLS_IMPROPER actually isn't any different from OPLS_PROPER
+                params['improper'] = False
+
+            # # we can have multiple parameters with DESMOND, and append if we do
+            # dihedralmatch = molecule_type.match_dihedrals(dihedral)
+            # # this will fail if it's the wrong type of dihedral
+            # if dihedralmatch:
+            #     # TODO: This line will fail. Not sure what it was intended
+            #     # to do in the first place...
+            #     dihedralmatch.sum_parameters(dihedral)
+            return dihedral, params
+
         else:
             try:
                 name = self.lookup_desmond_dihedrals[dihedral.__class__]
@@ -290,43 +297,16 @@ class DesmondParser(object):
                 raise UnsupportedFunctional(dihedral, ENGINE)
 
             canonical_force_scale = self.canonical_force_scale_from
-            phase = 'Write'
 
-        if dihedral.__class__ in [ImproperHarmonicDihedral, TrigDihedral]:
+            if dihedral.__class__ in [ImproperHarmonicDihedral]:
+                params['k'] = params['k'] * canonical_force_scale
+                name = 'IMPROPER_HARM'
 
-            if direction == 'into':
-            #Improper Diehdral 2 ---NOT SURE ABOUT MULTIPLICITY
-
-                if name == "IMPROPER_HARM":
-                    dihedral.improper = True
-                elif name == "PROPER_TRIG" or name == "IMPROPER_TRIG":
-                    if name == "IMPROPER_TRIG":
-                        dihedral.improper = True
-                    else:
-                        dihedral.improper = False
-                elif name == "OPLS_PROPER" or name == "OPLS_IMPROPER":
-                # OPLS_IMPROPER actually isn't any different from OPLS_PROPER
-                    dihedral.improper = False
-
-                # we can have multiple parameters with DESMOND, and append if we do
-                dihedralmatch = molecule_type.match_dihedrals(dihedral)
-                # this will fail if it's the wrong type of dihedral
-                if dihedralmatch:
-                    # TODO: This line will fail. Not sure what it was intended
-                    # to do in the first place...
-                    dihedralmatch.sum_parameters(dihedral)
-                return dihedral
-
-            else:
-                if dihedral.__class__ in [ImproperHarmonicDihedral]:
-                    params['k'] = params['k'] * canonical_force_scale
-                    name = 'IMPROPER_HARM'
-
-                elif dihedral.__class__ in [TrigDihedral]:
-                    name = 'PROPER_TRIG'
-                    if hasattr(dihedral,'improper'):
-                        if getattr(dihedral,'improper'):
-                            name = 'IMPROPER_TRIG'
+            elif dihedral.__class__ in [TrigDihedral]:
+                name = 'PROPER_TRIG'
+                if hasattr(dihedral,'improper'):
+                    if getattr(dihedral,'improper'):
+                        name = 'IMPROPER_TRIG'
 
             return [name], [params]
 
@@ -686,15 +666,19 @@ class DesmondParser(object):
             key = split[4].upper()
             atoms = [int(x) for x in split[1:4]]
             bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
-            atoms.extend(bondingtypes)
-            kwds = [float(x) for x in split[5:7]]
-            new_angle = self.create_forcetype(self.desmond_angles[key], atoms, kwds)
-            kwds = self.get_parameter_kwds_from_force(new_angle)
-            new_angle = self.canonical_angle(new_angle, kwds, direction = 'into', name = key,
-                                             molecule_type = current_molecule_type)
+            params = [float(x) for x in split[5:7]]
 
-            if new_angle:
-                current_molecule_type.angles.add(new_angle)
+            AngleType = self.desmond_angle_types[key]
+            kwds = self.create_kwds_from_entries(params, AngleType)
+            AngleType, params = self.canonical_angle(AngleType, kwds,
+                                                     direction='into', name=key,
+                                                     molecule_type=current_molecule_type)
+
+            angle = Angle(*atoms)
+            angle_type = AngleType(*bondingtypes, **params)
+            angle.forcetype = angle_type
+
+            current_molecule_type.angles.add(angle)
 
     def parse_dihedrals(self, type, current_molecule_type):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
@@ -702,36 +686,39 @@ class DesmondParser(object):
 
         for j in range(ff_number):
             split = entry_values[j].split()
-            new_dihedral = None
-            dihedral_type = None
             atoms = [int(x) for x in split[1:5]]
             bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             key = split[5].upper()
-            atoms.extend(bondingtypes)
             # not sure how to put the following lines in canonical, since it expects keywords,
             # not strings of variable length.  will have to fix later.
 
             if key == "IMPROPER_HARM":
-                kwds = [float(split[6]), 2*float(split[7])]
+                params = [float(split[6]), 2*float(split[7])]
             elif key == "PROPER_TRIG" or key == "IMPROPER_TRIG":
-                kwds = [float(x) for x in split[6:14]]
+                params = [float(x) for x in split[6:14]]
             elif key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
                 # next 3 lines definitely not the right way to do it.
                 opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), [units.kilocalorie_per_mole * float(s) for s in split[7:11]])}
                 opls_kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
-                kwds = np.zeros(8) # will fill this in later.
-            new_dihedral = self.create_forcetype(self.desmond_dihedrals[key], atoms, kwds)
+                params = np.zeros(8) # will fill this in later.
+
+
+            DihedralType = self.desmond_dihedral_types[key]
+            kwds = self.create_kwds_from_entries(params, DihedralType)
+            DihedralType, params = self.canonical_dihedral(DihedralType, kwds,
+                                                     direction='into', name=key,
+                                                     molecule_type=current_molecule_type)
+
+            dihedral = Dihedral(*atoms)
+            dihedral_type = DihedralType(*bondingtypes, **params)
+            dihedral.forcetype = dihedral_type
+
             # really should be some way to get rid of this code below
             if key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
                 for key in opls_kwds.keys():
-                    setattr(new_dihedral,key,opls_kwds[key])
-            # really should be some way to get rid of this code above
-            kwds = self.get_parameter_kwds_from_force(new_dihedral)
-            new_dihedral = self.canonical_dihedral(new_dihedral, kwds, direction = 'into', name = key,
-                                                   molecule_type = current_molecule_type)
+                    setattr(dihedral, key, opls_kwds[key])
 
-            if new_dihedral:
-                current_molecule_type.dihedrals.add(new_dihedral)
+            current_molecule_type.dihedrals.add(dihedral)
 
     def parse_torsion_torsion(self, type, current_molecule_type):
         ff_number, entry_data, entry_values = self.retrieve_ffio_data(type)
@@ -842,9 +829,6 @@ class DesmondParser(object):
         self.stored_ffio_data = {}  # dictionary of stored ffio_entries
 
         self.vdwtypeskeys = []
-        split = []
-        constraints = []
-        temp = []
 
         current_molecule_type = None
 
@@ -978,8 +962,6 @@ class DesmondParser(object):
 
         logger.debug("Parsing [ m_atom ] ...")
         i = start
-
-        aname = ""
 
         mult = int(re.split('\W',lines[start].split()[0])[1])/slength
 
@@ -1149,19 +1131,18 @@ class DesmondParser(object):
         logger.debug("Reading ffio block...")
         #MRS: warning -- currently no check to avoid duplicated molecule names. Investigate.
         i = 0
-        j = 0
         while i < (len(self.ffio_blockpos)-1):
             j = self.fmct_blockpos[i]
             while ':::' not in self.lines[j]:
-                j+=1
+                j += 1
             # make sure we have reasonable molecular names.
             molname = self.lines[j+1].strip()
-            molname = molname.replace("\"","")  # get rid of quotation marks so we can find unique names
+            molname = molname.replace("\"", "")  # get rid of quotation marks so we can find unique names
             if molname == "":
                 molname = "Molecule_"+str(len(molnames)+1)
             molnames.append(molname)
             self.load_ffio_block(molname, self.ffio_blockpos[i], self.fmct_blockpos[i+1]-1)
-            i+=1
+            i += 1
         i = 0
 
         #LOAD RAW BOX VECTOR-Same throughout cms
@@ -1177,8 +1158,6 @@ class DesmondParser(object):
         i = 0
         sites = []
         vdwtypes = []
-        sig = None
-        ep = None
         stemp = None
         etemp = None
         combrule = self.system.combination_rule
@@ -1281,7 +1260,6 @@ class DesmondParser(object):
         return hlines
 
     def write_angles(self, moleculetype):
-        #-ADDING ANGLES
         logger.debug("   -Writing angles...")
 
         dlines = list()
@@ -1322,7 +1300,6 @@ class DesmondParser(object):
         return hlines
 
     def write_dihedrals(self, moleculetype):
-        #-ADDING DIHEDRALS
         logger.debug("   -Writing dihedrals...")
         dlines = list()
         hlines = list()
@@ -1371,7 +1348,6 @@ class DesmondParser(object):
 
     def write_torsion_torsion(self, moleculetype):
 
-        # adding TORSION-TORSION terms
         logger.debug("   -Writing torsion-torsions...")
 
         hlines = list()
@@ -1423,7 +1399,6 @@ class DesmondParser(object):
         return hlines
 
     def write_exclusions(self, moleculetype):
-    #ADDING EXCLUSIONS
         i = 0
         logger.debug("   -Writing exclusions...")
         hlines = list()
@@ -1500,8 +1475,6 @@ class DesmondParser(object):
         return hlines
 
     def write_pairs(self, moleculetype):
-
-        #-ADDING PAIRS
         logger.debug("   -Writing pairs...")
 
         dlines = list()
@@ -1666,11 +1639,6 @@ class DesmondParser(object):
 
     def write(self):
 
-#        Write this topology to file
-#        Write out this topology in Desmond format
-#        Args:
-#            filename: the name of the file to write out to
-
         lines = list()
 
         logger.warning("MacroModel atom type is not defined in other files, is set to 1 for all cases as it must be validly defined for desmond files to run.  However, it does not affect the energies.")
@@ -1789,8 +1757,6 @@ class DesmondParser(object):
             lines.append('  }\n')
         lines.append('}\n')
 
-        solute = True
-        resname = ''
         #WRITE OUT ALL FFIO AND F_M_CT BLOCKS
 
         for molecule_name, moleculetype in self.system.molecule_types.items():
