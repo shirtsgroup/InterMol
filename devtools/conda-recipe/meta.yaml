@@ -8,6 +8,7 @@ requirements:
 
   run:
     - python
+    - parmed
     - numpy
     - scipy
     - openmm

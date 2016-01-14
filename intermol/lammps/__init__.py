@@ -27,13 +27,16 @@ else:
     warnings.warn('Found no LAMMPS executable.')
 
 
-def energies(input_file, lmp_path=LMP_PATH):
+def energies(input_file, lmp_path=None):
     """Evaluate energies of LAMMPS files
 
     Args:
         input_file = path to input file (expects data file in same folder)
         lmp_path = path to LAMMPS binaries
     """
+    if lmp_path is None:
+        lmp_path = LMP_PATH
+
     logger.info('Evaluating energy of {0}'.format(input_file))
     directory, input_file = os.path.split(os.path.abspath(input_file))
     stdout_path = os.path.join(directory, 'lammps_stdout.txt')

@@ -1,4 +1,5 @@
 numpy
+parmed
 pytest
 simtk.units
 six
