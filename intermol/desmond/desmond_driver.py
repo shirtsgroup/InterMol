@@ -31,7 +31,7 @@ def write_file(cms_file, system):
 # terms we are ignoring for now.
 #'en': 'Raw Potential',
 #'E_x': 'Extended En.',
-unwanted = ['E_x','E_n','E_k','constraints',]
+unwanted = ['E_x','E_n','E_k','constraints','Kinetic','Total']
 
 key_dict = {
     'E_p': 'Potential',
@@ -82,10 +82,19 @@ def get_desmond_energy_from_file(energy_file):
     data = [float(value) * units.kilocalories_per_mole for value in data]
     e_out = OrderedDict(zip(types, data))
 
-    # Discard non-energy terms.
+    # Discard non-potential energy terms.
     for group in unwanted:
         if group in e_out:
             del e_out[group]
+
+    bonded = ['Bond', 'Angle', 'All dihedrals']
+    sumterms = [bonded]
+    newkeys = ['Bonded']
+    for k, key in enumerate(newkeys):
+        e_out[key] =  0 * units.kilocalories_per_mole
+        for group in sumterms[k]:
+            if group in e_out:
+                e_out[key] += e_out[group]
 
     return e_out
 

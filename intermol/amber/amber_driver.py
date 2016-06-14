@@ -19,7 +19,7 @@ key_dict = {'ENERGY': 'Potential',
             '1-4 VDW': 'LJ-14',
             '1-4 EEL': 'Coulomb-14',
             'EEL': 'Coulomb', 
-            'VDWAALS': 'LJ'
+            'VDWAALS': 'LJ (SR)'
             }
 
 def standardize_key(in_key):
@@ -56,7 +56,12 @@ def amber_energies(prmtop, crd, input, amb_path):
     stdout_path = os.path.join(directory, 'amber_stdout.txt')
     stderr_path = os.path.join(directory, 'amber_stderr.txt')
 
-    amber_bin = os.path.join(amb_path, 'sander')
+    # did they give a path, or the name of the file?
+    islastbin = os.path.basename(os.path.normpath(amb_path))
+    if islastbin == 'sander':
+        amber_bin = amb_path
+    else:
+        amber_bin = os.path.join(amb_path, 'sander')
     if not which(amber_bin):
         raise IOError('Unable to find AMBER executable (sander).')
 
@@ -111,21 +116,18 @@ def _group_energy_terms(mdout):
     
     e_out = OrderedDict(zip(energy_types, energy_values))
     # now total up other terms.
-    # Dispersive energies.
-    dispersive = ['LJ-14', 'LJ']
-    e_out['Dispersive'] = 0 * units.kilocalories_per_mole
-    for group in dispersive:
-        if group in e_out:
-            e_out['Dispersive'] += e_out[group]
-
+    # van der Waals energies.
+    vanderwaals = ['LJ-14', 'LJ (SR)']
     # Electrostatic energies.
     electrostatic = ['Coulomb-14', 'Coulomb']
-    e_out['Electrostatic'] = 0 * units.kilocalories_per_mole
-
-    for group in electrostatic:
-        if group in e_out:
-            e_out['Electrostatic'] += e_out[group]
-
-    e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
+    bonded = ['Bond', 'Angle', 'All dihedrals']
+    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
+    sumterms = [vanderwaals, electrostatic, bonded, nonbonded]
+    newkeys = ['van der Waals', 'Electrostatic', 'Bonded', 'Nonbonded']
+    for k, key in enumerate(newkeys):
+        e_out[key] =  0 * units.kilocalories_per_mole
+        for group in sumterms[k]:
+            if group in e_out:
+                e_out[key] += e_out[group]
 
     return e_out, mdout

@@ -28,7 +28,6 @@ def write_file(in_file, system, unit_set='real', nonbonded_style = None):
     write_lammps(in_file, system, unit_set, nonbonded_style = nonbonded_style)
     logger.info('...done.')
 
-
 def lammps_energies(input_file, lmp_path='lmp_openmpi'):
     """Evaluate energies of LAMMPS files
 
@@ -83,11 +82,23 @@ def _group_energy_terms(stdout_path):
         raise Exception('Unable to read LAMMPS energy output')
 
     energy_values = [float(x) * units.kilocalories_per_mole for x in energies.split()]
-    energy_types = ['Bond', 'Angle', 'Proper Dih.', 'Improper', 'Non-bonded',
-                    'Dispersive', 'Electrostatic', 'Coul. recip.',
+    energy_types = ['Bond', 'Angle', 'Proper Dih.', 'Improper Dih.', 'Nonbonded',
+                    'van der Waals', 'Coulomb (SR)', 'Coul. recip.',
                     'Disper. corr.', 'Potential']
     e_out = OrderedDict(zip(energy_types, energy_values))
 
-    e_out['Electrostatic'] += e_out['Coul. recip.']
-    e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
+    # Electrostatic energies.
+    electrostatic = ['Coulomb (SR)', 'Coul. recip.']
+    all_dihedrals = ['Proper Dih.', 'Improper Dih.']
+    bonded = ['Bond', 'Angle', 'All dihedrals']
+    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
+    sumterms = [electrostatic, all_dihedrals, bonded, nonbonded]
+    newkeys = ['Electrostatic', 'All dihedrals', 'Bonded', 'Nonbonded']
+    for k, key in enumerate(newkeys):
+        e_out[key] =  0 * units.kilocalories_per_mole
+        for group in sumterms[k]:
+            if group in e_out:
+                e_out[key] += e_out[group]
+
+
     return e_out, stdout_path
