@@ -4,10 +4,6 @@ import os
 import sys
 import warnings
 
-#MRS: ensure local version is used
-sys.path.insert(1,'/home/mish4610/InterMol')
-
-
 import numpy as np
 
 from intermol.gromacs import gromacs_driver
