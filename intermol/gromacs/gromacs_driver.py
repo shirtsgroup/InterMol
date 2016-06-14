@@ -67,11 +67,10 @@ def gromacs_energies(top, gro, mdp, gro_path):
 
     suff = ['_d','']
     found_binaries = False
+    old_binaries = False
     for s in suff:
-        grompp_bin = os.path.join(gro_path, 'grompp' + s)
-        mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
-        genergy_bin = os.path.join(gro_path, 'g_energy' + s)
-        if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
+        gmx_bin = os.path.join(gro_path, 'gmx' + s)
+        if which(gmx_bin):
             if s == '_d':
                 logger.debug("Using double precision binaries")
                 found_binaries = True
@@ -80,16 +79,39 @@ def gromacs_energies(top, gro, mdp, gro_path):
                 logger.debug("Can't find double precision; using single precision binaries")
                 found_binaries = True
     if not found_binaries:
+        logger.debug("Can't find 5.0 version binaries; looking for 4.x version binaries")
+        old_binaries = True
+        for s in suff:
+            grompp_bin = os.path.join(gro_path, 'grompp' + s)
+            mdrun_bin = os.path.join(gro_path, 'mdrun' + s)
+            genergy_bin = os.path.join(gro_path, 'g_energy' + s)
+            if which(grompp_bin) and which(mdrun_bin) and which(genergy_bin):
+                if s == '_d':
+                    logger.debug("Using double precision binaries")
+                    found_binaries = True
+                    break
+                elif s == '':
+                    logger.debug("Can't find double precision; using single precision binaries")
+                    found_binaries = True
+    if not found_binaries:
         raise IOError('Unable to find GROMACS executables.')
 
     # Run grompp.
-    cmd = [grompp_bin, '-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
+    if old_binaries:
+        cmd = [grompp_bin]
+    else:
+        cmd = [gmx_bin, 'grompp']
+        cmd = cmd + ['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5']
     proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('grompp failed. See %s' % stderr_path)
 
     # Run single-point calculation with mdrun.
-    cmd = [mdrun_bin, '-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
+    if old_binaries:
+        cmd = [mdrun_bin]
+    else:
+        cmd = [gmx_bin, 'mdrun']
+    cmd = cmd + ['-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c',
         conf, '-e', ener, '-g', log]
     proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
@@ -97,7 +119,11 @@ def gromacs_energies(top, gro, mdp, gro_path):
 
     # Extract energies using g_energy
     select = " ".join(map(str, range(1, 20))) + " 0 "
-    cmd = [genergy_bin, '-f', ener, '-o', ener_xvg, '-dp']
+    if old_binaries:
+        cmd = [genergy_bin]
+    else:
+        cmd = [gmx_bin, 'energy']
+    cmd = cmd + ['-f', ener, '-o', ener_xvg, '-dp']
     proc = run_subprocess(cmd, 'gromacs', stdout_path, stderr_path, stdin=select)
     if proc.returncode != 0:
         logger.error('g_energy failed. See %s' % stderr_path)
@@ -118,30 +144,22 @@ def _group_energy_terms(ener_xvg):
         if group in e_out:
             del e_out[group]
 
-    # Dispersive energies.
+    # van der Waals energies.
     # TODO: Do buckingham energies also get dumped here?
-    dispersive = ['LJ (SR)', 'LJ-14', 'Disper. corr.']
-    e_out['Dispersive'] = 0 * units.kilojoules_per_mole
-    for group in dispersive:
-        if group in e_out:
-            e_out['Dispersive'] += e_out[group]
-
+    vanderwaals = ['LJ (SR)', 'LJ-14', 'Disper. corr.']
     # Electrostatic energies.
     electrostatic = ['Coulomb (SR)', 'Coulomb-14', 'Coul. recip.']
-    e_out['Electrostatic'] = 0 * units.kilojoules_per_mole
-    for group in electrostatic:
-        if group in e_out:
-            e_out['Electrostatic'] += e_out[group]
-
-    e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
-
-    # All the various dihedral energies.
-    # TODO: What else goes in here?
+    # dihedral terms
     all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper Dih.']
-    e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
-    for group in all_dihedrals:
-        if group in e_out:
-            e_out['All dihedrals'] += e_out[group]
+    bonded = ['Bond', 'Angle', 'All dihedrals']
+    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
+    sumterms = [vanderwaals, electrostatic, all_dihedrals, bonded, nonbonded]
+    newkeys = ['van der Waals', 'Electrostatic', 'All dihedrals', 'Bonded', 'Nonbonded']
+    for k, key in enumerate(newkeys):
+        e_out[key] =  0 * units.kilojoules_per_mole
+        for group in sumterms[k]:
+            if group in e_out:
+                e_out[key] += e_out[group]
 
     return e_out, ener_xvg
 

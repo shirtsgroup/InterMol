@@ -10,10 +10,14 @@ from intermol.gromacs import gromacs_driver
 from intermol.lammps import lammps_driver
 from intermol.desmond import desmond_driver
 from intermol.amber import amber_driver
+from intermol.charmm import charmm_driver
+
 import intermol.tests
 from intermol.tests.testing_tools import which
 
-
+# we have a number of "canonical" terms that we would like to print first
+canonical_keys = ['Potential', 'Bond', 'Angle', 'All dihedrals', 'LJ-14', 'Coulomb-14', 
+                  'van der Waals', 'Electrostatic', 'Bonded', 'Nonbonded']
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
 logger.setLevel(logging.DEBUG)
@@ -39,6 +43,8 @@ def parse_args(args):
                  ' data file in same directory and a read_data call)')
     group_in.add_argument('--amb_in', nargs=2, metavar='file',
             help='input files (.prmtop) and (.crd or equivalent) for conversion from AMBER file format')
+    group_in.add_argument('--crm_in', metavar='file',
+            help='input file for conversion from CHARMM file format')
 
     # Output arguments.
     group_out = parser.add_argument_group('Choose output conversion format(s)')
@@ -50,6 +56,8 @@ def parse_args(args):
             help='convert to LAMMPS')
     group_out.add_argument('--amber', action='store_true',
             help='convert to AMBER')
+    group_out.add_argument('--charmm', action='store_true',
+            help='convert to CHARMM')
 
     # Other options.
     group_misc = parser.add_argument_group('Other optional arguments')
@@ -84,9 +92,9 @@ def parse_args(args):
     group_misc.add_argument('-lp', '--lmppath', dest='lammps_path',
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
-    group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_style',
-            #metavar='settings', default="pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
-            metavar='settings', default="pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
+    group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_settings',
+            metavar='settings', default="pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
+            #metavar='settings', default='pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n',
             help='pair_style string to use in the output file. Default is a periodic Ewald simulation')
 
     # amber settings
@@ -95,12 +103,24 @@ def parse_args(args):
             help='path for AMBER binary, needed for energy evaluation')
     group_misc.add_argument('-as', '--ambersettings', dest='amber_set',
             metavar='settings', default=None,
-            help='Amber .in settings file used for energy evaluation')
+            help='AMBER .in file used for energy evaluation')
+
+
+    # charmm settings
+    group_misc.add_argument('-cp', '--charmmpath', dest='charmm_path',
+            metavar='path', default='',
+            help='path for CHARMM binary, needed for energy evaluation')
+    group_misc.add_argument('-cs', '--charmmsettings', dest='charmm_settings',
+            metavar='settings', default='nbond inbfrq -1 imgfrq -1 -\nelec ewald pmew fftx 48 ffty 48 fftz 48 kappa 0.20822755 order 4 -\nvdw vips cutnb 15. cutim 15. ctofnb 15. ctonnb 15.',
+            help='CHARMM .in settings used for energy evaluation. Because of the unified input file, settings lines rather than a file are part')
+
 
     group_misc.add_argument('-f', '--force', dest='force', action='store_true',
             help='ignore warnings (NOTE: may lead to partially correct topologies)')
     group_misc.add_argument('-v', '--verbose', dest='verbose', action='store_true',
             help='high verbosity, includes DEBUG level output')
+    group_misc.add_argument('-n', '--noncanonical', dest='noncanonical', action='store_true',
+            help='print the \'noncanonical\' enery terms, the ones that only occur in 1 or 2 programs')
 
     # Prints help if no arguments given.
     if len(sys.argv) == 1:
@@ -135,6 +155,11 @@ def main(args=None):
         amb_path = ''
     else:
         amb_path = args['amber_path']
+
+    if not args.get('charmm_path'):
+        crm_path = ''
+    else:
+        crm_path = args['charmm_path']
 
     if args.get('verbose'):
         h.setLevel(logging.DEBUG)
@@ -172,7 +197,6 @@ def main(args=None):
         system = lammps_driver.read_file(in_file=lammps_file)
 
     elif args.get('amb_in'):
-
         amber_files = args['amb_in']
         prefix = os.path.splitext(os.path.basename(amber_files[0]))[0]
 
@@ -206,6 +230,117 @@ def main(args=None):
 
         # now, read in using gromacs
         system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
+
+    elif args.get('crm_in'):
+
+        #logger.error('CHARMM can\'t currently be used as an input file type for conversions')
+        #sys.exit(1)    
+
+        charmm_input_file = args['crm_in']
+        prefix = os.path.splitext(os.path.basename(charmm_input_file))[0]
+        # we need to find the parameter and structure files by reading the input file.
+        cinf = open(charmm_input_file,'r')
+        lines = cinf.readlines()
+        box = []
+        rtfs = []
+        prms = []
+        strms = []
+        topsuffixes = ['.rtf','.top']
+        prmsuffixes = ['.prm','.par']
+
+        for line in lines:
+            # Find the psf file
+            if '.psf' in line: 
+                psffile = line.split()[-1] # append the file at the end of the line 
+            if '.crd' in line:
+                crdfile = line.split()[-1] # append the file at the end of the line
+            if '.str' in line:     
+                strms.append(line.split()[-1]) # append the file at the end of the line 
+            if any(x in line for x in topsuffixes): # if the file is any of the topology suffixes: need to be read in before prms.
+                rtfs.append(line.split()[-1])  # append the file at the end of the line 
+            if any(x in line for x in prmsuffixes): # if the file is any of the parameter suffixes
+                prms.append(line.split()[-1])  # append the file at the end of the line 
+            if 'set box ' in line:   # will need to handle general variables
+                boxlength_vars = line.split()
+                boxval = np.float(boxlength_vars[2])
+            if 'crystal define' in line:
+                boxangle_vars = line.split()
+                boxtype = boxangle_vars[2]
+                boxvecs = boxangle_vars[3:6]
+                for i, b in enumerate(boxvecs):
+                    if '@box' in b:
+                        boxvecs[i] = boxval
+                    else:
+                        boxvecs[i] = np.float(b)
+                boxangles = np.array(boxangle_vars[6:9],float)
+                box = np.append(np.array(boxvecs),boxangles)
+            
+        # next, convert to gromacs with ParmEd
+
+        try:
+            import parmed
+        except Exception as e:
+            record_exception(logger, e_out, e_outfile, e)
+            output_status['amber'] = e
+
+        #load in the parameters
+        psf = parmed.load_file(psffile)
+        parameterset = parmed.charmm.CharmmParameterSet()
+        for tfile in rtfs:
+            parameterset.read_topology_file(tfile)
+        for pfile in prms:
+            parameterset.read_parameter_file(pfile)
+        for sfile in strms:
+            parameterset.read_stream_file(sfile)
+        psf.load_parameters(parameterset)
+
+        if len(box) == 6:
+            psf.box = box
+        # now load in the coordinates
+        crd = parmed.load_file(crdfile)
+        try:
+            if len(crd.coordinates.shape) == 3:
+                coords = crd.coordinates[0]
+            else:
+                coords = crd.coordinates
+        except:
+            logger.error('No coordinates in %s' % (crd))
+
+        if coords.shape != (len(psf.atoms), 3):
+            logger.error('Mismatch in number of coordinates (%d) and '
+                '3*number of atoms (%d)' % (len(coords), 3*len(psf.atoms)))
+            # Set the coordinates now, since creating the parm may re-order the 
+            # atoms in order to maintain contiguous molecules
+        psf.coordinates = coords
+
+        # copy the box over to the .psf
+        if hasattr(crd, 'box') and crd.box is not None:
+            if len(crd.box.shape) == 1:
+                crdbox = crd.box
+            else:
+                # Trajectory
+                crdbox = crd.box[0]
+
+            if len(crdbox) == 3:
+                psf.box = list(crdbox) + [90.0, 90.0, 90.0]
+            elif len(crdbox) == 6:
+                psf.box = list(crdbox)
+            else:
+                logger.error('Unexpected box array shape')
+
+        #Make GROMACS topology
+        parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(psf)
+
+        # write out the files.  Should write them out in the proper directory (the one reading in)
+        pathprefix = os.path.dirname(charmm_input_file)
+        fromcharmm_top_in = os.path.join(pathprefix, prefix + '_from_charmm.top')
+        fromcharmm_gro_in = os.path.join(pathprefix,prefix + '_from_charmm.gro')
+        parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromcharmm_top_in)
+        parmed.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision = 8)
+
+        # now, read in using gromacs
+        system = gromacs_driver.read_file(fromcharmm_top_in, fromcharmm_gro_in)
+    
     else:
         logger.error('No input file')
         sys.exit(1)
@@ -230,7 +365,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_style'))
+            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_settings'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -247,6 +382,13 @@ def main(args=None):
             output_status['desmond'] = 'Converted'
 
     if args.get('amber'):
+        # NOTE: Although in theory this should work fine, the gromacs
+        # output that InterMol produces include rb_torsions, which
+        # AMBER can't handle. They are EQUIVALENT to non-rb torsion
+        # parameters, but rb torsions are the preferred intermediate
+        # in GROMACS because it can handle as special cases all of
+        # different versions of torsions used in the supported
+        # programs so far.
         try:
             import parmed
         except Exception as e:
@@ -277,8 +419,40 @@ def main(args=None):
             except Exception as e:
                 output_status['amber'] = e
         else:
-            print "Can't convert to AMBER unless gromacs is also selected"
+            logger.warn("Can't convert to AMBER unless GROMACS is also selected")
 
+
+    if args.get('charmm'):
+        try:
+            import parmed
+        except Exception as e:
+            record_exception(logger, e_out, e_outfile, e)
+            output_status['charmm'] = e
+
+        # currently, this only works if amb_in is used. Reason is that
+        # charmm does not support RB dihedrals.
+        if args.get('amb_in'):
+            e = None
+            # if so, use the structure object.
+            try:
+                parmed_system = parmed.charmm.CharmmPsfFile.from_structure(structure)
+                charmm_output_psf = '{0}.psf'.format(oname)
+                charmm_output_rtf = '{0}.rtf'.format(oname)
+                charmm_output_prm = '{0}.prm'.format(oname)
+                charmm_output_crd = '{0}.crd'.format(oname)
+                # we need these arrays for enery output
+                prms = [charmm_output_prm]
+                rtfs = [charmm_output_rtf]
+                parmed.charmm.CharmmParameterSet.write(parmed.charmm.CharmmParameterSet.from_structure(structure), top=charmm_output_rtf, par=charmm_output_prm)
+                structure.save(charmm_output_psf, format='psf',overwrite=True)
+                parmed.charmm.CharmmCrdFile.write(parmed_system,charmm_output_crd)
+                
+            except Exception as e:
+                output_status['charmm'] = e
+            if e == None:
+                output_status['charmm'] = 'Converted'
+        else: 
+            logger.warn("Can't convert to CHARMM unless inputs are in AMBER")
 
     # --------------- ENERGY EVALUATION ----------------- #
 
@@ -328,13 +502,21 @@ def main(args=None):
                 in_in = in_in_default
             input_type = 'amber'
             e_in, e_infile = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
+
+        elif args.get('crm_in'):
+            if args.get('inefile'):
+                logger.warn("Original CHARMM input file is being used, not the supplied input file")
+            input_type = 'charmm'
+            # returns energy file
+            e_in, e_infile = charmm_driver.charmm_energies(args.get('crm_in'), crm_path)
         else:
-            logger.warn('No format for input files identified! Code should have never made it here!')
+            logger.warn('No input files identified! Code should have never made it here!')
 
         # Evaluate output energies.
         output_type = []
         e_outfile = []
         e_out = []
+
         if args.get('gromacs') and output_status['gromacs'] == 'Converted':
             output_type.append('gromacs')
             if args.get('gromacs_set'):
@@ -382,30 +564,33 @@ def main(args=None):
                 e_out.append(out)
                 e_outfile.append(outfile)
 
-        if args.get('amber') and output_status['amber'] == 'Converted':
-            output_type.append('amber')
-            if args.get('amber_set'):
-                in_amber = args.get('amber_set')
-            else:
-                in_amber = in_in_default
+        if args.get('charmm') and output_status['charmm'] == 'Converted':
+            output_type.append('charmm')
+            if args.get('inefile'):
+                logger.warn("CHARMM energy input file not used, information recreated from command line options")
+            inpfile = os.path.join(oname,'{0}.inp'.format(oname))
+            charmm_driver.write_input_file(inpfile, charmm_output_psf, rtfs, prms, [], 
+                                           charmm_driver.pick_crystal_type(structure.box),
+                                           structure.box, charmm_output_crd, args.get('charmm_settings'))
             try:
-                out, outfile = amber_driver.amber_energies(
-                    '{0}.prmtop'.format(oname), '{0}.rst7'.format(oname), in_amber, amb_path)
+                out, outfile = charmm_driver.charmm_energies(inpfile, crm_path)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
-                output_status['amber'] = e
+                output_status['charmm'] = e
             else:
                 output_status['amber'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
+
 
         # Display energy comparison results.
         out = ['InterMol Conversion Energy Comparison Results', '',
                '{0} input energy file: {1}'.format(input_type, e_infile)]
         for out_type, file in zip(output_type, e_outfile):
             out.append('{0} output energy file: {1}'.format(out_type, file))
-        out += summarize_energy_results(e_in, e_out, input_type, output_type)
+        out += summarize_energy_results(e_in, e_out, input_type, output_type, args.get('noncanonical'))
         logger.info('\n'.join(out))
+
     logger.info('Finished!')
     return output_status
 
@@ -434,7 +619,7 @@ def find_match(key, dictionary, unit):
         return np.nan
 
 
-def summarize_energy_results(energy_input, energy_outputs, input_type, output_types):
+def summarize_energy_results(energy_input, energy_outputs, input_type, output_types, print_noncanonical):
     """Creates a table comparing input and output energy groups.
 
     Args:
@@ -443,6 +628,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
             each output file
         input_type (str): input engine
         output_types (list): containing output formats
+        print_noncanonical (bool): if true, print noncanonical energy terms
 
     Returns:
         out (list of strings): which forms a summary table using "\n".join(out)
@@ -473,11 +659,14 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     out.append('')
     out.append('Energy group summary')
     out.append('=======================================================================')
-    header = '%20s %18s ' % ('type', 'input (%s)' % input_type)
+    header = '%20s %18s' % ('type', 'input(%s)' % input_type)
     for otype in output_types:
-        header += '%37s' % ('output (%s) diff (%s)' % (otype, otype))
+        header += '%18s' % ('output (%s)' % (otype)) 
+        header += '%18s' % ('diff (%s)' % (otype))  
     out.append(header)
     for i in range(len(data)):
+        if (labels[i] not in canonical_keys) and (not print_noncanonical):
+            continue
         line = '%20s ' % labels[i]
         if np.isnan(data[i][0]):
             line += '%18s' % 'n/a'
@@ -497,11 +686,13 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
     # get differences in potential energy
     i = labels.index('Potential')
     diff = data[i, 1::] - data[i, 0]
+    out.append('Input %s potential energy: %22.8f' % (input_type,data[i,0])) 
+    # print the canonical energies
     for d, otype in zip(diff, output_types):
-        out.append('difference in potential energy from %s=>%s conversion: %18.8f'
-                    % (input_type, otype, d))
+        out.append('Difference in potential energy from %s=>%s conversion: %18.8f'
+                   % (input_type, otype, d))
     for fail in failed:
-        out.append('energy comparison for {0} output failed'.format(fail))
+        out.append('Energy comparison for {0} output failed'.format(fail))
     out.append('=======================================================================')
     return out
 
