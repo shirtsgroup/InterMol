@@ -1,0 +1,7 @@
+intermol.tests.test_gromacs module
+==================================
+
+.. automodule:: intermol.tests.test_gromacs
+    :members:
+    :undoc-members:
+    :show-inheritance:

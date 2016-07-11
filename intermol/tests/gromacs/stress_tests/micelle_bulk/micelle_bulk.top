@@ -1,0 +1,30 @@
+;
+;	File 'water.top' was generated
+;	By user: onbekend (0)
+;	On host: onbekend
+;	At date: Tue Mar 14 22:31:34 2006
+;
+;	This is your topology file
+;	"You Look Better Upside Down" (Throwing Muses)
+;
+; Include forcefield parameters
+#include "ffCADMOL.itp"
+
+; Include water topology
+#include "spc.itp"
+
+; Include generic topology for ions
+#include "SDS.itp"
+#include "ions.itp"
+
+
+[ system ]
+; Name
+Dodecyl Sulfate
+
+[ molecules ]
+; Compound        #mols
+SDS	74
+SOL    7000
+Na      74
+SOL	25572

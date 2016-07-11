@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Contributing &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="index.html"/>
+        <link rel="next" title="intermol package" href="apidoc/intermol.html"/>
+        <link rel="prev" title="Installation" href="installation.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-our-tests">Running our tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.lammps.html">intermol.lammps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.lammps.html#module-intermol.lammps">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Contributing</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/development.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>Contributions are welcome and they are greatly appreciated! Every little bit
+helps and credit will always be given.</p>
+<div class="section" id="bug-reports">
+<h2>Bug Reports<a class="headerlink" href="#bug-reports" title="Permalink to this headline">¶</a></h2>
+<p>If you find a bug, please file a detailed issue <a class="reference external" href="https://github.com/shirtsgroup/InterMol/issues">here</a> and <strong>provide input files</strong>
+so that we can try to reproduce the problem.</p>
+</div>
+<div class="section" id="code-style">
+<h2>Code Style<a class="headerlink" href="#code-style" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP8</a> describes the style guide
+for python code. Please try to follow it when reasonable, in particular the
+naming conventions (e.g. public methods should use <tt class="docutils literal"><span class="pre">lower_case_with_underscores</span></tt>
+instead of <tt class="docutils literal"><span class="pre">camelCase</span></tt>).</p>
+<p>Two helpful tools for checking your code are <tt class="docutils literal"><span class="pre">flake8</span></tt> and <tt class="docutils literal"><span class="pre">pylint</span></tt>. The latter
+is a lot pickier but generally, your code should pass most <tt class="docutils literal"><span class="pre">flake8</span></tt> tests:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install flake8 pylint
+</pre></div>
+</div>
+<p>Also some IDE&#8217;s like <a class="reference external" href="https://www.jetbrains.com/pycharm/">PyCharm</a> will
+notify you of PEP8 violations as you code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some older chunks of the code do not yet adhere to PEP8. If you find
+something easily fixable, please do so!</p>
+</div>
+</div>
+<div class="section" id="running-our-tests">
+<h2>Running our tests<a class="headerlink" href="#running-our-tests" title="Permalink to this headline">¶</a></h2>
+<p>InterMol uses <a class="reference external" href="http://pytest.org/latest/">py.test</a> for unit testing. To run
+them simply type run the following while in the base directory:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ py.test
+</pre></div>
+</div>
+<p>We need a LOT more tests so any help here is especially welcome!</p>
+<p>To debug failing tests, you typically get a clearer output by running a subset of
+the tests, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python test_gromacs.py --type unit
+</pre></div>
+</div>
+<p>which prints out log files to
+<cite>intermol/tests/unit_test_outputs/from_gromacs/[system name]/debug.log</cite>. Re-running
+a single test is best done directly via the <cite>convert.py</cite> script, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python convert.py --gro_in tests/gromacs/unit_tests/[system name]/[system name].{top,gro} --gromacs -e
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you have any ideas or suggestions for streamlining the testing process
+please let us know by filing an issue or opening a pull request!</p>
+</div>
+</div>
+<div class="section" id="git-flow">
+<h2>Git Flow<a class="headerlink" href="#git-flow" title="Permalink to this headline">¶</a></h2>
+<p>Because we are supporting multiple molecular dynamics engines that should all
+work independently, we try to keep development of each engine in a separate
+branch until the basics are working.</p>
+<p>To this end, we&#8217;ve started working with the <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">git flow branching model</a>. The basic things
+to know are:</p>
+<ol class="arabic simple">
+<li>The <tt class="docutils literal"><span class="pre">master</span></tt> branch is strictly used for releases.</li>
+<li>The <tt class="docutils literal"><span class="pre">develop</span></tt> branch is where (!!!) development happens.</li>
+<li>When we start working on a new engine, we create a feature branch. E.g.,
+at the time of this writing, there are branches called <tt class="docutils literal"><span class="pre">feature/lammps</span></tt> and
+<tt class="docutils literal"><span class="pre">feature/desmond</span></tt>. Once the overall structure in this branch is fairly
+stable and has a good amounts of tests, we merge it into <tt class="docutils literal"><span class="pre">develop</span></tt>.</li>
+</ol>
+<p>So what do you, the interested developer, need to know?</p>
+<ol class="arabic simple">
+<li>Don&#8217;t make pull requests against <tt class="docutils literal"><span class="pre">master</span></tt>.</li>
+<li>Choose either <tt class="docutils literal"><span class="pre">develop</span></tt> or the appropriate <tt class="docutils literal"><span class="pre">feature/*</span></tt> branch to pull against.</li>
+</ol>
+<p>For more reading and a neat tool to help with branching see:</p>
+<p><a class="reference external" href="http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/">http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/</a></p>
+<p><a class="reference external" href="https://github.com/nvie/gitflow">https://github.com/nvie/gitflow</a></p>
+<p><a class="reference external" href="http://danielkummer.github.io/git-flow-cheatsheet/">http://danielkummer.github.io/git-flow-cheatsheet/</a></p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="apidoc/intermol.html" class="btn btn-neutral float-right" title="intermol package"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
