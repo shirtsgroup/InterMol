@@ -1709,7 +1709,6 @@ class GromacsTopologyParser(object):
         # [ molecules ]
         lines.append('[ molecules ]\n')
         lines.append('; Compound        nmols\n')
-        #pdb.set_trace()
         #for component in System._sys._components:
         #    lines.append('%-15s%8d\n'
         #                 % (component[0],
