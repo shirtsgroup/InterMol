@@ -1,8 +1,3 @@
-InterMol
-========
-
-Conversion tool for molecular simulations
-=======
 InterMol: a conversion tool for molecular dynamics simulations
 ==============================================================
 
@@ -74,4 +69,3 @@ formatted files.
 We're also developing a comprehensive test suite to ensure that all InterMol
 conversions happen correctly. For instructions on how to run this check out
 the [testing README](tests/README.md).
-
