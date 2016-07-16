@@ -1,0 +1,18 @@
+units real
+atom_style full
+
+dimension 3
+boundary p p p
+
+pair_style lj/cut/coul/cut 20.0 20.0
+pair_modify mix geometric
+
+bond_style hybrid harmonic morse
+angle_style harmonic
+special_bonds lj 0.0 0.0 0.5 coul 0.0 0.0 0.5
+
+read_data pair_style-ljcutcoullong-data_vacuum.lmp
+
+thermo_style custom ebond eangle edihed eimp epair evdwl ecoul elong etail pe
+
+run 0

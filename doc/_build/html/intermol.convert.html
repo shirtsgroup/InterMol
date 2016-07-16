@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>intermol.convert module &mdash; InterMol 0.2a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="InterMol 0.2a1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">InterMol 0.2a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-intermol.convert">
+<span id="intermol-convert-module"></span><h1>intermol.convert module<a class="headerlink" href="#module-intermol.convert" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="intermol.convert.find_match">
+<tt class="descclassname">intermol.convert.</tt><tt class="descname">find_match</tt><big>(</big><em>key</em>, <em>dictionary</em>, <em>unit</em><big>)</big><a class="reference internal" href="_modules/intermol/convert.html#find_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.convert.find_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for <cite>summarize_energy_results</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.convert.get_diff">
+<tt class="descclassname">intermol.convert.</tt><tt class="descname">potential_energy_diff</tt><big>(</big><em>e_in</em>, <em>e_out</em><big>)</big><a class="reference internal" href="_modules/intermol/convert.html#get_diff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.convert.get_diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns difference in potential energy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- dictionary of energy groups from input file</strong> (<em>e_in</em>) &#8211; </li>
+<li><strong>- dictionary of energy groups from output file</strong> (<em>e_out</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">potential energy difference in units of the input</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.convert.main">
+<tt class="descclassname">intermol.convert.</tt><tt class="descname">main</tt><big>(</big><em>args=None</em><big>)</big><a class="reference internal" href="_modules/intermol/convert.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.convert.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="intermol.convert.parse_args">
+<tt class="descclassname">intermol.convert.</tt><tt class="descname">parse_args</tt><big>(</big><em>args</em><big>)</big><a class="reference internal" href="_modules/intermol/convert.html#parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.convert.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="intermol.convert.summarize_energy_results">
+<tt class="descclassname">intermol.convert.</tt><tt class="descname">summarize_energy_results</tt><big>(</big><em>energy_input</em>, <em>energy_outputs</em>, <em>input_type</em>, <em>output_types</em><big>)</big><a class="reference internal" href="_modules/intermol/convert.html#summarize_energy_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.convert.summarize_energy_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a table comparing input and output energy groups.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">energy_input (dict): energy groups from input file
+energy_output(list): containing dictionary of energy groups or -1 for</p>
+<blockquote>
+<div>each output file</div></blockquote>
+<p class="last">input_type (str): input engine
+output_types (list): containing output formats</p>
+</dd>
+<dt>Returns:</dt>
+<dd>out (list of strings): which forms a summary table using &#8220;</dd>
+</dl>
+</div></blockquote>
+<p>&#8221;.join(out)</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intermol.convert.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">InterMol 0.2a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

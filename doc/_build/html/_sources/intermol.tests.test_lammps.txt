@@ -1,0 +1,7 @@
+intermol.tests.test_lammps module
+=================================
+
+.. automodule:: intermol.tests.test_lammps
+    :members:
+    :undoc-members:
+    :show-inheritance:

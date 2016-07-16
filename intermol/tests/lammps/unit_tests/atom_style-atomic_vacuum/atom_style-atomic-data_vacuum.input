@@ -1,0 +1,14 @@
+units real
+atom_style atomic
+
+dimension 3
+boundary p p p
+
+pair_style lj/cut 20.0
+pair_modify mix geometric
+
+read_data atom_style-atomic-data_vacuum.lmp
+
+thermo_style custom ebond eangle edihed eimp epair evdwl ecoul elong etail pe
+
+run 0

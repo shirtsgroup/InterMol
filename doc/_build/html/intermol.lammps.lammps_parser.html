@@ -1,0 +1,540 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>intermol.lammps.lammps_parser module &mdash; InterMol 0.2a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="InterMol 0.2a1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">InterMol 0.2a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-intermol.lammps.lammps_parser">
+<span id="intermol-lammps-lammps-parser-module"></span><h1>intermol.lammps.lammps_parser module<a class="headerlink" href="#module-intermol.lammps.lammps_parser" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="intermol.lammps.lammps_parser.LammpsParser">
+<em class="property">class </em><tt class="descclassname">intermol.lammps.lammps_parser.</tt><tt class="descname">LammpsParser</tt><big>(</big><em>in_file</em>, <em>system=None</em>, <em>unit_set='real'</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A class containing methods to read and write LAMMPS files.</p>
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.SCALE_FROM">
+<tt class="descname">SCALE_FROM</tt><em class="property"> = 0.5</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.SCALE_FROM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.SCALE_INTO">
+<tt class="descname">SCALE_INTO</tt><em class="property"> = 2.0</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.SCALE_INTO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.canonical_angle">
+<tt class="descname">canonical_angle</tt><big>(</big><em>kwds</em>, <em>angle</em>, <em>direction</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.canonical_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.canonical_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert from the canonical form of this interaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.canonical_bond">
+<tt class="descname">canonical_bond</tt><big>(</big><em>kwds</em>, <em>bond</em>, <em>direction='into'</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.canonical_bond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.canonical_bond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert to/from the canonical form of this interaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.canonical_dihedral">
+<tt class="descname">canonical_dihedral</tt><big>(</big><em>params</em>, <em>dihedral</em>, <em>direction='into'</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.canonical_dihedral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.canonical_dihedral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert from the canonical form of this interaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.create_kwds_from_entries">
+<tt class="descname">create_kwds_from_entries</tt><big>(</big><em>entries</em>, <em>force_class</em>, <em>offset=0</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.create_kwds_from_entries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.create_kwds_from_entries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.get_force_atoms">
+<tt class="descname">get_force_atoms</tt><big>(</big><em>force</em>, <em>forceclass</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.get_force_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.get_force_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the atoms involved in a force.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.get_force_bondingtypes">
+<tt class="descname">get_force_bondingtypes</tt><big>(</big><em>force</em>, <em>forceclass</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.get_force_bondingtypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.get_force_bondingtypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the atoms involved in a force.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.get_parameter_kwds_from_force">
+<tt class="descname">get_parameter_kwds_from_force</tt><big>(</big><em>force</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.get_parameter_kwds_from_force"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.get_parameter_kwds_from_force" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.get_parameter_list_from_force">
+<tt class="descname">get_parameter_list_from_force</tt><big>(</big><em>force</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.get_parameter_list_from_force"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.get_parameter_list_from_force" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_angle_types">
+<tt class="descname">lammps_angle_types</tt><em class="property"> = {'charmm': &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngleType'&gt;, 'cosine': &lt;class 'intermol.forces.cosine_angle_type.CosineAngleType'&gt;, 'harmonic': &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngleType'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_angle_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_angles">
+<tt class="descname">lammps_angles</tt><em class="property"> = {'charmm': &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;, 'cosine': &lt;class 'intermol.forces.cosine_angle_type.CosineAngle'&gt;, 'harmonic': &lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_bond_types">
+<tt class="descname">lammps_bond_types</tt><em class="property"> = {'nonlinear': &lt;class 'intermol.forces.nonlinear_bond_type.NonlinearBondType'&gt;, 'quartic': &lt;class 'intermol.forces.quartic_breakable_bond_type.QuarticBreakableBondType'&gt;, 'morse': &lt;class 'intermol.forces.morse_bond_type.MorseBondType'&gt;, 'harmonic': &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBondType'&gt;, 'fene/expand': &lt;class 'intermol.forces.fene_expandable_bond_type.FeneExpandableBondType'&gt;, 'class2': &lt;class 'intermol.forces.quartic_bond_type.QuarticBondType'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_bond_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_bonds">
+<tt class="descname">lammps_bonds</tt><em class="property"> = {'nonlinear': &lt;class 'intermol.forces.nonlinear_bond_type.NonlinearBond'&gt;, 'quartic': &lt;class 'intermol.forces.quartic_breakable_bond_type.QuarticBreakableBond'&gt;, 'morse': &lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;, 'harmonic': &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;, 'fene/expand': &lt;class 'intermol.forces.fene_expandable_bond_type.FeneExpandableBond'&gt;, 'class2': &lt;class 'intermol.forces.quartic_bond_type.QuarticBond'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_dihedral_types">
+<tt class="descname">lammps_dihedral_types</tt><em class="property"> = {'charmm': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedralType'&gt;, 'multi/harmonic': &lt;class 'intermol.forces.rb_dihedral_type.RbDihedralType'&gt;, 'opls': &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedralType'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_dihedral_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_dihedrals">
+<tt class="descname">lammps_dihedrals</tt><em class="property"> = {'charmm': &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;, 'multi/harmonic': &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;, 'opls': &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_improper_types">
+<tt class="descname">lammps_improper_types</tt><em class="property"> = {'cvff': &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedralType'&gt;, 'harmonic': &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedralType'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_improper_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lammps_impropers">
+<tt class="descname">lammps_impropers</tt><em class="property"> = {'cvff': &lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;, 'harmonic': &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lammps_impropers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_angles">
+<tt class="descname">lookup_lammps_angles</tt><em class="property"> = {&lt;class 'intermol.forces.harmonic_angle_type.HarmonicAngle'&gt;: 'harmonic', &lt;class 'intermol.forces.urey_bradley_angle_type.UreyBradleyAngle'&gt;: 'charmm', &lt;class 'intermol.forces.cosine_angle_type.CosineAngle'&gt;: 'cosine'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_bonds">
+<tt class="descname">lookup_lammps_bonds</tt><em class="property"> = {&lt;class 'intermol.forces.morse_bond_type.MorseBond'&gt;: 'morse', &lt;class 'intermol.forces.harmonic_potential_bond_type.HarmonicPotentialBond'&gt;: 'harmonic', &lt;class 'intermol.forces.harmonic_bond_type.HarmonicBond'&gt;: 'harmonic', &lt;class 'intermol.forces.quartic_bond_type.QuarticBond'&gt;: 'class2', &lt;class 'intermol.forces.quartic_breakable_bond_type.QuarticBreakableBond'&gt;: 'quartic', &lt;class 'intermol.forces.fene_expandable_bond_type.FeneExpandableBond'&gt;: 'fene/expand', &lt;class 'intermol.forces.nonlinear_bond_type.NonlinearBond'&gt;: 'nonlinear'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_dihedrals">
+<tt class="descname">lookup_lammps_dihedrals</tt><em class="property"> = {&lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'Trig', &lt;class 'intermol.forces.rb_dihedral_type.RbDihedral'&gt;: 'multi/harmonic', &lt;class 'intermol.forces.fourier_dihedral_type.FourierDihedral'&gt;: 'opls', &lt;class 'intermol.forces.proper_periodic_dihedral_type.ProperPeriodicDihedral'&gt;: 'charmm'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_impropers">
+<tt class="descname">lookup_lammps_impropers</tt><em class="property"> = {&lt;class 'intermol.forces.trig_dihedral_type.TrigDihedral'&gt;: 'cvff', &lt;class 'intermol.forces.improper_harmonic_dihedral_type.ImproperHarmonicDihedral'&gt;: 'harmonic'}</em><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.lookup_lammps_impropers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_angle_coeffs">
+<tt class="descname">parse_angle_coeffs</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_angle_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_angle_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_angle_style">
+<tt class="descname">parse_angle_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_angle_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_angle_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_angles">
+<tt class="descname">parse_angles</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_angles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_atom_style">
+<tt class="descname">parse_atom_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_atom_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_atom_style" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Assuming &#8216;full&#8217; as default for everything else.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_atoms">
+<tt class="descname">parse_atoms</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read atoms from data file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_bond_coeffs">
+<tt class="descname">parse_bond_coeffs</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_bond_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_bond_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_bond_style">
+<tt class="descname">parse_bond_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_bond_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_bond_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_bonded_style">
+<tt class="descname">parse_bonded_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_bonded_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_bonded_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_bonds">
+<tt class="descname">parse_bonds</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_bonds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_boundary">
+<tt class="descname">parse_boundary</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_boundary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_boundary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_box">
+<tt class="descname">parse_box</tt><big>(</big><em>line</em>, <em>dim</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read box information from data file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>line</strong> (<em>str</em>) &#8211; Current line in input file.</li>
+<li><strong>dim</strong> (<em>int</em>) &#8211; Dimension specified in line.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_dihedral_coeffs">
+<tt class="descname">parse_dihedral_coeffs</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_dihedral_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_dihedral_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_dihedral_style">
+<tt class="descname">parse_dihedral_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_dihedral_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_dihedral_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_dihedrals">
+<tt class="descname">parse_dihedrals</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_dihedrals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_dimension">
+<tt class="descname">parse_dimension</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_force">
+<tt class="descname">parse_force</tt><big>(</big><em>data_lines</em>, <em>force_classes</em>, <em>forceSet</em>, <em>n=0</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_force"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_force" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read bonds, angles, dihedrals, impropers from data file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_force_coeffs">
+<tt class="descname">parse_force_coeffs</tt><big>(</big><em>data_lines</em>, <em>force_name</em>, <em>force_classes</em>, <em>force_style</em>, <em>lammps_forces</em>, <em>canonical_force</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_force_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_force_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read force coefficients from data file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_improper_coeffs">
+<tt class="descname">parse_improper_coeffs</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_improper_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_improper_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_improper_style">
+<tt class="descname">parse_improper_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_improper_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_improper_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_impropers">
+<tt class="descname">parse_impropers</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_impropers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_impropers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_kspace_style">
+<tt class="descname">parse_kspace_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_kspace_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_kspace_style" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently ignored.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_masses">
+<tt class="descname">parse_masses</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_masses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_masses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read masses from data file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_pair_coeffs">
+<tt class="descname">parse_pair_coeffs</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_pair_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_pair_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read pair coefficients from data file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_pair_modify">
+<tt class="descname">parse_pair_modify</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_pair_modify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_pair_modify" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_pair_style">
+<tt class="descname">parse_pair_style</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_pair_style"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_pair_style" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_read_data">
+<tt class="descname">parse_read_data</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_read_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_read_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_special_bonds">
+<tt class="descname">parse_special_bonds</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_special_bonds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_special_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_units">
+<tt class="descname">parse_units</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_units" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.parse_velocities">
+<tt class="descname">parse_velocities</tt><big>(</big><em>data_lines</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.parse_velocities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.parse_velocities" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.read">
+<tt class="descname">read</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a LAMMPS input file and a data file specified within.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>input_file</strong> (<em>str</em>) &#8211; Name of LAMMPS input file to read in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.read_data">
+<tt class="descname">read_data</tt><big>(</big><em>data_file</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.read_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a LAMMPS data file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data_file</strong> (<em>str</em>) &#8211; name of LAMMPS data file to read in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.read_input">
+<tt class="descname">read_input</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.read_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.read_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a LAMMPS input file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>input_file</strong> (<em>str</em>) &#8211; Name of LAMMPS input file to read in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.set_units">
+<tt class="descname">set_units</tt><big>(</big><em>unit_set</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.set_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set what unit set to use.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write">
+<tt class="descname">write</tt><big>(</big><em>unit_set='real'</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a LAMMPS data and corresponding input file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data_file</strong> (<em>str</em>) &#8211; Name of LAMMPS data file to write to.</li>
+<li><strong>unit_set</strong> (<em>str</em>) &#8211; LAMMPS unit set for output file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_angles">
+<tt class="descname">write_angles</tt><big>(</big><em>mol_type</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_angles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_angles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_bonds">
+<tt class="descname">write_bonds</tt><big>(</big><em>mol_type</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_bonds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_bonds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_dihedrals">
+<tt class="descname">write_dihedrals</tt><big>(</big><em>mol_type</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_dihedrals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_dihedrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate dihedrals from impropers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_forces">
+<tt class="descname">write_forces</tt><big>(</big><em>forces</em>, <em>offset</em>, <em>force_name</em>, <em>lookup_lammps_force</em>, <em>lammps_force_types</em>, <em>canonical_force</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_forces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_forces" title="Permalink to this definition">¶</a></dt>
+<dd><p>The general force writing function.</p>
+<p>Currently supports bonds, angles, dihedrals, impropers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_impropers">
+<tt class="descname">write_impropers</tt><big>(</big><em>mol_type</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_impropers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_impropers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate dihedrals from impropers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="intermol.lammps.lammps_parser.LammpsParser.write_virtuals">
+<tt class="descname">write_virtuals</tt><big>(</big><em>mol_type</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#LammpsParser.write_virtuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.LammpsParser.write_virtuals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.lammps.lammps_parser.load_lammps">
+<tt class="descclassname">intermol.lammps.lammps_parser.</tt><tt class="descname">load_lammps</tt><big>(</big><em>in_file</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#load_lammps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.load_lammps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a LAMMPS input file into a <cite>System</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>in_file</strong> &#8211; </li>
+<li><strong>include_dir</strong> &#8211; </li>
+<li><strong>defines</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">system</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="intermol.lammps.lammps_parser.write_lammps">
+<tt class="descclassname">intermol.lammps.lammps_parser.</tt><tt class="descname">write_lammps</tt><big>(</big><em>in_file</em>, <em>system</em>, <em>unit_set='real'</em><big>)</big><a class="reference internal" href="_modules/intermol/lammps/lammps_parser.html#write_lammps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#intermol.lammps.lammps_parser.write_lammps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a LAMMPS input file into a <cite>System</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>in_file</strong> &#8211; </li>
+<li><strong>include_dir</strong> &#8211; </li>
+<li><strong>defines</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">system</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intermol.lammps.lammps_parser.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">InterMol 0.2a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

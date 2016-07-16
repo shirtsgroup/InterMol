@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>intermol.tests.test_lammps &mdash; InterMol 0.2a1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="InterMol 0.2a1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../../index.html" class="fa fa-home"> InterMol</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-with-pip-coming-soon">Install with pip (coming soon!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#testing-your-installation">Testing your installation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#bug-reports">Bug Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#code-style">Code Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development.html#git-flow">Git Flow</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.html">intermol package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.html#module-intermol">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html">intermol.gromacs package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.gromacs.html#module-intermol.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/intermol.forces.html">intermol.forces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../apidoc/intermol.forces.html#module-intermol.forces">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">InterMol</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>intermol.tests.test_lammps</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for intermol.tests.test_lammps</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">intermol</span> <span class="kn">import</span> <span class="n">convert</span>
+<span class="kn">from</span> <span class="nn">testing_tools</span> <span class="kn">import</span> <span class="p">(</span><span class="n">add_handler</span><span class="p">,</span> <span class="n">remove_handler</span><span class="p">,</span> <span class="n">summarize_results</span><span class="p">,</span>
+                           <span class="n">ENGINES</span><span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;InterMolLog&#39;</span><span class="p">)</span>
+<span class="n">testing_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;testing&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">testing_logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+    <span class="n">testing_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>  <span class="c"># ignores DEBUG level for now</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%(levelname)s</span><span class="s"> </span><span class="si">%(asctime)s</span><span class="s"> </span><span class="si">%(message)s</span><span class="s">&quot;</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">testing_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="lammps"><a class="viewcode-back" href="../../../intermol.tests.test_lammps.html#intermol.tests.test_lammps.lammps">[docs]</a><span class="k">def</span> <span class="nf">lammps</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="n">test_type</span><span class="o">=</span><span class="s">&#39;unit&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args:</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">resource_dir</span> <span class="o">=</span> <span class="n">resource_filename</span><span class="p">(</span><span class="s">&#39;intermol&#39;</span><span class="p">,</span>
+                                     <span class="s">&#39;tests/lammps/{0}_tests&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">test_type</span><span class="p">))</span>
+
+    <span class="n">gro_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resource_dir</span><span class="p">,</span> <span class="s">&#39;*/*.gro&#39;</span><span class="p">)))</span>
+    <span class="n">gro_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gro_files</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;out.gro&#39;</span><span class="p">)]</span>
+    <span class="n">top_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resource_dir</span><span class="p">,</span> <span class="s">&#39;*/*.top&#39;</span><span class="p">)))</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">gro</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">gro</span> <span class="ow">in</span> <span class="n">gro_files</span><span class="p">]</span>
+
+    <span class="c"># The results of all conversions are stored in nested dictionaries:</span>
+    <span class="c"># results = {&#39;lammps&#39;: {&#39;bond1: result, &#39;bond2: results...},</span>
+    <span class="c">#            &#39;lammps&#39;: {&#39;bond1: result, &#39;bond2: results...},</span>
+    <span class="c">#            ...}</span>
+    <span class="n">per_file_results</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">engine</span><span class="p">:</span> <span class="n">per_file_results</span> <span class="k">for</span> <span class="n">engine</span> <span class="ow">in</span> <span class="n">ENGINES</span><span class="p">}</span>
+
+    <span class="n">unit_test_outputs</span> <span class="o">=</span> <span class="s">&#39;{0}_test_outputs/from_lammps&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">test_type</span><span class="p">)</span>
+    <span class="n">basedir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="n">unit_test_outputs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">basedir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">basedir</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gro_files</span><span class="p">,</span> <span class="n">top_files</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="n">testing_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Converting {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">odir</span> <span class="o">=</span> <span class="s">&#39;{0}/{1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">odir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">odir</span><span class="p">)</span>
+        <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">add_handler</span><span class="p">(</span><span class="n">odir</span><span class="p">)</span>
+
+        <span class="n">flags</span><span class="p">[</span><span class="s">&#39;gro_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">]</span>
+        <span class="n">flags</span><span class="p">[</span><span class="s">&#39;odir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">odir</span>
+
+        <span class="k">for</span> <span class="n">engine</span> <span class="ow">in</span> <span class="n">ENGINES</span><span class="p">:</span>
+            <span class="n">flags</span><span class="p">[</span><span class="n">engine</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">cmd_line_equivalent</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">flags</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">in_files</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="s">&#39;--{0} {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">in_files</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="s">&#39;--{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="s">&#39;--{0} {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">cmd_line_equivalent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Converting {0}, {1} with command:</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gro</span><span class="p">,</span> <span class="n">top</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;    python convert.py {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd_line_equivalent</span><span class="p">)))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">convert</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">engine</span> <span class="ow">in</span> <span class="n">ENGINES</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">engine</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">engine</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">diff</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">engine</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">remove_handler</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">)</span>
+
+    <span class="n">summarize_results</span><span class="p">(</span><span class="s">&#39;lammps&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">basedir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<div class="viewcode-block" id="test_lammps_unit"><a class="viewcode-back" href="../../../intermol.tests.test_lammps.html#intermol.tests.test_lammps.test_lammps_unit">[docs]</a><span class="k">def</span> <span class="nf">test_lammps_unit</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lammps:</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unit_test_tolerance</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;unit&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+             <span class="s">&#39;energy&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+             <span class="s">&#39;lammps&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+
+    <span class="n">testing_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Running unit tests&#39;</span><span class="p">)</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;unit_test_outputs&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">lammps</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="n">test_type</span><span class="o">=</span><span class="s">&#39;unit&#39;</span><span class="p">)</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">])))</span>
+    <span class="k">for</span> <span class="n">engine</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">passed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">tests</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">unit_test_tolerance</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Found non-numeric result. This probably means an&#39;</span>
+                             <span class="s">&#39;error occured somewhere in the conversion.&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">passed</span><span class="p">,</span> <span class="s">&#39;Unit tests do not match within {0:.1e} kJ/mol.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">unit_test_tolerance</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;All unit tests match within {0:.1e} kJ/mol.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unit_test_tolerance</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="test_lammps_stress"><a class="viewcode-back" href="../../../intermol.tests.test_lammps.html#intermol.tests.test_lammps.test_lammps_stress">[docs]</a><span class="k">def</span> <span class="nf">test_lammps_stress</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lammps:</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stress_test_tolerance</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;stress&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+             <span class="s">&#39;energy&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+             <span class="s">&#39;lammps&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+
+    <span class="n">testing_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Running stress tests&#39;</span><span class="p">)</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;stress_test_outputs&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">lammps</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="n">test_type</span><span class="o">=</span><span class="s">&#39;stress&#39;</span><span class="p">)</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s">&#39;lammps&#39;</span><span class="p">])))</span>
+    <span class="k">for</span> <span class="n">engine</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">passed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">tests</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">stress_test_tolerance</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Found non-numeric result. This probably means an&#39;</span>
+                             <span class="s">&#39;error occured somewhere in the conversion.&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">passed</span><span class="p">,</span> <span class="s">&#39;Stress tests do not match within {0:.1e} kJ/mol.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">stress_test_tolerance</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;All stress tests match within {0:.1e} kJ/mol.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stress_test_tolerance</span><span class="p">))</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Run the LAMMPS tests.&#39;</span><span class="p">)</span>
+
+    <span class="n">type_of_test</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-t&#39;</span><span class="p">,</span> <span class="s">&#39;--type&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;test_type&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s">&#39;unit&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;The type of tests to run: &#39;unit&#39;, &#39;stress&#39; or &#39;all&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;unit&#39;</span><span class="p">,</span> <span class="s">&#39;all&#39;</span><span class="p">]:</span>
+        <span class="n">test_lammps_unit</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;stress&#39;</span><span class="p">,</span> <span class="s">&#39;all&#39;</span><span class="p">]:</span>
+        <span class="n">test_lammps_stress</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
