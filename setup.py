@@ -5,7 +5,6 @@ from __future__ import print_function
 import os
 import sys
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 
 #####################################
 VERSION = "0.1.0"
@@ -26,25 +25,13 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-
-class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import pytest
-        errcode = pytest.main(['intermol'])
-        sys.exit(errcode)
-
 with open('requirements.txt') as reqs_file:
     reqs = [line.strip() for line in reqs_file]
 
 setup(
     name='intermol',
     version=__version__,
-    description='InterMol is a conversion tool for molecular simulations.',
+    description=__doc__,
     author='Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts',
     author_email='ctk3b@virginia.edu, ctl4f@virginia.edu, edz3fz@virginia.edu, '
                  'michael.shirts@virginia.edu',
@@ -80,8 +67,5 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Software Development :: Libraries :: Python Modules'
         ],
-    test_suite='tests',
-    cmdclass={'test': PyTest},
-    extras_require={'utils': ['pytest']},
 )
 

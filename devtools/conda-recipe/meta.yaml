@@ -9,8 +9,8 @@ requirements:
   run:
     - python
     - numpy
-    - scipy
     - openmm
+    - parmed
     - six
 
 test:
