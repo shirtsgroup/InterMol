@@ -276,12 +276,12 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
         if flags['lammps']:
             if '_vacuum' in test_file[0]:
                 warning_logger.info("I'm seeing an input file (%s) with 'vacuum' in the title; I'm assuming a nonperiodic system with no cutoffs for the LAMMPS input file." % (test_file[0]))
-                flags['lmp_style'] = "pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n"
+                flags['lmp_settings'] = "pair_style lj/cut/coul/cut 20.0 20.0\nkspace_style none\n\n"
             elif 'lj3_bulk' in test_file[0]:  # annoying workaround since kspace won't work with zero charges.
-                flags['lmp_style'] = "pair_style lj/cut 9.0 \npair_modify tail yes\nkspace_style none\n\n"
+                flags['lmp_settings'] = "pair_style lj/cut 9.0 \npair_modify tail yes\nkspace_style none\n\n"
             else:
-                flags['lmp_style'] = "pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n"  # Ewald defaults
-                #flags['lmp_style'] = "pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-6\n\n"  # Ewald defaults
+                flags['lmp_settings'] = "pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n"  # Ewald defaults
+                #flags['lmp_settings'] = "pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-6\n\n"  # Ewald defaults
         h1, h2 = add_handler(odir)
         cmd_line_equivalent = command_line_flags(flags)
 
