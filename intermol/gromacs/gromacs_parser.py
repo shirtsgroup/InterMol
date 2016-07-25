@@ -22,7 +22,7 @@ logger = logging.getLogger('InterMolLog')
 ENGINE = 'gromacs'
 
 
-def load_gromacs(top_file, gro_file, include_dir=None, defines=None):
+def load(top_file, gro_file, include_dir=None, defines=None):
     """Load a set of GROMACS input files into a `System`.
 
     Args:
@@ -38,7 +38,7 @@ def load_gromacs(top_file, gro_file, include_dir=None, defines=None):
     return parser.read()
 
 
-def write_gromacs(top_file, gro_file, system):
+def save(top_file, gro_file, system):
     """Load a set of GROMACS input files into a `System`.
 
     Args:

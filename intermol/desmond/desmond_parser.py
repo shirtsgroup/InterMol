@@ -26,7 +26,7 @@ ENGINE = 'desmond'
 
 
 # driver helper functions
-def load_desmond(cms_file):
+def load(cms_file):
     """Load a DESMOND input file into a 'System'
 
     Args:
@@ -39,7 +39,7 @@ def load_desmond(cms_file):
     return parser.read()
 
 
-def write_desmond(cms_file, system):
+def save(cms_file, system):
     """Unpacks a 'System' into a DESMOND input file
 
     Args:
