@@ -82,29 +82,28 @@ def write_input_file(inpfile, psffile, rtfs, prms, strms,
     #and files thatare used.
     counter = 10
     increment = 10
-    charmm_inp = open(inpfile,'w')
-    # will use relative paths because of length of line issues in charmm
-    charmm_inp.write('! CHARMM Energy for %s\n' % os.path.relpath(inpfile))
-    for r in rtfs:
-        charmm_inp.write('open read card unit %d name \"%s\"\nread rtf card unit %d\n' % (counter, os.path.relpath(r), counter))
-        counter = counter + increment
-    for p in prms:
-        charmm_inp.write('open read card unit %d name \"%s\"\nread para card unit %d\n' % (counter, os.path.relpath(p), counter))
-        counter = counter + increment
-    for s in strms:
-        charmm_inp.write('stream \"%s\"\n' % (os.path.relpath(s)))
-    charmm_inp.write('read psf card name \"%s\"\n' % (os.path.relpath(psffile)))
-    charmm_inp.write('read coor card name \"%s\"\nread coor card comp name \"%s\"\n' % (os.path.relpath(crdfile), os.path.relpath(crdfile)))
-    charmm_inp.write('crystal define %s %.8f %.8f %.8f %.8f %.8f %.8f\ncrystal build noper 0\n' %  (boxtype,
-           boxvecs[0], boxvecs[1], boxvecs[2], boxvecs[3], boxvecs[4], boxvecs[5]))
-    # ! These segments are used for water and ions in bulk solvent
-    #define bulks sele .not. (segid A .or. segid B) end
-    # ! You may need to change these depending on how you plan to do recentering
-    #image byseg sele .not. resname tip3 .and. .not. bulks end
-    #image byres sele resname tip3 .or. bulks end
-    charmm_inp.write("%s\n" % (charmm_settings))
-    charmm_inp.write("energy\nstop")
-    charmm_inp.close()
+    with open(inpfile, 'w') as charmm_inp:
+        # will use relative paths because of length of line issues in charmm
+        charmm_inp.write('! CHARMM Energy for %s\n' % os.path.relpath(inpfile))
+        for r in rtfs:
+            charmm_inp.write('open read card unit %d name \"%s\"\nread rtf card unit %d\n' % (counter, os.path.relpath(r), counter))
+            counter = counter + increment
+        for p in prms:
+            charmm_inp.write('open read card unit %d name \"%s\"\nread para card unit %d\n' % (counter, os.path.relpath(p), counter))
+            counter = counter + increment
+        for s in strms:
+            charmm_inp.write('stream \"%s\"\n' % (os.path.relpath(s)))
+        charmm_inp.write('read psf card name \"%s\"\n' % (os.path.relpath(psffile)))
+        charmm_inp.write('read coor card name \"%s\"\nread coor card comp name \"%s\"\n' % (os.path.relpath(crdfile), os.path.relpath(crdfile)))
+        charmm_inp.write('crystal define %s %.8f %.8f %.8f %.8f %.8f %.8f\ncrystal build noper 0\n' %  (boxtype,
+               boxvecs[0], boxvecs[1], boxvecs[2], boxvecs[3], boxvecs[4], boxvecs[5]))
+        # ! These segments are used for water and ions in bulk solvent
+        #define bulks sele .not. (segid A .or. segid B) end
+        # ! You may need to change these depending on how you plan to do recentering
+        #image byseg sele .not. resname tip3 .and. .not. bulks end
+        #image byres sele resname tip3 .or. bulks end
+        charmm_inp.write("%s\n" % (charmm_settings))
+        charmm_inp.write("energy\nstop")
 
 
 def charmm_energies(inpfile, crm_path):

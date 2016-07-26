@@ -1076,9 +1076,8 @@ class DesmondParser(object):
 #        Args:
 
         molnames = []
-        fl = open(self.cms_file, 'r')
-        self.lines = list(fl)
-        fl.close()
+        with open(self.cms_file, 'r') as fl:
+            self.lines = list(fl)
         i=0
         j=0
 
@@ -1926,7 +1925,6 @@ class DesmondParser(object):
             lines.append("  }\n")
             lines.append("}\n")
 
-        fout = open(self.cms_file, 'w')
-        for line in lines:
-            fout.write(line)
-        fout.close()
+        with open(self.cms_file, 'w') as fout:
+            for line in lines:
+                fout.write(line)

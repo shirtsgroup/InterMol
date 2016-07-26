@@ -62,7 +62,7 @@ def parse_args(args):
 
     # Other options.
     group_misc = parser.add_argument_group('Other optional arguments')
-    group_misc.add_argument('--odir', metavar='directory', default='.',
+    group_misc.add_argument('--odir', metavar='directory', default=os.getcwd(),
             help='specification of output directory (default: ./)')
     group_misc.add_argument('--oname', metavar='prefix', default='',
             help='specification of prefix for output filenames '
@@ -202,7 +202,7 @@ def main(args=None):
         # write out the files.  Should write them out in the proper directory (the one reading in)
         pathprefix = os.path.dirname(prmtop_in)
         fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
-        fromamber_gro_in = os.path.join(pathprefix,prefix + '_from_amber.gro')
+        fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
@@ -217,8 +217,8 @@ def main(args=None):
         charmm_input_file = args['crm_in']
         prefix = os.path.splitext(os.path.basename(charmm_input_file))[0]
         # we need to find the parameter and structure files by reading the input file.
-        cinf = open(charmm_input_file,'r')
-        lines = cinf.readlines()
+        with open(charmm_input_file) as cinf:
+            lines = cinf.readlines()
         box = []
         rtfs = []
         prms = []
@@ -365,7 +365,7 @@ def main(args=None):
         top_out = oname + '.top'
         top = None
         e = None
-        if (os.path.isfile(gro_out) and os.path.isfile(top_out)):
+        if os.path.isfile(gro_out) and os.path.isfile(top_out):
             # if so, use these files.  Load them into ParmEd
             try:
                 top = parmed.load_file(top_out, xyz=gro_out)
