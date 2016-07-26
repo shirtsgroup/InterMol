@@ -5,15 +5,14 @@ import sys
 import warnings
 
 import numpy as np
+import parmed
 
-from intermol.gromacs import gromacs_driver
-from intermol.lammps import lammps_driver
-from intermol.desmond import desmond_driver
-from intermol.amber import amber_driver
-from intermol.charmm import charmm_driver
-
+import intermol.gromacs as gmx
+import intermol.lammps as lmp
+import intermol.desmond as des
+import intermol.amber as amb
+import intermol.charmm as crm
 import intermol.tests
-from intermol.tests.testing_tools import which
 
 # we have a number of "canonical" terms that we would like to print first
 canonical_keys = ['Potential', 'Bond', 'Angle', 'All dihedrals', 'LJ-14', 'Coulomb-14', 
@@ -24,10 +23,12 @@ logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
+
 def record_exception(logger, e_out, e_outfile, e):
     logger.exception(e)
     e_out.append(-1)
     e_outfile.append(-1)
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Perform a file conversion')
@@ -61,7 +62,7 @@ def parse_args(args):
 
     # Other options.
     group_misc = parser.add_argument_group('Other optional arguments')
-    group_misc.add_argument('--odir', metavar='directory', default='.',
+    group_misc.add_argument('--odir', metavar='directory', default=os.getcwd(),
             help='specification of output directory (default: ./)')
     group_misc.add_argument('--oname', metavar='prefix', default='',
             help='specification of prefix for output filenames '
@@ -128,38 +129,22 @@ def parse_args(args):
         sys.exit(1)
     return parser.parse_args(args)
 
+
 def main(args=None):
     logger.info('Beginning InterMol conversion')
     if not args:
         args = vars(parse_args(args))
 
-    # annoyingly, have to define the path variables here, since they
-    # aren't defined by the argument defaults if we call convert as a
-    # function instead of from the command line.
-
-    if not args.get('gromacs_path'):
-        gro_path = ''
-    else:
-        gro_path = args['gromacs_path']
-    if not args.get('lammps_path'):
-        lmp_path = ''
-    else:
-        lmp_path = args['lammps_path']
-
-    if not args.get('desmond_path'):
-        des_path = ''
-    else:
-        des_path = args['desmond_path']
-
-    if not args.get('amber_path'):
-        amb_path = ''
-    else:
-        amb_path = args['amber_path']
-
-    if not args.get('charmm_path'):
-        crm_path = ''
-    else:
-        crm_path = args['charmm_path']
+    if args.get('gromacs_path'):
+        gmx.GMX_PATH = args['gromacs_path']
+    if args.get('lammps_path'):
+        lmp.LMP_PATH = args['lammps_path']
+    if args.get('desmond_path'):
+        des.DES_PATH = args['desmond_path']
+    if args.get('amber_path'):
+        amb.AMB_PATH = args['amber_path']
+    if args.get('charmm_path'):
+        crm.CRM_PATH = args['charmm_path']
 
     if args.get('verbose'):
         h.setLevel(logging.DEBUG)
@@ -184,17 +169,17 @@ def main(args=None):
         gro_in = [x for x in gromacs_files if x.endswith('.gro')]
         assert(len(gro_in) == 1)
         gro_in = os.path.abspath(gro_in[0])
-        system = gromacs_driver.read_file(top_in, gro_in)
+        system = gmx.load(top_in, gro_in)
 
     elif args.get('des_in'):
         cms_file = args['des_in']
         prefix = os.path.splitext(os.path.basename(cms_file))[0]
-        system = desmond_driver.read_file(cms_file=cms_file)
+        system = des.load(cms_file=cms_file)
 
     elif args.get('lmp_in'):
         lammps_file = args['lmp_in']
         prefix = os.path.splitext(os.path.basename(lammps_file))[0]
-        system = lammps_driver.read_file(in_file=lammps_file)
+        system = lmp.load(in_file=lammps_file)
 
     elif args.get('amb_in'):
         amber_files = args['amb_in']
@@ -210,13 +195,6 @@ def main(args=None):
         assert(len(crd_in) == 1)
         crd_in = os.path.abspath(crd_in[0])
 
-        # next, convert to gromacs with ParmEd
-        try:
-            import parmed
-        except Exception as e:
-            record_exception(logger, e_out, e_outfile, e)
-            output_status['amber'] = e
-
         structure = parmed.amber.AmberParm(prmtop_in,crd_in)
         #Make GROMACS topology
         parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(structure)
@@ -224,12 +202,12 @@ def main(args=None):
         # write out the files.  Should write them out in the proper directory (the one reading in)
         pathprefix = os.path.dirname(prmtop_in)
         fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
-        fromamber_gro_in = os.path.join(pathprefix,prefix + '_from_amber.gro')
+        fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
         parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
 
         # now, read in using gromacs
-        system = gromacs_driver.read_file(fromamber_top_in, fromamber_gro_in)
+        system = gmx.load(fromamber_top_in, fromamber_gro_in)
 
     elif args.get('crm_in'):
 
@@ -239,8 +217,8 @@ def main(args=None):
         charmm_input_file = args['crm_in']
         prefix = os.path.splitext(os.path.basename(charmm_input_file))[0]
         # we need to find the parameter and structure files by reading the input file.
-        cinf = open(charmm_input_file,'r')
-        lines = cinf.readlines()
+        with open(charmm_input_file) as cinf:
+            lines = cinf.readlines()
         box = []
         rtfs = []
         prms = []
@@ -274,14 +252,6 @@ def main(args=None):
                         boxvecs[i] = np.float(b)
                 boxangles = np.array(boxangle_vars[6:9],float)
                 box = np.append(np.array(boxvecs),boxangles)
-            
-        # next, convert to gromacs with ParmEd
-
-        try:
-            import parmed
-        except Exception as e:
-            record_exception(logger, e_out, e_outfile, e)
-            output_status['amber'] = e
 
         #load in the parameters
         psf = parmed.load_file(psffile)
@@ -339,7 +309,7 @@ def main(args=None):
         parmed.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision = 8)
 
         # now, read in using gromacs
-        system = gromacs_driver.read_file(fromcharmm_top_in, fromcharmm_gro_in)
+        system = gmx.load(fromcharmm_top_in, fromcharmm_gro_in)
     
     else:
         logger.error('No input file')
@@ -356,7 +326,7 @@ def main(args=None):
     # TODO: factor out exception handling
     if args.get('gromacs'):
         try:
-            gromacs_driver.write_file(system, '{0}.top'.format(oname), '{0}.gro'.format(oname))
+            gmx.save('{0}.top'.format(oname), '{0}.gro'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['gromacs'] = e
@@ -365,7 +335,7 @@ def main(args=None):
 
     if args.get('lammps'):
         try:
-            lammps_driver.write_file('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_settings'))
+            lmp.save('{0}.input'.format(oname), system, nonbonded_style=args.get('lmp_settings'))
         except Exception as e:
             logger.exception(e)
             output_status['lammps'] = e
@@ -374,7 +344,7 @@ def main(args=None):
 
     if args.get('desmond'):
         try:
-            desmond_driver.write_file('{0}.cms'.format(oname), system)
+            des.save('{0}.cms'.format(oname), system)
         except Exception as e:
             logger.exception(e)
             output_status['desmond'] = e
@@ -389,18 +359,13 @@ def main(args=None):
         # in GROMACS because it can handle as special cases all of
         # different versions of torsions used in the supported
         # programs so far.
-        try:
-            import parmed
-        except Exception as e:
-            record_exception(logger, e_out, e_outfile, e)
-            output_status['amber'] = e
 
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
         top_out = oname + '.top'
         top = None
         e = None
-        if (os.path.isfile(gro_out) and os.path.isfile(top_out)):
+        if os.path.isfile(gro_out) and os.path.isfile(top_out):
             # if so, use these files.  Load them into ParmEd
             try:
                 top = parmed.load_file(top_out, xyz=gro_out)
@@ -421,14 +386,7 @@ def main(args=None):
         else:
             logger.warn("Can't convert to AMBER unless GROMACS is also selected")
 
-
     if args.get('charmm'):
-        try:
-            import parmed
-        except Exception as e:
-            record_exception(logger, e_out, e_outfile, e)
-            output_status['charmm'] = e
-
         # currently, this only works if amb_in is used. Reason is that
         # charmm does not support RB dihedrals.
         if args.get('amb_in'):
@@ -443,13 +401,16 @@ def main(args=None):
                 # we need these arrays for enery output
                 prms = [charmm_output_prm]
                 rtfs = [charmm_output_rtf]
-                parmed.charmm.CharmmParameterSet.write(parmed.charmm.CharmmParameterSet.from_structure(structure), top=charmm_output_rtf, par=charmm_output_prm)
+                parmed.charmm.CharmmParameterSet.write(
+                    parmed.charmm.CharmmParameterSet.from_structure(structure),
+                    top=charmm_output_rtf,
+                    par=charmm_output_prm)
                 structure.save(charmm_output_psf, format='psf',overwrite=True)
-                parmed.charmm.CharmmCrdFile.write(parmed_system,charmm_output_crd)
+                parmed.charmm.CharmmCrdFile.write(parmed_system, charmm_output_crd)
                 
             except Exception as e:
                 output_status['charmm'] = e
-            if e == None:
+            if e is None:
                 output_status['charmm'] = 'Converted'
         else: 
             logger.warn("Can't convert to CHARMM unless inputs are in AMBER")
@@ -476,12 +437,12 @@ def main(args=None):
             else:
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
-            e_in, e_infile = gromacs_driver.gromacs_energies(top_in, gro_in, mdp_in, gro_path)
+            e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
-            e_in, e_infile = lammps_driver.lammps_energies(lammps_, lmp_path)
+            e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -491,7 +452,7 @@ def main(args=None):
             else:
                 cfg_in = cfg_in_default
             input_type = 'desmond'
-            e_in, e_infile = desmond_driver.desmond_energies(cms_file, cfg_in, des_path)
+            e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -501,14 +462,14 @@ def main(args=None):
             else:
                 in_in = in_in_default
             input_type = 'amber'
-            e_in, e_infile = amber_driver.amber_energies(prmtop_in, crd_in, in_in, amb_path)
+            e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
 
         elif args.get('crm_in'):
             if args.get('inefile'):
                 logger.warn("Original CHARMM input file is being used, not the supplied input file")
             input_type = 'charmm'
             # returns energy file
-            e_in, e_infile = charmm_driver.charmm_energies(args.get('crm_in'), crm_path)
+            e_in, e_infile = crm.energies(args.get('crm_in'), crm.CRM_PATH)
         else:
             logger.warn('No input files identified! Code should have never made it here!')
 
@@ -524,8 +485,9 @@ def main(args=None):
             else:
                 mdp = mdp_in_default
             try:
-                out, outfile = gromacs_driver.gromacs_energies(
-                    '{0}.top'.format(oname), '{0}.gro'.format(oname), mdp, gro_path)
+                out, outfile = gmx.energies('{0}.top'.format(oname),
+                                            '{0}.gro'.format(oname),
+                                            mdp, gmx.GMX_PATH)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['gromacs'] = e
@@ -537,8 +499,8 @@ def main(args=None):
         if args.get('lammps') and output_status['lammps'] == 'Converted':
             output_type.append('lammps')
             try:
-                out, outfile = lammps_driver.lammps_energies(
-                    '{0}.input'.format(oname), lmp_path)
+                out, outfile = lmp.energies('{0}.input'.format(oname),
+                                            lmp.LMP_PATH)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['lammps'] = e
@@ -554,8 +516,8 @@ def main(args=None):
             else:
                 cfg = cfg_in_default
             try:
-                out, outfile = desmond_driver.desmond_energies(
-                    '{0}.cms'.format(oname), cfg, des_path)
+                out, outfile = des.energies('{0}.cms'.format(oname),
+                                            cfg, des.DES_PATH)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['desmond'] = e
@@ -569,11 +531,12 @@ def main(args=None):
             if args.get('inefile'):
                 logger.warn("CHARMM energy input file not used, information recreated from command line options")
             inpfile = os.path.join(oname,'{0}.inp'.format(oname))
-            charmm_driver.write_input_file(inpfile, charmm_output_psf, rtfs, prms, [], 
-                                           charmm_driver.pick_crystal_type(structure.box),
-                                           structure.box, charmm_output_crd, args.get('charmm_settings'))
+            crm.write_input_file(inpfile, charmm_output_psf, rtfs, prms, [],
+                                 crm.pick_crystal_type(structure.box),
+                                 structure.box, charmm_output_crd,
+                                 args.get('charmm_settings'))
             try:
-                out, outfile = charmm_driver.charmm_energies(inpfile, crm_path)
+                out, outfile = crm.energies(inpfile, crm.CRM_PATH)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['charmm'] = e

@@ -20,7 +20,7 @@ logger = logging.getLogger('InterMolLog')
 ENGINE = 'lammps'
 
 
-def load_lammps(in_file):
+def load(in_file):
     """Load a LAMMPS input file into a `System`.
 
     Args:
@@ -34,7 +34,7 @@ def load_lammps(in_file):
     return parser.read()
 
 
-def write_lammps(in_file, system, unit_set='real',
+def save(in_file, system, unit_set='real',
                  nonbonded_style='pair_style lj/cut/coul/long 9.0 9.0\nkspace_style pppm 1e-6\n'):
 
     """write a `System` into LAMMPS input file.
