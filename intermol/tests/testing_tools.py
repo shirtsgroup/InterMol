@@ -68,20 +68,23 @@ def summarize_results(input_type, results, outdir):
         print(out.read())
 
 
-def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
+def convert_one_to_all(input_engine, test_type, energy, output_dir,
+                       test_tolerance=1e-4):
     """Convert all tests of a type from one engine to all others. """
     flags = {'energy': energy,
              input_engine: True}
 
     testing_logger.info('Running {} {} tests'.format(input_engine.upper(), test_type))
-    output_dir = resource_filename('intermol', 'tests/{}_test_outputs'.format(test_type))
+    output_dir = os.path.join(output_dir, '{}_test_outputs'.format(test_type))
+
     try:
         os.makedirs(output_dir)
     except OSError:
         if not os.path.isdir(output_dir):
             raise
 
-    results = _convert_from_engine(input_engine, flags, test_type=test_type)
+    results = _convert_from_engine(input_engine, flags, test_type=test_type,
+                                   output_dir=output_dir)
     if not energy:
         return  # No need to compare energies.
 
@@ -114,7 +117,7 @@ def convert_one_to_all(input_engine, test_type, energy, test_tolerance=1e-4):
         raise MultipleValidationErrors(*exceptions)
 
 
-def _convert_from_engine(input_engine, flags, test_type='unit'):
+def _convert_from_engine(input_engine, flags, output_dir, test_type='unit'):
     """Run all tests of a particular type from one engine to all others.
 
     Args:
@@ -129,7 +132,7 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
 
     """
     from intermol import convert
-    test_dir = resource_filename('intermol', 'tests/{0}/{1}_tests'.format(
+    test_dir = resource_filename('intermol', 'tests/{}/{}_tests'.format(
         input_engine, test_type))
 
     get_test_files = eval('_get_{}_test_files'.format(input_engine))
@@ -141,7 +144,7 @@ def _convert_from_engine(input_engine, flags, test_type='unit'):
     per_file_results = OrderedDict((k, None) for k in names)
     results = OrderedDict((engine, copy(per_file_results)) for engine in ENGINES)
 
-    base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_{1}'.format(test_type, input_engine))
+    base_output_dir = os.path.join(output_dir, 'from_{}'.format(input_engine))
     try:
         os.makedirs(base_output_dir)
     except OSError:
