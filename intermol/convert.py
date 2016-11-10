@@ -442,6 +442,7 @@ def main(args=None):
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warn("LAMMPS energy settings should not require a separate infile")
+                input_type = 'lammps'
             e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
