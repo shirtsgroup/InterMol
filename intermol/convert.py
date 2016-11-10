@@ -363,7 +363,6 @@ def main(args=None):
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
         top_out = oname + '.top'
-        top = None
         e = None
         if os.path.isfile(gro_out) and os.path.isfile(top_out):
             # if so, use these files.  Load them into ParmEd
@@ -379,7 +378,7 @@ def main(args=None):
                     top.save(oname + '.rst7', overwrite=True)
                 except Exception as e:
                     output_status['amber'] = e
-                if e == None:
+                if e is None:
                     output_status['amber'] = 'Converted'
             except Exception as e:
                 output_status['amber'] = e

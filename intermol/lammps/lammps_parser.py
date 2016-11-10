@@ -1061,7 +1061,7 @@ class LammpsParser(object):
 
                     if atom.charge[0]._value != 0:
                         atom_charges = True
-                    if atom.velocity:
+                    if np.any(atom.velocity):
                         vel_list.append(
                             '{0:-6d} {1:11.7f} {2:11.7f} {3:11.7f}\n'.format(
                                 atom.index,
