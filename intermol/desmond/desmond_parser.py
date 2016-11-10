@@ -1712,7 +1712,7 @@ class DesmondParser(object):
                         '"%s"'%atom.residue_name,
                         atom.atomic_number,
                         '"%s"'%atom.name)
-                    if atom._velocity:
+                    if np.any(atom._velocity):
                         for j in range(3):
                             line += " %10.8f" % (float(atom._velocity[j].value_in_unit(units.angstroms / units.picoseconds)))
                     else:
@@ -1824,7 +1824,7 @@ class DesmondParser(object):
                                 '"%s"'%atom.residue_name,
                                 atom.atomic_number,
                                 '"%s"'%atom.name)
-                    if atom._velocity:
+                    if np.any(atom._velocity):
                         for j in range(3):
                             line += " %10.8f" % (float(atom._velocity[j].value_in_unit(units.angstroms / units.picoseconds)))
                     else:

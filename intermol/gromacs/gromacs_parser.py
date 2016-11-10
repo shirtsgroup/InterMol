@@ -730,6 +730,7 @@ class GromacsParser(object):
             atom.mass = (1, mass)
 
         atom.position = self.gro.positions[self.n_atoms_added]
+        atom.velocity= self.gro.velocities[self.n_atoms_added]
 
         for state, atomtype in atom.atomtype.items():
             intermol_atomtype = self.system.atomtypes.get(atomtype)
