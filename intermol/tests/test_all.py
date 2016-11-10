@@ -19,33 +19,41 @@ if not testing_logger.handlers:
     testing_logger.addHandler(h)
 
 
-def test_gromacs_unit(energy=False):
-    convert_one_to_all(input_engine='gromacs', test_type='unit', energy=energy)
+def test_gromacs_unit(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='gromacs', test_type='unit', energy=energy,
+                       output_dir=output_dir)
 
 @pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
-def test_gromacs_stress(energy=False):
-    convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy)
+def test_gromacs_stress(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy,
+                       output_dir=output_dir)
 
-def test_lammps_unit(energy=False):
-    convert_one_to_all(input_engine='lammps', test_type='unit', energy=energy)
-
-@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
-def test_lammps_stress(energy=False):
-    convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy)
-
-def test_desmond_unit(energy=False):
-    convert_one_to_all(input_engine='desmond', test_type='unit', energy=energy)
+def test_lammps_unit(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='lammps', test_type='unit', energy=energy,
+                       output_dir=output_dir)
 
 @pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
-def test_desmond_stress(energy=False):
-    convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy)
+def test_lammps_stress(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy,
+                       output_dir=output_dir)
 
-def test_amber_unit(energy=False):
-    convert_one_to_all(input_engine='amber', test_type='unit', energy=energy)
+def test_desmond_unit(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='desmond', test_type='unit', energy=energy,
+                       output_dir=output_dir)
 
 @pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
-def test_amber_stress(energy=False):
-    convert_one_to_all(input_engine='amber', test_type='stress', energy=energy)
+def test_desmond_stress(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy,
+                       output_dir=output_dir)
+
+def test_amber_unit(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='amber', test_type='unit', energy=energy,
+                       output_dir=output_dir)
+
+@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+def test_amber_stress(energy=False, output_dir=os.getcwd()):
+    convert_one_to_all(input_engine='amber', test_type='stress', energy=energy,
+                       output_dir=output_dir)
 
 if __name__ == "__main__":
     import argparse
@@ -58,6 +66,8 @@ if __name__ == "__main__":
             default='unit', help="The type of tests to run: unit, stress.")
     compute_energies = parser.add_argument('-e', '--energy', dest='compute_energies',
             action='store_true', help="Compute and compare the input and output energies.")
+    output_dir = parser.add_argument('-o', '--output', dest='output_dir',
+            default=os.getcwd(), help="Output directory.")
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -66,4 +76,4 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     func_name = 'test_{}_{}'.format(args['program'].lower(), args['type'])
     testing_function = eval(func_name)
-    testing_function(args['compute_energies'])
+    testing_function(args['compute_energies'], args['output_dir'])
