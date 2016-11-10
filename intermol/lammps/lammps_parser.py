@@ -172,7 +172,7 @@ class LammpsParser(object):
             elif dihedral == RbDihedral:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 converted_dihedral = TrigDihedral
-            elif dihedral == FourierDihedralType:
+            elif dihedral == FourierDihedral:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
                 # Now actually convert the dihedral.
