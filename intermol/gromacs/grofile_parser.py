@@ -1,6 +1,6 @@
 import logging
 
-from simtk.unit import nanometers
+from simtk.unit import nanometers, picoseconds
 import numpy as np
 
 logger = logging.getLogger('InterMolLog')
@@ -30,6 +30,7 @@ class GromacsGroParser(object):
         resname = list()
         boxes = list()
         xyzs = list()
+        vels = list()
         with open(self.gro_file) as gro:
             next(gro)
             n_atoms = int(next(gro).strip())
@@ -54,6 +55,11 @@ class GromacsGroParser(object):
                 entries = [float(x) for x in entries]
                 xyz = [x * nanometers for x in entries[:3]]
                 xyzs.append(xyz)
+                if len(entries) == 6:
+                    vel = [v * nanometers / picoseconds for v in entries[3:6]]
+                else:
+                    vel = [v * nanometers / picoseconds for v in [0., 0., 0.]]
+                vels.append(vel)
 
             line = next(gro)
             raw_box_vector = line.split()
@@ -73,6 +79,7 @@ class GromacsGroParser(object):
             boxes.append(v)
 
         self.positions = np.array(xyzs)
+        self.velocities = np.array(vels)
         self.atom_names = atomname
         self.residue_ids = resid
         self.residue_names = resname
