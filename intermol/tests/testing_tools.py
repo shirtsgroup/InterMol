@@ -75,7 +75,6 @@ def convert_one_to_all(input_engine, test_type, energy, output_dir,
              input_engine: True}
 
     testing_logger.info('Running {} {} tests'.format(input_engine.upper(), test_type))
-    # output_dir = resource_filename('intermol', 'tests/{}_test_outputs'.format(test_type))
     output_dir = os.path.join(output_dir, '{}_test_outputs'.format(test_type))
 
     try:
@@ -145,7 +144,6 @@ def _convert_from_engine(input_engine, flags, output_dir, test_type='unit'):
     per_file_results = OrderedDict((k, None) for k in names)
     results = OrderedDict((engine, copy(per_file_results)) for engine in ENGINES)
 
-    # base_output_dir = resource_filename('intermol', 'tests/{0}_test_outputs/from_{1}'.format(test_type, input_engine))
     base_output_dir = os.path.join(output_dir, 'from_{}'.format(input_engine))
     try:
         os.makedirs(base_output_dir)
