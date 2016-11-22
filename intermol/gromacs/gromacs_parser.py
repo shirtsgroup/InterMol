@@ -1103,7 +1103,9 @@ class GromacsParser(object):
                         self.process_file(top_filename)
                         break
                 else:
-                    raise GromacsError('Could not locate #include file: '+name)
+                    raise GromacsError('Could not locate #include file: {}\n\n'
+                                       'Did you add the GROMACS share directory'
+                                       ' to "GMXDATA"?'.format(name))
 
             elif command == '#define' and not ignore:
                 # Add a value to our list of defines.
