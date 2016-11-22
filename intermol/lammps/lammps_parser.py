@@ -728,7 +728,7 @@ class LammpsParser(object):
                 pass
             new_atom_type = None
             if self.system.combination_rule == "Multiply-C6C12":
-                logger.warnings("Combination rule 'Multiply-C6C12' not yet implemented")
+                logger.warning("Combination rule 'Multiply-C6C12' not yet implemented")
             elif self.system.combination_rule in ['Multiply-Sigeps',
                                                   'Lorentz-Berthelot']:
                 atomtype = 'lmp_{:03d}'.format(int(fields[self.type_idx]))
