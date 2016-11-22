@@ -310,7 +310,7 @@ class GromacsParser(object):
                 for i, p in enumerate(params):
                     kwds[p] = force_type_params[i]
             else:
-                logger.warn("No forcetype defined for: {0}".format(entries))
+                logger.warning("No forcetype defined for: {0}".format(entries))
         return kwds
 
     paramlist = ff.build_paramlist('gromacs')
@@ -582,7 +582,7 @@ class GromacsParser(object):
                                 param.value_in_unit(param_units[i])))
                 top.write('\n')
             else:
-                logger.warn("Found unsupported pair type {0}".format(
+                logger.warning("Found unsupported pair type {0}".format(
                         pair.__class__.__name__))
 
         top.write('\n')
@@ -735,7 +735,7 @@ class GromacsParser(object):
         for state, atomtype in atom.atomtype.items():
             intermol_atomtype = self.system.atomtypes.get(atomtype)
             if not intermol_atomtype:
-                logger.warn('A corresponding AtomType for {0} was not'
+                logger.warning('A corresponding AtomType for {0} was not'
                             ' found.'.format(atom))
                 continue
             atom.atomic_number = intermol_atomtype.atomic_number
@@ -748,7 +748,7 @@ class GromacsParser(object):
                 if intermol_atomtype.mass._value >= 0:
                     atom.mass = (state, intermol_atomtype.mass)
                 else:
-                    logger.warn("Suspicious mass parameter found for atom "
+                    logger.warning("Suspicious mass parameter found for atom "
                                 "{0}. Visually inspect before using.".format(atom))
             atom.sigma = (state, intermol_atomtype.sigma)
             atom.epsilon = (state, intermol_atomtype.epsilon)
@@ -788,10 +788,10 @@ class GromacsParser(object):
                                                         direction='into')
             new_bond = canonical_bond(*atoms, **kwds)
         else:
-            logger.warn("Unsupported Gromacs bondtype: {0}".format(numeric_bondtype))
+            logger.warning("Unsupported Gromacs bondtype: {0}".format(numeric_bondtype))
 
         if not new_bond:
-            logger.warn("Undefined bond formatting.")
+            logger.warning("Undefined bond formatting.")
         else:
             self.current_molecule_type.bond_forces.add(new_bond)
 
@@ -853,11 +853,11 @@ class GromacsParser(object):
                     pairvars.extend(self.get_parameter_list_from_force(pairtype))
             new_pair = thispair(*pairvars, **optpairvars)
         else:
-            logger.warn("Unsupported Gromacs pairtype: {0}".format(
+            logger.warning("Unsupported Gromacs pairtype: {0}".format(
                 numeric_pairtype))
 
         if not new_pair:
-            logger.warn("Undefined pair formatting.")
+            logger.warning("Undefined pair formatting.")
         else:
             self.current_molecule_type.pair_forces.add(new_pair)
 
@@ -920,10 +920,10 @@ class GromacsParser(object):
                                                          direction='into')
             new_angle = canonical_angle(*atoms, **kwds)
         else:
-            logger.warn("Unsupported Gromacs angletype: {0}".format(numeric_angletype))
+            logger.warning("Unsupported Gromacs angletype: {0}".format(numeric_angletype))
 
         if not new_angle:
-            logger.warn("Undefined angle formatting.")
+            logger.warning("Undefined angle formatting.")
         else:
             self.current_molecule_type.angle_forces.add(new_angle)
 
@@ -960,6 +960,7 @@ class GromacsParser(object):
             dihedral += ['0.0'] * 3
             gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
 
+        new_dihedral = None
         for d_type in dihedral_types:
             kwds = self.choose_parameter_kwds_from_forces(
                     dihedral, n_atoms, d_type, gromacs_dihedral)
@@ -969,9 +970,9 @@ class GromacsParser(object):
             kwds['improper'] = improper
             new_dihedral = canonical_dihedral(*atoms, **kwds)
 
-            if not new_dihedral:
-                logger.warn("Undefined dihedral formatting: {0}".format(dihedral))
-            self.current_molecule_type.dihedral_forces.add(new_dihedral)
+        if new_dihedral is None:
+            logger.warning("Undefined dihedral formatting: {0}".format(dihedral))
+        self.current_molecule_type.dihedral_forces.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
         """Determine the type of dihedral interaction between four atoms. """
@@ -985,10 +986,12 @@ class GromacsParser(object):
                        ['X', 'X', a3, a4],  # front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
                        ['X', 'X', a2, a1],  # rear end double wildcard
+                       [a1, 'X', 'X', a4],  # middle double wildcard
                        ['X', a3, a2, a1],   # flipped single wildcard 1
                        [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a3, a2, 'X'],  # flipped double wildcard
-                       [a4, a3, 'X', 'X']   # flipped front end double wildcard
+                       [a4, a3, 'X', 'X'],  # flipped front end double wildcard
+                       [a4, 'X', 'X', a1],  # flipped middle double wildcard
                        ]
 
         dihedral_types = set()
@@ -1006,7 +1009,8 @@ class GromacsParser(object):
                         dihedral_types.add(to_be_added)
                 break
         if not dihedral_types:
-            logger.warn("Lookup failed for dihedral: {0}".format(bondingtypes))
+            logger.warning("Lookup failed for dihedral: {0}".format(bondingtypes))
+            return []
         else:
             return list(dihedral_types)
 
@@ -1372,7 +1376,7 @@ class GromacsParser(object):
         else:
             # TODO: Come up with remaining cases (are there any?) and a proper
             #       failure case.
-            logger.warn('Should never have gotten here.')
+            logger.warning('Should never have gotten here.')
         dihedral_type = self.process_forcetype(
             btypes, 'dihedral', line, n_atoms_specified,
             self.gromacs_dihedral_types, self.canonical_dihedral)
@@ -1404,7 +1408,7 @@ class GromacsParser(object):
         force_type = CanonicalForceType(*bondingtypes, **kwds)
 
         if not force_type:
-            logger.warn("{0} is not a supported {1} type".format(fields[2], forcename))
+            logger.warning("{0} is not a supported {1} type".format(fields[2], forcename))
             return
         else:
             return force_type
@@ -1442,7 +1446,7 @@ class GromacsParser(object):
                 PairFunc = LjqSigepsPairType
             offset = 4
         else:
-            logger.warn("Could not find pair type for line: {0}".format(line))
+            logger.warning("Could not find pair type for line: {0}".format(line))
 
         if PairFunc:
             pairvars = [fields[0], fields[1]]
@@ -1479,7 +1483,7 @@ class GromacsParser(object):
             if combination_rule == 'Buckingham':
                 NonbondedFunc = BuckinghamNonbondedType
         else:
-            logger.warn("Could not find nonbonded type for line: {0}".format(line))
+            logger.warning("Could not find nonbonded type for line: {0}".format(line))
 
         nonbonded_vars = [fields[0], fields[1]]
         kwds = self.create_kwds_from_entries(fields, NonbondedFunc, offset=3)

@@ -383,7 +383,7 @@ def main(args=None):
             except Exception as e:
                 output_status['amber'] = e
         else:
-            logger.warn("Can't convert to AMBER unless GROMACS is also selected")
+            logger.warning("Can't convert to AMBER unless GROMACS is also selected")
 
     if args.get('charmm'):
         # currently, this only works if amb_in is used. Reason is that
@@ -412,7 +412,7 @@ def main(args=None):
             if e is None:
                 output_status['charmm'] = 'Converted'
         else: 
-            logger.warn("Can't convert to CHARMM unless inputs are in AMBER")
+            logger.warning("Can't convert to CHARMM unless inputs are in AMBER")
 
     # --------------- ENERGY EVALUATION ----------------- #
 
@@ -431,7 +431,7 @@ def main(args=None):
         if args.get('gro_in'):
             if args.get('inefile'):
                 if os.path.splitext(args.get('inefile'))[-1] != '.mdp':
-                    logger.warn("GROMACS energy settings file does not end with .mdp")
+                    logger.warning("GROMACS energy settings file does not end with .mdp")
                 mdp_in = args['inefile']
             else:
                 mdp_in = mdp_in_default
@@ -440,14 +440,14 @@ def main(args=None):
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
-                logger.warn("LAMMPS energy settings should not require a separate infile")
+                logger.warning("LAMMPS energy settings should not require a separate infile")
                 input_type = 'lammps'
             e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
 
         elif args.get('des_in'):
             if args.get('inefile'):
                 if os.path.splitext(args.get('inefile'))[-1] != '.cfg':
-                    logger.warn("DESMOND energy settings file does not end with .cfg")
+                    logger.warning("DESMOND energy settings file does not end with .cfg")
                 cfg_in = args['inefile']
             else:
                 cfg_in = cfg_in_default
@@ -457,7 +457,7 @@ def main(args=None):
         elif args.get('amb_in'):
             if args.get('inefile'):
                 if os.path.splitext(args.get('inefile'))[-1] != '.in':
-                    logger.warn("AMBER energy settings file does not end with .in")
+                    logger.warning("AMBER energy settings file does not end with .in")
                 in_in = args['inefile']
             else:
                 in_in = in_in_default
@@ -466,12 +466,12 @@ def main(args=None):
 
         elif args.get('crm_in'):
             if args.get('inefile'):
-                logger.warn("Original CHARMM input file is being used, not the supplied input file")
+                logger.warning("Original CHARMM input file is being used, not the supplied input file")
             input_type = 'charmm'
             # returns energy file
             e_in, e_infile = crm.energies(args.get('crm_in'), crm.CRM_PATH)
         else:
-            logger.warn('No input files identified! Code should have never made it here!')
+            logger.warning('No input files identified! Code should have never made it here!')
 
         # Evaluate output energies.
         output_type = []
@@ -529,7 +529,7 @@ def main(args=None):
         if args.get('charmm') and output_status['charmm'] == 'Converted':
             output_type.append('charmm')
             if args.get('inefile'):
-                logger.warn("CHARMM energy input file not used, information recreated from command line options")
+                logger.warning("CHARMM energy input file not used, information recreated from command line options")
             inpfile = os.path.join(oname,'{0}.inp'.format(oname))
             crm.write_input_file(inpfile, charmm_output_psf, rtfs, prms, [],
                                  crm.pick_crystal_type(structure.box),
