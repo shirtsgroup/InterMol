@@ -6,6 +6,7 @@ InterMol: a conversion tool for molecular dynamics simulations
 
 We are currently in beta testing phase. Desmond<=>Gromacs<=>Lammps conversions are carried out natively in InterMol.  AMBER->X is carried out by converting AMBER to GROMACS, then to other programs using ParmEd. AMBER->CHARMM is carried out by ParmEd directly.
 
+
 ### Basic usage
 To check out how it works, use the ````convert.py```` script found in the ````intermol```` directory:
 
@@ -98,3 +99,21 @@ formatted files.
 We're also developing a comprehensive test suite to ensure that all InterMol
 conversions happen correctly. For instructions on how to run this check out
 the [testing README](tests/README.md).
+
+### Citation [![Citing InterMol](https://img.shields.io/badge/DOI-10.1063%2F1.4880555-blue.svg
+(http://dx.doi.org/10.1007/s10822-016-9977-1)
+
+InterMol is research software. If you make use of InterMol in scientific
+publications please cite the following reference:
+
+```
+@article{shirts2016lessons,
+  title={Lessons learned from comparing molecular dynamics engines on the SAMPL5 dataset},
+  author={Shirts, Michael R and Klein, Christoph and Swails, Jason M and Yin, Jian and Gilson, Michael K and Mobley, David L and Case, David A and Zhong, Ellen D},
+  journal={Journal of computer-aided molecular design},
+  pages={1--15},
+  year={2016},
+  doi={doi:10.1007/s10822-016-9977-1}
+  publisher={Springer International Publishing}
+}
+```
