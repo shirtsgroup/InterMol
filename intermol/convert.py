@@ -131,7 +131,13 @@ def parse_args(args):
 
 
 def main(args=None):
-    logger.info('Beginning InterMol conversion')
+    logger.info('Beginning InterMol conversion\n')
+
+    logger.info('InterMol is research software. If you make use of InterMol '
+                'in scientific publications please cite the following '
+                'reference:\n'
+                'Shirts, M.R., Klein, C., Swails, J.M. et al. J Comput Aided Mol Des (2016). doi:10.1007/s10822-016-9977-1\n')
+
     if not args:
         args = vars(parse_args(args))
 
