@@ -100,7 +100,7 @@ We're also developing a comprehensive test suite to ensure that all InterMol
 conversions happen correctly. For instructions on how to run this check out
 the [testing README](tests/README.md).
 
-### Citation [![Citing InterMol](https://img.shields.io/badge/DOI-10.1063%2F1.4880555-blue.svg
+### Citation [![Citing InterMol](https://img.shields.io/badge/DOI-10.1063%2F1.4880555-blue.svg)
 (http://dx.doi.org/10.1007/s10822-016-9977-1)
 
 InterMol is research software. If you make use of InterMol in scientific
