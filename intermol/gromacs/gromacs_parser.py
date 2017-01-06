@@ -960,7 +960,6 @@ class GromacsParser(object):
             dihedral += ['0.0'] * 3
             gromacs_dihedral = self.gromacs_dihedrals[numeric_dihedraltype]
 
-        new_dihedral = None
         for d_type in dihedral_types:
             kwds = self.choose_parameter_kwds_from_forces(
                     dihedral, n_atoms, d_type, gromacs_dihedral)
@@ -969,10 +968,7 @@ class GromacsParser(object):
 
             kwds['improper'] = improper
             new_dihedral = canonical_dihedral(*atoms, **kwds)
-
-        if new_dihedral is None:
-            logger.warning("Undefined dihedral formatting: {0}".format(dihedral))
-        self.current_molecule_type.dihedral_forces.add(new_dihedral)
+            self.current_molecule_type.dihedral_forces.add(new_dihedral)
 
     def find_dihedraltype(self, bondingtypes, improper):
         """Determine the type of dihedral interaction between four atoms. """
