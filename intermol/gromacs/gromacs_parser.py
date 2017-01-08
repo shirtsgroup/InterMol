@@ -468,7 +468,7 @@ class GromacsParser(object):
 
     def write_nonbonded_types(self, top):
         top.write('[ nonbond_params ]\n')
-        top.write('i    j    func    sigma     epsilon\n')
+        top.write(';i    j    func    sigma     epsilon\n')
         for nbtype in sorted(self.system.nonbonded_types.values(), key=lambda x: (x.atom1, x.atom2)):
             # TODO: support for buckingham NB types
             top.write('{0:6s} {1:6s} {2:3d}'.format(
