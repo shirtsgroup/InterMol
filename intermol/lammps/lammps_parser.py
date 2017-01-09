@@ -1079,7 +1079,7 @@ class LammpsParser(object):
                     atom2_type = int(atom_list[pair.atom2].split()[2])
                     if atom2_type < atom1_type:  # LAMMPS requires i < j
                         atom1_type, atom2_type = atom2_type, atom1_type
-                    pair_coeffs.append('pair_coeff {0:d} {1:d} {1:11.7f} {2:11.7f}\n'.format(
+                    pair_coeffs.append('pair_coeff {0:d} {1:d} {2:11.7f} {3:11.7f}\n'.format(
                                 atom1_type,
                                 atom2_type,
                                 pair.epsilon.value_in_unit(self.ENERGY),
