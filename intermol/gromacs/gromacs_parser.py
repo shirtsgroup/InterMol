@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import logging
 import os
 import math
@@ -96,6 +96,20 @@ class GromacsParser(object):
 
     gromacs_pair_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in gromacs_pairs.items())
+
+    gromacs_virtuals = {
+        '2-1': TwoVirtual,
+        '3-1': ThreeLinearVirtual,
+        '3-2': ThreeFdVirtual,
+        '3-3': ThreeFadVirtual,
+        '3-4': ThreeOutVirtual,
+        '4-2': FourFdnVirtual
+    }
+
+    lookup_gromacs_virtuals = dict((v, k) for k, v in gromacs_virtuals.items())
+
+    gromacs_virtual_types = dict(
+        (k, eval(v.__name__ + 'Type')) for k, v in gromacs_virtuals.items())
 
     gromacs_bonds = {
         '1': HarmonicBond,
@@ -339,11 +353,10 @@ class GromacsParser(object):
             self.exclusions = []
             self.pairs = []
             self.cmaps = []
+            self.virtuals = defaultdict(list)
 
     def __init__(self, top_file, gro_file, system=None, include_dir=None, defines=None):
-        """
-        Initializes a GromacsTopologyParse object which serves to read in a Gromacs
-        topology into the abstract representation.
+        """Initializes the parser with all required metadata.
 
         Args:
             defines: Sets of default defines to use while parsing.
@@ -366,9 +379,9 @@ class GromacsParser(object):
             self.defines.update(defines)
 
     def read(self):
-        """
+        """Load the files into InterMol's abstract representation.
 
-        Return:
+        Returns:
             system
         """
         self.current_directive = None
@@ -503,10 +516,8 @@ class GromacsParser(object):
                 self.write_angles(top)
             if self.current_molecule_type.dihedral_forces:
                 self.write_dihedrals(top)
-
-            # if moleculeType.virtualForceSet:
-            #     lines += self.write_virtuals(moleculeType.virtualForceSet)
-            #
+            if self.current_molecule_type.virtual_forces:
+                self.write_virtual_sites(top)
             if self.current_molecule_type.rigidwaters:
                 self.write_rigidwaters(top)
             if self.current_molecule_type.exclusions:
@@ -586,6 +597,37 @@ class GromacsParser(object):
                         pair.__class__.__name__))
 
         top.write('\n')
+
+    def write_virtual_sites(self, top):
+        virtuals = defaultdict(list)
+        for force in self.current_molecule_type.virtual_forces:
+            if hasattr(force, 'atom5'):
+                virtuals[4].append(force)
+            elif hasattr(force, 'atom4'):
+                virtuals[3].append(force)
+            else:
+                virtuals[2].append(force)
+
+        virtuals[2] = sorted(virtuals[2], key=lambda x: (x.atom1, x.atom2, x.atom3))
+        virtuals[3] = sorted(virtuals[3], key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+        virtuals[4] = sorted(virtuals[4], key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4, x.atom5))
+
+        for n_body_type, vsites in virtuals.items():
+            top.write('[ virtual_sites{0} ]\n'.format(n_body_type))
+            top.write(';from   atoms({0})   func      params\n'.format(n_body_type))
+            for vsite in vsites:
+                for n in range(1, n_body_type + 2):
+                    atom = getattr(vsite, 'atom{}'.format(n))
+                    top.write('{0:7d} '.format(atom))
+
+                top.write('{:4s}'.format(self.lookup_gromacs_virtuals[vsite.__class__][-1]))
+
+                vsite_params = self.get_parameter_list_from_force(vsite)
+                param_units = self.unitvars[vsite.__class__.__name__]
+                for param, unit in zip(vsite_params, param_units):
+                    top.write('{0:18.8e}'.format(param.value_in_unit(unit)))
+                top.write('\n')
+            top.write('\n')
 
     def write_bonds(self, top):
         top.write('[ bonds ]\n')
@@ -692,6 +734,9 @@ class GromacsParser(object):
             self.create_rigidwater(rigidwater)
         for exclusion in top_moltype.exclusions:
             self.create_exclusion(exclusion)
+        for vsite_type, vsites in top_moltype.virtuals.items():
+            for vsite in vsites:
+                self.create_virtual_site(vsite, vsite_type)
 
     def create_molecule(self, top_moltype, mol_name):
         molecule = Molecule(mol_name)
@@ -890,6 +935,24 @@ class GromacsParser(object):
         for index in exclusion:
             if first < index:
                 self.current_molecule_type.exclusions.add((int(first), int(index)))
+
+    def create_virtual_site(self, vsite, n_body_type):
+        n_entries = len(vsite)
+        n_atoms = int(n_body_type) + 1
+        numeric_vsite_type = vsite[n_atoms]
+        force_lookup_key = '{}-{}'.format(n_body_type, numeric_vsite_type)
+        VSite = self.gromacs_virtuals[force_lookup_key]
+        VSiteType = VSite.__base__
+
+        atoms = [int(n) for n in vsite[:n_atoms]]
+        btypes = [None] * n_atoms  # TODO: Unused? Can we remove from classes?
+        params = self.create_kwds_from_entries(vsite, VSiteType, offset=n_atoms + 1)
+
+        # Can't unpack multiple args in Python <3.5 so combine into one.
+        atoms.extend(btypes)
+
+        new_vsite = VSite(*atoms, **params)
+        self.current_molecule_type.virtual_forces.add(new_vsite)
 
     def create_angle(self, angle):
         n_atoms = 3
@@ -1489,6 +1552,14 @@ class GromacsParser(object):
         # TODO: figure out what to do with the gromacs numeric type
         nonbonded_type.type = int(fields[2])
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
+
+    def process_virtual_sites(self, line, v_site_type):
+        """Process a line in a [ virtual_sites? ] category."""
+        if v_site_type == 'n':
+            raise UnimplementedSetting('Parsing of [ virtual_sitesn ] directives'
+                                       ' is not yet implemented')
+        fields = line.split()
+        self.current_molecule_type.virtuals[v_site_type].append(fields)
 
     # =========== Pre-processing errors =========== #
     def too_few_fields(self, line):

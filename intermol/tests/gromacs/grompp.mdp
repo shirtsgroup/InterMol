@@ -48,4 +48,4 @@ constraints              = none
 
 ; GENERATE VELOCITIES FOR STARTUP RUN = 
 gen_vel                  = no
-continuation             = yes
+continuation             = no
