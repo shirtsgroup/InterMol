@@ -27,6 +27,6 @@ class TwoVirtual(TwoVirtualType):
         self.atom1 = atom1
         self.atom2 = atom2
         self.atom3 = atom3
-        TwoVirtualType.__init__(self, bondingtype1, bondingtype2, bondingtype3, 
+        TwoVirtualType.__init__(self, bondingtype1, bondingtype2, bondingtype3,
                 a=a,
                 placeholder=placeholder)
