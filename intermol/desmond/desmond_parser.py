@@ -1,3 +1,4 @@
+from collections import OrderedDict, defaultdict
 import logging
 from warnings import warn
 import math
@@ -110,6 +111,24 @@ class DesmondParser(object):
 
     lookup_desmond_bonds = create_lookup(desmond_bonds)  # not unique
     desmond_bond_types = create_type(desmond_bonds)
+
+    # desmond virtuals are not quite the same as gromacs virtuals.  
+    # lc2, lc3, out3 are the same. 
+    # fdat3 is generalization of gromacs 3fd and 3fda. Eventually this conversion
+    # should be moved to a canonicalization file.
+    # 4fdn is not defined in desmond
+
+    desmond_virtuals = {
+        'lc2': TwoVirtual,
+        'lc3': ThreeLinearVirtual,
+        'fdat3': ThreeFdVirtual,
+        'fdat3': ThreeFadVirtual,
+        'out3': ThreeOutVirtual,
+        None: FourFdnVirtual
+    }
+
+    lookup_desmond_virtuals = create_lookup(desmond_virtuals)  # not unique
+    desmond_virtual_types = create_type(desmond_virtuals)
 
     def canonical_bond(self, bond, params, direction='into', name=None):
 
@@ -1162,15 +1181,21 @@ class DesmondParser(object):
         combrule = self.system.combination_rule
         for atom in molecule.atoms:
             i+=1
+            if atom.ptype == 'A':
+                atom_type = 'atom'
+            elif atom.ptype == 'D':
+                atom_type = 'pseudo'
+            else:
+                raise DesmondError('The physical type of an atom is {0}, which is not allowed'.format(atom.ptype))
             if atom.residue_index:
-                sites.append(' %3d %5s %9.8f %9.8f %2s %1d %4s\n' % (
-                        i, 'atom',
+                sites.append(' %3d %6s %9.8f %9.8f %2s %1d %4s\n' % (
+                        i, atom_type,
                         atom._charge[0].value_in_unit(units.elementary_charge),
                         atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0], atom.residue_index, atom.residue_name))
             else:
                 sites.append(' %3d %5s %9.8f %9.8f %2s\n' % (
-                        i, 'atom',
+                        i, atom_type,
                         atom._charge[0].value_in_unit(units.elementary_charge),
                         atom._mass[0].value_in_unit(units.atomic_mass_unit),
                         atom.atomtype[0]))
@@ -1649,6 +1674,111 @@ class DesmondParser(object):
         hlines.extend(dlines)
         return hlines
 
+    def write_virtuals(self, moleculetype):
+
+        #ADDING VIRTUALS
+        logger.debug("   -Writing virtuals...")
+
+        import pdb
+        pdb.set_trace()
+        virtuals = defaultdict(list)
+        virtuallist = sorted(list(moleculetype.virtuals),key=lambda x: x.atom1)
+
+        dlines = list()
+        hlines = list()
+
+        for virtual in virtuallist:
+            if hasattr(virtual, 'atom5'):
+                virtuals[4].append(virtual)
+            elif hasattr(force, 'atom4'):
+                virtuals[3].append(virtual)
+            else:
+                virtuals[2].append(virtual)
+
+        virtuals[2] = sorted(virtuals[2], key=lambda x: (x.atom1, x.atom2, x.atom3))
+        virtuals[3] = sorted(virtuals[3], key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4))
+        virtuals[4] = sorted(virtuals[4], key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4, x.atom5))
+        
+        alen_max = 2 # figure out the maximum number of atoms in all of the virtuals.
+        for i in range(2,5):
+            if virtuals[i] > 0:
+                alen_max = i
+
+        clen_max = 3 # maximum number of parameters involved. We won't try to automatically find. 
+        for n_body_type, vsites in virtuals.items():
+            for vsite in vsites:
+                i += 1
+                cline = '      %d ' % i
+                for n in range(1, n_body_type + 2):
+                    atom = getattr(vsite, 'atom{}'.format(n))
+                    cline += '{0:7d} '.format(atom)
+                cline += '{:4s}'.format(self.lookup_desmond_virtuals[vsite.__class__][-1])
+                for i in range(len(param),alen_max):
+                    cline += ' <>'
+
+                vsite_params = self.get_parameter_list_from_force(vsite)
+                param_units = self.unitvars[vsite.__class__.__name__]
+                for param, unit in zip(vsite_params, param_units):
+                    cline += '{0:18.8e}'.format(param.value_in_unit(unit))
+                for i in range(len(vsite_params),clen_max):
+                    cline += ' <>'
+                cline += '\n'
+                dlines.append(cline)
+
+        hlines.append("    ffio_virtuals[%d] {\n" % (i))
+        if i == 0:
+            hlines.append("      :::\n")
+        else:
+
+        #decide on alen and clen based on the type of virtual
+            letters = ['i','j','k','l','m']
+            for j in range(len(letters)):
+                hlines.append('      i_ffio_a%s\n'%letters[j])
+            hlines.append('      s_ffio_funct\n')
+            for j in range(clen):
+                hlines.append('      r_ffio_c%d\n' %(j+1))
+            hlines.append("      :::\n")
+
+        dlines.append("      :::\n")
+        dlines.append("    }\n")
+        hlines.extend(dlines)
+        return hlines
+
+    def write_pseudos(self, molecule):
+     
+        '''
+        lines.append('m_atom\n')
+        lines.append('    # First column is atom index #\n')
+        for vars in self.atom_col_vars:
+                if '_pdb_atom' not in vars:
+                    lines.append('    %s\n' % vars)
+        lines.append('    :::\n')
+
+        i = 0
+        nmol = 0
+        totalatoms = []
+        totalatoms.append(0)
+        for moleculetype in self.system._molecule_types.values():
+            for molecule in moleculetype.molecules:
+                for atom in molecule.atoms:
+                    i += 1
+                    for j in range(3):
+                        line += " %10.8f" % (float(atom._position[j].value_in_unit(units.angstroms)))
+                    line +=   "     %2d %4s    %2d  %2s" % (
+                        atom.residue_index,
+                        '"%s"'%atom.residue_name,
+                        atom.atomic_number,
+                        '"%s"'%atom.name)
+                    if np.any(atom._velocity):
+                        for j in range(3):
+                            line += " %10.8f" % (float(atom._velocity[j].value_in_unit(units.angstroms / units.picoseconds)))
+                    else:
+                         for j in range(3):
+                            line += " %10.8f" % (0)
+                    lines.append(line + '\n')
+            totalatoms.append(i)
+    '''
+
     def write(self):
 
 #        Write this topology to file
@@ -1919,6 +2049,8 @@ class DesmondParser(object):
             lines += self.write_exclusions(moleculetype)
             lines += self.write_pairs(moleculetype)
             lines += self.write_constraints(moleculetype)
+            lines += self.write_virtuals(moleculetype)
+            #lines += self.write_pseudos(molecule)
 
             #STILL NEED TO ADD RESTRAINTS
 
