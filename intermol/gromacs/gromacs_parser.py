@@ -1249,6 +1249,9 @@ class GromacsParser(object):
                 self.process_cmaptype(line)
             elif self.current_directive == 'nonbond_params':
                 self.process_nonbond_params(line)
+            elif self.current_directive.startswith('virtual_sites'):
+                vsite_type = self.current_directive[-1]
+                self.process_virtual_sites(line, vsite_type)
 
     def process_defaults(self, line):
         """Process the [ defaults ] line."""
