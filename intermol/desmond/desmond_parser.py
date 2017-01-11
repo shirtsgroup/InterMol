@@ -1763,7 +1763,7 @@ class DesmondParser(object):
                         '"%s"'%atom.name)
                     dlines.append(line + '\n')
 
-        hlines.append("    ffio_pseudos[%d] {\n" % (i))
+        hlines.append("    ffio_pseudo[%d] {\n" % (i))
         if i == 0:
             hlines.append("      :::\n")
         else:
