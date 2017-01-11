@@ -1702,9 +1702,7 @@ class DesmondParser(object):
             if virtuals[j] > 0:
                 alen_max = j
 
-        i = 0       
-        import pdb
-        pdb.set_trace()
+        i = 0
 
         clen_max = 3 # maximum number of parameters involved. We won't try to automatically find. 
         for n_body_type, vsites in virtuals.items():
@@ -1731,7 +1729,6 @@ class DesmondParser(object):
         if i == 0:
             hlines.append("      :::\n")
         else:
-
         #decide on alen and clen based on the type of virtual
             letters = ['i','j','k','l','m']
             hlines.append('      i_ffio_index\n')
@@ -1747,40 +1744,43 @@ class DesmondParser(object):
         hlines.extend(dlines)
         return hlines
 
-    def write_pseudos(self, molecule):
-     
-        '''
-        lines.append('m_atom\n')
-        lines.append('    # First column is atom index #\n')
-        for vars in self.atom_col_vars:
-                if '_pdb_atom' not in vars:
-                    lines.append('    %s\n' % vars)
-        lines.append('    :::\n')
+    def write_pseudos(self, moleculetype):
+
+        dlines = list()
+        hlines = list()
 
         i = 0
-        nmol = 0
-        totalatoms = []
-        totalatoms.append(0)
-        for moleculetype in self.system._molecule_types.values():
-            for molecule in moleculetype.molecules:
-                for atom in molecule.atoms:
+        for molecule in moleculetype.molecules:
+            for atom in molecule.atoms:
+                if atom.ptype == 'D':
                     i += 1
+                    line = '      %d ' % i
                     for j in range(3):
                         line += " %10.8f" % (float(atom._position[j].value_in_unit(units.angstroms)))
-                    line +=   "     %2d %4s    %2d  %2s" % (
+                    line +=   "     %2d %4s  %2s" % (
                         atom.residue_index,
                         '"%s"'%atom.residue_name,
-                        atom.atomic_number,
                         '"%s"'%atom.name)
-                    if np.any(atom._velocity):
-                        for j in range(3):
-                            line += " %10.8f" % (float(atom._velocity[j].value_in_unit(units.angstroms / units.picoseconds)))
-                    else:
-                         for j in range(3):
-                            line += " %10.8f" % (0)
-                    lines.append(line + '\n')
-            totalatoms.append(i)
-    '''
+                    dlines.append(line + '\n')
+
+        hlines.append("    ffio_pseudos[%d] {\n" % (i))
+        if i == 0:
+            hlines.append("      :::\n")
+        else:
+            hlines.append('      r_ffio_x_coord\n')
+            hlines.append('      r_ffio_y_coord\n')
+            hlines.append('      r_ffio_z_coord\n')
+            hlines.append('      i_ffio_residue_number\n')
+            hlines.append('      s_ffio_pdb_residue_name\n')
+            hlines.append('      s_ffio_atom_name\n')
+            hlines.append("      :::\n")
+
+        dlines.append("      :::\n")
+        dlines.append("    }\n")
+
+        hlines.extend(dlines)
+
+        return hlines
 
     def write(self):
 
@@ -2053,7 +2053,7 @@ class DesmondParser(object):
             lines += self.write_pairs(moleculetype)
             lines += self.write_constraints(moleculetype)
             lines += self.write_virtuals(moleculetype)
-            #lines += self.write_pseudos(molecule)
+            lines += self.write_pseudos(moleculetype)
 
             #STILL NEED TO ADD RESTRAINTS
 

@@ -798,6 +798,7 @@ class GromacsParser(object):
                                 "{0}. Visually inspect before using.".format(atom))
             atom.sigma = (state, intermol_atomtype.sigma)
             atom.epsilon = (state, intermol_atomtype.epsilon)
+            atom.ptype = intermol_atomtype.ptype
 
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
