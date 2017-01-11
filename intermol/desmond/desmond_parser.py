@@ -1679,10 +1679,8 @@ class DesmondParser(object):
         #ADDING VIRTUALS
         logger.debug("   -Writing virtuals...")
 
-        import pdb
-        pdb.set_trace()
         virtuals = defaultdict(list)
-        virtuallist = sorted(list(moleculetype.virtuals),key=lambda x: x.atom1)
+        virtuallist = sorted(list(moleculetype.virtual_forces),key=lambda x: x.atom1)
 
         dlines = list()
         hlines = list()
@@ -1690,7 +1688,7 @@ class DesmondParser(object):
         for virtual in virtuallist:
             if hasattr(virtual, 'atom5'):
                 virtuals[4].append(virtual)
-            elif hasattr(force, 'atom4'):
+            elif hasattr(virtual, 'atom4'):
                 virtuals[3].append(virtual)
             else:
                 virtuals[2].append(virtual)
@@ -1700,9 +1698,13 @@ class DesmondParser(object):
         virtuals[4] = sorted(virtuals[4], key=lambda x: (x.atom1, x.atom2, x.atom3, x.atom4, x.atom5))
         
         alen_max = 2 # figure out the maximum number of atoms in all of the virtuals.
-        for i in range(2,5):
-            if virtuals[i] > 0:
-                alen_max = i
+        for j in range(2,5):
+            if virtuals[j] > 0:
+                alen_max = j
+
+        i = 0       
+        import pdb
+        pdb.set_trace()
 
         clen_max = 3 # maximum number of parameters involved. We won't try to automatically find. 
         for n_body_type, vsites in virtuals.items():
@@ -1712,15 +1714,15 @@ class DesmondParser(object):
                 for n in range(1, n_body_type + 2):
                     atom = getattr(vsite, 'atom{}'.format(n))
                     cline += '{0:7d} '.format(atom)
-                cline += '{:4s}'.format(self.lookup_desmond_virtuals[vsite.__class__][-1])
-                for i in range(len(param),alen_max):
+                for j in range(n_body_type + 1, alen_max):
                     cline += ' <>'
+                cline += ' {:4s} '.format(self.lookup_desmond_virtuals[vsite.__class__])
 
                 vsite_params = self.get_parameter_list_from_force(vsite)
                 param_units = self.unitvars[vsite.__class__.__name__]
                 for param, unit in zip(vsite_params, param_units):
                     cline += '{0:18.8e}'.format(param.value_in_unit(unit))
-                for i in range(len(vsite_params),clen_max):
+                for j in range(len(vsite_params),clen_max):
                     cline += ' <>'
                 cline += '\n'
                 dlines.append(cline)
@@ -1732,10 +1734,11 @@ class DesmondParser(object):
 
         #decide on alen and clen based on the type of virtual
             letters = ['i','j','k','l','m']
-            for j in range(len(letters)):
-                hlines.append('      i_ffio_a%s\n'%letters[j])
+            hlines.append('      i_ffio_index\n')
+            for j in range(alen_max-1):
+                hlines.append('      i_ffio_a%s\n' % letters[j])
             hlines.append('      s_ffio_funct\n')
-            for j in range(clen):
+            for j in range(clen_max):
                 hlines.append('      r_ffio_c%d\n' %(j+1))
             hlines.append("      :::\n")
 
