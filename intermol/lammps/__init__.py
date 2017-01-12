@@ -81,4 +81,5 @@ def _group_energy_terms(stdout_path):
 
     e_out['Electrostatic'] += e_out['Coul. recip.']
     e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
+    e_out['All angles'] = e_out['Angle']
     return e_out, stdout_path

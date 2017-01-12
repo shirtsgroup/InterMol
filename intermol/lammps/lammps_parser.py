@@ -896,8 +896,11 @@ class LammpsParser(object):
                             # LAMMPS expects an integer.
                             line += "%10d" % (p.value_in_unit(u[i]))
                         elif style == 'charmm' and p.unit == units.degrees:
-                            # LAMMPS loves enforcing unnecessary integers.
-                            line += "%10d" % (p.value_in_unit(u[i]))
+                            if force_name == 'Dihedral':
+                                # LAMMPS loves enforcing unnecessary integers.
+                                line += "%10d" % (p.value_in_unit(u[i]))
+                            else:
+                                line += "%18.8e" % (p.value_in_unit(u[i]))
                         else:
                             line += "%18.8e" % (p.value_in_unit(u[i]))
                     line += '\n'
