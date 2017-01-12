@@ -2051,9 +2051,9 @@ class DesmondParser(object):
             lines += self.write_torsion_torsion(moleculetype)
             lines += self.write_exclusions(moleculetype)
             lines += self.write_pairs(moleculetype)
-            lines += self.write_constraints(moleculetype)
             lines += self.write_virtuals(moleculetype)
             lines += self.write_pseudos(moleculetype)
+            lines += self.write_constraints(moleculetype)
 
             #STILL NEED TO ADD RESTRAINTS
 
