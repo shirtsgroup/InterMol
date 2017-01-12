@@ -15,8 +15,11 @@ import intermol.charmm as crm
 import intermol.tests
 
 # we have a number of "canonical" terms that we would like to print first
-canonical_keys = ['Potential', 'Bond', 'Angle', 'All dihedrals', 'LJ-14', 'Coulomb-14', 
-                  'van der Waals', 'Electrostatic', 'Bonded', 'Nonbonded']
+canonical_keys = ['Potential',
+                  'Bonded', 'Nonbonded',
+                  'van der Waals', 'Electrostatic',
+                  'Bond', 'Angle', 'All angles', 'All dihedrals',
+                  'LJ-14', 'Coulomb-14']
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
 logger.setLevel(logging.DEBUG)

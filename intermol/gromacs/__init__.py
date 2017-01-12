@@ -137,8 +137,13 @@ def _group_energy_terms(ener_xvg):
 
     e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
 
-    # All the various dihedral energies.
-    # TODO: What else goes in here?
+    all_angles = ['Angle', 'U-B', 'G96Angle', 'Restricted Angles', 'Bond-Cross',
+                  'BA-Cross', 'Quartic Angles']
+    e_out['All angles'] = 0 * units.kilojoules_per_mole
+    for group in all_angles:
+        if group in e_out:
+            e_out['All angles'] += e_out[group]
+
     all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper Dih.']
     e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
     for group in all_dihedrals:
