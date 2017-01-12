@@ -1836,6 +1836,8 @@ class DesmondParser(object):
         for moleculetype in self.system._molecule_types.values():
             for molecule in moleculetype.molecules:
                 for atom in molecule.atoms:
+                    if atom.ptype == 'D': # dummy (virtual) atoms do not go here.
+                        continue
                     i += 1
                     line = '    %d        %d' % (i,1) #HAVE TO PUT THE 1 HERE OR ELSE DESMOND DIES, EVEN THOUGH IT DOESN'T USE IT
                     for j in range(3):
@@ -1916,7 +1918,8 @@ class DesmondParser(object):
 
         for molecule_name, moleculetype in self.system.molecule_types.items():
             logger.debug('Writing molecule block %s...' % (molecule_name))
-            #BEGINNING BLOCK
+
+            #BEGINNING BLOCK - should be separate function.
 
             logger.debug("  Writing f_m_ct...")
             lines.append('f_m_ct {\n')
@@ -1931,7 +1934,8 @@ class DesmondParser(object):
                 for bj in range(3):
                     lines.append('%22s\n' % float(bv[bi][bj].value_in_unit(units.angstroms)))
             lines.append('  solute\n')
-            #M_ATOMS
+
+            #M_ATOMS - should be separate function
 
             logger.debug("  Writing m_atoms...")
             apos = len(lines) #pos of where m_atom will be; will need to overwite later based on the number of atoms
@@ -1945,6 +1949,8 @@ class DesmondParser(object):
             i = 0
             for molecule in moleculetype.molecules:
                 for atom in molecule.atoms:
+                    if atom.ptype == 'D': # dummy (virtual) atoms do not go here.
+                        continue
                     i += 1
                     #NOT SURE WHAT TO PUT FOR MMOD TYPE; 1 is currently used.
                     #This can't be determined currently from the information provided,
@@ -1969,7 +1975,8 @@ class DesmondParser(object):
             lines.append('    :::\n')
             lines.append('  }\n')
 
-            #M_BONDS
+
+            #M_BONDS - should be separate function
             logger.debug("  Writing m_bonds...")
 
             hlines = list()
