@@ -16,7 +16,7 @@ import intermol.tests
 
 # we have a number of "canonical" terms that we would like to print first
 canonical_keys = ['Potential',
-                  'Bonded', 'Nonbonded',
+                  'Bonded', 'Non-bonded',
                   'van der Waals', 'Electrostatic',
                   'Bond', 'Angle', 'All angles', 'All dihedrals',
                   'LJ-14', 'Coulomb-14']
