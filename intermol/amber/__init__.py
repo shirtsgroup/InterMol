@@ -122,7 +122,7 @@ def _group_energy_terms(mdout):
     bonded = ['Bond', 'Angle', 'All dihedrals']
     nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
     sumterms = [vanderwaals, electrostatic, bonded, nonbonded]
-    newkeys = ['van der Waals', 'Electrostatic', 'Bonded', 'Nonbonded']
+    newkeys = ['van der Waals', 'Electrostatic', 'Bonded', 'Non-bonded']
     for k, key in enumerate(newkeys):
         e_out[key] =  0 * units.kilocalories_per_mole
         for group in sumterms[k]:
