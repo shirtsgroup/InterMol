@@ -909,7 +909,7 @@ class LammpsParser(object):
                 # Write out the force entry.
                 line = '{0:-6d} {1:6d}'.format(force_count, numeric_coeff[temp_force_type])
                 for atom in atom_indices:
-                    line += '{0:6d}'.format(atom + offset)
+                    line += ' {0:d}'.format(atom + offset)
                 line += '\n'
                 force_list.append(line)
                 force_count += 1
