@@ -12,6 +12,31 @@ GMX_PATH = ''
 logger = logging.getLogger('InterMolLog')
 
 
+to_canonical = {
+    'Bond': 'bond',
+
+    'Angle': 'angle',
+    'U-B': 'angle',
+    'G96Angle': 'angle' ,
+    'Restricted Angles': 'angle',
+    'Bond-Cross': 'angle',
+    'BA-Cross': 'angle',
+    'Quartic Angles': 'angle',
+
+    'Proper Dih.': ['dihedral', 'proper'],
+    'Ryckaert-Bell.': ['dihedral', 'proper'],
+    'Improper Dih.': ['dihedral', 'improper'],
+
+    'LJ (SR)': ['vdw', 'dispersive'],
+    'LJ-14': ['vdw-14', 'dispersive'],
+    'Disper. corr.': ['disper. corr.', 'dispersive'],
+    'Coulomb (SR)': 'coulomb',
+    'Coulomb-14': 'coulomb-14',
+    'Coul. recip.': 'coulomb',
+    'Potential': 'potential'
+}
+
+
 def binaries(gmxpath, gmxsuff):
     """Locate the paths to the best available gromacs binaries. """
     def gmx_path(binary_path):
@@ -42,12 +67,6 @@ def binaries(gmxpath, gmxsuff):
     else:
         raise IOError('Unable to find gromacs executables.')
     return grompp_bin, mdrun_bin, genergy_bin
-
-# energy terms we are ignoring
-unwanted = ['Kinetic En.', 'Total Energy', 'Temperature', 'Pressure',
-            'Volume', 'Box-X', 'Box-Y', 'Box-Z', 'Box-atomic_number',
-            'Pres. DC', 'Vir-XY', 'Vir-XX', 'Vir-XZ', 'Vir-YY', 'Vir-YX',
-            'Vir-YZ', 'Vir-ZX', 'Vir-ZY', 'Vir-ZZ', 'pV', 'Density', 'Enthalpy']
 
 
 def energies(top, gro, mdp, gmx_path=GMX_PATH, grosuff='', grompp_check=False):
@@ -114,41 +133,5 @@ def _group_energy_terms(ener_xvg):
     energy_types = [line.split('"')[1] for line in all_lines if line[:3] == '@ s']
     energy_values = [float(x) * units.kilojoule_per_mole for x in all_lines[-1].split()[1:]]
     e_out = OrderedDict(zip(energy_types, energy_values))
-
-    # Discard non-energy terms.
-    for group in unwanted:
-        if group in e_out:
-            del e_out[group]
-
-    # Dispersive energies.
-    # TODO: Do buckingham energies also get dumped here?
-    dispersive = ['LJ (SR)', 'LJ-14', 'Disper. corr.']
-    e_out['Dispersive'] = 0 * units.kilojoules_per_mole
-    for group in dispersive:
-        if group in e_out:
-            e_out['Dispersive'] += e_out[group]
-
-    # Electrostatic energies.
-    electrostatic = ['Coulomb (SR)', 'Coulomb-14', 'Coul. recip.']
-    e_out['Electrostatic'] = 0 * units.kilojoules_per_mole
-    for group in electrostatic:
-        if group in e_out:
-            e_out['Electrostatic'] += e_out[group]
-
-    e_out['Non-bonded'] = e_out['Electrostatic'] + e_out['Dispersive']
-
-    all_angles = ['Angle', 'U-B', 'G96Angle', 'Restricted Angles', 'Bond-Cross',
-                  'BA-Cross', 'Quartic Angles']
-    e_out['All angles'] = 0 * units.kilojoules_per_mole
-    for group in all_angles:
-        if group in e_out:
-            e_out['All angles'] += e_out[group]
-
-    all_dihedrals = ['Ryckaert-Bell.', 'Proper Dih.', 'Improper Dih.']
-    e_out['All dihedrals'] = 0 * units.kilojoules_per_mole
-    for group in all_dihedrals:
-        if group in e_out:
-            e_out['All dihedrals'] += e_out[group]
-
     return e_out, ener_xvg
 

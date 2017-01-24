@@ -17,6 +17,24 @@ except NameError:
 
 logger = logging.getLogger('InterMolLog')
 
+to_canonical = {
+    'Bond': 'bond',
+
+    'Angle': 'angle',
+
+    'Proper Dih.': ['dihedral', 'proper'],
+    'Improper': ['dihedral', 'improper'],
+
+    'Dispersive': ['vdw', 'dispersive'],
+    'Disper. corr.': ['disper. corr.', 'dispersive'],
+    'Electrostatic': 'coulomb',
+    'Coul.recip.': 'coulomb',
+
+    'Non-bonded': 'nonbonded',
+    'Potential': 'potential'
+}
+
+
 
 for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
             'lmp_mac_mpi']:
@@ -79,7 +97,7 @@ def _group_energy_terms(stdout_path):
                     'Disper. corr.', 'Potential']
     e_out = OrderedDict(zip(energy_types, energy_values))
 
-    e_out['Electrostatic'] += e_out['Coul. recip.']
-    e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
-    e_out['All angles'] = e_out['Angle']
+    # e_out['Electrostatic'] += e_out['Coul. recip.']
+    # e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
+    # e_out['All angles'] = e_out['Angle']
     return e_out, stdout_path

@@ -1,4 +1,5 @@
 import argparse
+from collections import OrderedDict
 import logging
 import os
 import sys
@@ -6,6 +7,8 @@ import warnings
 
 import numpy as np
 import parmed
+from parmed.utils.six import string_types
+import simtk.unit as u
 
 import intermol.gromacs as gmx
 import intermol.lammps as lmp
@@ -14,17 +17,69 @@ import intermol.amber as amb
 import intermol.charmm as crm
 import intermol.tests
 
-# we have a number of "canonical" terms that we would like to print first
-canonical_keys = ['Potential',
-                  'Bonded', 'Non-bonded',
-                  'van der Waals', 'Electrostatic',
-                  'Bond', 'Angle', 'All angles', 'All dihedrals',
-                  'LJ-14', 'Coulomb-14']
+
 # Make a global logging object.
 logger = logging.getLogger('InterMolLog')
 logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
+
+
+canonical_energy_names = [
+    'bond',
+
+    'angle', 'urey_bradley',
+
+    'dihedral', 'improper', 'proper',
+
+    'cmap',
+
+    'dispersive', 'vdw', 'vdw-14', 'disper. corr.',
+    'electrostatic', 'coulomb', 'coulomb-14',
+
+    'nonbonded', 'bonded',
+
+    'potential']
+
+
+def canonicalize_energy_names(energy_dict, canonical_keys):
+    """Adjust the keys in energy_dict to the canonical names.
+
+    Parameters
+    ----------
+    energy_dict : OrderedDict
+    engine : str
+
+    Returns
+    -------
+    normalized : OrderedDict
+
+    """
+    # TODO: Look into creating an `EnergyDict` class.
+    normalized = OrderedDict.fromkeys(canonical_energy_names,
+                                      0 * u.kilojoules_per_mole)
+
+    for key, energy in energy_dict.items():
+        canonical_key = canonical_keys.get(key)
+        if canonical_key is None:
+            continue
+        elif not isinstance(canonical_key, string_types):
+            for k in canonical_key:
+                normalized[k] += energy.in_units_of(u.kilojoules_per_mole)
+        else:
+            normalized[canonical_key] += energy.in_units_of(u.kilojoules_per_mole)
+
+
+    if 'Non-bonded' in canonical_keys:
+        normalized['nonbonded'] = energy_dict['Non-bonded']
+    else:
+        normalized['nonbonded'] = (normalized['vdw'] + normalized['coulomb'] +
+                                   normalized['vdw-14'] + normalized['coulomb-14'])
+
+    normalized['bonded'] = (normalized['bond'] + normalized['angle'] +
+                           normalized['dihedral'])
+
+    return normalized
 
 
 def record_exception(logger, e_out, e_outfile, e):
@@ -446,12 +501,14 @@ def main(args=None):
                 mdp_in = mdp_in_default
             input_type = 'gromacs'
             e_in, e_infile = gmx.energies(top_in, gro_in, mdp_in, gmx.GMX_PATH)
+            e_in = canonicalize_energy_names(e_in, gmx.to_canonical)
 
         elif args.get('lmp_in'):
             if args.get('inefile'):
                 logger.warning("LAMMPS energy settings should not require a separate infile")
                 input_type = 'lammps'
             e_in, e_infile = lmp.energies(lammps_file, lmp.LMP_PATH)
+            e_in = canonicalize_energy_names(e_in, lmp.to_canonical)
 
         elif args.get('des_in'):
             if args.get('inefile'):
@@ -462,6 +519,7 @@ def main(args=None):
                 cfg_in = cfg_in_default
             input_type = 'desmond'
             e_in, e_infile = des.energies(cms_file, cfg_in, des.DES_PATH)
+            e_in = canonicalize_energy_names(e_in, des.to_canonical)
 
         elif args.get('amb_in'):
             if args.get('inefile'):
@@ -472,6 +530,7 @@ def main(args=None):
                 in_in = in_in_default
             input_type = 'amber'
             e_in, e_infile = amb.energies(prmtop_in, crd_in, in_in, amb.AMB_PATH)
+            e_in = canonicalize_energy_names(e_in, amb.to_canonical)
 
         elif args.get('crm_in'):
             if args.get('inefile'):
@@ -479,6 +538,7 @@ def main(args=None):
             input_type = 'charmm'
             # returns energy file
             e_in, e_infile = crm.energies(args.get('crm_in'), crm.CRM_PATH)
+            e_in = canonicalize_energy_names(e_in, crm.to_canonical)
         else:
             logger.warning('No input files identified! Code should have never made it here!')
 
@@ -497,6 +557,7 @@ def main(args=None):
                 out, outfile = gmx.energies('{0}.top'.format(oname),
                                             '{0}.gro'.format(oname),
                                             mdp, gmx.GMX_PATH)
+                out = canonicalize_energy_names(out, gmx.to_canonical)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['gromacs'] = e
@@ -510,6 +571,7 @@ def main(args=None):
             try:
                 out, outfile = lmp.energies('{0}.input'.format(oname),
                                             lmp.LMP_PATH)
+                out = canonicalize_energy_names(out, lmp.to_canonical)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['lammps'] = e
@@ -527,6 +589,7 @@ def main(args=None):
             try:
                 out, outfile = des.energies('{0}.cms'.format(oname),
                                             cfg, des.DES_PATH)
+                out = canonicalize_energy_names(out, des.to_canonical)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['desmond'] = e
@@ -546,6 +609,7 @@ def main(args=None):
                                  args.get('charmm_settings'))
             try:
                 out, outfile = crm.energies(inpfile, crm.CRM_PATH)
+                out = canonicalize_energy_names(out, crm.to_canonical)
             except Exception as e:
                 record_exception(logger, e_out, e_outfile, e)
                 output_status['charmm'] = e
@@ -577,7 +641,7 @@ def potential_energy_diff(e_in, e_out):
     returns:
         potential energy difference in units of the input
     """
-    energy_type = 'Potential'
+    energy_type = 'potential'
     input_energy = e_in[energy_type]
     diff = e_out[energy_type].in_units_of(input_energy.unit) - input_energy
     return diff._value
@@ -619,7 +683,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
             labels.add(key)
 
     # Set up energy comparison table
-    labels = list(labels)
+    labels = sorted(list(labels))
     unit = energy_input[list(energy_input.keys())[0]].unit
     energy_all = [energy_input] + energy_outputs
     data = np.empty((len(labels), len(energy_all)))
@@ -637,7 +701,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         header += '%18s' % ('diff (%s)' % (otype))  
     out.append(header)
     for i in range(len(data)):
-        if (labels[i] not in canonical_keys) and (not print_noncanonical):
+        if labels[i] not in canonical_energy_names and not print_noncanonical:
             continue
         line = '%20s ' % labels[i]
         if np.isnan(data[i][0]):
@@ -656,7 +720,7 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         out.append(line)
     out.append('')
     # get differences in potential energy
-    i = labels.index('Potential')
+    i = labels.index('potential')
     diff = data[i, 1::] - data[i, 0]
     out.append('Input %s potential energy: %22.8f' % (input_type,data[i,0])) 
     # print the canonical energies
