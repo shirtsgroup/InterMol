@@ -29,7 +29,7 @@ def standardize_key(in_key):
     return out_key
 
 
-def amber_energies(prmtop, crd, input, amb_path):
+def energies(prmtop, crd, input, amb_path):
     """Compute single-point energies using AMBER.
 
     Args:

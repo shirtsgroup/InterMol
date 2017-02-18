@@ -427,25 +427,16 @@ def main(args=None):
         # first, check if the gro files exit from writing
         gro_out = oname + '.gro'
         top_out = oname + '.top'
-        e = None
         if os.path.isfile(gro_out) and os.path.isfile(top_out):
-            # if so, use these files.  Load them into ParmEd
             try:
                 top = parmed.load_file(top_out, xyz=gro_out)
-                prmtop_out = oname + '.prmtop'
-                crd_out = oname + '.rst7'
-                try:
-                    top.save(oname + '.prmtop', overwrite=True)
-                except Exception as e:
-                    output_status['amber'] = e
-                try:        
-                    top.save(oname + '.rst7', overwrite=True)
-                except Exception as e:
-                    output_status['amber'] = e
-                if e is None:
-                    output_status['amber'] = 'Converted'
+                top.save(oname + '.prmtop', overwrite=True)
+                top.save(oname + '.rst7', overwrite=True)
             except Exception as e:
+                logger.warning(str(e))
                 output_status['amber'] = e
+            else:
+                output_status['amber'] = 'Converted'
         else:
             logger.warning("Can't convert to AMBER unless GROMACS is also selected")
 
@@ -595,6 +586,24 @@ def main(args=None):
                 output_status['desmond'] = e
             else:
                 output_status['desmond'] = potential_energy_diff(e_in, out)
+                e_out.append(out)
+                e_outfile.append(outfile)
+
+        if args.get('amber') and output_status['amber'] == 'Converted':
+            output_type.append('amber')
+            amber_in = args.get('amber_set') or in_in_default
+
+            try:
+                out, outfile = amb.energies('{}.prmtop'.format(oname),
+                                            '{}.crd'.format(oname),
+                                            amber_in,
+                                            amb.AMB_PATH)
+                out = canonicalize_energy_names(out, amb.to_canonical)
+            except Exception as e:
+                record_exception(logger, e_out, e_outfile, e)
+                output_status['amber'] = e
+            else:
+                output_status['amber'] = potential_energy_diff(e_in, out)
                 e_out.append(out)
                 e_outfile.append(outfile)
 
