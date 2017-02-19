@@ -1040,14 +1040,14 @@ class GromacsParser(object):
         atom_orders = [[a1, a2, a3, a4],    # original order
                        [a4, a3, a2, a1],    # flip it
                        [a1, a2, a3, 'X'],   # single wildcard 1
+                       ['X', a3, a2, a1],   # flipped single wildcard 1
+                       [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a2, a3, a4],   # single wildcard 2
                        ['X', a2, a3, 'X'],  # double wildcard
                        ['X', 'X', a3, a4],  # front end double wildcard
                        [a1, a2, 'X', 'X'],  # rear end double wildcard
                        ['X', 'X', a2, a1],  # rear end double wildcard
                        [a1, 'X', 'X', a4],  # middle double wildcard
-                       ['X', a3, a2, a1],   # flipped single wildcard 1
-                       [a4, a3, a2, 'X'],   # flipped single wildcard 2
                        ['X', a3, a2, 'X'],  # flipped double wildcard
                        [a4, a3, 'X', 'X'],  # flipped front end double wildcard
                        [a4, 'X', 'X', a1],  # flipped middle double wildcard
