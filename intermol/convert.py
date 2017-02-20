@@ -595,7 +595,7 @@ def main(args=None):
 
             try:
                 out, outfile = amb.energies('{}.prmtop'.format(oname),
-                                            '{}.crd'.format(oname),
+                                            '{}.rst7'.format(oname),
                                             amber_in,
                                             amb.AMB_PATH)
                 out = canonicalize_energy_names(out, amb.to_canonical)

@@ -52,6 +52,10 @@ class GromacsError(ParsingError):
     """"""
 
 
+class AmberError(ParsingError):
+    """"""
+
+
 class DesmondError(ParsingError):
     """"""
 

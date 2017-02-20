@@ -2,31 +2,30 @@ from collections import OrderedDict
 import logging
 import os
 
-import simtk.unit as units
+import simtk.unit as u
 
+from intermol.exceptions import AmberError
 from intermol.utils import which, run_subprocess
+
 
 AMB_PATH = ''
 
 logger = logging.getLogger('InterMolLog')
 
-# --------- energy evaluation methods ---------- #
-key_dict = {'ENERGY': 'Potential',
-            'BOND': 'Bond',
-            'ANGLE': 'Angle',
-            'DIHED': 'All dihedrals',
-            '1-4 VDW': 'LJ-14',
-            '1-4 EEL': 'Coulomb-14',
-            'EEL': 'Coulomb',
-            'VDWAALS': 'LJ (SR)'
-            }
 
-def standardize_key(in_key):
-    if in_key in key_dict:
-        out_key = key_dict[in_key]
-    else:
-        out_key = in_key
-    return out_key
+to_canonical = {
+    'BOND': 'bond',
+
+    'ANGLE': 'angle',
+
+    'DIHED': ['dihedral'],
+
+    'VDWAALS': ['vdw', 'dispersive'],
+    '1-4 VDW': ['vdw-14', 'dispersive'],
+    'EEL': 'coulomb',
+    '1-4 EEL': 'coulomb-14',
+    'ENERGY': 'potential'
+}
 
 
 def energies(prmtop, crd, input, amb_path):
@@ -76,25 +75,25 @@ def energies(prmtop, crd, input, amb_path):
 
 
 def _group_energy_terms(mdout):
-    """Parse AMBER output file to extract and group the energy terms in a dict. """
+    """Parse AMBER output file and group the energy terms in a dict. """
 
     with open(mdout) as f:
         all_lines = f.readlines()
 
-    # find where the energy information starts
-    i = 0
-    for line in all_lines:
+    # Find where the energy information starts.
+    for i, line in enumerate(all_lines):
         if line[0:8] == '   NSTEP':
             startline = i
             break
-        i+=1
+    else:
+        raise AmberError('Unable to detect where energy info starts in AMBER '
+                         'output file: {}'.format(mdout))
 
-    energy_types = []
-    energy_values = []
+    # Strange ranges for amber file data.
+    ranges = [[1, 24], [26, 49], [51, 77]]
 
-    ranges = [[1,24],[26,49],[51,77]]  # strange ranges for amber file data.
-
-    potential = 0*units.kilocalories_per_mole
+    e_out = OrderedDict()
+    potential = 0 * u.kilocalories_per_mole
     for line in all_lines[startline+3:]:
         if '=' in line:
             for i in range(3):
@@ -102,31 +101,11 @@ def _group_energy_terms(mdout):
                 term = line[r[0]:r[1]]
                 if '=' in term:
                     energy_type, energy_value = term.split('=')
-                    energy_value = float(energy_value)*units.kilocalories_per_mole
+                    energy_value = float(energy_value) * u.kilocalories_per_mole
                     potential += energy_value
                     energy_type = energy_type.rstrip()
-                    if energy_type in key_dict.keys():# remove the whitespace before storing as key.
-                        energy_values.append(energy_value)
-                        energy_types.append(key_dict[energy_type])
+                    e_out[energy_type] = energy_value
         else:
             break
-    energy_types.append('Potential')
-    energy_values.append(potential)
-
-    e_out = OrderedDict(zip(energy_types, energy_values))
-    # now total up other terms.
-    # van der Waals energies.
-    vanderwaals = ['LJ-14', 'LJ (SR)']
-    # Electrostatic energies.
-    electrostatic = ['Coulomb-14', 'Coulomb']
-    bonded = ['Bond', 'Angle', 'All dihedrals']
-    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
-    sumterms = [vanderwaals, electrostatic, bonded, nonbonded]
-    newkeys = ['van der Waals', 'Electrostatic', 'Bonded', 'Non-bonded']
-    for k, key in enumerate(newkeys):
-        e_out[key] =  0 * units.kilocalories_per_mole
-        for group in sumterms[k]:
-            if group in e_out:
-                e_out[key] += e_out[group]
-
+    e_out['ENERGY'] = potential
     return e_out, mdout
