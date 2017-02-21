@@ -35,7 +35,6 @@ to_canonical = {
 }
 
 
-
 for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
             'lmp_mac_mpi']:
     if which(exe):
@@ -96,8 +95,4 @@ def _group_energy_terms(stdout_path):
                     'Dispersive', 'Electrostatic', 'Coul. recip.',
                     'Disper. corr.', 'Potential']
     e_out = OrderedDict(zip(energy_types, energy_values))
-
-    # e_out['Electrostatic'] += e_out['Coul. recip.']
-    # e_out['All dihedrals'] = e_out['Proper Dih.'] + e_out['Improper']
-    # e_out['All angles'] = e_out['Angle']
     return e_out, stdout_path
