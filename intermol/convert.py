@@ -731,9 +731,9 @@ def _load_charmm(charmm_in):
     # write out the files.  Should write them out in the proper directory (the one reading in)
     pathprefix = os.path.dirname(charmm_in)
     fromcharmm_top_in = os.path.join(pathprefix, prefix + '_from_charmm.top')
-    fromcharmm_gro_in = os.path.join(pathprefix,prefix + '_from_charmm.gro')
+    fromcharmm_gro_in = os.path.join(pathprefix, prefix + '_from_charmm.gro')
     pmd.gromacs.GromacsTopologyFile.write(parmed_system, fromcharmm_top_in)
-    pmd.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision = 8)
+    pmd.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision=8)
 
     # now, read in using gromacs
     system = gmx.load(fromcharmm_top_in, fromcharmm_gro_in)
@@ -755,7 +755,7 @@ def _save_charmm(amb_structure, oname, output_status):
             pmd.charmm.CharmmParameterSet.from_structure(amb_structure),
             top=charmm_output_rtf,
             par=charmm_output_prm)
-        amb_structure.save(charmm_output_psf, format='psf',overwrite=True)
+        amb_structure.save(charmm_output_psf, format='psf', overwrite=True)
         pmd.charmm.CharmmCrdFile.write(parmed_system, charmm_output_crd)
     except Exception as e:
         logger.exception(e)
