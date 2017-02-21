@@ -10,28 +10,28 @@ CRM_PATH = ''
 
 logger = logging.getLogger('InterMolLog')
 
-# --------- energy evaluation methods ---------- #
-# this dict hasn't been upated yet:
-key_dict = {'ENERgy': 'Potential',
-            'BONDs': 'Bond',
-            'ANGLes': 'Angle',
-            'DIHEdrals': 'Proper Dih.',
-            'IMPRopers': 'Improper Dih.',
-            'EEL': 'Coulomb',
-            'VDWaals': 'LJ (SR)',
-            'EVDW': 'Disper. corr.'
-            }
 
-def remove_zero_terms(sdict):
-    # remove entries that are all zero
-    for key in sdict:
-        if sdict[key]._value == 0.0:
-            sdict.pop(key)
+to_canonical = {
+    'BONDs': 'bond',
 
-def standardize_key(sdict,in_key):
-    if in_key in key_dict:
-        sdict[key_dict[in_key]] = sdict[in_key]
-        sdict.pop(in_key)
+    'ANGLEs': 'angle',
+
+    'DIHEdrals': ['dihedral', 'proper'],
+    'IMPRopers': ['dihedral', 'improper'],
+
+    'VDWaals': ['vdw', 'dispersive'],
+    'IMNBvdw': ['vdw', 'dispersive'],
+    'EVDW': ['disper. corr.', 'dispersive'],
+
+    'EEL': 'coulomb',
+    'IMELec': 'coulomb',
+    'EWKSum': 'coulomb',
+    'EWSElf': 'coulomb',
+    'EWEXcl': 'coulomb',
+
+    'ENERgy': 'potential'
+}
+
 
 def pick_crystal_type(box):
     ''' take a box vector and determine the crystal type (string output).
@@ -106,7 +106,7 @@ def write_input_file(inpfile, psffile, rtfs, prms, strms,
         charmm_inp.write("energy\nstop")
 
 
-def charmm_energies(inpfile, crm_path):
+def energies(inpfile, crm_path):
     """Compute single-point energies using CHARMM.
 
     Args:
@@ -158,12 +158,10 @@ def _group_energy_terms(mdout):
         all_lines = f.readlines()
 
     # find where the energy information starts
-    i = 0
-    for line in all_lines:
+    for i, line in enumerate(all_lines):
         if line[0:9] == 'ENER ENR:':
             startline = i
             break
-        i+=1
 
     energy_types = []
     energy_values = []
@@ -174,7 +172,7 @@ def _group_energy_terms(mdout):
                 # unforunately, we can' just split; we have to do it by fixed width
                 startcol = 15
                 colwidth = 13
-                klim = (len(line)-startcol)/colwidth
+                klim = (len(line)-startcol) // colwidth
                 for k in range(klim):
                     startc = startcol+k*colwidth-1
                     endc = startc + colwidth
@@ -187,31 +185,4 @@ def _group_energy_terms(mdout):
                         energy_types.append(n)
 
     e_out = OrderedDict(zip(energy_types, energy_values))
-    # remove zero terms from the comparison
-    remove_zero_terms(e_out)
-
-    # remove components that are not energy
-    nonenergykeys = ['GRMS','VIRI']
-    for key in nonenergykeys:
-        if key in e_out:
-            e_out.pop(key)
-
-    # rename energy terms to standardize
-    for key in e_out:
-        key = standardize_key(e_out, key)
-
-    # sum up terms to components we can jointly report
-    # this will likely need to change because the precise terms reported by CHARMM will vary.
-    vanderwaals = ['LJ (SR)', 'IMNBvdw', 'Disper. corr.']
-    electrostatic = ['ELEC', 'IMELec', 'EWKSum', 'EWSElf', 'EWEXcl']
-    dihedrals = ['Proper Dih.', 'Improper Dih.']
-    bonded = ['Bond', 'Angle', 'All dihedrals']
-    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
-    sumterms = [vanderwaals, electrostatic, dihedrals, bonded, nonbonded]
-    newkeys = ['van der Waals','Electrostatic', 'All dihedrals', 'Bonded', 'Nonbonded']
-    for k, key in enumerate(newkeys):
-        e_out[key] =  0 * units.kilocalories_per_mole
-        for group in sumterms[k]:
-            if group in e_out:
-                e_out[key] += e_out[group]
     return e_out, mdout

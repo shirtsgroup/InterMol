@@ -54,7 +54,7 @@ def energies(prmtop, crd, input, amb_path):
     stdout_path = os.path.join(directory, 'amber_stdout.txt')
     stderr_path = os.path.join(directory, 'amber_stderr.txt')
 
-    # did they give a path, or the name of the file?
+    # Did they give a path, or the name of the file?
     islastbin = os.path.basename(os.path.normpath(amb_path))
     if islastbin == 'sander':
         amber_bin = amb_path
@@ -63,13 +63,11 @@ def energies(prmtop, crd, input, amb_path):
     if not which(amber_bin):
         raise IOError('Unable to find AMBER executable (sander).')
 
-    # run sander
+    # Run sander.
     cmd = [amber_bin, '-i', input, '-c', crd, '-p', prmtop, '-o', mdout, '-O']
     proc = run_subprocess(cmd, 'amber', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('sander failed. See %s' % stderr_path)
-
-    # Extract energies from amber output
 
     return _group_energy_terms(mdout)
 

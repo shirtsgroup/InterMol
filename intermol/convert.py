@@ -6,7 +6,7 @@ import sys
 import warnings
 
 import numpy as np
-import parmed
+import parmed as pmd
 from parmed.utils.six import string_types
 import simtk.unit as u
 
@@ -68,7 +68,6 @@ def canonicalize_energy_names(energy_dict, canonical_keys):
                 normalized[k] += energy.in_units_of(u.kilojoules_per_mole)
         else:
             normalized[canonical_key] += energy.in_units_of(u.kilojoules_per_mole)
-
 
     if 'Non-bonded' in canonical_keys:
         normalized['nonbonded'] = energy_dict['Non-bonded']
@@ -259,7 +258,7 @@ def main(args=None):
         if args.get('amb_in'):
             prms, rtfs = _save_charmm(amb_structure, oname, output_status)
         else:
-            logger.warning("Can't convert to CHARMM unless inputs are in AMBER")
+            logger.error("Can't convert to CHARMM unless inputs are in AMBER")
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
@@ -400,10 +399,15 @@ def main(args=None):
             output_type.append('charmm')
             if args.get('inefile'):
                 logger.warning("CHARMM energy input file not used, information recreated from command line options")
-            inpfile = os.path.join(oname,'{0}.inp'.format(oname))
-            crm.write_input_file(inpfile, charmm_output_psf, rtfs, prms, [],
-                                 crm.pick_crystal_type(structure.box),
-                                 structure.box, charmm_output_crd,
+            inpfile = os.path.join(oname, '{0}.inp'.format(oname))
+            crm.write_input_file(inpfile,
+                                 oname + '.psf',
+                                 rtfs,
+                                 prms,
+                                 [],
+                                 crm.pick_crystal_type(amb_structure.box),
+                                 amb_structure.box,
+                                 oname + '.crd',
                                  args.get('charmm_settings'))
             try:
                 out, outfile = crm.energies(inpfile, crm.CRM_PATH)
@@ -592,25 +596,32 @@ def _load_amber(amber_files):
     prefix = os.path.splitext(os.path.basename(amber_files[0]))[0]
 
     # Find the prmtop file since order of inputs is not enforced.
-    prmtop_in = [x for x in amber_files if x.endswith('.prmtop')]
-    assert(len(prmtop_in) == 1)
+    prmtop_in = [x for x in amber_files if (x.endswith('.prmtop') or
+                                            x.endswith('.parm7'))]
+    assert len(prmtop_in) == 1
     prmtop_in = os.path.abspath(prmtop_in[0])
 
     # Find the crd file since order of inputs is not enforced, not is suffix
-    crd_in = [x for x in amber_files if (x.endswith('.rst7') or x.endswith('.crd') or x.endswith('.rst') or x.endswith('.inpcrd'))]
-    assert(len(crd_in) == 1)
+    crd_in = [x for x in amber_files if (x.endswith('.rst7') or
+                                         x.endswith('.crd') or
+                                         x.endswith('.rst') or
+                                         x.endswith('.inpcrd'))]
+    assert len(crd_in) == 1
     crd_in = os.path.abspath(crd_in[0])
 
-    amb_structure = parmed.amber.AmberParm(prmtop_in, crd_in)
+    print(prmtop_in, crd_in)
+    amb_structure = pmd.load_file(prmtop_in, xyz=crd_in)
     #Make GROMACS topology
-    parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(amb_structure)
+    # parmed_system = pmd.gromacs.GromacsTopologyFile.from_structure(amb_structure)
 
     # write out the files.  Should write them out in the proper directory (the one reading in)
     pathprefix = os.path.dirname(prmtop_in)
     fromamber_top_in = os.path.join(pathprefix, prefix + '_from_amber.top')
     fromamber_gro_in = os.path.join(pathprefix, prefix + '_from_amber.gro')
-    parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
-    parmed.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
+    # pmd.gromacs.GromacsTopologyFile.write(parmed_system, fromamber_top_in)
+    # pmd.gromacs.GromacsGroFile.write(parmed_system, fromamber_gro_in, precision = 8)
+    amb_structure.save(fromamber_top_in, overwrite=True)
+    amb_structure.save(fromamber_gro_in, precision=8, overwrite=True)
 
     # now, read in using gromacs
     system = gmx.load(fromamber_top_in, fromamber_gro_in)
@@ -621,7 +632,7 @@ def _save_amber(system, oname, output_status):
     # To get to AMBER, we write to GROMACS and then convert with ParmEd
     _save_gromacs(system, oname, output_status)
     try:
-        top = parmed.load_file(oname + '.top', xyz=oname + '.gro')
+        top = pmd.load_file(oname + '.top', xyz=oname + '.gro')
         top.save(oname + '.prmtop', overwrite=True)
         top.save(oname + '.rst7', overwrite=True)
     except Exception as e:
@@ -670,8 +681,8 @@ def _load_charmm(charmm_in):
             box = np.append(np.array(boxvecs),boxangles)
 
     #load in the parameters
-    psf = parmed.load_file(psffile)
-    parameterset = parmed.charmm.CharmmParameterSet()
+    psf = pmd.load_file(psffile)
+    parameterset = pmd.charmm.CharmmParameterSet()
     for tfile in rtfs:
         parameterset.read_topology_file(tfile)
     for pfile in prms:
@@ -683,7 +694,7 @@ def _load_charmm(charmm_in):
     if len(box) == 6:
         psf.box = box
     # now load in the coordinates
-    crd = parmed.load_file(crdfile)
+    crd = pmd.load_file(crdfile)
     try:
         if len(crd.coordinates.shape) == 3:
             coords = crd.coordinates[0]
@@ -715,14 +726,14 @@ def _load_charmm(charmm_in):
             logger.error('Unexpected box array shape')
 
     #Make GROMACS topology
-    parmed_system = parmed.gromacs.GromacsTopologyFile.from_structure(psf)
+    parmed_system = pmd.gromacs.GromacsTopologyFile.from_structure(psf)
 
     # write out the files.  Should write them out in the proper directory (the one reading in)
     pathprefix = os.path.dirname(charmm_in)
     fromcharmm_top_in = os.path.join(pathprefix, prefix + '_from_charmm.top')
     fromcharmm_gro_in = os.path.join(pathprefix,prefix + '_from_charmm.gro')
-    parmed.gromacs.GromacsTopologyFile.write(parmed_system, fromcharmm_top_in)
-    parmed.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision = 8)
+    pmd.gromacs.GromacsTopologyFile.write(parmed_system, fromcharmm_top_in)
+    pmd.gromacs.GromacsGroFile.write(parmed_system, fromcharmm_gro_in, precision = 8)
 
     # now, read in using gromacs
     system = gmx.load(fromcharmm_top_in, fromcharmm_gro_in)
@@ -731,20 +742,21 @@ def _load_charmm(charmm_in):
 
 def _save_charmm(amb_structure, oname, output_status):
     try:
-        parmed_system = parmed.charmm.CharmmPsfFile.from_structure(amb_structure)
+        parmed_system = pmd.charmm.CharmmPsfFile.from_structure(amb_structure)
         charmm_output_psf = '{0}.psf'.format(oname)
+        charmm_output_crd = '{0}.crd'.format(oname)
+
+        # We need these arrays for enery output.
         charmm_output_rtf = '{0}.rtf'.format(oname)
         charmm_output_prm = '{0}.prm'.format(oname)
-        charmm_output_crd = '{0}.crd'.format(oname)
-        # we need these arrays for enery output
         prms = [charmm_output_prm]
         rtfs = [charmm_output_rtf]
-        parmed.charmm.CharmmParameterSet.write(
-            parmed.charmm.CharmmParameterSet.from_structure(amb_structure),
+        pmd.charmm.CharmmParameterSet.write(
+            pmd.charmm.CharmmParameterSet.from_structure(amb_structure),
             top=charmm_output_rtf,
             par=charmm_output_prm)
         amb_structure.save(charmm_output_psf, format='psf',overwrite=True)
-        parmed.charmm.CharmmCrdFile.write(parmed_system, charmm_output_crd)
+        pmd.charmm.CharmmCrdFile.write(parmed_system, charmm_output_crd)
     except Exception as e:
         logger.exception(e)
         output_status['charmm'] = e

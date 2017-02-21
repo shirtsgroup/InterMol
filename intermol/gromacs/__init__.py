@@ -17,7 +17,7 @@ to_canonical = {
 
     'Angle': 'angle',
     'U-B': 'angle',
-    'G96Angle': 'angle' ,
+    'G96Angle': 'angle',
     'Restricted Angles': 'angle',
     'Bond-Cross': 'angle',
     'BA-Cross': 'angle',
