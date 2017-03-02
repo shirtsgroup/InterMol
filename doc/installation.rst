@@ -13,11 +13,11 @@ Install from source
 
     $ git clone https://github.com/shirtsgroup/InterMol.git
     $ cd InterMol
-    $ python setup.py install
+    $ pip install .
 
 Or if you plan on `contributing <development.html>`__ something::
 
-    $ python setup.py develop
+    $ pip install --editable .
 
 Dependencies
 ------------
