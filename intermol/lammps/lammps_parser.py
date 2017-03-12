@@ -790,7 +790,6 @@ class LammpsParser(object):
                 break  # found another blank line
             fields = [int(field) for field in line.partition('#')[0].split()]
 
-            new_force = None
             coeff_num = fields[1]
             atom_nums = fields[2:n + 2]
             paraminfo = force_classes[coeff_num]

@@ -17,14 +17,13 @@ except NameError:
 
 logger = logging.getLogger('InterMolLog')
 
-
 for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
             'lmp_mac_mpi']:
     if which(exe):
         LMP_PATH = exe
         break
 else:
-    warnings.warn('Found no LAMMPS executable.')
+    LMP_PATH = None
 
 
 def energies(input_file, lmp_path=None):
@@ -34,8 +33,10 @@ def energies(input_file, lmp_path=None):
         input_file = path to input file (expects data file in same folder)
         lmp_path = path to LAMMPS binaries
     """
-    if lmp_path is None:
+    if lmp_path is None and LMP_PATH is not None:
         lmp_path = LMP_PATH
+    elif LMP_PATH is None:
+        raise IOError('Unable to find LAMMPS executables.')
 
     logger.info('Evaluating energy of {0}'.format(input_file))
     directory, input_file = os.path.split(os.path.abspath(input_file))
