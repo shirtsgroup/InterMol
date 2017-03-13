@@ -15,19 +15,23 @@ to_canonical = {
     'BONDs': 'bond',
 
     'ANGLEs': 'angle',
-
+    'UREY-b': ['angle','urey-bradley'],
+    
     'DIHEdrals': ['dihedral', 'proper'],
     'IMPRopers': ['dihedral', 'improper'],
+    'CMAP': ['dihedral','cmap'],
 
-    'VDWaals': ['vdw', 'dispersive'],
-    'IMNBvdw': ['vdw', 'dispersive'],
-    'EVDW': ['disper. corr.', 'dispersive'],
-
-    'EEL': 'coulomb',
-    'IMELec': 'coulomb',
-    'EWKSum': 'coulomb',
-    'EWSElf': 'coulomb',
-    'EWEXcl': 'coulomb',
+    'HBONds': ['h-bond'],
+    'IMHBnd': ['h-bond'],
+    'VDWaals': ['vdw total', 'vdw (SR)'],
+    'IMNBvdw': ['vdw total', 'vdw (LR)'],
+    'EVDW': ['vdw total', 'vdw (SR)'],
+    'RXNField': ['coulomb total','coulomb (SR)'],
+    'ELEC': ['coulomb total', 'couloumb (SR)'],
+    'IMELec': ['couloumb total', 'coulomb (LR)'],
+    'EWKSum': ['couloumb total', 'coulomb (LR)'],
+    'EWSElf': ['couloumb total', 'coulomb (LR)'],
+    'EWEXcl': ['couloumb total', 'coulomb (LR)'],
 
     'ENERgy': 'potential'
 }
