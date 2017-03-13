@@ -24,23 +24,24 @@ logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
 warning_logger = logging.getLogger('py.warnings')
 
-
+# we convert them into these names 
 canonical_energy_names = [
     'bond',
 
-    'angle', 'urey_bradley',
+    'angle', 'urey-bradley',
 
-    'dihedral', 'improper', 'proper',
+    'dihedral', 'improper', 'proper', 'cmap',
 
-    'cmap',
-
-    'dispersive', 'vdw', 'vdw-14', 'disper. corr.',
-    'electrostatic', 'coulomb', 'coulomb-14',
+    'h-bond',
+    'vdw total', 'vdw-14', 'vdw (SR)', 'vdw (LR)',
+    'coulomb total', 'coulomb-14', 'coulomb (SR)', 'coulomb (LR)',
 
     'nonbonded', 'bonded',
 
     'potential']
 
+# these names we actually expect to be similar.
+comparable_energy_terms = ['bond','angle','dihedral','bonded','nonbonded','potential']
 
 def canonicalize_energy_names(energy_dict, canonical_keys):
     """Adjust the keys in energy_dict to the canonical names.
@@ -72,11 +73,10 @@ def canonicalize_energy_names(energy_dict, canonical_keys):
     if 'Non-bonded' in canonical_keys:
         normalized['nonbonded'] = energy_dict['Non-bonded']
     else:
-        normalized['nonbonded'] = (normalized['vdw'] + normalized['coulomb'] +
-                                   normalized['vdw-14'] + normalized['coulomb-14'])
+        normalized['nonbonded'] = normalized['vdw total'] + normalized['coulomb total'] + normalized['h-bond']
 
-    normalized['bonded'] = (normalized['bond'] + normalized['angle'] +
-                           normalized['dihedral'])
+    # could be a problem here since desmond calls UB angle as stretch = bond
+    normalized['bonded'] = (normalized['bond'] + normalized['angle'] + normalized['dihedral'])
 
     return normalized
 
@@ -151,8 +151,8 @@ def parse_args(args):
             metavar='path', default='',
             help='path for LAMMPS binary, needed for energy evaluation')
     group_misc.add_argument('-ls', '--lammpssettings', dest='lmp_settings',
-            metavar='settings', default="pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
-            #metavar='settings', default='pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n',
+            #metavar='settings', default="pair_style lj/cut/coul/long 15.0 15.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n",
+            metavar='settings', default='pair_style lj/cut/coul/long 9.0 9.0\npair_modify tail yes\nkspace_style pppm 1e-8\n\n',
             help='pair_style string to use in the output file. Default is a periodic Ewald simulation')
 
     # amber settings
@@ -258,7 +258,9 @@ def main(args=None):
         if args.get('amb_in'):
             prms, rtfs = _save_charmm(amb_structure, oname, output_status)
         else:
-            logger.error("Can't convert to CHARMM unless inputs are in AMBER")
+            errstr = "Can't convert to CHARMM unless inputs are in AMBER"
+            output_status['charmm'] = errstr
+            logger.error(errstr)
 
     # --------------- ENERGY EVALUATION ----------------- #
     if args.get('energy'):
@@ -502,28 +504,50 @@ def summarize_energy_results(energy_input, energy_outputs, input_type, output_ty
         header += '%18s' % ('output (%s)' % (otype)) 
         header += '%18s' % ('diff (%s)' % (otype))  
     out.append(header)
-    for i in range(len(data)):
-        if labels[i] not in canonical_energy_names and not print_noncanonical:
-            continue
-        line = '%20s ' % labels[i]
-        if np.isnan(data[i][0]):
-            line += '%18s' % 'n/a'
-        else:
-            line += '%18.8f' % (data[i][0])
-        for j in range(1, len(data[i])):
-            if np.isnan(data[i][j]):
+    types = ['notcomparable','comparable']
+    for t in types:
+        if t == 'notcomparable':
+            out.append('-----------------------------------------------------------------------')
+            out.append('Not comparable energies: are likely not to be the same')
+            out.append('-----------------------------------------------------------------------')
+            # warning on urey_bradley being put in two different categories here?
+        elif t == 'comparable':
+            out.append('-----------------------------------------------------------------------')
+            out.append('Comparable energy terms: these should be very close')
+            out.append('-----------------------------------------------------------------------')
+        for i in range(len(data)):
+            if t == 'notcomparable':
+                if labels[i] in comparable_energy_terms:
+                    continue
+            elif t == 'comparable':
+                if labels[i] not in comparable_energy_terms:
+                    continue
+            are_all_zero = True   # if all terms are zero, don't bother printing
+            for j in range(0, len(data[i])):
+                if data[i][j] != 0:
+                    are_all_zero = False
+            if labels[i] not in canonical_energy_names and not print_noncanonical or are_all_zero:
+                continue
+            line = '%20s ' % labels[i]
+            if np.isnan(data[i][0]):
                 line += '%18s' % 'n/a'
             else:
-                line += '%18.8f' % (data[i][j])
-            if np.isnan(data[i][j]) or np.isnan(data[i][0]):
-                line += '%18s' % 'n/a'
-            else:
-                line += '%18.8f' % (data[i][j]-data[i][0])
-        out.append(line)
+                line += '%18.8f' % (data[i][0])
+            for j in range(1, len(data[i])):
+                if np.isnan(data[i][j]):
+                    line += '%18s' % 'n/a'
+                else:
+                    line += '%18.8f' % (data[i][j])
+                if np.isnan(data[i][j]) or np.isnan(data[i][0]):
+                    line += '%18s' % 'n/a'
+                else:
+                    line += '%18.8f' % (data[i][j]-data[i][0])
+            out.append(line)
     out.append('')
     # get differences in potential energy
     i = labels.index('potential')
     diff = data[i, 1::] - data[i, 0]
+    out.append('---------------- Total Potential Energy Comparison --------------------')
     out.append('Input %s potential energy: %22.8f' % (input_type,data[i,0])) 
     # print the canonical energies
     for d, otype in zip(diff, output_types):
