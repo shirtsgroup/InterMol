@@ -25,6 +25,9 @@ set_prefix = {'gromacs': 'grompp',
               'amber': 'min'
             }
 
+
+
+
 # Log filenames which will be written for each system tested.
 INFO_LOG = 'info.log'
 DEBUG_LOG = 'debug.log'
@@ -135,8 +138,14 @@ def _convert_from_engine(input_engine, flags, output_dir, test_type='unit'):
     test_dir = resource_filename('intermol', 'tests/{}/{}_tests'.format(
         input_engine, test_type))
 
-    get_test_files = eval('_get_{}_test_files'.format(input_engine))
+    get_test_files = test_finders[input_engine]
+
     test_files, names = get_test_files(test_dir)
+    test_files = list(test_files)
+    if len(test_files) < 1:
+        testing_logger.info('No {} tests found for {}.'.format(
+            test_type, input_engine.upper()))
+        return
     # The results of all conversions are stored in nested dictionaries:
     # results = {'gromacs': {'bond1: result, 'bond2: result...},
     #            'lammps': {'bond1: result, 'bond2: result...},
@@ -247,3 +256,8 @@ def _get_amber_test_files(test_dir):
     names = [os.path.splitext(os.path.basename(prmtop))[0] for prmtop in prmtop_files]
     return zip(prmtop_files, crd_files), names
 
+test_finders = {'gromacs': _get_gromacs_test_files,
+                'lammps': _get_lammps_test_files,
+                'amber': _get_amber_test_files,
+                'desmond': _get_desmond_test_files,
+                }
