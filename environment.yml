@@ -6,7 +6,7 @@ channels:
 dependencies:
 - numpy
 - parmed
-- simtk.units
+- openmm
 - six
 # Testing Deps
 - pytest >=3.0
