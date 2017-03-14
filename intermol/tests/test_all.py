@@ -24,7 +24,6 @@ def test_gromacs_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_gromacs_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy,
                        output_dir=output_dir)
@@ -35,7 +34,6 @@ def test_lammps_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_lammps_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy,
                        output_dir=output_dir)
@@ -46,7 +44,8 @@ def test_desmond_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
+@pytest.mark.skipif(os.getenv('CI') is True,
+                    reason='Desmond stress tests take too long to run')
 def test_desmond_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy,
                        output_dir=output_dir)
@@ -57,10 +56,21 @@ def test_amber_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_amber_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='amber', test_type='stress', energy=energy,
                        output_dir=output_dir)
+
+find_test_func = {('unit', 'gromacs'): test_gromacs_unit,
+                  ('unit', 'amber'): test_amber_unit,
+                  ('unit', 'desmond'): test_desmond_unit,
+                  ('unit', 'lammps'): test_lammps_unit,
+
+                  ('stress', 'gromacs'): test_gromacs_stress,
+                  ('stress', 'amber'): test_amber_stress,
+                  ('stress', 'desmond'): test_desmond_stress,
+                  ('stress', 'lammps'): test_lammps_stress,
+}
+
 
 if __name__ == "__main__":
     import argparse
@@ -81,6 +91,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     args = vars(parser.parse_args())
-    func_name = 'test_{}_{}'.format(args['program'].lower(), args['type'])
-    testing_function = eval(func_name)
+    testing_function = find_test_func[(args['type'].lower(),
+                                       args['program'].lower())]
     testing_function(args['compute_energies'], args['output_dir'])
