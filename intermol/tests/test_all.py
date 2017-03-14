@@ -23,34 +23,41 @@ def test_gromacs_unit(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='gromacs', test_type='unit', energy=energy,
                        output_dir=output_dir)
 
-@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+
+@pytest.mark.skipif(ossgetenv('CI') is True, reason="Running on CI")
 def test_gromacs_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy,
                        output_dir=output_dir)
+
 
 def test_lammps_unit(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='lammps', test_type='unit', energy=energy,
                        output_dir=output_dir)
 
-@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+
+@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_lammps_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='lammps', test_type='stress', energy=energy,
                        output_dir=output_dir)
+
 
 def test_desmond_unit(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='desmond', test_type='unit', energy=energy,
                        output_dir=output_dir)
 
-@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+
+@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_desmond_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy,
                        output_dir=output_dir)
+
 
 def test_amber_unit(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='amber', test_type='unit', energy=energy,
                        output_dir=output_dir)
 
-@pytest.mark.skipif(bool(os.getenv('CI')), reason="Running on CI")
+
+@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_amber_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='amber', test_type='stress', energy=energy,
                        output_dir=output_dir)
