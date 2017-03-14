@@ -1,0 +1,12 @@
+name: test-environment
+channels:
+- omnia
+- conda-forge
+- defaults
+dependencies:
+- numpy
+- parmed
+- simtk.units
+- six
+# Testing Deps
+- pytest >=3.0
