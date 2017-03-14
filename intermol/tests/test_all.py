@@ -24,7 +24,7 @@ def test_gromacs_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(ossgetenv('CI') is True, reason="Running on CI")
+@pytest.mark.skipif(os.getenv('CI') is True, reason="Running on CI")
 def test_gromacs_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='gromacs', test_type='stress', energy=energy,
                        output_dir=output_dir)
