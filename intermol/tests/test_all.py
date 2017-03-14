@@ -44,7 +44,7 @@ def test_desmond_unit(energy=False, output_dir=os.getcwd()):
                        output_dir=output_dir)
 
 
-@pytest.mark.skipif(os.getenv('CI') is True,
+@pytest.mark.skipif(os.getenv('CI') == 'true',
                     reason='Desmond stress tests take too long to run')
 def test_desmond_stress(energy=False, output_dir=os.getcwd()):
     convert_one_to_all(input_engine='desmond', test_type='stress', energy=energy,
