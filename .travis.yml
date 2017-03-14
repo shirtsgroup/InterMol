@@ -1,11 +1,5 @@
 language: c
 sudo: false
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        packages:
-            - gromacs
 
 matrix:
   include:
