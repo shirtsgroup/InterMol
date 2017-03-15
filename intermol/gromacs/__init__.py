@@ -2,7 +2,7 @@ from collections import OrderedDict
 import logging
 import os
 
-import simtk.unit as units
+import parmed.unit as units
 
 from intermol.utils import which, run_subprocess
 from intermol.gromacs.gromacs_parser import load, save

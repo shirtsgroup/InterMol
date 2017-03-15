@@ -3,7 +3,7 @@ from warnings import warn
 import math
 import numpy as np
 
-import simtk.unit as units
+import parmed.unit as units
 from intermol.atom import Atom
 from intermol.forces import *
 import intermol.forces.forcefunctions as ff

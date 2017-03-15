@@ -4,7 +4,7 @@ import os
 from subprocess import Popen, PIPE
 import warnings
 
-import simtk.unit as units
+import parmed.unit as units
 
 from intermol.utils import run_subprocess, which
 from intermol.lammps.lammps_parser import load, save

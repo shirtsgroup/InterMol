@@ -2,7 +2,7 @@ import os
 import logging
 import re
 
-import simtk.unit as units
+import parmed.unit as units
 import numpy as np
 
 from intermol.forces import *

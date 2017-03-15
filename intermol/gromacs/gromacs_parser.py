@@ -3,7 +3,7 @@ import logging
 import os
 import math
 
-import simtk.unit as units
+import parmed.unit as units
 from intermol.atom import Atom
 
 from intermol.forces import *
