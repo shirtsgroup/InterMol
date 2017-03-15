@@ -14,17 +14,24 @@ logger = logging.getLogger('InterMolLog')
 
 
 to_canonical = {
-    'BOND': 'bond',
+    'BOND': ['bond'],
 
-    'ANGLE': 'angle',
+    'ANGLE': ['angle'],
+    'UB': ['angle','urey-bradley'],
 
-    'DIHED': ['dihedral'],
+    'DIHED': ['dihedral','proper'],
+    'IMP': ['dihedral','improper'],
+    'CMAP': ['dihedral','cmap'],
 
-    'VDWAALS': ['vdw', 'dispersive'],
-    '1-4 VDW': ['vdw-14', 'dispersive'],
-    'EEL': 'coulomb',
-    '1-4 EEL': 'coulomb-14',
-    'ENERGY': 'potential'
+    'HBOND': ['h-bond'],
+
+    'VDWAALS': ['vdw total'],
+    '1-4 VDW': ['vdw total', 'vdw-14'],
+
+    'EEL': ['coulomb total'],
+    '1-4 EEL': ['coulomb total', 'coulomb-14'],
+
+    'ENERGY': ['potential']
 }
 
 

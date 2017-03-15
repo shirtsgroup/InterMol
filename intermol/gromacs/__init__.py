@@ -16,24 +16,24 @@ to_canonical = {
     'Bond': 'bond',
 
     'Angle': 'angle',
-    'U-B': 'angle',
     'G96Angle': 'angle',
     'Restricted Angles': 'angle',
     'Bond-Cross': 'angle',
     'BA-Cross': 'angle',
     'Quartic Angles': 'angle',
+    'U-B': ['urey-bradley','angle'],
 
     'Proper Dih.': ['dihedral', 'proper'],
     'Ryckaert-Bell.': ['dihedral', 'proper'],
     'Improper Dih.': ['dihedral', 'improper'],
-
-    'LJ (SR)': ['vdw', 'dispersive'],
-    'LJ-14': ['vdw-14', 'dispersive'],
-    'Disper. corr.': ['disper. corr.', 'dispersive'],
-    'Coulomb (SR)': 'coulomb',
-    'Coulomb-14': 'coulomb-14',
-    'Coul. recip.': 'coulomb',
-    'Potential': 'potential'
+    'CMAP': ['dihedral','cmap'],
+    'LJ (SR)': ['vdw total', 'vdw (SR)'],
+    'LJ-14': ['vdw total','vdw-14'],
+    'Disper. corr.': ['vdw total', 'vdw (LR)'],
+    'Coulomb (SR)': ['coulomb total','coulomb (SR)'],
+    'Coulomb-14': ['coulomb total','coulomb-14'],
+    'Coul. recip.': ['coulomb total','coulomb (LR)'],
+    'Potential': ['potential']
 }
 
 

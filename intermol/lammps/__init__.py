@@ -18,25 +18,25 @@ except NameError:
 logger = logging.getLogger('InterMolLog')
 
 to_canonical = {
-    'Bond': 'bond',
+    'Bond': ['bond'],
 
-    'Angle': 'angle',
+    'Angle': ['angle'],
 
     'Proper Dih.': ['dihedral', 'proper'],
     'Improper': ['dihedral', 'improper'],
 
-    'Dispersive': ['vdw', 'dispersive'],
-    'Disper. corr.': ['disper. corr.', 'dispersive'],
-    'Electrostatic': 'coulomb',
-    'Coul.recip.': 'coulomb',
+    'Dispersive': ['vdw total'],
+    'Disper. corr.': ['vdw total', 'vdw (LR)'],
+    'Electrostatic': ['coulomb total'],
+    'Coul.recip.': ['coulomb total','coulomb (LR)'],
 
-    'Non-bonded': 'nonbonded',
-    'Potential': 'potential'
+    'Non-bonded': ['nonbonded'],
+    'Potential': ['potential']
 }
 
 
 for exe in ['lammps', 'lmp_mpi', 'lmp_serial', 'lmp_openmpi',
-            'lmp_mac_mpi']:
+            'lmp_mac_mpi', '/home/mish4610/software/lammps/src/lmp_serial']:
     if which(exe):
         LMP_PATH = exe
         break
