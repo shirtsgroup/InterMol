@@ -2,7 +2,7 @@ from collections import OrderedDict
 import logging
 import os
 
-import simtk.unit as u
+import parmed.unit as units
 
 from intermol.exceptions import AmberError
 from intermol.utils import which, run_subprocess

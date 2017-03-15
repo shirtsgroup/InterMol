@@ -1,6 +1,6 @@
 import logging
 
-from simtk.unit import nanometers, picoseconds
+from parmed.unit import nanometers, picoseconds
 import numpy as np
 
 logger = logging.getLogger('InterMolLog')

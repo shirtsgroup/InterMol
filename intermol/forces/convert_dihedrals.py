@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import math
 
-import simtk.unit as units
+import parmed.unit as units
 
 from intermol.exceptions import (UnimplementedFunctional, UnsupportedFunctional,
                                  UnimplementedSetting, UnsupportedSetting,

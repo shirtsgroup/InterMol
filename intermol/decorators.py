@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import simtk.unit as units
+import parmed.unit as units
 
 
 class UnitsException(Exception):

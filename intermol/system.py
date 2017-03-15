@@ -2,7 +2,7 @@ from collections import OrderedDict
 import logging
 
 import numpy as np
-import simtk.unit as units
+import parmed.unit as units
 
 logger = logging.getLogger('InterMolLog')  # TODO: do we need the logger here?
 
