@@ -1,25 +1,23 @@
 language: c
 sudo: false
 
+matrix:
+  include:
+    - { os: linux, env: PYTHON_VERSION=2.7 }
+    - { os: linux, env: PYTHON_VERSION=3.4 }
+    - { os: linux, env: PYTHON_VERSION=3.5 }
+    - { os: osx, env: PYTHON_VERSION=2.7 }
+    - { os: osx, env: PYTHON_VERSION=3.4 }
+    - { os: osx, env: PYTHON_VERSION=3.5 }
+
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install md5sha1sum; fi
-  - source devtools/travis-ci/install.sh
-  - conda config --add channels omnia
+  - source devtools/travis-ci/install_conda.sh
+
+  - conda config --set always_yes yes --set changeps1 no
+  - conda env create -q -n test-environment python=$PYTHON_VERSION -f environment.yml
+  - source activate test-environment
+  - pip install -e .
 
 script:
-  - conda build devtools/conda-recipe
-os:
-  - osx
-  - linux
-
-env:
-  matrix:
-    - python=2.7  CONDA_PY=27
-    - python=3.4  CONDA_PY=34
-    - python=3.5  CONDA_PY=35
-
-  global:
-    # BINSTAR
-    - secure: "UGmEljhTf6mQxjhj6We2PPNaNsaYONoFgH30SEofJDNIqXSM6zNQzSVOm5RBxfvVdw+TSYwmyZ/XmMio+yIWMDBXXW8MbGHWYIGqevSkgqCT9qqZv2475MCyPFpmyucQzN+0/3+b7JxAR/VC2N6CLPGohsUe1Up/xU3MfY5DcJY="
-
-
+  - py.test -v --pyargs intermol

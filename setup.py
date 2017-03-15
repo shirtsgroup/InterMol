@@ -49,6 +49,8 @@ setup(
                             'gromacs/*/*/*.itp',
                             'lammps/*/*.lmp',
                             'lammps/*/*.input',
+                            'amber/*.in',
+                            'amber/*/*',
                             ]},
     include_package_data=True,
     install_requires=reqs,

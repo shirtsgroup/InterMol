@@ -1,4 +1,4 @@
-import simtk.unit as units
+import parmed.unit as units
 
 from intermol.decorators import accepts_compatible_units
 from intermol.forces.abstract_3_virtual_type import Abstract3VirtualType

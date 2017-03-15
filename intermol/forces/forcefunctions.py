@@ -1,4 +1,4 @@
-import simtk.unit as units
+import parmed.unit as units
 
 import intermol.forces.forcedata as forcedata
 
