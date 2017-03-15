@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 
-import simtk.unit as units
+import parmed.unit as units
 
 from intermol.desmond.desmond_parser import load, save
 

@@ -3,7 +3,7 @@ import logging
 import os
 import math
 
-import simtk.unit as units
+import parmed.unit as units
 from intermol.atom import Atom
 
 from intermol.forces import *
@@ -748,9 +748,7 @@ class GromacsParser(object):
     def create_atom(self, temp_atom):
         index = self.n_atoms_added + 1
         atomtype = temp_atom[1]
-        #res_id = int(temp_atom[2])
         res_id = self.gro.residue_ids[self.n_atoms_added]
-        #res_name = temp_atom[3]
         res_name = self.gro.residue_names[self.n_atoms_added]
         atom_name = temp_atom[4]
         cgnr = int(temp_atom[5])

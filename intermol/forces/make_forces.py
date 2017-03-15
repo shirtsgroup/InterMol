@@ -138,7 +138,7 @@ for forcelist in forcelists:
 
         with open(filename, 'w') as f:
             # Imports
-            f.write('import simtk.unit as units\n\n')
+            f.write('import parmed.unit as units\n\n')
             f.write('from intermol.decorators import accepts_compatible_units\n')
             f.write('from intermol.forces.{0} import {1}\n\n\n'.format(abstract_type_file, abstract_type))
 
