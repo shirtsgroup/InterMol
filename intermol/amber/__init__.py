@@ -98,7 +98,7 @@ def _group_energy_terms(mdout):
     ranges = [[1, 24], [26, 49], [51, 77]]
 
     e_out = OrderedDict()
-    potential = 0 * u.kilocalories_per_mole
+    potential = 0 * units.kilocalories_per_mole
     for line in all_lines[startline+3:]:
         if '=' in line:
             for i in range(3):
@@ -106,7 +106,7 @@ def _group_energy_terms(mdout):
                 term = line[r[0]:r[1]]
                 if '=' in term:
                     energy_type, energy_value = term.split('=')
-                    energy_value = float(energy_value) * u.kilocalories_per_mole
+                    energy_value = float(energy_value) * units.kilocalories_per_mole
                     potential += energy_value
                     energy_type = energy_type.rstrip()
                     e_out[energy_type] = energy_value
