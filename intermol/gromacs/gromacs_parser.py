@@ -409,7 +409,6 @@ class GromacsParser(object):
         self.gro.read()
         self.system.box_vector = self.gro.box_vector
         self.system.n_atoms = self.gro.positions.shape[0]
-        self.system.n_molecules = self.molecules
 
         self.n_atoms_added = 0
         for mol_name, mol_count in self.molecules:
@@ -1531,8 +1530,6 @@ class GromacsParser(object):
     def process_nonbond_params(self, line):
         """Process a line in the [ nonbond_param ] category."""
         fields = line.split()
-        natoms = 2
-        nonbonded_type = None
         NonbondedFunc = None
         combination_rule = self.system.combination_rule
 

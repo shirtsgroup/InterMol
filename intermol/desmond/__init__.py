@@ -13,28 +13,21 @@ DES_PATH = ''
 logger = logging.getLogger('InterMolLog')
 
 
-# terms we are ignoring for now.
-#'en': 'Raw Potential',
-#'E_x': 'Extended En.',
-unwanted = ['E_x','E_n','E_k','constraints',]
+to_canonical = {
+    'stretch': ['bond'],
 
-key_dict = {
-    'E_p': 'Potential',
-    'stretch': 'Bond',
-    'angle': 'Angle',
-    'dihedral': 'All dihedrals',
-    'pair_vdw': 'LJ-14',
-    'pair_elec': 'Coulomb-14',
-    'nonbonded_vdw': 'LJ (SR)',
-    }
+    'angle': ['angle'],
 
+    'dihedral': ['dihedral','proper'],
+    'improper': ['dihedral','improper'],
+    'pair_vdw': ['vdw total', 'vdw-14'],
+    'nonbonded_vdw': ['vdw total'],
+    'Self_energy': ['coulomb total','coulomb (LR)'],
+    'nonbonded_elec': ['coulomb total'],
+    'pair_elec': ['coulomb total','coulomb-14'],
 
-def standardize_key(in_key):
-    if in_key in key_dict:
-        out_key = key_dict[in_key]
-    else:
-        out_key = in_key
-    return out_key
+    'E_p': ['potential']
+}
 
 
 def get_desmond_energy_from_file(energy_file):
@@ -51,26 +44,21 @@ def get_desmond_energy_from_file(energy_file):
             terms = terms[1:-2]  # Exclude time, pressure, and volume.
             for term in terms:
                 key, value = term.split('=')
-                types.append(standardize_key(key))
+                types.append(key)
                 data.append(float(value))
 
-        # Parse rest of file for individual energy grouops.
+        # Parse rest of file for individual energy groups.
         for line in f:
             if '(0.000000)' in line:  # Time = 0.0
                 words = line.split()
                 if words[-1] == 'total':
                     continue
-                key = standardize_key(words[0])
+                key = words[0]
                 if key:
                     types.append(key)
                     data.append(words[-1])
     data = [float(value) * units.kilocalories_per_mole for value in data]
     e_out = OrderedDict(zip(types, data))
-
-    # Discard non-energy terms.
-    for group in unwanted:
-        if group in e_out:
-            del e_out[group]
 
     return e_out
 

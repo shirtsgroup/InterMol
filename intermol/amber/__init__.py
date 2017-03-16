@@ -4,32 +4,38 @@ import os
 
 import parmed.unit as units
 
+from intermol.exceptions import AmberError
 from intermol.utils import which, run_subprocess
+
 
 AMB_PATH = ''
 
 logger = logging.getLogger('InterMolLog')
 
-# --------- energy evaluation methods ---------- #
-key_dict = {'ENERGY': 'Potential',
-            'BOND': 'Bond',
-            'ANGLE': 'Angle',
-            'DIHED': 'All dihedrals',
-            '1-4 VDW': 'LJ-14',
-            '1-4 EEL': 'Coulomb-14',
-            'EEL': 'Coulomb',
-            'VDWAALS': 'LJ (SR)'
-            }
 
-def standardize_key(in_key):
-    if in_key in key_dict:
-        out_key = key_dict[in_key]
-    else:
-        out_key = in_key
-    return out_key
+to_canonical = {
+    'BOND': ['bond'],
+
+    'ANGLE': ['angle'],
+    'UB': ['angle','urey-bradley'],
+
+    'DIHED': ['dihedral','proper'],
+    'IMP': ['dihedral','improper'],
+    'CMAP': ['dihedral','cmap'],
+
+    'HBOND': ['h-bond'],
+
+    'VDWAALS': ['vdw total'],
+    '1-4 VDW': ['vdw total', 'vdw-14'],
+
+    'EEL': ['coulomb total'],
+    '1-4 EEL': ['coulomb total', 'coulomb-14'],
+
+    'ENERGY': ['potential']
+}
 
 
-def amber_energies(prmtop, crd, input, amb_path):
+def energies(prmtop, crd, input, amb_path):
     """Compute single-point energies using AMBER.
 
     Args:
@@ -55,7 +61,7 @@ def amber_energies(prmtop, crd, input, amb_path):
     stdout_path = os.path.join(directory, 'amber_stdout.txt')
     stderr_path = os.path.join(directory, 'amber_stderr.txt')
 
-    # did they give a path, or the name of the file?
+    # Did they give a path, or the name of the file?
     islastbin = os.path.basename(os.path.normpath(amb_path))
     if islastbin == 'sander':
         amber_bin = amb_path
@@ -64,37 +70,35 @@ def amber_energies(prmtop, crd, input, amb_path):
     if not which(amber_bin):
         raise IOError('Unable to find AMBER executable (sander).')
 
-    # run sander
+    # Run sander.
     cmd = [amber_bin, '-i', input, '-c', crd, '-p', prmtop, '-o', mdout, '-O']
     proc = run_subprocess(cmd, 'amber', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('sander failed. See %s' % stderr_path)
 
-    # Extract energies from amber output
-
     return _group_energy_terms(mdout)
 
 
 def _group_energy_terms(mdout):
-    """Parse AMBER output file to extract and group the energy terms in a dict. """
+    """Parse AMBER output file and group the energy terms in a dict. """
 
     with open(mdout) as f:
         all_lines = f.readlines()
 
-    # find where the energy information starts
-    i = 0
-    for line in all_lines:
+    # Find where the energy information starts.
+    for i, line in enumerate(all_lines):
         if line[0:8] == '   NSTEP':
             startline = i
             break
-        i+=1
+    else:
+        raise AmberError('Unable to detect where energy info starts in AMBER '
+                         'output file: {}'.format(mdout))
 
-    energy_types = []
-    energy_values = []
+    # Strange ranges for amber file data.
+    ranges = [[1, 24], [26, 49], [51, 77]]
 
-    ranges = [[1,24],[26,49],[51,77]]  # strange ranges for amber file data.
-
-    potential = 0*units.kilocalories_per_mole
+    e_out = OrderedDict()
+    potential = 0 * u.kilocalories_per_mole
     for line in all_lines[startline+3:]:
         if '=' in line:
             for i in range(3):
@@ -102,31 +106,11 @@ def _group_energy_terms(mdout):
                 term = line[r[0]:r[1]]
                 if '=' in term:
                     energy_type, energy_value = term.split('=')
-                    energy_value = float(energy_value)*units.kilocalories_per_mole
+                    energy_value = float(energy_value) * u.kilocalories_per_mole
                     potential += energy_value
                     energy_type = energy_type.rstrip()
-                    if energy_type in key_dict.keys():# remove the whitespace before storing as key.
-                        energy_values.append(energy_value)
-                        energy_types.append(key_dict[energy_type])
+                    e_out[energy_type] = energy_value
         else:
             break
-    energy_types.append('Potential')
-    energy_values.append(potential)
-
-    e_out = OrderedDict(zip(energy_types, energy_values))
-    # now total up other terms.
-    # van der Waals energies.
-    vanderwaals = ['LJ-14', 'LJ (SR)']
-    # Electrostatic energies.
-    electrostatic = ['Coulomb-14', 'Coulomb']
-    bonded = ['Bond', 'Angle', 'All dihedrals']
-    nonbonded = ['Electrostatic', 'van der Waals'] # must come last, since is a sum of summed terms
-    sumterms = [vanderwaals, electrostatic, bonded, nonbonded]
-    newkeys = ['van der Waals', 'Electrostatic', 'Bonded', 'Non-bonded']
-    for k, key in enumerate(newkeys):
-        e_out[key] =  0 * units.kilocalories_per_mole
-        for group in sumterms[k]:
-            if group in e_out:
-                e_out[key] += e_out[group]
-
+    e_out['ENERGY'] = potential
     return e_out, mdout
