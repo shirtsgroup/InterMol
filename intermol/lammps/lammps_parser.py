@@ -1207,7 +1207,7 @@ class LammpsParser(object):
             f.write('\n')
 
             # non-bonded: either defaults, or specified by user
-            f.write(nonbonded_style)
+            f.write(nonbonded_style.replace('[lf]',os.linesep))
 
             for line in pair_coeffs:
                 f.write(line)
