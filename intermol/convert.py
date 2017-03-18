@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import parmed as pmd
 from parmed.utils.six import string_types
-import simtk.unit as u
+import parmed.unit as units
 
 import intermol.gromacs as gmx
 import intermol.lammps as lmp
@@ -58,7 +58,7 @@ def canonicalize_energy_names(energy_dict, canonical_keys):
     """
     # TODO: Look into creating an `EnergyDict` class.
     normalized = OrderedDict.fromkeys(canonical_energy_names,
-                                      0 * u.kilojoules_per_mole)
+                                      0 * units.kilojoules_per_mole)
 
     for key, energy in energy_dict.items():
         canonical_key = canonical_keys.get(key)
@@ -66,9 +66,9 @@ def canonicalize_energy_names(energy_dict, canonical_keys):
             continue
         elif not isinstance(canonical_key, string_types):
             for k in canonical_key:
-                normalized[k] += energy.in_units_of(u.kilojoules_per_mole)
+                normalized[k] += energy.in_units_of(units.kilojoules_per_mole)
         else:
-            normalized[canonical_key] += energy.in_units_of(u.kilojoules_per_mole)
+            normalized[canonical_key] += energy.in_units_of(units.kilojoules_per_mole)
 
     if 'Non-bonded' in canonical_keys:
         normalized['nonbonded'] = energy_dict['Non-bonded']
