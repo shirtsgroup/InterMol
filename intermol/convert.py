@@ -410,7 +410,7 @@ def main(args=None):
                                  crm.pick_crystal_type(amb_structure.box),
                                  amb_structure.box,
                                  oname + '.crd',
-                                 args.get('charmm_settings'))
+                                 args.get('charmm_settings'), ignore_warnings=True)
             try:
                 out, outfile = crm.energies(inpfile, crm.CRM_PATH)
                 out = canonicalize_energy_names(out, crm.to_canonical)
@@ -634,7 +634,9 @@ def _load_amber(amber_files):
     crd_in = os.path.abspath(crd_in[0])
 
     print(prmtop_in, crd_in)
-    amb_structure = pmd.load_file(prmtop_in, xyz=crd_in)
+    # the box vector should be inferred rather than specified.
+
+    amb_structure = pmd.load_file(prmtop_in, xyz=crd_in, box = [70,70,70,90,90,90])
     #Make GROMACS topology
     # parmed_system = pmd.gromacs.GromacsTopologyFile.from_structure(amb_structure)
 
