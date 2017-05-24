@@ -790,12 +790,12 @@ class DesmondParser(object):
 
                 constr_type = split[funct_pos]
                 if 'HOH' in constr_type:
-                    dHH = float(split[8])
-                    if dHH != float(split[9]):
-                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[6],split[7]))
-                    angle = float(split[5])/(180/math.pi)
-                    dOH = 2*dHH*math.sin(angle/2)
-                    params = [int(split[1]), int(split[2]), int(split[3]), dOH*units.angstroms, dHH*units.angstroms]
+                    dOH = float(split[lenpos[1]])
+                    if dOH != float(split[lenpos[2]]):
+                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[lenpos[1]],split[lenpos[2]]))
+                    angle = float(split[lenpos[0]])/(180/math.pi)
+                    dHH = 2*dOH*math.sin(angle/2)
+                    params = [atompos[0], atompos[1], atompos[2], dOH*units.angstroms, dHH*units.angstroms]
                     new_rigidwater = RigidWater(*params)
                     if new_rigidwater:
                         current_molecule_type.rigidwaters.add(new_rigidwater)
@@ -1625,8 +1625,8 @@ class DesmondParser(object):
             cline += ' HOH '
             dOH = rigidwater.dOH.value_in_unit(units.angstroms)
             dHH = rigidwater.dHH.value_in_unit(units.angstroms)
-            angle = 2.0*math.asin(0.5*dOH/dHH)*(180/math.pi)    # could automate conversion. . .
-            cline += " %.6f %.6f %.6f " % (angle,dHH,dHH)
+            angle = 2.0*math.asin(0.5*dHH/dOH)*(180/math.pi)    # could automate conversion. . .
+            cline += " %.8f %.8f %.8f" % (angle,dOH,dOH)
             cline += '\n'
             for j in range(alen,alen_max):
                 cline += ' 0.0'
