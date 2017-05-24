@@ -790,12 +790,12 @@ class DesmondParser(object):
 
                 constr_type = split[funct_pos]
                 if 'HOH' in constr_type:
-                    dOH = float(split[8])
-                    if dOH != float(split[9]):
-                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[6],split[7]))
-                    angle = float(split[5])/(180/math.pi)
+                    dOH = float(split[lenpos[1]])
+                    if dOH != float(split[lenpos[2]]):
+                        logger.debug("Warning: second length in a rigid water specification (%s) is not the same as the first (%s)" % (split[lenpos[1]],split[lenpos[2]]))
+                    angle = float(split[lenpos[0]])/(180/math.pi)
                     dHH = 2*dOH*math.sin(angle/2)
-                    params = [int(split[1]), int(split[2]), int(split[3]), dOH*units.angstroms, dHH*units.angstroms]
+                    params = [atompos[0], atompos[1], atompos[2], dOH*units.angstroms, dHH*units.angstroms]
                     new_rigidwater = RigidWater(*params)
                     if new_rigidwater:
                         current_molecule_type.rigidwaters.add(new_rigidwater)
