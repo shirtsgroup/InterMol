@@ -410,7 +410,7 @@ def main(args=None):
                                  crm.pick_crystal_type(amb_structure.box),
                                  amb_structure.box,
                                  oname + '.crd',
-                                 args.get('charmm_settings'))
+                                 args.get('charmm_settings'), ignore_warnings=True)
             try:
                 out, outfile = crm.energies(inpfile, crm.CRM_PATH)
                 out = canonicalize_energy_names(out, crm.to_canonical)
@@ -634,9 +634,13 @@ def _load_amber(amber_files):
     crd_in = os.path.abspath(crd_in[0])
 
     print(prmtop_in, crd_in)
+
+    # some coordinate files don't actually load in the box.  We need to assume something.
+    # if there is no box, we assume that it's vacuum, and we just need to make sure it's big.
+    # revisit this at some point.
     amb_structure = pmd.load_file(prmtop_in, xyz=crd_in)
-    #Make GROMACS topology
-    # parmed_system = pmd.gromacs.GromacsTopologyFile.from_structure(amb_structure)
+    if not amb_structure.box:
+        amb_structure = pmd.load_file(prmtop_in, xyz=crd_in, box = [70,70,70,90,90,90])
 
     # write out the files.  Should write them out in the proper directory (the one reading in)
     pathprefix = os.path.dirname(prmtop_in)

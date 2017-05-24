@@ -14,7 +14,7 @@ logger = logging.getLogger('InterMolLog')
 to_canonical = {
     'BONDs': 'bond',
 
-    'ANGLEs': 'angle',
+    'ANGLes': 'angle',
     'UREY-b': ['angle','urey-bradley'],
     
     'DIHEdrals': ['dihedral', 'proper'],
@@ -27,11 +27,11 @@ to_canonical = {
     'IMNBvdw': ['vdw total', 'vdw (LR)'],
     'EVDW': ['vdw total', 'vdw (SR)'],
     'RXNField': ['coulomb total','coulomb (SR)'],
-    'ELEC': ['coulomb total', 'couloumb (SR)'],
-    'IMELec': ['couloumb total', 'coulomb (LR)'],
-    'EWKSum': ['couloumb total', 'coulomb (LR)'],
-    'EWSElf': ['couloumb total', 'coulomb (LR)'],
-    'EWEXcl': ['couloumb total', 'coulomb (LR)'],
+    'ELEC': ['coulomb total', 'coulomb (SR)'],
+    'IMELec': ['coulomb total', 'coulomb (LR)'],
+    'EWKSum': ['coulomb total', 'coulomb (LR)'],
+    'EWSElf': ['coulomb total', 'coulomb (LR)'],
+    'EWEXcl': ['coulomb total', 'coulomb (LR)'],
 
     'ENERgy': 'potential'
 }
@@ -80,15 +80,19 @@ def pick_crystal_type(box):
 
 
 def write_input_file(inpfile, psffile, rtfs, prms, strms,
-                     boxtype, boxvecs, crdfile, charmm_settings):
+                     boxtype, boxvecs, crdfile, charmm_settings, ignore_warnings=False):
 
     #annoyingly we need to write the charmm input file, which containes nonbonded interaction parameters,
     #and files thatare used.
     counter = 10
     increment = 10
+
     with open(inpfile, 'w') as charmm_inp:
         # will use relative paths because of length of line issues in charmm
         charmm_inp.write('! CHARMM Energy for %s\n' % os.path.relpath(inpfile))
+        if (ignore_warnings):
+            charmm_inp.write("BOMLEV  -1\n")
+
         for r in rtfs:
             charmm_inp.write('open read card unit %d name \"%s\"\nread rtf card unit %d\n' % (counter, os.path.relpath(r), counter))
             counter = counter + increment
@@ -161,11 +165,16 @@ def _group_energy_terms(mdout):
     with open(mdout) as f:
         all_lines = f.readlines()
 
+    startline = -1
     # find where the energy information starts
     for i, line in enumerate(all_lines):
         if line[0:9] == 'ENER ENR:':
             startline = i
             break
+
+    if startline == -1:
+        logger.error('No energy data (ENER ENR line) found in %s' % mdout)
+        return
 
     energy_types = []
     energy_values = []
