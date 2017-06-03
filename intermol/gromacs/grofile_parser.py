@@ -100,7 +100,7 @@ class GromacsGroParser(object):
                     atom.name = "LMP_{0}".format(atom.name)
                 # .gro wraps at 100,0000, which is why the field is 5 width.    
                 gro.write('{0:5d}{1:<5s}{2:5s}{3:5d}'.format(
-                        atom.residue_index, atom.residue_name, atom.name, (n + 1)%100000))
+                        atom.residue_index%100000, atom.residue_name, atom.name, (n + 1)%100000))
                 for pos in atom.position:
                     gro.write('{0:17.12f}'.format(pos.value_in_unit(nanometers)))
                 if np.any(atom.velocity):
