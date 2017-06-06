@@ -676,7 +676,7 @@ class DesmondParser(object):
             atoms = [int(values[ed[a]]) for a in atomnames]
             bondingtypes = [self.atomlist[atom-1].name for atom in atoms]
             atoms.extend(bondingtypes)
-            kwds = [float(values[ed['r_ffio_c1']]), float(values[ed['r_ffio_c1']])]
+            kwds = [float(values[ed['r_ffio_c1']]), float(values[ed['r_ffio_c2']])]
             new_angle = self.create_forcetype(self.desmond_angles[key], atoms, kwds)
             kwds = self.get_parameter_kwds_from_force(new_angle)
             new_angle = self.canonical_angle(new_angle, kwds, direction = 'into', name = key,
