@@ -372,6 +372,9 @@ class LammpsParser(object):
 
         self.set_units(self.unit_set)
 
+        # Run some checks that cannot be evaluated until the full file has been parsed
+        self.check_boundary_dimension_compatibility()
+
     def read_data(self, data_file):
         """Reads a LAMMPS data file.
 
@@ -507,6 +510,9 @@ class LammpsParser(object):
     def parse_boundary(self, line):
         """ """
         self.boundaries = [line[1], line[2], line[3]]
+
+    def check_boundary_dimension_compatibility(self):
+        """ """
         if len(self.boundaries) != self.dimension:
             raise LammpsError("Boundaries do not match specified dimension "
                               "in input file")
