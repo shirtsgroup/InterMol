@@ -710,9 +710,8 @@ class DesmondParser(object):
             elif key == "PROPER_TRIG" or key == "IMPROPER_TRIG":
                 kwds = [float(values[ed[x]]) for x in cnames]
             elif key == "OPLS_PROPER" or key == "OPLS_IMPROPER":
-                # next 3 lines definitely not the right way to do it.
-                #opls_kwds = {key: value for key, value in zip("c1 c2 c3 c4".split(), [units.kilocalorie_per_mole * float(s) for s in values[7:11]])}
-                opls_kwds = [float(values[ed[x]]) * units.kilocalorie_per_mole for x in cnames[1:5]]
+                opls_vals = [float(values[ed[x]]) * units.kilocalorie_per_mole for x in cnames[1:5]]
+                opls_kwds = dict(zip([x[-2:] for x in cnames[1:5]],opls_vals))
                 opls_kwds = convert_dihedral_from_fourier_to_trig(opls_kwds)
                 kwds = np.zeros(8) # will fill this in later.
             new_dihedral = self.create_forcetype(self.desmond_dihedrals[key], atoms, kwds)
