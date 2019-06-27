@@ -398,6 +398,7 @@ class GromacsParser(object):
         self.pairtypes = dict()
         self.cmaptypes = dict()
         self.nonbondedtypes = dict()
+        self.virtualtypes = dict()
 
         # Parse the top_filename into a set of plain text, intermediate
         # TopMoleculeType objects.
@@ -794,6 +795,7 @@ class GromacsParser(object):
                                 "{0}. Visually inspect before using.".format(atom))
             atom.sigma = (state, intermol_atomtype.sigma)
             atom.epsilon = (state, intermol_atomtype.epsilon)
+            atom.ptype = intermol_atomtype.ptype
 
         self.current_molecule.add_atom(atom)
         self.n_atoms_added += 1
@@ -1552,6 +1554,7 @@ class GromacsParser(object):
         self.system.nonbonded_types[tuple(nonbonded_vars)] = nonbonded_type
 
     def process_virtual_sites(self, line, v_site_type):
+
         """Process a line in a [ virtual_sites? ] category."""
         if v_site_type == 'n':
             raise UnimplementedSetting('Parsing of [ virtual_sitesn ] directives'
