@@ -29,6 +29,7 @@ to_canonical = {
     'CMAP': ['dihedral','cmap'],
     'LJ (SR)': ['vdw total', 'vdw (SR)'],
     'LJ-14': ['vdw total','vdw-14'],
+    'LJ recip.': ['vdw total', 'vdw (LR)'],
     'Disper. corr.': ['vdw total', 'vdw (LR)'],
     'Coulomb (SR)': ['coulomb total','coulomb (SR)'],
     'Coulomb-14': ['coulomb total','coulomb-14'],

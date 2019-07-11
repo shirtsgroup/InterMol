@@ -412,6 +412,8 @@ class LammpsParser(object):
                         self.parse_box(line.split(), 1)
                     elif ('zlo' in line) and ('zhi' in line):
                         self.parse_box(line.split(), 2)
+                    elif ('xy xz yz' in line):
+                        self.parse_box(line.split(), 'tilt')
                     # Other headers.
                     else:
                         keyword = line.strip()
@@ -608,12 +610,23 @@ class LammpsParser(object):
             line (str): Current line in input file.
             dim (int): Dimension specified in line.
         """
-        fields = [float(field) for field in line[:2]]
-        box_length = fields[1] - fields[0]
-        if box_length > 0:
-            self.system.box_vector[dim, dim] = box_length * self.DIST
+        if dim == 'tilt':
+            fields = [(float(field) * self.DIST) for field in line[:3]]
+            dirs = line[3:]
+            for f,d in zip(fields,dirs):
+                if d == 'xy':
+                    self.system.box_vector[1,0] = f
+                elif d == 'xz':
+                    self.system.box_vector[2,0] = f
+                elif d == 'yz':
+                    self.system.box_vector[2,1] = f
         else:
-            raise LammpsError("Negative box length specified in data file.")
+            fields = [float(field) for field in line[:2]]
+            box_length = fields[1] - fields[0]
+            if box_length > 0:
+                self.system.box_vector[dim, dim] = box_length * self.DIST
+            else:
+                raise LammpsError("Negative box length specified in data file.")
 
     def parse_masses(self, data_lines):
         """Read masses from data file."""
@@ -1154,6 +1167,10 @@ class LammpsParser(object):
             f.write('{0:11.7f} {1:11.7f} zlo zhi\n'.format(
                     z_min, z_min + self.system.box_vector[2][2].value_in_unit(
                             self.DIST)))
+            f.write('{0:11.7f} {1:11.7f} {2:11.7f} xy xz yz\n'.format(
+                    self.system.box_vector[1][0].value_in_unit(self.DIST),
+                    self.system.box_vector[2][0].value_in_unit(self.DIST),
+                    self.system.box_vector[2][1].value_in_unit(self.DIST)))
 
             for mass in mass_list:
                 f.write(mass)
