@@ -22,7 +22,7 @@ jobs:
     - uses: goanpeca/setup-miniconda@v1
       with:
         python-version: ${{ matrix.python-version }}
-        activate-environment: test
+        activate-environment: intermol-test-env
         mamba-version: "*"
         channels: conda-forge,omnia,bioconda,defaults
         channel-priority: true

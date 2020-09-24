@@ -17,4 +17,4 @@ dependencies:
   - lammps
 
     # Testing
-  - pytest >=3.0
+  - pytest
