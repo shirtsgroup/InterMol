@@ -1,7 +1,14 @@
 #!/bin/bash
 
-if [[ "$TRAVIS_OS_NAME" == "osx" ]];   then MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh; fi
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA=Miniconda3-latest-Linux-x86_64.sh;  fi
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    # Make OSX md5 mimic md5sum from linux, alias does not work
+    md5sum () {
+        command md5 -r "$@"
+    }
+    MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh
+else
+    MINICONDA=Miniconda3-latest-Linux-x86_64.sh
+fi
 
 MINICONDA_MD5=$(wget -qO- https://repo.anaconda.com/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
 wget -q https://repo.anaconda.com/miniconda/$MINICONDA
