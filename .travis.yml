@@ -13,7 +13,7 @@ install:
   - source devtools/travis-ci/install_conda.sh
 
   - conda config --set always_yes yes --set changeps1 no
-  - conda env create -q python=$PYTHON_VERSION -f devtools/conda-ens/test_env.yml
+  - conda env create -q python=$PYTHON_VERSION -f devtools/conda-envs/test_env.yml
   - source activate intermol-test-env
   - pip install -e .
 
