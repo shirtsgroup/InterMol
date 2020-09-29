@@ -1,0 +1,20 @@
+name: intermol-test-env
+channels:
+  - conda-forge
+  - omnia
+  - bioconda
+  - defaults
+dependencies:
+    # Core
+  - numpy
+  - parmed
+  - openmm
+  - six
+
+    # Engines
+  - ambertools
+  - gromacs
+  - lammps
+
+    # Testing
+  - pytest
