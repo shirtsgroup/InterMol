@@ -9,7 +9,6 @@ matrix:
     - { os: osx, env: PYTHON_VERSION=3.7 }
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install md5sha1sum; fi
   - source devtools/travis-ci/install_conda.sh
 
   - conda config --set always_yes yes --set changeps1 no
