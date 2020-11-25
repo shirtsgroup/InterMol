@@ -5,8 +5,10 @@ matrix:
   include:
     - { os: linux, env: PYTHON_VERSION=3.6 }
     - { os: linux, env: PYTHON_VERSION=3.7 }
+    - { os: linux, env: PYTHON_VERSION=3.8 }
     - { os: osx, env: PYTHON_VERSION=3.6 }
     - { os: osx, env: PYTHON_VERSION=3.7 }
+    - { os: osx, env: PYTHON_VERSION=3.8 }
 
 install:
   - source devtools/travis-ci/install_conda.sh
