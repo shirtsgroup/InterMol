@@ -1,11 +1,12 @@
-import collections
+from collections.abc import Set
+from collections import OrderedDict
 from copy import deepcopy
 
 
-class OrderedSet(collections.Set):
+class OrderedSet(Set):
 
     def __init__(self, iterable=()):
-        self.d = collections.OrderedDict.fromkeys(iterable)
+        self.d = OrderedDict.fromkeys(iterable)
 
     def add(self, key):
         self.d[key] = None
@@ -31,7 +32,7 @@ class OrderedSet(collections.Set):
         return self.d.__iter__()
 
     def __le__(self, other):
-        if not isinstance(other, collections.Set):
+        if not isinstance(other, Set):
             return NotImplemented
         if len(self) > len(other):
             return False
