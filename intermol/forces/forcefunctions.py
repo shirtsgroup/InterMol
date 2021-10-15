@@ -136,8 +136,8 @@ def create_kwds_from_entries(unitvars, paramlist, entries, force_type, offset=0)
     u = unitvars[typename]
     params = paramlist[typename]
     for i, p in enumerate(params):
-        if len(entries)<=(offset+i):
-            kwds[p] = float(0.0) * u[i]
+        if len(entries) <= (offset+i):
+            kwds[p] = 0.0 * u[i]
         else:
             kwds[p] = float(entries[offset+i]) * u[i]
     return kwds
