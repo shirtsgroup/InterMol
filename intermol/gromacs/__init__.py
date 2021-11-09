@@ -109,7 +109,7 @@ def energies(top, gro, mdp, gmx_path=GMX_PATH, grosuff='', grompp_check=False):
     grompp_bin.extend(['-f', mdp, '-c', gro, '-p', top, '-o', tpr, '-po', mdout, '-maxwarn', '5'])
     proc = run_subprocess(grompp_bin, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
-        logger.error('grompp failed. See %s' % stderr_path)
+        logger.error(f'grompp failed with error code {proc.returncode} See {stderr_path}')
 
     # Run single-point calculation with mdrun.
     mdrun_bin.extend(['-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', conf, '-e', ener, '-g', log])
