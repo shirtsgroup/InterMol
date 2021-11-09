@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 import parmed as pmd
-from parmed.utils.six import string_types
+from six import string_types
 import parmed.unit as units
 
 import intermol.gromacs as gmx
