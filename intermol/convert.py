@@ -210,7 +210,7 @@ def main(args=None):
         crm.CRM_PATH = args['charmm_path']
 
     if args.get('verbose'):
-        h.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
 
     # Print warnings.
     warnings.simplefilter("always")
