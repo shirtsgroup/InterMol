@@ -210,16 +210,7 @@ def main(args=None):
         crm.CRM_PATH = args['charmm_path']
 
     if args.get('verbose'):
-        # Fixed for Verbose: This part is not getting read from the __main__ function and gives a NameError
-        # NameError: name 'h' is not defined
-        
         logger.setLevel(logging.DEBUG)
-        h = logging.StreamHandler()
-        h.setLevel(logging.INFO)  # Ignores DEBUG level for now.
-        f = logging.Formatter("%(levelname)s %(asctime)s %(message)s",
-                          "%Y-%m-%d %H:%M:%S")
-        h.setFormatter(f)
-        logger.addHandler(h)
 
     # Print warnings.
     warnings.simplefilter("always")
