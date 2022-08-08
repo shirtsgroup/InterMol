@@ -16,9 +16,9 @@ jobs:
       PYVER: ${{ matrix.python-version }}
 
     steps:
-    - uses: actions/checkout
+    - uses: actions/checkout@v3
 
-    - uses: conda-incubator/setup-miniconda
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python-version }}
         activate-environment: intermol-test-env
