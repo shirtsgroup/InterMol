@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 import parmed as pmd
-from parmed.utils.six import string_types
+from six import string_types
 import parmed.unit as units
 
 import intermol.gromacs as gmx
@@ -210,7 +210,7 @@ def main(args=None):
         crm.CRM_PATH = args['charmm_path']
 
     if args.get('verbose'):
-        h.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
 
     # Print warnings.
     warnings.simplefilter("always")

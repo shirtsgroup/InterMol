@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 #####################################
 VERSION = "0.1.0"
-ISRELEASED = False
+ISRELEASED = True
 if ISRELEASED:
     __version__ = VERSION
 else:
@@ -69,5 +69,10 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Software Development :: Libraries :: Python Modules'
         ],
+    entry_points={
+        'console_scripts': [
+            'intermol-convert=intermol.convert:main',
+        ],
+    },
 )
 
