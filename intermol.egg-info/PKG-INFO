@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: intermol
+Version: 0.1.0
+Summary: InterMol: A conversion tool for molecular dynamics simulations.
+Home-page: https://github.com/shirtsgroup/intermol
+Download-URL: https://github.com/shirtsgroup/intermol/tarball/0.1.0
+Author: Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts
+Author-email: ctk3b@virginia.edu, ctl4f@virginia.edu, edz3fz@virginia.edu, michael.shirts@virginia.edu
+License: MIT
+Keywords: intermol
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Environment :: Console
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+License-File: LICENSE.md

@@ -1,0 +1,17 @@
+#include "amber03.ff/forcefield.itp"
+#include "1atomtypes.itp"
+#include "cucurbit_7_uril_GMX.itp"
+#include "1_GMX.itp"
+#include "amber03.ff/ions.itp"
+#include "amber03.ff/tip3p.itp"
+
+
+[ system ]
+host1.cucurbit7uril in water
+
+[ molecules ]
+; Compound        #nmols
+HOS                 1
+MOL                 1
+SOL              2712
+CL                  2

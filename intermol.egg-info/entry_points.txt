@@ -1,0 +1,2 @@
+[console_scripts]
+intermol-convert = intermol.convert:main
