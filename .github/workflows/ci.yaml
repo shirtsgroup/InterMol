@@ -2,7 +2,13 @@ name: ci
 
 on:
   push:
+    branches:
+      - "main"
+      - "master"
   pull_request:
+    branches:
+      - "main"
+      - "master"
 
 jobs:
   test:
@@ -54,4 +60,4 @@ jobs:
     - name: Run tests
       shell: bash -l {0}
       run: |
-        pytest --pyargs intermol -v
+        pytest -v -nauto

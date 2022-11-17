@@ -1,42 +1,27 @@
 """InterMol: A conversion tool for molecular dynamics simulations.
 """
-from __future__ import print_function
-
-import os
 import sys
 from setuptools import setup, find_packages
+import versioneer
 
-#####################################
-VERSION = "0.1.0"
-ISRELEASED = True
-if ISRELEASED:
-    __version__ = VERSION
-else:
-    __version__ = VERSION + '.dev0'
-#####################################
+short_description = __doc__
 
-with open('intermol/version.py', 'w') as version_file:
-    version_file.write('version="{0}"\n'.format(__version__))
-
-with open('__conda_version__.txt', 'w') as conda_version:
-    conda_version.write(__version__)
-
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
-    sys.exit()
-
-with open('requirements.txt') as reqs_file:
-    reqs = [line.strip() for line in reqs_file]
+try:
+    with open("README.md", "r") as handle:
+        long_description = handle.read()
+except:
+    long_description = None
 
 setup(
     name='intermol',
-    version=__version__,
-    description=__doc__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
+    description=short_description,
+    long_description=long_description,
     author='Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts',
     author_email='ctk3b@virginia.edu, ctl4f@virginia.edu, edz3fz@virginia.edu, '
                  'michael.shirts@virginia.edu',
     url='https://github.com/shirtsgroup/intermol',
-    download_url='https://github.com/shirtsgroup/intermol/tarball/{}'.format(__version__),
     packages=find_packages(),
     package_dir={'intermol': 'intermol'},
     package_data={'tests': ['*.py',
@@ -53,7 +38,6 @@ setup(
                             'amber/*/*',
                             ]},
     include_package_data=True,
-    install_requires=reqs,
     license="MIT",
     zip_safe=False,
     keywords='intermol',
@@ -62,7 +46,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Environment :: Console',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
