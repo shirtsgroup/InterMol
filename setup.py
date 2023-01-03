@@ -18,6 +18,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description=short_description,
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Christoph Klein, Christopher Lee, Ellen Zhong, and Michael Shirts',
     author_email='ctk3b@virginia.edu, ctl4f@virginia.edu, edz3fz@virginia.edu, '
                  'michael.shirts@virginia.edu',
