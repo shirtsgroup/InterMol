@@ -233,7 +233,10 @@ def convert_dihedral_from_RB_to_trig(c):
     c2 = c['C2']
     c3 = c['C3']
     c4 = c['C4']
-    c5 = c['C5']
+    if 'C5' in c:  # program might not define this one, need to check it exists.
+        c5 = c['C5']
+    else:
+        c5 = 0*c0.unit
     if 'C6' in c:  # program might not define this one, need to check it exists.
         c6 = c['C6']
     else:
