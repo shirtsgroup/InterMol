@@ -362,6 +362,10 @@ master_unitlist['restricted_bending_angle'] = ['angleD','energy']
 # ========
 # dihedrals
 # ========
+lammps_paramlist['improper_cvff_dihedral'] = ['k', 'sign', 'multiplicity']
+master_paramlist['improper_cvff_dihedral'] = ['k', 'sign', 'multiplicity']
+master_unitlist['improper_cvff_dihedral']  = ['energy', 'units.dimensionless', 'units.dimensionless']
+
 doclist['improper_harmonic_dihedral'] = 'stub documentation\n'
 master_paramlist['improper_harmonic_dihedral'] = ['xi', 'k']
 master_unitlist['improper_harmonic_dihedral'] = ['angleD',

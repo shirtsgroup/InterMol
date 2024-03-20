@@ -37,3 +37,9 @@ Thumbs.db
 
 # python #
 *.pyc
+
+build/
+dist/
+intermol.egg-info/
+
+

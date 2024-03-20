@@ -61,7 +61,7 @@ from intermol.forces.rb_dihedral_type import RbDihedralType, RbDihedral
 from intermol.forces.trig_dihedral_type import TrigDihedralType, TrigDihedral
 from intermol.forces.restricted_bending_dihedral_type import RestrictedBendingDihedralType, RestrictedBendingDihedral
 from intermol.forces.bending_torsion_dihedral_type import BendingTorsionDihedralType, BendingTorsionDihedral
-
+from intermol.forces.improper_cvff_dihedral_type import ImproperCvffDihedralType, ImproperCvffDihedral
 
 # virtual_sites
 from intermol.forces.two_virtual_type import TwoVirtualType, TwoVirtual
@@ -80,5 +80,5 @@ from intermol.forces.convert_dihedrals import convert_dihedral_from_trig_to_RB
 from intermol.forces.convert_dihedrals import convert_dihedral_from_proper_to_trig
 from intermol.forces.convert_dihedrals import convert_dihedral_from_fourier_to_trig
 from intermol.forces.convert_dihedrals import convert_dihedral_from_trig_to_fourier
-
+from intermol.forces.convert_dihedrals import convert_dihedral_from_improper_cvff_to_trig
 

@@ -34,6 +34,27 @@ def convert_dihedral_from_proper_to_trig(p):
     fcs[fk] = k
     return fcs
 
+def convert_dihedral_from_improper_cvff_to_trig(p):
+
+    k = p['k']
+    multiplicity = p['multiplicity']
+    sign = p['sign']
+    zu = 0*k.unit
+    fcs = {
+        'phi': 0 * units.degrees,
+        'fc0': k,
+        'fc1': zu,
+        'fc2': zu,
+        'fc3': zu,
+        'fc4': zu,
+        'fc5': zu,
+        'fc6': zu
+        }
+
+    k # which force constant is nonzero because of the multiplicity?
+    fk = "fc%d" % (multiplicity._value)
+    fcs[fk] = sign * k
+    return fcs
 
 def convert_dihedral_from_fourier_to_trig(f):
 
@@ -212,7 +233,10 @@ def convert_dihedral_from_RB_to_trig(c):
     c2 = c['C2']
     c3 = c['C3']
     c4 = c['C4']
-    c5 = c['C5']
+    if 'C5' in c:  # program might not define this one, need to check it exists.
+        c5 = c['C5']
+    else:
+        c5 = 0*c0.unit
     if 'C6' in c:  # program might not define this one, need to check it exists.
         c6 = c['C6']
     else:

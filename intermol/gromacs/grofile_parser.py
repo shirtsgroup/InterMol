@@ -102,10 +102,10 @@ class GromacsGroParser(object):
                 gro.write('{0:5d}{1:<5s}{2:5s}{3:5d}'.format(
                         atom.residue_index%100000, atom.residue_name, atom.name, (n + 1)%100000))
                 for pos in atom.position:
-                    gro.write('{0:17.12f}'.format(pos.value_in_unit(nanometers)))
+                    gro.write('{0:8.3f}'.format(pos.value_in_unit(nanometers)))
                 if np.any(atom.velocity):
                     for vel in atom.velocity:
-                        gro.write('{0:17.12f}'.format(vel.value_in_unit(nanometers / picoseconds)))
+                        gro.write('{0:8.4f}'.format(vel.value_in_unit(nanometers / picoseconds)))
                 gro.write('\n')
 
             # Check for rectangular; should be symmetric, so we don't have to
