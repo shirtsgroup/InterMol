@@ -168,6 +168,7 @@ class LammpsParser(object):
                 converted_dihedral = TrigDihedral
             elif dihedral == ImproperHarmonicDihedral:
                 convertfunc = convert_nothing
+                converted_dihedral = ImproperHarmonicDihedral
             elif dihedral == RbDihedral:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 converted_dihedral = TrigDihedral
@@ -182,7 +183,7 @@ class LammpsParser(object):
 
             # Adjust scaling conventions.
             canonical_force_scale = self.SCALE_INTO
-            if converted_dihedral == ImproperHarmonicDihedralType:
+            if converted_dihedral == ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
 
             return converted_dihedral, params
