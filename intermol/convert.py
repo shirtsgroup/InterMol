@@ -19,6 +19,10 @@ import intermol.tests
 
 
 # Make a global logging object.
+
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.DEBUG, format="%(levelname)s:%(name)s:%(message)s")
+
 logger = logging.getLogger('InterMolLog')
 logger.setLevel(logging.DEBUG)
 logging.captureWarnings(True)
