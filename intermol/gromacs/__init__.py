@@ -26,6 +26,7 @@ to_canonical = {
     'Proper Dih.': ['dihedral', 'proper'],
     'Ryckaert-Bell.': ['dihedral', 'proper'],
     'Improper Dih.': ['dihedral', 'improper'],
+    'Per. Imp. Dih.': ['dihedral', 'improper'],
     'CMAP': ['dihedral','cmap'],
     'LJ (SR)': ['vdw total', 'vdw (SR)'],
     'LJ-14': ['vdw total','vdw-14'],
