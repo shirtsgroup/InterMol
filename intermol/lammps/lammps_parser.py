@@ -73,26 +73,25 @@ class LammpsParser(object):
     lammps_bond_types = dict(
         (k, eval(v.__name__ + 'Type')) for k, v in lammps_bonds.items())
 
-    def canonical_bond(self, params, bond, direction='into'):
+    def canonical_bond(self, params, bond, direction):
         """Convert to/from the canonical form of this interaction. """
         # TODO: Gromacs says harmonic potential bonds do not have constraints or
         #       exclusions. Check that this logic is supported.
         if direction == 'into':
             canonical_force_scale = self.SCALE_INTO
+            bondtest = bond
         else:
             try:
                 typename = self.lookup_lammps_bonds[bond.__class__]
             except KeyError:
-                if bond.__class__.__name__ in ['FeneBond', 'ConnectionBond']:
-                    raise UnimplementedFunctional(bond, ENGINE)
-                else:
-                    raise UnsupportedFunctional(bond, ENGINE)
+                raise UnsupportedFunctional(bond, ENGINE)
+            bondtest = bond.__class__
             canonical_force_scale = self.SCALE_FROM
 
-        if bond.__class__ in [HarmonicBond, HarmonicPotentialBond]:
+        if bondtest in [HarmonicBond, HarmonicPotentialBond]:
             params['k'] *= canonical_force_scale
 
-        if bond.__class__ == HarmonicPotentialBond:
+        if bondtest == HarmonicPotentialBond:
             typename = 'harmonic'
 
         if direction == 'into':
@@ -153,7 +152,7 @@ class LammpsParser(object):
 
     lammps_impropers = {
         'harmonic': ImproperHarmonicDihedral,
-        'cvff': TrigDihedral,
+        'cvff': ImproperCvffDihedral,
         }
     lookup_lammps_impropers = dict((v, k) for k, v in lammps_impropers.items())
     lammps_improper_types = dict(
@@ -169,18 +168,22 @@ class LammpsParser(object):
                 converted_dihedral = TrigDihedral
             elif dihedral == ImproperHarmonicDihedral:
                 convertfunc = convert_nothing
+                converted_dihedral = ImproperHarmonicDihedral
             elif dihedral == RbDihedral:
                 convertfunc = convert_dihedral_from_RB_to_trig
                 converted_dihedral = TrigDihedral
             elif dihedral == FourierDihedral:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
+            elif dihedral == ImproperCvffDihedral:
+                convertfunc = convert_dihedral_from_improper_cvff_to_trig
+                converted_dihedral = TrigDihedral
                 # Now actually convert the dihedral.
             params = convertfunc(params)
 
             # Adjust scaling conventions.
             canonical_force_scale = self.SCALE_INTO
-            if converted_dihedral == ImproperHarmonicDihedralType:
+            if converted_dihedral == ImproperHarmonicDihedral:
                 params['k'] *= canonical_force_scale
 
             return converted_dihedral, params
@@ -706,7 +709,6 @@ class LammpsParser(object):
             force_classes[int(fields[0])] = [force_class, kwds]
 
     def parse_bond_coeffs(self, data_lines):
-
         self.bond_classes = dict()
         self.parse_force_coeffs(data_lines, "Bond",
                                 self.bond_classes, self.bond_style,
