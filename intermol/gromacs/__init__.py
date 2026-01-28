@@ -65,6 +65,12 @@ def binaries(gmxpath, gmxsuff):
         grompp_bin = [gmx_path('grompp')]
         mdrun_bin = [gmx_path('mdrun')]
         genergy_bin = [gmx_path('g_energy')]
+    elif which('gmx_mpi'):
+        logger.debug("Using MPI-parallel binaries")
+        main_binary = gmx_path('gmx_mpi')
+        grompp_bin = [main_binary, 'grompp']
+        mdrun_bin = [main_binary, 'mdrun']
+        genergy_bin = [main_binary, 'energy']
     else:
         raise IOError('Unable to find gromacs executables.')
     return grompp_bin, mdrun_bin, genergy_bin
@@ -112,7 +118,7 @@ def energies(top, gro, mdp, gmx_path=GMX_PATH, grosuff='', grompp_check=False):
         logger.error(f'grompp failed with error code {proc.returncode} See {stderr_path}')
 
     # Run single-point calculation with mdrun.
-    mdrun_bin.extend(['-nt', '1', '-s', tpr, '-o', traj, '-cpo', state, '-c', conf, '-e', ener, '-g', log])
+    mdrun_bin.extend(['-s', tpr, '-o', traj, '-cpo', state, '-c', conf, '-e', ener, '-g', log])
     proc = run_subprocess(mdrun_bin, 'gromacs', stdout_path, stderr_path)
     if proc.returncode != 0:
         logger.error('mdrun failed. See %s' % stderr_path)
