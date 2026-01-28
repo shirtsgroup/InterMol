@@ -65,6 +65,12 @@ def binaries(gmxpath, gmxsuff):
         grompp_bin = [gmx_path('grompp')]
         mdrun_bin = [gmx_path('mdrun')]
         genergy_bin = [gmx_path('g_energy')]
+    elif which('gmx_mpi'):
+        logger.debug("Using MPI-parallel binaries")
+        main_binary = gmx_path('gmx_mpi')
+        grompp_bin = [main_binary, 'grompp']
+        mdrun_bin = [main_binary, 'mdrun']
+        genergy_bin = [main_binary, 'energy']
     else:
         raise IOError('Unable to find gromacs executables.')
     return grompp_bin, mdrun_bin, genergy_bin
