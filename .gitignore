@@ -35,5 +35,10 @@ trj
 ehthumbs.db
 Thumbs.db
 
-# python #
-*.pyc
+# Python
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+dist/
+*.egg-info/
