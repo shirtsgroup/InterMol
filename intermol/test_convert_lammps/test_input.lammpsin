@@ -1,0 +1,13 @@
+# minimal input file only including parameters read by InterMol
+
+units            real
+atom_style       full
+#suffix          opt
+boundary        p p p
+pair_style      lj/cut/coul/long 15
+special_bonds    lj 0.000000 0.000000 0.500000 coul 0.000000 0.000000 0.500000
+bond_style       harmonic
+angle_style      harmonic
+dihedral_style   opls
+improper_style   cvff
+read_data        benzene.lmp

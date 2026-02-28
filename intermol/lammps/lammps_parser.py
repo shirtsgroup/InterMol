@@ -175,6 +175,9 @@ class LammpsParser(object):
             elif dihedral == FourierDihedral:
                 convertfunc = convert_dihedral_from_fourier_to_trig
                 converted_dihedral = TrigDihedral
+            elif dihedral == TrigDihedral:
+                convertfunc = lambda x: x
+                converted_dihedral = TrigDihedral
                 # Now actually convert the dihedral.
             params = convertfunc(params)
 
